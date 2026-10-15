@@ -278,7 +278,7 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);bo
 @keyframes trace{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
 .ballg{pointer-events:none}
 .ballg.drop{animation:drop .45s cubic-bezier(.2,1.4,.5,1)}
-@keyframes drop{0%{opacity:0;transform:translateY(-14px)}60%{opacity:1}100%{transform:none}}
+@keyframes drop{0%{opacity:0;transform:translateY(-7px)}60%{opacity:1}100%{transform:none}}
 @media (prefers-reduced-motion:reduce){.tracer,.ballg.drop{animation:none}}
 
 
@@ -338,7 +338,7 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);bo
 .az-green.on-sel .g-ring{stroke:#F2B01E}
 .tracer{animation:none}
 .tracer.anim{animation:trace .5s ease-out both}
-.ballg.drop{animation:drop .35s cubic-bezier(.2,1.4,.5,1) .48s both}
+.ballg.drop{animation:drop .3s cubic-bezier(.2,1.2,.5,1) .48s both}
 .az-s .az-bg{stroke:var(--line)}
 .az-p{font:700 18px var(--f-num);fill:var(--fg);text-anchor:middle;dominant-baseline:middle}
 .az-p.worst{fill:var(--q-triple)}
@@ -429,6 +429,14 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);bo
 .resume .rinfo b{font-size:15px}
 .resume .rinfo span{font-family:var(--f-num);font-size:22px;font-weight:700}
 .resume .rbtns{display:flex;gap:8px}.resume .rbtns .btn{flex:1}
+
+
+/* v11 */
+.az-green.on-sel .on-t,.az.az-green.on-sel .az-t{fill:#fff}
+.confetti.full{position:fixed;inset:0;z-index:43;pointer-events:none}
+.confetti.full i{animation-name:fallFull}
+@keyframes fallFull{0%{transform:translateY(0) rotate(0);opacity:0}5%{opacity:1}100%{transform:translateY(110vh) translateX(20px) rotate(720deg);opacity:.6}}
+.result-wrap{position:relative;z-index:42}
 
 /* stats */
 .who-pick{display:flex;gap:6px;overflow-x:auto;padding:2px}
@@ -553,7 +561,7 @@ const LS = {
 };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
 const today = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
-const DIRS = { on:"オン", left:"左", right:"右", long:"奥", short:"ショート" };
+const DIRS = { on:"オン", left:"左", right:"右", long:"オーバー", short:"ショート" };
 
 const state = {
   tab: LS.get("sc.tab","record"),
@@ -568,7 +576,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-16-0900";
+const BUILD = "2026-10-16-0915";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -715,7 +723,9 @@ function resultOverlay(r){
   const flag = !others.length ? "FIRST ROUND" : (t.diff < Math.min(...others.map(x=>roundTotals(x).diff)) ? "COURSE BEST!" : "");
   const n = k => s.dist[k];
   const [y,m,d] = r.date.split("-");
-  return `<div class="result-back" role="dialog" aria-label="ラウンド結果"><div class="result-wrap">
+  const best = flag==="COURSE BEST!";
+  const conf = best ? `<div class="confetti full">${Array.from({length:60},(_,i)=>`<i style="left:${(Math.random()*100).toFixed(1)}%;background:${["#F2B01E","#FFD76A","#FFFFFF","#4F9BEA","#FF8A65"][i%5]};animation-delay:${(-Math.random()*4).toFixed(2)}s;animation-duration:${(3+Math.random()*2.5).toFixed(2)}s;width:${5+Math.round(Math.random()*5)}px"></i>`).join("")}</div>` : "";
+  return `<div class="result-back" role="dialog" aria-label="ラウンド結果">${conf}<div class="result-wrap">
     <div class="result-card"><div class="rc-in">
       <div class="rc-top"><div><div class="k">ROUND COMPLETE</div><div class="n">${esc(r.player)}</div><div class="c">${esc(r.courseName)}・${+m}/${+d}</div></div>${flag?`<span class="rc-flag">${flag}</span>`:""}</div>
       <div class="rc-score"><b>${t.score}</b><span>${toPar(t.diff)}</span></div>
@@ -819,7 +829,7 @@ function approachSVG(dir, tap, stat){
       <filter id="gShadow${stat?"S":""}" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="6" dy="6" stdDeviation="6" flood-color="#083C26" flood-opacity=".3"/></filter>
     </defs>
     <rect class="az-rough" x="0" y="0" width="340" height="196" rx="18"/>
-    ${zone("long", `<path class="az-bg" d="M70 4 H270 Q286 4 286 20 V36 Q240 46 170 48 Q100 46 54 36 V20 Q54 4 70 4Z"/>`, 170, stat?24:30, "奥")}
+    ${zone("long", `<path class="az-bg" d="M70 4 H270 Q286 4 286 20 V36 Q240 46 170 48 Q100 46 54 36 V20 Q54 4 70 4Z"/>`, 170, stat?24:30, "オーバー")}
     ${zone("short", `<path class="az-bg" d="M54 160 Q100 150 170 148 Q240 150 286 160 V176 Q286 192 270 192 H70 Q54 192 54 176Z"/>`, 170, stat?174:180, "ショート")}
     ${zone("left", `<path class="az-bg" d="M4 22 Q4 6 20 6 H40 Q60 40 64 98 Q60 156 40 190 H20 Q4 190 4 174Z"/>`, 30, 100, "左")}
     ${zone("right", `<path class="az-bg" d="M336 22 Q336 6 320 6 H300 Q280 40 276 98 Q280 156 300 190 H320 Q336 190 336 174Z"/>`, 310, 100, "右")}
@@ -954,7 +964,7 @@ function viewStats(){
     </div>
     <div class="row"><div><span>BEST</span><b>${toPar(s.best)}</b></div><div><span>前回</span><b>${toPar(roundTotals(rs[rs.length-1]).diff)}</b></div><div><span>ROUNDS</span><b>${s.rounds}</b></div>${s.dist.hio?`<div><span>HOLE IN ONE</span><b>${s.dist.hio}</b></div>`:`<div><span>HOLES</span><b>${s.holes}</b></div>`}</div>
   </div>
-  <div class="panel"><div class="sec"><em>RECENT</em><span>直近5ラウンド</span></div><div class="recent">${rs.slice(-5).reverse().map(r=>{ const t=roundTotals(r); const [y,m,d]=r.date.split("-");
+  <div class="panel"><div class="sec"><em>RECENT</em><span>直近3ラウンド</span></div><div class="recent">${rs.slice(-3).reverse().map(r=>{ const t=roundTotals(r); const [y,m,d]=r.date.split("-");
       return `<div class="rr"><div class="rd"><small>${+m}/${+d}</small><b>${t.score}<i>(${toPar(t.diff)})</i></b></div><div class="rh">${r.holes.map(h=>`<span class="mk4 m-${TONEH(h)}" title="${h.strokes}"></span>`).join("")}</div></div>`; }).join("")}</div>
     <div class="mk-legend"><span><i class="mk4 m-par"></i>パー</span><span><i class="mk4 m-birdie"></i>バーディ</span><span><i class="mk4 m-eagle"></i>イーグル</span><span><i class="mk4 m-bogey"></i>ボギー</span><span><i class="mk4 m-double"></i>ダボ</span><span><i class="mk4 m-triple"></i>トリプル+</span></div></div>
   <div class="panel"><div class="sec"><em>SHOTS</em><span>ショット</span></div><div class="gauges">
@@ -1020,21 +1030,20 @@ after.stats = () => {
   const scoreZone = i => { const per = tot[i].diff / rs[i].holes.length; return per<=0 ? "par" : per<=1 ? "bogey" : "double"; };
   const puttZone = i => { const per = tot[i].putts / rs[i].holes.length; return per<=2 ? "par" : per<=2.5 ? "bogey" : "double"; };
   const zoneColor = z => cssv("--q-"+z);
-  const zoneFill = zf => c => { const {ctx,chartArea:a}=c.chart; const col = zoneColor(zf(c.dataIndex)); if(!a) return col;
-    const g=ctx.createLinearGradient(0,a.bottom,0,a.top); g.addColorStop(0, col+"10"); g.addColorStop(1, col+"55"); return g; };
+  const zoneFill = zf => c => zoneColor(zf(c.dataIndex));
   const tip = { callbacks:{ title: items => { const r=rs[items[0].dataIndex]; return `${r.date}  ${r.courseName}（${r.holes.length}H）`; } } };
   const opts = (yTitle, yFmt, lo, hi) => ({ maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:tip },
     scales:{ x:{ ticks:{ maxRotation:0, autoSkip:true, autoSkipPadding:14, maxTicksLimit:6 }, grid:{display:false} }, y:{ title:{display:true,text:yTitle}, ticks:{ precision:0, callback: yFmt || (v=>v) }, suggestedMin:lo, suggestedMax:hi, grid:{ color: cssv("--soft") } } } });
   const o1 = opts(oneCourse?"スコア":"対パー", oneCourse?null:(v=>toPar(v)), Math.min(parN-2, ...vals), Math.max(parN+2*holesN+1, ...vals));
   o1.plugins.tooltip.callbacks.label = c => ` スコア ${tot[c.dataIndex].score}（${toPar(tot[c.dataIndex].diff)}）`;
   charts.push(new Chart($("#ch-score"), { type:"bar", data:{ labels, datasets:[
-    { label:"スコア", data: vals, backgroundColor: zoneFill(i=>scoreZone(i)), borderColor: rs.map((r,i)=>zoneColor(scoreZone(i))), borderWidth:{top:3,left:0,right:0,bottom:0}, borderSkipped:false, borderRadius:{topLeft:6,topRight:6}, maxBarThickness:20, base: oneCourse ? undefined : 0 }
+    { label:"スコア", data: vals, backgroundColor: zoneFill(i=>scoreZone(i)), borderColor: rs.map((r,i)=>zoneColor(scoreZone(i))), borderWidth:0, borderSkipped:"start", borderRadius:5, maxBarThickness:16, base: oneCourse ? undefined : 0 }
   ]}, options:o1, plugins:[refLines(scoreLines)] }));
   const pVals = tot.map(t=>t.putts);
   const o2 = opts("パット", null); o2.scales.y.min = Math.min(holesN+1, ...pVals); o2.scales.y.max = Math.max(holesN*2+6, ...pVals);
   o2.plugins.tooltip.callbacks.label = c => ` ${tot[c.dataIndex].putts}パット`;
   charts.push(new Chart($("#ch-putt"), { type:"bar", data:{ labels, datasets:[
-    { label:"パット", data: pVals, backgroundColor: zoneFill(i=>puttZone(i)), borderColor: rs.map((r,i)=>zoneColor(puttZone(i))), borderWidth:{top:3,left:0,right:0,bottom:0}, borderSkipped:false, borderRadius:{topLeft:6,topRight:6}, maxBarThickness:20 }
+    { label:"パット", data: pVals, backgroundColor: zoneFill(i=>puttZone(i)), borderColor: rs.map((r,i)=>zoneColor(puttZone(i))), borderWidth:0, borderSkipped:"start", borderRadius:5, maxBarThickness:16 }
   ]}, options:o2, plugins:[refLines([{ v:2*holesN, label:`${2*holesN}`, color: cssv("--q-par") }])] }));
   const donut = (id, segs) => { const el=$(id); if(!el) return;
     charts.push(new Chart(el, {type:"doughnut", data:{labels:segs.map(x=>x.label), datasets:[{data:segs.map(x=>x.n), backgroundColor:segs.map(x=>cssv(x.tone)), borderWidth:0, borderRadius:0, spacing:2, hoverOffset:4}]},
