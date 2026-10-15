@@ -622,7 +622,7 @@ after.stats = () => {
   o2.plugins.tooltip.callbacks.label = c => { const r=rs[c.dataIndex]; return `${c.dataset.label}: ${roundTotals(r).putts}パット（${r.holes.length}H）`; };
   charts.push(new Chart($("#ch-putt"), {type:"line", data:{labels, datasets:mkSeries(r=>roundTotals(r).putts)}, options:o2}));
   const donut = (id, segs) => { const el=$(id); if(!el) return;
-    charts.push(new Chart(el, {type:"doughnut", data:{labels:segs.map(x=>x.label), datasets:[{data:segs.map(x=>x.n), backgroundColor:segs.map(x=>cssv(x.tone)), borderWidth:0, borderRadius:6, spacing:3, hoverOffset:4}]},
+    charts.push(new Chart(el, {type:"doughnut", data:{labels:segs.map(x=>x.label), datasets:[{data:segs.map(x=>x.n), backgroundColor:segs.map(x=>cssv(x.tone)), borderWidth:0, borderRadius:0, spacing:2, hoverOffset:4}]},
       options:{maintainAspectRatio:false, cutout:"74%", plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>` ${c.raw}ホール`}}}}})); };
   donut("#ch-pie", PUTT_SEGS(s));
   donut("#ch-dist", DIST_SEGS(s));
