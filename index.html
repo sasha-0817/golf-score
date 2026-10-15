@@ -308,6 +308,19 @@ const state = {
   demo: false
 };
 
+/* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
+const BUILD = "2026-10-16-0015";
+async function checkUpdate(){
+  try{
+    const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
+    const txt = await res.text();
+    const m = txt.match(/const BUILD = "([^"]+)"/);
+    if(m && m[1] !== BUILD) location.replace(location.pathname + "?v=" + m[1]);
+  }catch(e){}
+}
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") checkUpdate(); });
+setTimeout(checkUpdate, 1500);
+
 /* ---------- storage: Google スプレッドシート (Apps Script) ---------- */
 // ↓ Apps Script を「ウェブアプリ」として公開したときの URL を貼り付けてください
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw0sl0SbAukE3UDirc5iYePK-XaY9pD5gZvwg5g-IJMdAuiRRqwilifThZvbinzDTuO/exec";
