@@ -81,8 +81,8 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);bo
 .empty strong{display:block;color:var(--fg);font-size:16px;margin-bottom:4px}
 .num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
 
-/* record screen: a night-green scoreboard, same look in both themes */
-.rec{display:flex;flex-direction:column;gap:12px;padding-top:10px;padding-bottom:calc(88px + env(safe-area-inset-bottom,0px));color:var(--rec-fg)}
+/* record screen: a launch-monitor style input — gradient hole card, colour-coded score cells */
+.rec{display:flex;flex-direction:column;gap:12px;padding-top:10px;padding-bottom:calc(92px + env(safe-area-inset-bottom,0px));color:var(--rec-fg)}
 .rec-top{display:flex;align-items:center;gap:10px}
 .icon-btn{width:38px;height:38px;flex:0 0 38px;border-radius:50%;border:1px solid var(--rec-line);background:var(--rec-surface);color:var(--rec-fg);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .icon-btn svg{width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round}
@@ -93,67 +93,88 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);bo
 .rec-total .num{font-size:30px;font-weight:700}
 .rec-total small{display:block;font-size:11px;color:var(--rec-muted);margin-top:3px}
 .dots{display:flex;gap:4px}
-.dots button{flex:1 1 0;min-width:0;height:30px;border:0;border-radius:6px;background:var(--rec-surface);color:var(--rec-muted);font-family:var(--f-num);font-size:13px;font-weight:600;cursor:pointer;position:relative;padding:0}
-.dots button.done{background:var(--rec-raise);color:var(--rec-fg)}
-.dots button.done::after{content:"";position:absolute;left:30%;right:30%;bottom:3px;height:2px;border-radius:2px;background:var(--rec-turf-hi)}
-.dots button.cur{background:var(--rec-fg);color:var(--rec-bg)}
-.dots button.cur::after{display:none}
+.dots button{flex:1 1 0;min-width:0;height:34px;border:1px solid var(--rec-line);border-radius:8px;background:var(--rec-surface);color:var(--rec-muted);font-family:var(--f-num);font-size:14px;font-weight:700;cursor:pointer;padding:0;line-height:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.dots button small{font-size:8px;font-weight:600;opacity:.75;letter-spacing:.04em}
+.dots button.r-under{background:color-mix(in srgb,var(--rec-under) 14%,var(--rec-surface));color:var(--rec-under);border-color:transparent}
+.dots button.r-par{background:color-mix(in srgb,var(--rec-turf) 14%,var(--rec-surface));color:var(--rec-turf);border-color:transparent}
+.dots button.r-bogey{background:color-mix(in srgb,var(--rec-over) 14%,var(--rec-surface));color:var(--rec-over);border-color:transparent}
+.dots button.r-worse{background:var(--rec-fg);color:var(--rec-bg);border-color:transparent}
+.dots button.cur{outline:2px solid var(--rec-fg);outline-offset:1px}
 .dots.two{flex-wrap:wrap}.dots.two button{flex:0 0 calc((100% - 32px)/9)}
-.rec-card{background:var(--rec-surface);border:1px solid var(--rec-line);border-radius:24px;box-shadow:var(--shadow);padding:16px 14px;display:flex;flex-direction:column;gap:14px;touch-action:pan-y}
-.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
+.hole-card{position:relative;overflow:hidden;border-radius:24px;padding:16px 18px 14px;color:#fff;background:linear-gradient(135deg,#08261C 0%,#0B6B44 55%,#0E8FA0 100%);box-shadow:0 12px 28px -14px rgba(8,38,28,.7)}
+.hole-card::before{content:"";position:absolute;right:-70px;top:-60px;width:260px;height:220px;border-radius:50%;background:repeating-radial-gradient(ellipse at center,rgba(255,255,255,.13) 0 1px,transparent 1px 14px);pointer-events:none}
+.hole-card .row1{display:flex;justify-content:space-between;align-items:flex-end;position:relative}
+.hole-card .lbl{font-size:10px;font-weight:700;letter-spacing:.22em;opacity:.7}
+.hole-card .hno{font-family:var(--f-num);font-size:84px;font-weight:700;line-height:.82;letter-spacing:-.02em}
+.hole-card .hno small{font-size:20px;opacity:.6;font-weight:600;margin-left:4px;letter-spacing:0}
+.hole-card .meta{text-align:right;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.hole-card .par{font-family:var(--f-num);font-size:34px;font-weight:700;line-height:1}
+.hole-card .par span{font-size:13px;opacity:.7;margin-right:4px;letter-spacing:.12em}
+.hole-card .yd{font-family:var(--f-num);font-size:14px;opacity:.75}
+.badge{display:inline-flex;align-items:center;gap:6px;margin-top:12px;position:relative;font-size:12px;font-weight:900;letter-spacing:.14em;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.14);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.badge i{width:8px;height:8px;border-radius:50%;background:currentColor}
+.badge.b-under{color:#FFB3AD}.badge.b-par{color:#9DF5C9}.badge.b-bogey{color:#B9CCFF}.badge.b-worse{color:#fff}
+.badge.hio{background:linear-gradient(120deg,#F2B01E,#FFD76A);color:#3A2600}
+.rec-card{background:var(--rec-surface);border:1px solid var(--rec-line);border-radius:24px;padding:14px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow);touch-action:pan-y}
+.slide-l{animation:slideL .22s ease-out}.slide-r{animation:slideR .22s ease-out}
+@keyframes slideL{from{opacity:.2;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes slideR{from{opacity:.2;transform:translateX(-28px)}to{opacity:1;transform:none}}
 .eyebrow{display:block;font-size:10px;font-weight:700;letter-spacing:.2em;color:var(--rec-muted)}
-.hero .hno{font-family:var(--f-num);font-size:64px;font-weight:700;line-height:.85;letter-spacing:-.01em}
-.hero .hno small{font-size:18px;color:var(--rec-muted);font-weight:600;margin-left:4px;letter-spacing:0}
-.hero .parbox{text-align:right}
-.hero .parbox .num{font-size:30px;font-weight:700;line-height:1}
-.hero .parbox .yd{font-size:12px;color:var(--rec-muted);font-family:var(--f-num);margin-left:4px}
-.result{display:inline-block;margin-top:6px;font-size:12px;font-weight:900;letter-spacing:.08em;padding:3px 10px;border-radius:999px;background:var(--rec-raise)}
-.seg-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.seg-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
 .seg-head .eyebrow{font-size:11px}
-.seg-head .hint{font-size:11px;color:var(--rec-turf-hi);font-weight:700}
+.seg-head .eyebrow b{font-family:var(--f-body);letter-spacing:.04em;margin-left:6px;color:var(--rec-fg);font-size:11px}
+.seg-head .hint{font-size:11px;color:var(--rec-turf);font-weight:700}
 .seg{display:grid;gap:5px}
 .seg.s8{grid-template-columns:repeat(8,1fr)}
-.seg.s5{grid-template-columns:repeat(5,1fr)}
-.seg button{height:46px;border-radius:10px;border:1px solid var(--rec-line);background:var(--rec-bg);color:var(--rec-fg);font-family:var(--f-num);font-size:22px;font-weight:700;cursor:pointer;position:relative;padding:0;transition:transform .08s}
-.seg button:active{transform:scale(.94)}
-.seg button.par::before{content:"PAR";position:absolute;top:2px;left:0;right:0;font-size:7px;letter-spacing:.12em;color:var(--rec-muted);font-family:var(--f-body)}
-.seg button[aria-pressed="true"]{background:var(--rec-sel);border-color:var(--rec-sel);color:var(--rec-sel-ink);box-shadow:0 6px 16px -6px var(--rec-sel)}
-.seg button[aria-pressed="true"].par::before{color:var(--rec-sel-ink)}
-.seg button:disabled{opacity:.25;cursor:default}
-.greenpad{position:relative;height:168px;margin-top:2px}
-.greenpad .rough{position:absolute;inset:0;border-radius:18px;background:var(--rec-raise);background-image:linear-gradient(var(--rec-line) 1px,transparent 1px),linear-gradient(90deg,var(--rec-line) 1px,transparent 1px);background-size:18px 18px;background-position:center;opacity:.9}
-.greenpad button{position:absolute;font:inherit;font-weight:700;font-size:13px;border:1px solid var(--rec-line);background:var(--rec-surface);color:var(--rec-fg);border-radius:999px;cursor:pointer;padding:0;transition:transform .08s}
+.seg.s6{grid-template-columns:repeat(6,1fr)}
+.seg button{height:54px;border-radius:12px;border:1px solid var(--rec-line);background:var(--rec-bg);color:var(--rec-fg);font-family:var(--f-num);font-size:23px;font-weight:700;cursor:pointer;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1;transition:transform .08s}
+.seg button small{font-family:var(--f-body);font-size:7.5px;letter-spacing:.06em;color:var(--rec-muted);font-weight:700}
+.seg.s6 button{height:46px}
+.seg button:active{transform:scale(.93)}
+.seg button[aria-pressed="true"]{color:#fff;border-color:transparent;box-shadow:0 8px 16px -8px var(--sel)}
+.seg button[aria-pressed="true"] small{color:rgba(255,255,255,.85)}
+.seg button.t-under{--sel:var(--rec-under)}.seg button.t-par{--sel:var(--rec-turf)}.seg button.t-bogey{--sel:var(--rec-over)}.seg button.t-worse{--sel:#2B3530}
+.seg button[aria-pressed="true"]{background:var(--sel)}
+.greenpad{position:relative;height:172px}
+.greenpad .rough{position:absolute;inset:0;border-radius:18px;background:var(--rec-raise);background-image:radial-gradient(circle,var(--rec-line) 1px,transparent 1.2px);background-size:12px 12px}
+.greenpad button{position:absolute;font:inherit;font-weight:700;font-size:13px;border:1px solid var(--rec-line);background:var(--rec-surface);color:var(--rec-fg);border-radius:999px;cursor:pointer;padding:0;transition:transform .08s;display:flex;align-items:center;justify-content:center;gap:4px}
+.greenpad button svg{width:12px;height:12px;stroke:currentColor;stroke-width:2.4;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .greenpad button:active{transform:scale(.95)}
-.gp-on{left:27%;right:27%;top:26%;bottom:26%;border-radius:50%!important;background:radial-gradient(ellipse at 45% 40%,var(--rec-turf-hi),var(--rec-turf))!important;border:0!important;color:#fff!important;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 0 0 8px var(--glow),0 0 0 16px rgba(127,127,127,.06)}
-.gp-on svg{width:14px;height:18px}
-.gp-long{left:34%;right:34%;top:4px;height:34px}
-.gp-short{left:34%;right:34%;bottom:4px;height:34px}
-.gp-left{left:4px;width:20%;top:calc(50% - 17px);height:34px}
-.gp-right{right:4px;width:20%;top:calc(50% - 17px);height:34px}
-.greenpad button[aria-pressed="true"]{background:var(--rec-sel);border-color:var(--rec-sel);color:var(--rec-sel-ink)}
-.greenpad .gp-on[aria-pressed="true"]{border-color:var(--rec-sel)!important;box-shadow:0 0 0 4px var(--rec-sel)}
+.gp-on{left:26%;right:26%;top:24%;bottom:24%;border-radius:50%!important;border:0!important;color:#fff!important;flex-direction:column;gap:2px!important;background:repeating-radial-gradient(ellipse at 52% 46%,rgba(255,255,255,.10) 0 1px,transparent 1px 9px),radial-gradient(ellipse at 45% 40%,#4BE3A3,#0E9F62 75%)!important;box-shadow:0 0 0 7px color-mix(in srgb,var(--rec-turf) 22%,transparent),0 0 0 14px color-mix(in srgb,var(--rec-turf) 8%,transparent)}
+.gp-on svg{width:14px!important;height:18px!important;stroke:none!important}
+.gp-long{left:33%;right:33%;top:4px;height:34px}
+.gp-short{left:33%;right:33%;bottom:4px;height:34px}
+.gp-left{left:4px;width:19%;top:calc(50% - 17px);height:34px}
+.gp-right{right:4px;width:19%;top:calc(50% - 17px);height:34px}
+.greenpad button[aria-pressed="true"]{background:var(--rec-fg);border-color:var(--rec-fg);color:var(--rec-bg)}
+.greenpad .gp-on[aria-pressed="true"]{box-shadow:0 0 0 4px var(--rec-fg),0 0 0 12px color-mix(in srgb,var(--rec-turf) 18%,transparent)}
+.ball{position:absolute;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#d9dedb);box-shadow:0 2px 4px rgba(0,0,0,.35);pointer-events:none;z-index:2;transition:all .2s}
 .trouble{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.trouble button{height:44px;border-radius:12px;border:1px dashed var(--rec-line);background:transparent;color:var(--rec-muted);font:inherit;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.trouble button{height:44px;border-radius:12px;border:1px dashed var(--rec-line);background:transparent;color:var(--rec-muted);font:inherit;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.trouble button svg{width:18px;height:18px}
 .trouble button[aria-pressed="true"].bk{background:var(--rec-warn);border:1px solid var(--rec-warn);color:#fff}
 .trouble button[aria-pressed="true"].ob{background:var(--rec-under);border:1px solid var(--rec-under);color:#fff}
 .rec-bar{position:fixed;left:0;right:0;bottom:0;z-index:11;padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));background:linear-gradient(to top,var(--rec-bg) 70%,var(--rec-fade));display:flex;gap:10px;max-width:760px;margin:0 auto}
 .rec-bar button{height:54px;border-radius:16px;font:inherit;font-weight:900;font-size:16px;cursor:pointer;border:1px solid var(--rec-line);background:var(--rec-surface);color:var(--rec-fg)}
 .rec-bar .back{flex:0 0 64px;display:flex;align-items:center;justify-content:center}
 .rec-bar .back svg{width:22px;height:22px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
-.rec-bar .go{flex:1;background:var(--rec-fg);color:var(--rec-bg);border-color:var(--rec-fg);letter-spacing:.04em}
-.rec-bar .go.save{background:linear-gradient(120deg,var(--turf),var(--accent2));border-color:transparent;color:var(--turf-ink)}
+.rec-bar .go{flex:1;background:var(--rec-fg);color:var(--rec-bg);border-color:var(--rec-fg);letter-spacing:.04em;display:flex;align-items:center;justify-content:center;gap:8px}
+.rec-bar .go svg{width:18px;height:18px;stroke:currentColor;stroke-width:2.4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.rec-bar .go.save{background:linear-gradient(120deg,var(--turf),var(--accent2));border-color:transparent;color:#fff}
 .rec-bar button:disabled{opacity:.3}
-.swipe-hint{text-align:center;font-size:11px;color:var(--rec-muted);margin-top:-4px}
 .sheet-back{position:fixed;inset:0;background:rgba(0,0,0,.4);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);z-index:30;display:flex;align-items:flex-end}
 .sheet{width:100%;max-width:760px;margin:0 auto;background:var(--rec-surface);border-top:1px solid var(--rec-line);border-radius:20px 20px 0 0;padding:20px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:10px;color:var(--rec-fg)}
 .sheet p{margin:0 0 6px;font-weight:700}
 .sheet button{height:50px;border-radius:14px;font:inherit;font-weight:700;font-size:15px;border:1px solid var(--rec-line);background:var(--rec-bg);color:var(--rec-fg);cursor:pointer}
 .sheet button.danger{background:var(--rec-under);border-color:var(--rec-under);color:#fff}
-@media (max-height:700px){.rec{gap:10px;padding-top:6px}.rec-card{gap:11px;padding:12px}.hero .hno{font-size:50px}.hero .parbox .num{font-size:24px}.result{margin-top:3px}.seg button{height:42px}.greenpad{height:136px}.gp-long,.gp-short,.gp-left,.gp-right{height:30px!important}.gp-left,.gp-right{top:calc(50% - 15px)!important}.trouble button{height:40px}.swipe-hint{display:none}.rec-bar button{height:50px}}
-@media (max-width:360px){.hero .hno{font-size:54px}.seg button{height:42px;font-size:19px}}
-
+@media (max-height:700px){.rec{gap:9px;padding-top:6px}.hole-card{padding:12px 16px 12px}.hole-card .hno{font-size:66px}.hole-card .par{font-size:28px}.badge{margin-top:8px}.rec-card{gap:11px;padding:12px}.seg button{height:48px}.seg.s6 button{height:42px}.greenpad{height:140px}.gp-long,.gp-short,.gp-left,.gp-right{height:30px!important}.gp-left,.gp-right{top:calc(50% - 15px)!important}.trouble button{height:40px}.rec-bar button{height:50px}}
+@media (max-width:360px){.seg button{font-size:20px}.hole-card .hno{font-size:60px}}
+@media (prefers-reduced-motion:reduce){.slide-l,.slide-r{animation:none}}
 
 /* stats */
+.who-pick{display:flex;gap:6px;overflow-x:auto;padding:2px}
+.who-pick button{flex:0 0 auto;font:inherit;font-weight:700;font-size:15px;padding:10px 18px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--muted);cursor:pointer}
+.who-pick button[aria-selected="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .donut{display:flex;flex-direction:column;gap:14px;align-items:stretch}
 .dwrap{position:relative;height:170px}
 .dcenter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
@@ -447,51 +468,58 @@ const ICON = {
   back:'<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>',
   flag:'<svg viewBox="0 0 14 18" aria-hidden="true"><line x1="2" y1="1" x2="2" y2="17" stroke="#fff" stroke-width="1.6"/><path d="M3 1.5 L13 4.5 L3 7.5Z" fill="#F0BE3A"/></svg>'
 };
+const TERM = d => d<=-3?"ALBATROSS":d===-2?"EAGLE":d===-1?"BIRDIE":d===0?"PAR":d===1?"BOGEY":d===2?"DOUBLE":d===3?"TRIPLE":"+"+d;
+const TONE = d => d<0?"under":d===0?"par":d===1?"bogey":"worse";
+const BALL_POS = { on:{left:"calc(50% + 16px)",top:"calc(50% + 4px)"}, left:{left:"calc(19% + 9px)",top:"calc(50% - 7px)"}, right:{left:"calc(81% - 23px)",top:"calc(50% - 7px)"}, long:{left:"calc(67% + 8px)",top:"14px"}, short:{left:"calc(67% + 8px)",top:"calc(100% - 28px)"} };
+const AR = { long:'<svg viewBox="0 0 12 12"><path d="M6 10V2M2.5 5.5L6 2l3.5 3.5"/></svg>', short:'<svg viewBox="0 0 12 12"><path d="M6 2v8M2.5 6.5L6 10l3.5-3.5"/></svg>', left:'<svg viewBox="0 0 12 12"><path d="M10 6H2M5.5 2.5L2 6l3.5 3.5"/></svg>', right:'<svg viewBox="0 0 12 12"><path d="M2 6h8M6.5 2.5L10 6l-3.5 3.5"/></svg>' };
 function viewRecordDraft(d){
   const h = d.holes[state.hole];
   const N = d.holes.length;
   const done = d.holes.filter(x=>x.entered);
   const tot = roundTotals({holes:done});
   const diff = h.strokes - h.par;
-  const label = h.strokes===1?"HOLE IN ONE":diff<=-2?"EAGLE":diff===-1?"BIRDIE":diff===0?"PAR":diff===1?"BOGEY":diff===2?"DOUBLE BOGEY":"+"+diff;
-  const rcol = diff<0?"var(--rec-under)":diff>0?"var(--rec-over)":"var(--rec-turf-hi)";
+  const hio = h.strokes===1;
   const onIn = h.strokes - h.putts;
   const hint = onIn<=h.par-2 ? "パーオン" : onIn<=h.par-1 ? "ボギーオン" : (h.putts===0 ? "チップイン" : "");
-  const sv = [1,2,3,4,5,6,7,8];
-  const sBtn = v => { const isMax=v===8; const pressed = isMax ? h.strokes>=8 : h.strokes===v;
-    return `<button data-act="sv" data-v="${v}" class="${v===h.par?"par":""}" aria-pressed="${pressed}" aria-label="${v}${isMax?"打以上":"打"}">${isMax&&h.strokes>8?h.strokes:(isMax?"8+":v)}</button>`; };
-  const pBtn = v => `<button data-act="pv" data-v="${v}" aria-pressed="${h.putts===v}" ${v>h.strokes?"disabled":""} aria-label="${v}パット">${v}</button>`;
-  const gp = (k,cls,txt) => `<button class="${cls}" data-act="dir" data-v="${k}" aria-pressed="${h.dir===k}">${txt}</button>`;
+  const sBtn = v => { const isMax=v===8; const val = isMax && h.strokes>8 ? h.strokes : v; const pressed = isMax ? h.strokes>=8 : h.strokes===v; const dd=val-h.par;
+    return `<button data-act="sv" data-v="${v}" class="t-${TONE(dd)}" aria-pressed="${pressed}" aria-label="${val}打">${isMax&&h.strokes<=8?"8+":val}<small>${val===1?"HIO":TERM(dd)}</small></button>`; };
+  const pBtn = v => { const t = v<=1?"under":v===2?"worse":"bogey"; return `<button data-act="pv" data-v="${v}" class="t-${v>=3?"under":v===2?"worse":"par"}" aria-pressed="${h.putts===v}" aria-label="${v}パット">${v===5?"5+":v}</button>`; };
+  const gp = (k,cls,txt) => `<button class="${cls}" data-act="dir" data-v="${k}" aria-pressed="${h.dir===k}">${AR[k]||""}${txt}</button>`;
   const totLabel = done.length ? toPar(tot.diff) : "—";
+  const dotCls = x => { if(!x.entered) return ""; return "r-"+TONE(x.strokes-x.par); };
+  const ball = h.dir && BALL_POS[h.dir] ? `<span class="ball" style="left:${BALL_POS[h.dir].left};top:${BALL_POS[h.dir].top}"></span>` : "";
+  const slide = state.slide ? (state.slide==="l"?"slide-l":"slide-r") : ""; state.slide = null;
   return `<div class="rec">
     <div class="rec-top">
       <button class="icon-btn" data-act="ask-discard" aria-label="記録を閉じる">${ICON.x}</button>
       <div class="rec-who"><b>${esc(d.player)}</b><span>${esc(d.courseName)}・${esc(d.date.slice(5).replace("-","/"))}${d.editing?"・編集中":""}</span></div>
       <div class="rec-total"><span class="num" style="color:${done.length&&tot.diff<0?"var(--rec-under)":"inherit"}">${totLabel}</span><small>${tot.score||0}打・${tot.putts||0}パット</small></div>
     </div>
-    <div class="progress"><i style="width:${Math.round(done.length/N*100)}%"></i></div>
-    <div class="dots ${N>9?"two":""}">${d.holes.map((x,i)=>`<button data-act="hole" data-i="${i}" class="${i===state.hole?"cur":x.entered?"done":""}" aria-label="${i+1}番ホール">${i+1}</button>`).join("")}</div>
-    <div class="rec-card" id="rec-card">
-      <div class="hero">
-        <div><span class="eyebrow">HOLE</span><div class="hno">${state.hole+1}<small>/${N}</small></div></div>
-        <div class="parbox"><span class="eyebrow">PAR</span><span class="num">${h.par}</span>${h.yards?`<span class="yd">${h.yards}y</span>`:""}<div><span class="result ${h.strokes===1?"hio":""}" style="color:${rcol}">${label}</span></div></div>
+    <div class="dots ${N>9?"two":""}">${d.holes.map((x,i)=>`<button data-act="hole" data-i="${i}" class="${dotCls(x)} ${i===state.hole?"cur":""}" aria-label="${i+1}番ホール">${x.entered?x.strokes:i+1}<small>${x.entered?(i+1)+"H":""}</small></button>`).join("")}</div>
+    <div class="hole-card ${slide}">
+      <div class="row1">
+        <div><span class="lbl">HOLE</span><div class="hno">${state.hole+1}<small>/${N}</small></div></div>
+        <div class="meta"><div class="par"><span>PAR</span>${h.par}</div>${h.yards?`<div class="yd">${h.yards} YDS</div>`:""}</div>
       </div>
-      <div><div class="seg-head"><span class="eyebrow">打数</span></div><div class="seg s8">${sv.map(sBtn).join("")}</div></div>
-      <div><div class="seg-head"><span class="eyebrow">パット</span><span class="hint">${hint}</span></div><div class="seg s5">${[0,1,2,3,4].map(pBtn).join("")}</div></div>
-      <div><div class="seg-head"><span class="eyebrow">グリーンを狙った1球目</span><span class="hint" style="color:var(--rec-muted)">${h.dir?DIRS[h.dir]:"タップで選択"}</span></div>
+      <span class="badge ${hio?"hio":"b-"+TONE(diff)}"><i></i>${hio?"HOLE IN ONE":TERM(diff)}</span>
+    </div>
+    <div class="rec-card ${slide}" id="rec-card">
+      <div><div class="seg-head"><span class="eyebrow">SCORE<b>打数</b></span></div><div class="seg s8">${[1,2,3,4,5,6,7,8].map(sBtn).join("")}</div></div>
+      <div><div class="seg-head"><span class="eyebrow">PUTTS<b>パット</b></span><span class="hint">${hint}</span></div><div class="seg s6">${[0,1,2,3,4,5].map(pBtn).join("")}</div></div>
+      <div><div class="seg-head"><span class="eyebrow">APPROACH<b>グリーンを狙った1球目</b></span></div>
         <div class="greenpad"><div class="rough"></div>
           ${gp("long","gp-long","奥")}${gp("left","gp-left","左")}${gp("right","gp-right","右")}${gp("short","gp-short","ショート")}
           <button class="gp-on" data-act="dir" data-v="on" aria-pressed="${h.dir==="on"}" aria-label="オン">${ICON.flag}<span>オン</span></button>
+          ${ball}
         </div></div>
       <div class="trouble">
-        <button class="bk" data-act="tog" data-k="bunker" aria-pressed="${!!h.bunker}">バンカー</button>
-        <button class="ob" data-act="tog" data-k="ob" aria-pressed="${!!h.ob}">OB</button>
+        <button class="bk" data-act="tog" data-k="bunker" aria-pressed="${!!h.bunker}"><svg viewBox="0 0 18 18" aria-hidden="true"><ellipse cx="9" cy="11" rx="7.5" ry="4" fill="currentColor" opacity=".35"/><circle cx="6" cy="10.5" r=".9" fill="currentColor"/><circle cx="10" cy="12" r=".9" fill="currentColor"/><circle cx="12.5" cy="10" r=".9" fill="currentColor"/></svg>バンカー</button>
+        <button class="ob" data-act="tog" data-k="ob" aria-pressed="${!!h.ob}"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="7.5" y="2" width="3" height="14" rx="1" fill="currentColor"/><rect x="7.5" y="4" width="3" height="2.5" fill="#fff" opacity=".9"/><rect x="7.5" y="9" width="3" height="2.5" fill="#fff" opacity=".9"/></svg>OB</button>
       </div>
     </div>
-    <div class="swipe-hint">左右にスワイプでホール移動</div>
     <div class="rec-bar">
       <button class="back" data-act="prev" ${state.hole===0?"disabled":""} aria-label="前のホール">${ICON.back}</button>
-      ${state.hole<N-1?`<button class="go" data-act="next">${state.hole+2}番ホールへ</button>`:`<button class="go save" data-act="finish">ラウンドを保存</button>`}
+      ${state.hole<N-1?`<button class="go" data-act="next">${state.hole+2}番ホールへ<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>`:`<button class="go save" data-act="finish">ラウンドを保存</button>`}
     </div>
     ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>${d.editing?"編集をやめますか？変更は保存されません。":"このラウンドの記録をやめますか？入力した内容は消えます。"}</p><button class="danger" data-act="discard">${d.editing?"編集をやめる":"記録を破棄する"}</button><button data-act="cancel-confirm">続ける</button></div></div>`:""}
   </div>`;
@@ -502,7 +530,7 @@ after.record = () => {
   card.addEventListener("touchstart", e=>{ const t=e.touches[0]; x0=t.clientX; y0=t.clientY; }, {passive:true});
   card.addEventListener("touchend", e=>{ if(x0==null) return; const t=e.changedTouches[0]; const dx=t.clientX-x0, dy=t.clientY-y0; x0=null;
     if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.5){ const N=state.draft.holes.length; mark_entered();
-      if(dx<0 && state.hole<N-1) state.hole++; else if(dx>0 && state.hole>0) state.hole--; else return; saveDraft(); render(); } }, {passive:true});
+      if(dx<0 && state.hole<N-1){ state.hole++; state.slide="l"; } else if(dx>0 && state.hole>0){ state.hole--; state.slide="r"; } else return; saveDraft(); render(); } }, {passive:true});
 };
 
 /* ----- 分析 ----- */
@@ -531,7 +559,7 @@ function viewStats(){
     return `<div class="panel empty"><strong>まだラウンドがありません</strong>ラウンドを保存すると、パーオン率やパットの割合、ミスの傾向がここに出ます。<div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn primary" data-act="goto-record">ラウンドを記録する</button><button class="btn" data-act="demo-on">デモデータで見てみる</button></div></div>`;
   }
   const pl = players();
-  if(state.fPlayer!=="all" && !pl.includes(state.fPlayer)) state.fPlayer="all";
+  if(!pl.includes(state.fPlayer)) state.fPlayer = pl.includes(LS.get("sc.player","")) ? LS.get("sc.player","") : pl[0];
   const cs = courses().filter(c=>all.some(r=>r.courseId===c.id));
   const rs = filteredRounds();
   const s = computeStats(rs);
@@ -540,8 +568,8 @@ function viewStats(){
   const kpi = (k,v,unit,d) => `<div class="kpi"><div class="k">${k}</div><div class="v">${v}${unit?`<small>${unit}</small>`:""}</div>${d?`<div class="d">${d}</div>`:""}</div>`;
   const fx = v => v==null? "—" : v.toFixed(1);
   return `${demoBand}
+  <div class="who-pick" role="tablist" aria-label="プレーヤー">${pl.map(p=>`<button role="tab" data-act="pick-player" data-v="${esc(p)}" aria-selected="${p===state.fPlayer}">${esc(p)}</button>`).join("")}</div>
   <div class="panel"><div class="filters">
-    <div class="field"><label for="f-player">プレーヤー</label><select id="f-player"><option value="all">全員</option>${pl.map(p=>`<option ${p===state.fPlayer?"selected":""}>${esc(p)}</option>`).join("")}</select></div>
     <div class="field"><label for="f-course">コース</label><select id="f-course"><option value="all">すべて</option>${cs.map(c=>`<option value="${c.id}" ${c.id===state.fCourse?"selected":""}>${esc(c.name)}</option>`).join("")}</select></div>
     <div class="field"><label for="f-range">期間</label><select id="f-range">${[["all","全ラウンド"],["5","直近5ラウンド"],["10","直近10ラウンド"]].map(([v,t])=>`<option value="${v}" ${v===state.fRange?"selected":""}>${t}</option>`).join("")}</select></div>
   </div></div>
@@ -596,7 +624,7 @@ function greenMap(s){
 }
 function cssv(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 after.stats = () => {
-  ["f-player","f-course","f-range"].forEach(id=>{ const el=$("#"+id); if(el) el.onchange=()=>{ if(id==="f-player"){state.fPlayer=el.value; LS.set("sc.fPlayer",el.value);} if(id==="f-course") state.fCourse=el.value; if(id==="f-range") state.fRange=el.value; render(); }; });
+  ["f-course","f-range"].forEach(id=>{ const el=$("#"+id); if(el) el.onchange=()=>{ if(id==="f-player"){state.fPlayer=el.value; LS.set("sc.fPlayer",el.value);} if(id==="f-course") state.fCourse=el.value; if(id==="f-range") state.fRange=el.value; render(); }; });
   if(!window.Chart || !$("#ch-score")) return;
   const fg=cssv("--fg"), muted=cssv("--muted"), line=cssv("--line"), paper=cssv("--paper");
   const pal=["--c1","--c2","--c3","--c4","--c5","--c6"].map(cssv);
@@ -604,23 +632,35 @@ after.stats = () => {
   Chart.defaults.font.family=cssv("--f-body"); Chart.defaults.font.size=12;
   const rs = filteredRounds();
   const s = computeStats(rs);
-  const pls = state.fPlayer==="all" ? [...new Set(rs.map(r=>r.player))] : [state.fPlayer];
-  const labels = rs.map((r,i)=>i);
-  const lbl = rs.map(r=>{ const [y,m,d]=(r.date||"").split("-"); return `${+m}/${+d}`; });
-  const mkSeries = (fn) => pls.slice(0,6).map((p,i)=>({
-    label:p, data: rs.map(r=> r.player===p ? fn(r) : null), spanGaps:true,
-    borderColor:pal[i], backgroundColor:pal[i], pointRadius:4, pointHoverRadius:6, tension:.25, borderWidth:2
-  }));
-  const tip = { callbacks:{ title: items => { const r=rs[items[0].dataIndex]; return `${r.date}  ${r.courseName}`; } } };
-  const baseOpts = (yTitle) => ({ maintainAspectRatio:false, interaction:{mode:"nearest",intersect:false}, plugins:{legend:{display:pls.length>1,labels:{boxWidth:10}}, tooltip:tip},
-    scales:{ x:{ticks:{callback:(v,i)=>lbl[i], maxRotation:0, autoSkip:true}, grid:{display:false}}, y:{title:{display:!!yTitle,text:yTitle}, ticks:{precision:0}} } });
+  const seen={}; const circ="①②③④⑤⑥⑦⑧⑨";
+  const byDay={}; rs.forEach(r=>{ byDay[r.date]=(byDay[r.date]||0)+1; });
+  const lbl = rs.map(r=>{ const [y,m,d]=(r.date||"").split("-"); seen[r.date]=(seen[r.date]||0)+1; return `${+m}/${+d}` + (byDay[r.date]>1 ? circ[seen[r.date]-1]||"" : ""); });
+  const labels = lbl;
   const oneCourse = state.fCourse!=="all";
-  const o1 = baseOpts(oneCourse?"スコア":"対パー"); if(!oneCourse) o1.scales.y.ticks.callback = v => toPar(v);
-  o1.plugins.tooltip.callbacks.label = c => { const r=rs[c.dataIndex]; const t=roundTotals(r); return `${c.dataset.label}: ${t.score} (${toPar(t.diff)})`; };
-  charts.push(new Chart($("#ch-score"), {type:"line", data:{labels, datasets:mkSeries(r=>oneCourse?roundTotals(r).score:roundTotals(r).diff)}, options:o1}));
-  const o2 = baseOpts("パット");
-  o2.plugins.tooltip.callbacks.label = c => { const r=rs[c.dataIndex]; return `${c.dataset.label}: ${roundTotals(r).putts}パット（${r.holes.length}H）`; };
-  charts.push(new Chart($("#ch-putt"), {type:"line", data:{labels, datasets:mkSeries(r=>roundTotals(r).putts)}, options:o2}));
+  const tot = rs.map(roundTotals);
+  const base = r => oneCourse ? roundTotals(r).par : 0;
+  const pace = (k, name, color, dash) => ({ type:"line", label:name, data: rs.map((r,i)=> base(r) + k*r.holes.length), borderColor:color, borderDash:dash, borderWidth:1.5, pointRadius:0, pointHoverRadius:0, stepped:"middle", fill:false, order:0 });
+  const barColor = (r,t) => { const per = t.diff / r.holes.length; return per<=0 ? cssv("--q-birdie") : per<=1 ? cssv("--turf") : per<=2 ? cssv("--q-bogey") : cssv("--q-triple"); };
+  const tip = { callbacks:{ title: items => { const r=rs[items[0].dataIndex]; return `${r.date}  ${r.courseName}（${r.holes.length}H）`; } } };
+  const opts = (yTitle, yFmt) => ({ maintainAspectRatio:false, interaction:{mode:"index",intersect:false},
+    plugins:{ legend:{ display:true, position:"bottom", labels:{ boxWidth:18, boxHeight:2, usePointStyle:false, filter:i=>i.datasetIndex>0 } }, tooltip:tip },
+    scales:{ x:{ ticks:{ maxRotation:0, autoSkip:true }, grid:{display:false} }, y:{ title:{display:true,text:yTitle}, ticks:{ precision:0, callback: yFmt || (v=>v) }, grace:"8%" } } });
+  const o1 = opts(oneCourse?"スコア":"対パー", oneCourse?null:(v=>toPar(v)));
+  o1.plugins.tooltip.callbacks.label = c => c.datasetIndex===0 ? ` スコア ${tot[c.dataIndex].score}（${toPar(tot[c.dataIndex].diff)}）` : ` ${c.dataset.label} ${oneCourse?c.raw:toPar(c.raw)}`;
+  if(!oneCourse) o1.scales.y.suggestedMin = Math.min(-1, ...tot.map(t=>t.diff));
+  charts.push(new Chart($("#ch-score"), { data:{ labels, datasets:[
+    { type:"bar", label:"スコア", data: rs.map((r,i)=> oneCourse ? tot[i].score : tot[i].diff), backgroundColor: rs.map((r,i)=>barColor(r,tot[i])), borderRadius:4, maxBarThickness:28, order:1 },
+    pace(0,"パーペース", cssv("--turf"), [2,3]),
+    pace(1,"ボギーペース", cssv("--q-bogey"), [6,4]),
+    pace(2,"ダボペース", cssv("--q-triple"), [10,4])
+  ]}, options:o1 }));
+  const o2 = opts("パット");
+  o2.plugins.tooltip.callbacks.label = c => c.datasetIndex===0 ? ` ${tot[c.dataIndex].putts}パット` : ` ${c.dataset.label} ${c.raw}`;
+  o2.scales.y.beginAtZero = false;
+  charts.push(new Chart($("#ch-putt"), { data:{ labels, datasets:[
+    { type:"bar", label:"パット", data: tot.map(t=>t.putts), backgroundColor: rs.map((r,i)=> tot[i].putts > 2*r.holes.length ? cssv("--q-triple") : cssv("--accent2")), borderRadius:4, maxBarThickness:28, order:1 },
+    { type:"line", label:"2パットペース", data: rs.map(r=>2*r.holes.length), borderColor:cssv("--muted"), borderDash:[6,4], borderWidth:1.5, pointRadius:0, pointHoverRadius:0, stepped:"middle", order:0 }
+  ]}, options:o2 }));
   const donut = (id, segs) => { const el=$(id); if(!el) return;
     charts.push(new Chart(el, {type:"doughnut", data:{labels:segs.map(x=>x.label), datasets:[{data:segs.map(x=>x.n), backgroundColor:segs.map(x=>cssv(x.tone)), borderWidth:0, borderRadius:0, spacing:2, hoverOffset:4}]},
       options:{maintainAspectRatio:false, cutout:"74%", plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>` ${c.raw}ホール`}}}}})); };
@@ -711,6 +751,7 @@ document.addEventListener("click", async ev => {
   switch(a){
     case "goto-courses": state.tab="courses"; state.courseEdit=newCourse(); render(); break;
     case "goto-record": state.tab="record"; render(); break;
+    case "pick-player": state.fPlayer=b.dataset.v; LS.set("sc.fPlayer",state.fPlayer); render(); break;
     case "demo-on": state.demo=true; render(); break;
     case "demo-off": state.demo=false; render(); break;
     case "start": {
@@ -721,15 +762,15 @@ document.addEventListener("click", async ev => {
       state.draft={ id:uid(), player:p, courseId:c.id, courseName:c.name, date:dt, holes:c.holes.map(x=>({par:x.par, yards:x.yards||null, strokes:x.par, putts:2, dir:null, bunker:false, ob:false, entered:false})) };
       state.hole=0; saveDraft(); render(); break;
     }
-    case "hole": mark_entered(); state.hole=+b.dataset.i; saveDraft(); render(); break;
-    case "sv": { const v=+b.dataset.v; h.strokes = v===8 ? (h.strokes>=8 ? h.strokes+1 : 8) : v; if(h.strokes>15) h.strokes=8; if(h.putts>h.strokes) h.putts=h.strokes; h.entered=true; saveDraft(); render(); break; }
-    case "pv": h.putts=Math.min(+b.dataset.v,h.strokes); h.entered=true; saveDraft(); render(); break;
+    case "hole": mark_entered(); state.slide = +b.dataset.i>state.hole?"l":"r"; state.hole=+b.dataset.i; saveDraft(); render(); break;
+    case "sv": { const v=+b.dataset.v; h.strokes = v===8 ? (h.strokes>=8 ? h.strokes+1 : 8) : v; if(h.strokes>15) h.strokes=8; if(h.putts>h.strokes-1) h.putts=Math.max(0,h.strokes-1); h.entered=true; saveDraft(); render(); break; }
+    case "pv": h.putts=+b.dataset.v; if(h.strokes<h.putts+1) h.strokes=h.putts+1; h.entered=true; saveDraft(); render(); break;
     case "st": h.strokes=Math.max(1,Math.min(15,h.strokes+ +b.dataset.d)); if(h.putts>h.strokes) h.putts=h.strokes; h.entered=true; saveDraft(); render(); break;
     case "pt": h.putts=Math.max(0,Math.min(h.strokes,h.putts+ +b.dataset.d)); h.entered=true; saveDraft(); render(); break;
     case "dir": h.dir = h.dir===b.dataset.v ? null : b.dataset.v; h.entered=true; saveDraft(); render(); break;
     case "tog": h[b.dataset.k]=!h[b.dataset.k]; h.entered=true; saveDraft(); render(); break;
-    case "prev": mark_entered(); state.hole--; saveDraft(); render(); break;
-    case "next": mark_entered(); state.hole++; saveDraft(); render(); window.scrollTo({top:0}); break;
+    case "prev": mark_entered(); state.slide="r"; state.hole--; saveDraft(); render(); break;
+    case "next": mark_entered(); state.slide="l"; state.hole++; saveDraft(); render(); window.scrollTo({top:0}); break;
     case "finish": {
       mark_entered();
       const r={ id:d.id, player:d.player, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:d.createdAt||Date.now(),
