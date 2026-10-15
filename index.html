@@ -23,7 +23,7 @@
   --turf:#0E9F62; --turf-ink:#FFFFFF; --flag:#F2B01E; --accent2:#13A9C2;
   --under:#E5484D; --over:#3E63DD; --warn:#F08C1A;
   --c1:#0E9F62; --c2:#F2B01E; --c3:#3E63DD; --c4:#E5484D; --c5:#8B5CF6; --c6:#13A9C2;
-  --q-hio:#D9A514; --q-eagle:#0A6B4B; --q-birdie:#10A56B; --q-par:#62D3A2; --q-bogey:#C3CDD5; --q-double:#F4A091; --q-triple:#E5484D; --q-neutral:#C3CDD5;
+  --q-hio:#F5B700; --q-eagle:#1D4ED8; --q-birdie:#3B82F6; --q-par:#16A34A; --q-bogey:#F28C28; --q-double:#E5484D; --q-triple:#9F1D2A; --q-neutral:#C3CDD5;
   --rec-bg:#EEF2F0; --rec-surface:#FFFFFF; --rec-raise:#EEF3F0; --rec-line:#DDE5E1; --rec-fg:#0B1310; --rec-muted:#6E7C75;
   --rec-sel:#0B1310; --rec-sel-ink:#FFFFFF; --rec-turf:#0E9F62; --rec-turf-hi:#2FD58C; --rec-under:#E5484D; --rec-over:#3E63DD; --rec-warn:#F08C1A; --rec-fade:rgba(238,242,240,0);
   --glow:rgba(14,159,98,.18); --shadow:0 1px 2px rgba(11,19,16,.04),0 8px 24px rgba(11,19,16,.06);
@@ -34,7 +34,7 @@
   --bg:#070C0A; --paper:#0F1714; --fg:#ECF4EF; --muted:#8B9A92; --line:#1F2C26; --soft:#16211C;
   --turf:#2EE59D; --turf-ink:#03130B; --flag:#FFC53D; --accent2:#3BD3EA; --under:#FF6B6B; --over:#7AA2FF; --warn:#FFA94D;
   --c1:#2EE59D; --c2:#FFC53D; --c3:#7AA2FF; --c4:#FF6B6B; --c5:#B59CFF; --c6:#3BD3EA;
-  --q-hio:#FFC53D; --q-eagle:#139E6C; --q-birdie:#2EE59D; --q-par:#94F0C8; --q-bogey:#4A5965; --q-double:#FF9E8A; --q-triple:#FF5A5F; --q-neutral:#4A5965;
+  --q-hio:#FFC53D; --q-eagle:#4F7BFF; --q-birdie:#6AA8FF; --q-par:#34D27A; --q-bogey:#FFA94D; --q-double:#FF5A5F; --q-triple:#C2323F; --q-neutral:#4A5965;
   --rec-bg:#070C0A; --rec-surface:#0F1714; --rec-raise:#17221D; --rec-line:#22312A; --rec-fg:#ECF4EF; --rec-muted:#8B9A92;
   --rec-sel:#ECF4EF; --rec-sel-ink:#070C0A; --rec-turf:#17B877; --rec-turf-hi:#2EE59D; --rec-under:#FF6B6B; --rec-over:#7AA2FF; --rec-warn:#FFA94D; --rec-fade:rgba(7,12,10,0);
   --glow:rgba(46,229,157,.22); --shadow:none; color-scheme:dark}}
@@ -42,7 +42,7 @@
   --bg:#070C0A; --paper:#0F1714; --fg:#ECF4EF; --muted:#8B9A92; --line:#1F2C26; --soft:#16211C;
   --turf:#2EE59D; --turf-ink:#03130B; --flag:#FFC53D; --accent2:#3BD3EA; --under:#FF6B6B; --over:#7AA2FF; --warn:#FFA94D;
   --c1:#2EE59D; --c2:#FFC53D; --c3:#7AA2FF; --c4:#FF6B6B; --c5:#B59CFF; --c6:#3BD3EA;
-  --q-hio:#FFC53D; --q-eagle:#139E6C; --q-birdie:#2EE59D; --q-par:#94F0C8; --q-bogey:#4A5965; --q-double:#FF9E8A; --q-triple:#FF5A5F; --q-neutral:#4A5965;
+  --q-hio:#FFC53D; --q-eagle:#4F7BFF; --q-birdie:#6AA8FF; --q-par:#34D27A; --q-bogey:#FFA94D; --q-double:#FF5A5F; --q-triple:#C2323F; --q-neutral:#4A5965;
   --rec-bg:#070C0A; --rec-surface:#0F1714; --rec-raise:#17221D; --rec-line:#22312A; --rec-fg:#ECF4EF; --rec-muted:#8B9A92;
   --rec-sel:#ECF4EF; --rec-sel-ink:#070C0A; --rec-turf:#17B877; --rec-turf-hi:#2EE59D; --rec-under:#FF6B6B; --rec-over:#7AA2FF; --rec-warn:#FFA94D; --rec-fade:rgba(7,12,10,0);
   --glow:rgba(46,229,157,.22); --shadow:none; color-scheme:dark}
@@ -360,6 +360,34 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);bo
 .spark-w{display:flex;flex-direction:column;align-items:flex-end;gap:4px;width:46%;max-width:180px}
 .spark-w span{font-size:9px;letter-spacing:.08em;opacity:.7;font-weight:700;white-space:nowrap}
 .spark-w .spark{width:100%}
+
+/* v8: new scale (HIO gold → blue → green → orange → red → dark red) */
+.seg button.t-hio{--sel:var(--q-hio)}
+.seg button.t-hio[aria-pressed="true"]{color:#3A2600}
+.seg button.t-par[aria-pressed="true"],.seg button.t-bogey[aria-pressed="true"]{color:#fff}
+.seg button.t-par[aria-pressed="true"] small,.seg button.t-bogey[aria-pressed="true"] small{color:rgba(255,255,255,.85)}
+.dots button.r-par,.dots button.r-bogey{color:#fff}
+.dots button.r-hio{background:var(--q-hio);color:#3A2600}
+.badge.b-par,.badge.b-bogey,.badge.b-double{color:#fff}
+.badge.b-par{background:var(--q-par)}.badge.b-bogey{background:var(--q-bogey)}.badge.b-double{background:var(--q-double)}
+.q-hio{background:var(--q-hio)}
+.m-hio{background:var(--q-hio);color:#3A2600;border-radius:50%;outline:2px solid var(--q-hio);outline-offset:2px}
+.m-bogey{border:2px solid var(--q-bogey);color:var(--q-bogey)}
+.m-par{color:var(--q-par)}
+.rc-sc .m-par{color:#9EF0BE}.rc-sc .m-bogey{border-color:#FFC37A;color:#FFC37A}
+.rc-sc .m-birdie,.rc-sc .m-eagle{border-color:#A9C8FF;color:#A9C8FF;outline-color:#A9C8FF}
+.rc-sc .m-double{border-color:#FF9A9E;color:#FF9A9E;outline-color:#FF9A9E}
+.rc-sc .m-triple{background:#E5484D}
+.recent{display:flex;flex-direction:column;gap:8px}
+.rr{display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;align-items:center;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.rr:last-child{border-bottom:0;padding-bottom:0}
+.rd{line-height:1.1}
+.rd b{display:block;font-family:var(--f-num);font-size:15px}
+.rd small{font-family:var(--f-num);font-size:12px;color:var(--muted);font-weight:700}
+.rh{display:grid;grid-template-columns:repeat(9,1fr);gap:4px 2px;justify-items:center}
+.rh .mk3{width:24px;height:24px;font-size:13px}
+.rh .m-eagle,.rh .m-double,.rh .m-hio{outline-offset:1.5px;outline-width:1.5px}
+
 /* stats */
 .who-pick{display:flex;gap:6px;overflow-x:auto;padding:2px}
 .who-pick button{flex:0 0 auto;font:inherit;font-weight:700;font-size:15px;padding:10px 18px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--muted);cursor:pointer}
@@ -498,7 +526,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-16-0310";
+const BUILD = "2026-10-16-0800";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -700,6 +728,7 @@ const ICON = {
   flag:'<svg viewBox="0 0 14 18" aria-hidden="true"><line x1="2" y1="1" x2="2" y2="17" stroke="#fff" stroke-width="1.6"/><path d="M3 1.5 L13 4.5 L3 7.5Z" fill="#F0BE3A"/></svg>'
 };
 const TERM = d => d<=-3?"ALBATROSS":d===-2?"EAGLE":d===-1?"BIRDIE":d===0?"PAR":d===1?"BOGEY":d===2?"DOUBLE":d===3?"TRIPLE":"+"+d;
+const TONEH = h => h.strokes===1 ? "hio" : TONE(h.strokes-h.par);
 const TONE = d => d<=-2?"eagle":d===-1?"birdie":d===0?"par":d===1?"bogey":d===2?"double":"triple";
 const BALL_POS = { on:{left:"calc(50% + 16px)",top:"calc(50% + 4px)"}, left:{left:"calc(19% + 9px)",top:"calc(50% - 7px)"}, right:{left:"calc(81% - 23px)",top:"calc(50% - 7px)"}, long:{left:"calc(67% + 8px)",top:"14px"}, short:{left:"calc(67% + 8px)",top:"calc(100% - 28px)"} };
 const AR = { long:'<svg viewBox="0 0 12 12"><path d="M6 10V2M2.5 5.5L6 2l3.5 3.5"/></svg>', short:'<svg viewBox="0 0 12 12"><path d="M6 2v8M2.5 6.5L6 10l3.5-3.5"/></svg>', left:'<svg viewBox="0 0 12 12"><path d="M10 6H2M5.5 2.5L2 6l3.5 3.5"/></svg>', right:'<svg viewBox="0 0 12 12"><path d="M2 6h8M6.5 2.5L10 6l-3.5 3.5"/></svg>' };
@@ -769,11 +798,11 @@ function viewRecordDraft(d){
   const onIn = h.strokes - h.putts;
   const hint = onIn<=h.par-2 ? "パーオン" : onIn<=h.par-1 ? "ボギーオン" : (h.putts===0 ? "チップイン" : "");
   const sBtn = v => { const isMax=v===8; const val = isMax && h.strokes>8 ? h.strokes : v; const pressed = isMax ? h.strokes>=8 : h.strokes===v; const dd=val-h.par;
-    return `<button data-act="sv" data-v="${v}" class="t-${TONE(dd)} ${state.tap==="sv"+v?"pop":""}" aria-pressed="${pressed}" aria-label="${val}打">${isMax&&h.strokes<=8?"8+":val}<small>${val===1?"HIO":TERM(dd)}</small></button>`; };
-  const pBtn = v => { const t = v<=1?"under":v===2?"worse":"bogey"; return `<button data-act="pv" data-v="${v}" class="t-${v<=1?"birdie":v===2?"bogey":v===3?"double":"triple"} ${state.tap==="pv"+v?"pop":""}" aria-pressed="${h.putts===v}" aria-label="${v}パット">${v===5?"5+":v}</button>`; };
+    return `<button data-act="sv" data-v="${v}" class="t-${val===1?"hio":TONE(dd)} ${state.tap==="sv"+v?"pop":""}" aria-pressed="${pressed}" aria-label="${val}打">${isMax&&h.strokes<=8?"8+":val}<small>${val===1?"HIO":TERM(dd)}</small></button>`; };
+  const pBtn = v => { const t = v<=1?"under":v===2?"worse":"bogey"; return `<button data-act="pv" data-v="${v}" class="t-${v<=1?"birdie":v===2?"par":v===3?"bogey":"double"} ${state.tap==="pv"+v?"pop":""}" aria-pressed="${h.putts===v}" aria-label="${v}パット">${v===5?"5+":v}</button>`; };
   const gp = (k,cls,txt) => `<button class="${cls}" data-act="dir" data-v="${k}" aria-pressed="${h.dir===k}">${AR[k]||""}${txt}</button>`;
   const totLabel = done.length ? toPar(tot.diff) : "—";
-  const dotCls = x => { if(!x.entered) return ""; return "r-"+TONE(x.strokes-x.par); };
+  const dotCls = x => { if(!x.entered) return ""; return "r-"+TONEH(x); };
   const ball = h.dir && BALL_POS[h.dir] ? `<span class="ball" style="left:${BALL_POS[h.dir].left};top:${BALL_POS[h.dir].top}"></span>` : "";
   const slide = state.slide ? (state.slide==="l"?"slide-l":"slide-r") : ""; state.slide = null;
   queueMicrotask(()=>{ state.tap = null; });
@@ -822,7 +851,7 @@ after.record = () => {
 };
 
 /* ----- 分析 ----- */
-const PUTT_SEGS = s => [["チップイン",0,"--q-eagle"],["1パット",1,"--q-birdie"],["2パット",2,"--q-bogey"],["3パット以上",3,"--q-triple"]]
+const PUTT_SEGS = s => [["チップイン",0,"--q-eagle"],["1パット",1,"--q-birdie"],["2パット",2,"--q-par"],["3パット以上",3,"--q-double"]]
   .map(([label,k,tone])=>({label, n:s.putt[k], tone})).filter(x=>x.n>0);
 const DIST_SEGS = s => [["ホールインワン","hio","--q-hio"],["イーグル","eagle","--q-eagle"],["バーディ","birdie","--q-birdie"],["パー","par","--q-par"],["ボギー","bogey","--q-bogey"],["ダブルボギー","double","--q-double"],["トリプル以上","triple","--q-triple"]]
   .map(([label,k,tone])=>({label, n:s.dist[k], tone})).filter(x=>x.n>0);
@@ -871,6 +900,8 @@ function viewStats(){
     </div>
     <div class="row"><div><span>BEST</span><b>${toPar(s.best)}</b></div><div><span>ROUNDS</span><b>${s.rounds}</b></div>${s.dist.hio?`<div><span>HOLE IN ONE</span><b>${s.dist.hio}</b></div>`:`<div><span>HOLES</span><b>${s.holes}</b></div>`}</div>
   </div>
+  <div class="panel"><div class="sec"><em>RECENT</em><span>直近5ラウンド</span></div><div class="recent">${rs.slice(-5).reverse().map(r=>{ const t=roundTotals(r); const [y,m,d]=r.date.split("-");
+      return `<div class="rr"><div class="rd"><b>${+m}/${+d}</b><small>${toPar(t.diff)}</small></div><div class="rh">${r.holes.map(h=>mark(h)).join("")}</div></div>`; }).join("")}</div></div>
   <div class="panel"><div class="sec"><em>SHOTS</em><span>ショット</span></div><div class="gauges">
     ${gauge("パーオン率", s.gir, "パー−2打以内でオン", "--turf")}
     ${gauge("ボギーオン率", s.bon, "パー−1打以内でオン", "--accent2")}
@@ -922,13 +953,12 @@ after.stats = () => {
   const refLines = (lines) => ({ id:"refLines", afterDatasetsDraw(chart){ const {ctx, chartArea:a, scales:{y}} = chart; ctx.save();
     lines.forEach(L=>{ const py=y.getPixelForValue(L.v); if(py<a.top-1||py>a.bottom+1) return;
       ctx.strokeStyle=L.color; ctx.lineWidth=L.w||2.5; ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(a.left,py); ctx.lineTo(a.right,py); ctx.stroke();
-      ctx.font="700 10px "+cssv("--f-body"); const tw=ctx.measureText(L.label).width; ctx.fillStyle=cssv("--paper"); ctx.fillRect(a.right-tw-10,py-8,tw+8,15);
-      ctx.fillStyle=L.color; ctx.textAlign="right"; ctx.textBaseline="middle"; ctx.fillText(L.label,a.right-6,py); });
+      ctx.font="700 12px "+cssv("--f-num"); ctx.fillStyle=L.color; ctx.textAlign="right"; ctx.textBaseline="bottom"; ctx.fillText(L.label,a.right-2,py-3); });
     ctx.restore(); } });
   const scoreLines = [
-    { v: parN, label: oneCourse?`パー ${parN}`:"パー ±0", color: cssv("--turf") },
-    { v: parN+holesN, label: oneCourse?`ボギー ${parN+holesN}`:`ボギー +${holesN}`, color: cssv("--warn") },
-    { v: parN+2*holesN, label: oneCourse?`ダボ ${parN+2*holesN}`:`ダボ +${2*holesN}`, color: cssv("--q-triple") }
+    { v: parN, label: oneCourse?`${parN}`:"±0", color: cssv("--q-par") },
+    { v: parN+holesN, label: oneCourse?`${parN+holesN}`:`+${holesN}`, color: cssv("--q-bogey") },
+    { v: parN+2*holesN, label: oneCourse?`${parN+2*holesN}`:`+${2*holesN}`, color: cssv("--q-double") }
   ];
   const vals = rs.map((r,i)=> oneCourse ? tot[i].score : tot[i].diff);
   const tip = { callbacks:{ title: items => { const r=rs[items[0].dataIndex]; return `${r.date}  ${r.courseName}（${r.holes.length}H）`; } } };
@@ -944,7 +974,7 @@ after.stats = () => {
   o2.plugins.tooltip.callbacks.label = c => ` ${tot[c.dataIndex].putts}パット`;
   charts.push(new Chart($("#ch-putt"), { type:"bar", data:{ labels, datasets:[
     { label:"パット", data: pVals, backgroundColor: c=>{ const {ctx,chartArea:a}=c.chart; if(!a) return cssv("--c3"); const g=ctx.createLinearGradient(0,a.bottom,0,a.top); g.addColorStop(0,cssv("--c3")); g.addColorStop(1,cssv("--c5")); return g; }, borderRadius:3, maxBarThickness:22 }
-  ]}, options:o2, plugins:[refLines([{ v:2*holesN, label:`2パット ${2*holesN}`, color: cssv("--muted") }])] }));
+  ]}, options:o2, plugins:[refLines([{ v:2*holesN, label:`${2*holesN}`, color: cssv("--q-par") }])] }));
   const donut = (id, segs) => { const el=$(id); if(!el) return;
     charts.push(new Chart(el, {type:"doughnut", data:{labels:segs.map(x=>x.label), datasets:[{data:segs.map(x=>x.n), backgroundColor:segs.map(x=>cssv(x.tone)), borderWidth:0, borderRadius:0, spacing:2, hoverOffset:4}]},
       options:{maintainAspectRatio:false, cutout:"74%", plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>` ${c.raw}ホール`}}}}})); };
@@ -963,7 +993,7 @@ after.stats = () => {
 };
 
 /* ----- 履歴 ----- */
-function mark(h){ const d=h.strokes-h.par; return `<span class="mk3 m-${TONE(d)}">${h.strokes}</span>`; }
+function mark(h){ return `<span class="mk3 m-${TONEH(h)}">${h.strokes}</span>`; }
 function viewHistory(){
   const demoBand = state.demo ? `<div class="demo-band">デモデータを表示中です（保存はされていません）<button class="btn small" data-act="demo-off">自分たちのデータに戻る</button></div>` : "";
   const all = rounds();
@@ -978,7 +1008,7 @@ function viewHistory(){
     const mh = `${y}-${m}`!==lastMonth ? `<div class="month">${+y}年${+m}月</div>` : ""; lastMonth = `${y}-${m}`;
     const open = state.openRound===r.id;
     const chunks=[]; for(let i=0;i<r.holes.length;i+=9) chunks.push(r.holes.slice(i,i+9).map((h,j)=>({h,no:i+j+1})));
-    const legend = `<div class="sc-legend"><span><i class="mk3 m-eagle"></i>イーグル</span><span><i class="mk3 m-birdie"></i>バーディ</span><span><i class="mk3 m-bogey"></i>ボギー</span><span><i class="mk3 m-double"></i>ダボ</span><span><i class="mk3 m-triple"></i>トリプル以上</span></div>`;
+    const legend = `<div class="sc-legend"><span><i class="mk3 m-hio"></i>ホールインワン</span><span><i class="mk3 m-eagle"></i>イーグル</span><span><i class="mk3 m-birdie"></i>バーディ</span><span><i class="mk3 m-bogey"></i>ボギー</span><span><i class="mk3 m-double"></i>ダボ</span><span><i class="mk3 m-triple"></i>トリプル以上</span></div>`;
     const tables = chunks.map(ch=>`<div class="sc-wrap"><table class="sc">
       <tr class="hn"><th>H</th>${ch.map(x=>`<td>${x.no}</td>`).join("")}<td>計</td></tr>
       <tr><th>PAR</th>${ch.map(x=>`<td>${x.h.par}</td>`).join("")}<td>${sum(ch,x=>x.h.par)}</td></tr>
@@ -991,7 +1021,7 @@ function viewHistory(){
     return `${mh}<div class="rcard">
       <button data-act="toggle-round" data-id="${r.id}" aria-expanded="${open}">
         <div class="day"><b>${+m}/${+d}</b><small>${wd}</small></div>
-        <div class="mid"><div class="cname">${esc(r.courseName)}</div><div class="strip">${r.holes.map(h=>`<i class="q-${TONE(h.strokes-h.par)}"></i>`).join("")}</div></div>
+        <div class="mid"><div class="cname">${esc(r.courseName)}</div><div class="strip">${r.holes.map(h=>`<i class="q-${TONEH(h)}"></i>`).join("")}</div></div>
         <div class="sc-tot"><b>${t.score}</b><small style="color:${tcol}">${toPar(t.diff)}</small><span>${t.putts}パット</span></div>
       </button>
       ${open?`<div class="detail">${tables}${legend}
