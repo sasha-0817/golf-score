@@ -16,6 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Barlow+Condensed:wght@500;600;700&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 /* Layout: a paper scorecard — sticky tab strip, one column of ruled panels, numbers set in condensed figures */
 :root{
@@ -410,6 +411,25 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);bo
 .mk-legend span{display:inline-flex;align-items:center;gap:4px}
 .mk-legend .mk4{transform:scale(.8)}
 
+
+/* v10 */
+.tr path{fill:none;stroke-linecap:round;pointer-events:none;stroke-dasharray:1;stroke-dashoffset:0}
+.tr .tr-shadow{stroke:rgba(0,0,0,.16);stroke-width:3}
+.tr .tr-glow{stroke:#FFB020;stroke-width:7;opacity:.45}
+.tr .tr-core{stroke-width:3}
+.tr .tr-hi{stroke:rgba(255,255,255,.85);stroke-width:1}
+.tr.anim path{animation:trace .5s ease-out both}
+.tracer{display:none}
+.rc-actions{display:flex;gap:10px;width:100%;max-width:380px;margin-top:14px}
+.rc-actions button{flex:1;height:50px;border-radius:16px;border:0;font:inherit;font-weight:900;font-size:15px;cursor:pointer}
+.rc-save{background:linear-gradient(120deg,var(--turf),var(--accent2));color:#fff}
+.rc-actions .rc-close{margin:0;background:#fff;color:#0B1310}
+.resume{display:flex;flex-direction:column;gap:10px}
+.resume .rinfo{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.resume .rinfo b{font-size:15px}
+.resume .rinfo span{font-family:var(--f-num);font-size:22px;font-weight:700}
+.resume .rbtns{display:flex;gap:8px}.resume .rbtns .btn{flex:1}
+
 /* stats */
 .who-pick{display:flex;gap:6px;overflow-x:auto;padding:2px}
 .who-pick button{flex:0 0 auto;font:inherit;font-weight:700;font-size:15px;padding:10px 18px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--muted);cursor:pointer}
@@ -548,7 +568,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-16-0830";
+const BUILD = "2026-10-16-0900";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -682,7 +702,7 @@ function render(){
   else if(state.mode==="local") s.textContent="この端末だけに保存中";
   else s.textContent="接続中…";
   killCharts();
-  document.body.classList.toggle("recording", state.tab==="record" && !!state.draft);
+  document.body.classList.toggle("recording", state.tab==="record" && !!state.draft && !state.draft.paused);
   const m=$("#main");
   const view = {record:viewRecord, stats:viewStats, history:viewHistory, courses:viewCourses}[state.tab] || viewRecord;
   m.innerHTML = `<section class="view">${view()}</section>`;
@@ -713,8 +733,7 @@ function resultOverlay(r){
       </div>
       <div class="rc-brand">SHORT COURSE SCORECARD</div>
     </div></div>
-    <p>スクショして友達に送れます</p>
-    <button class="rc-close" data-act="close-result">閉じる</button>
+    <div class="rc-actions"><button class="rc-save" data-act="save-card">画像を保存・送る</button><button class="rc-close" data-act="close-result">閉じる</button></div>
   </div></div>`;
 }
 const after = {};
@@ -723,6 +742,14 @@ const after = {};
 function viewRecord(){
   const cs = state.courses;
   const d = state.draft;
+  if(d && d.paused){
+    const n=d.holes.filter(x=>x.entered).length, t=roundTotals({holes:d.holes.filter(x=>x.entered)});
+    return `<div class="panel resume"><div class="sec"><em>PAUSED</em><span>中断中のラウンド</span></div>
+      <div class="rinfo"><div><b>${esc(d.player)}</b><div class="muted" style="font-size:12px">${esc(d.courseName)}・${esc(d.date)}・${n}/${d.holes.length}ホール入力済み</div></div><span>${n?toPar(t.diff):"—"}</span></div>
+      <div class="rbtns"><button class="btn primary" data-act="resume">続きから再開</button><button class="btn" data-act="ask-discard">破棄</button></div>
+      ${state.confirm==="discard"?`<div class="actions"><span class="muted" style="font-size:13px;align-self:center">本当に破棄しますか？</span><button class="btn small" data-act="cancel-confirm">やめる</button><button class="btn small danger" data-act="discard">破棄する</button></div>`:""}
+    </div>`;
+  }
   if(!d){
     if(state.mode==="connecting") return `<div class="panel empty">読み込み中…</div>`;
     if(!cs.length) return `<div class="panel empty"><strong>まずコースを登録しましょう</strong>ホールごとのパーを登録すると、ラウンドの記録を始められます。<div style="margin-top:14px"><button class="btn primary" data-act="goto-courses">コースを登録する</button></div></div>`;
@@ -770,7 +797,13 @@ function approachSVG(dir, tap, stat){
     return `<g class="az ${sel(k)?"on-sel":""}" role="button" tabindex="0" data-act="dir" data-v="${k}" aria-pressed="${sel(k)}" aria-label="${label}">${shape}<text x="${lx}" y="${ly}" class="az-t">${label}</text></g>`; };
   const b = !stat && dir && Z[dir];
   const sx=170, sy=196;
-  const tracer = b ? `<path class="tracer ${tap?"anim":""}" d="M${sx} ${sy} Q ${(sx+b[0])/2} ${Math.min(sy,b[1]) - (dir==="short"?70:dir==="long"?12:40)} ${b[0]} ${b[1]}" pathLength="1"/>` : "";
+  const cy = Math.min(sy,b?b[1]:sy) - (dir==="short"?70:dir==="long"?12:40);
+  const tpath = b ? `M${sx} ${sy} Q ${(sx+(b?b[0]:0))/2} ${cy} ${b[0]} ${b[1]}` : "";
+  const tracer = b ? `<g class="tr ${tap?"anim":""}">
+      <path class="tr-shadow" d="M${sx+6} ${sy} L${b[0]+5} ${b[1]+3}" pathLength="1" filter="url(#soft)"/>
+      <path class="tr-glow" d="${tpath}" pathLength="1" filter="url(#trGlow)"/>
+      <path class="tr-core" d="${tpath}" pathLength="1" stroke="url(#trGrad)"/>
+      <path class="tr-hi" d="${tpath}" pathLength="1"/></g>` : "";
   // 光は左上から: 影はすべて同じ向き (28,10) に落ちる
   const SH = "rgba(0,0,0,.22)";
   const ball = b ? `<g class="ballg ${tap?"drop":""}"><ellipse cx="${b[0]+3.5}" cy="${b[1]+5}" rx="7.5" ry="4.8" fill="rgba(0,0,0,.26)" filter="url(#soft)" transform="rotate(15 ${b[0]+3.5} ${b[1]+5})"/><image href="ball.png" x="${b[0]-7.5}" y="${b[1]-7.5}" width="15" height="15"/></g>` : "";
@@ -780,6 +813,8 @@ function approachSVG(dir, tap, stat){
     <defs>
       <radialGradient id="gGreen${stat?"S":""}" cx="45%" cy="40%" r="70%"><stop offset="0" stop-color="#5BE6A8"/><stop offset=".7" stop-color="#14A866"/><stop offset="1" stop-color="#0B8A52"/></radialGradient>
       <pattern id="mow${stat?"S":""}" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><rect width="8" height="16" fill="rgba(255,255,255,.07)"/></pattern>
+      <filter id="trGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.4"/></filter>
+      <linearGradient id="trGrad" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FF8A00"/><stop offset="1" stop-color="#FFE066"/></linearGradient>
       <filter id="soft${stat?"S":""}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation=".7"/></filter>
       <filter id="gShadow${stat?"S":""}" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="6" dy="6" stdDeviation="6" flood-color="#083C26" flood-opacity=".3"/></filter>
     </defs>
@@ -860,7 +895,7 @@ function viewRecordDraft(d){
       <button class="back" data-act="prev" ${state.hole===0?"disabled":""} aria-label="前のホール">${ICON.back}</button>
       ${state.hole<N-1?`<button class="go" data-act="next">${state.hole+2}番ホールへ<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>`:`<button class="go save" data-act="finish">ラウンドを保存</button>`}
     </div>
-    ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>${d.editing?"編集をやめますか？変更は保存されません。":"このラウンドの記録をやめますか？入力した内容は消えます。"}</p><button class="danger" data-act="discard">${d.editing?"編集をやめる":"記録を破棄する"}</button><button data-act="cancel-confirm">続ける</button></div></div>`:""}
+    ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p><button data-act="pause">中断してホームへ（あとで続きから）</button><button class="danger" data-act="discard">${d.editing?"編集をやめる（変更は保存されません）":"記録を破棄する"}</button><button data-act="cancel-confirm">入力に戻る</button></div></div>`:""}
   </div>`;
 }
 after.record = () => {
@@ -981,19 +1016,25 @@ after.stats = () => {
     { v: parN+2*holesN, label: oneCourse?`${parN+2*holesN}`:`+${2*holesN}`, color: cssv("--q-double") }
   ];
   const vals = rs.map((r,i)=> oneCourse ? tot[i].score : tot[i].diff);
+  // 棒の色: そのラウンドがどの基準線の内側か（パー以内=青 / ボギー以内=オレンジ / それ以上=赤）
+  const scoreZone = i => { const per = tot[i].diff / rs[i].holes.length; return per<=0 ? "par" : per<=1 ? "bogey" : "double"; };
+  const puttZone = i => { const per = tot[i].putts / rs[i].holes.length; return per<=2 ? "par" : per<=2.5 ? "bogey" : "double"; };
+  const zoneColor = z => cssv("--q-"+z);
+  const zoneFill = zf => c => { const {ctx,chartArea:a}=c.chart; const col = zoneColor(zf(c.dataIndex)); if(!a) return col;
+    const g=ctx.createLinearGradient(0,a.bottom,0,a.top); g.addColorStop(0, col+"10"); g.addColorStop(1, col+"55"); return g; };
   const tip = { callbacks:{ title: items => { const r=rs[items[0].dataIndex]; return `${r.date}  ${r.courseName}（${r.holes.length}H）`; } } };
   const opts = (yTitle, yFmt, lo, hi) => ({ maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:tip },
-    scales:{ x:{ ticks:{ maxRotation:0, autoSkip:true }, grid:{display:false} }, y:{ title:{display:true,text:yTitle}, ticks:{ precision:0, callback: yFmt || (v=>v) }, suggestedMin:lo, suggestedMax:hi, grid:{ color: cssv("--soft") } } } });
+    scales:{ x:{ ticks:{ maxRotation:0, autoSkip:true, autoSkipPadding:14, maxTicksLimit:6 }, grid:{display:false} }, y:{ title:{display:true,text:yTitle}, ticks:{ precision:0, callback: yFmt || (v=>v) }, suggestedMin:lo, suggestedMax:hi, grid:{ color: cssv("--soft") } } } });
   const o1 = opts(oneCourse?"スコア":"対パー", oneCourse?null:(v=>toPar(v)), Math.min(parN-2, ...vals), Math.max(parN+2*holesN+1, ...vals));
   o1.plugins.tooltip.callbacks.label = c => ` スコア ${tot[c.dataIndex].score}（${toPar(tot[c.dataIndex].diff)}）`;
   charts.push(new Chart($("#ch-score"), { type:"bar", data:{ labels, datasets:[
-    { label:"スコア", data: vals, backgroundColor: c=>{ const {ctx,chartArea:a}=c.chart; if(!a) return cssv("--q-neutral"); const g=ctx.createLinearGradient(0,a.bottom,0,a.top); g.addColorStop(0,"#64748B"); g.addColorStop(1,"#94A3B8"); return g; }, borderRadius:3, maxBarThickness:22, base: oneCourse ? undefined : 0 }
+    { label:"スコア", data: vals, backgroundColor: zoneFill(i=>scoreZone(i)), borderColor: rs.map((r,i)=>zoneColor(scoreZone(i))), borderWidth:{top:3,left:0,right:0,bottom:0}, borderSkipped:false, borderRadius:{topLeft:6,topRight:6}, maxBarThickness:20, base: oneCourse ? undefined : 0 }
   ]}, options:o1, plugins:[refLines(scoreLines)] }));
   const pVals = tot.map(t=>t.putts);
   const o2 = opts("パット", null); o2.scales.y.min = Math.min(holesN+1, ...pVals); o2.scales.y.max = Math.max(holesN*2+6, ...pVals);
   o2.plugins.tooltip.callbacks.label = c => ` ${tot[c.dataIndex].putts}パット`;
   charts.push(new Chart($("#ch-putt"), { type:"bar", data:{ labels, datasets:[
-    { label:"パット", data: pVals, backgroundColor: c=>{ const {ctx,chartArea:a}=c.chart; if(!a) return cssv("--c3"); const g=ctx.createLinearGradient(0,a.bottom,0,a.top); g.addColorStop(0,cssv("--c3")); g.addColorStop(1,cssv("--c5")); return g; }, borderRadius:3, maxBarThickness:22 }
+    { label:"パット", data: pVals, backgroundColor: zoneFill(i=>puttZone(i)), borderColor: rs.map((r,i)=>zoneColor(puttZone(i))), borderWidth:{top:3,left:0,right:0,bottom:0}, borderSkipped:false, borderRadius:{topLeft:6,topRight:6}, maxBarThickness:20 }
   ]}, options:o2, plugins:[refLines([{ v:2*holesN, label:`${2*holesN}`, color: cssv("--q-par") }])] }));
   const donut = (id, segs) => { const el=$(id); if(!el) return;
     charts.push(new Chart(el, {type:"doughnut", data:{labels:segs.map(x=>x.label), datasets:[{data:segs.map(x=>x.n), backgroundColor:segs.map(x=>cssv(x.tone)), borderWidth:0, borderRadius:0, spacing:2, hoverOffset:4}]},
@@ -1100,6 +1141,18 @@ document.addEventListener("click", async ev => {
   switch(a){
     case "goto-courses": state.tab="courses"; state.courseEdit=newCourse(); render(); break;
     case "goto-record": state.tab="record"; render(); break;
+    case "save-card": {
+      const card=$(".result-card"); if(!card || !window.html2canvas){ toast("画像を作れませんでした"); break; }
+      b.disabled=true; b.textContent="作成中…";
+      try{
+        const cv = await html2canvas(card,{scale:3, backgroundColor:null, useCORS:true});
+        const blob = await new Promise(r=>cv.toBlob(r,"image/png"));
+        const file = new File([blob], `golfsc-${state.result.date}.png`, {type:"image/png"});
+        if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:"GOLF SC."}); }
+        else { const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=file.name; document.body.appendChild(a); a.click(); a.remove(); toast("画像を保存しました"); }
+      }catch(e){ if(e && e.name!=="AbortError") toast("画像を作れませんでした"); }
+      b.disabled=false; b.textContent="画像を保存・送る"; break;
+    }
     case "close-result": state.result=null; render(); break;
     case "toggle-round": state.openRound = state.openRound===b.dataset.id ? null : b.dataset.id; state.confirm=null; render(); break;
     case "pick-player": state.fPlayer=b.dataset.v; LS.set("sc.fPlayer",state.fPlayer); render(); break;
@@ -1132,6 +1185,8 @@ document.addEventListener("click", async ev => {
       break;
     }
     case "ask-discard": state.confirm="discard"; render(); break;
+    case "pause": d.paused=true; state.confirm=null; saveDraft(); render(); window.scrollTo({top:0}); break;
+    case "resume": d.paused=false; saveDraft(); render(); break;
     case "discard": state.draft=null; state.confirm=null; saveDraft(); render(); break;
     case "cancel-confirm": state.confirm=null; render(); break;
     case "ask-del-round": state.confirm="del:"+b.dataset.id; render(); break;
