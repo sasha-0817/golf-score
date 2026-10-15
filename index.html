@@ -293,8 +293,8 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);bo
 
 /* celebration + best pace */
 .confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:3}
-.confetti i{position:absolute;top:-10px;width:7px;height:11px;border-radius:2px;animation:fall 1.4s cubic-bezier(.2,.6,.4,1) forwards}
-@keyframes fall{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(240px) rotate(540deg);opacity:0}}
+.confetti i{position:absolute;top:-14px;width:7px;height:11px;border-radius:2px;animation:fall 3s linear infinite}
+@keyframes fall{0%{transform:translateY(0) translateX(0) rotate(0);opacity:0}8%{opacity:1}50%{transform:translateY(120px) translateX(12px) rotate(300deg)}100%{transform:translateY(260px) translateX(-8px) rotate(620deg);opacity:.2}}
 .hole-card.flash{animation:flash .9s ease-out}
 @keyframes flash{0%{box-shadow:0 0 0 0 rgba(242,176,30,.9)}100%{box-shadow:0 0 0 18px rgba(242,176,30,0)}}
 .pace{position:absolute;left:18px;top:14px;z-index:2;font-size:10px;font-weight:900;letter-spacing:.16em;padding:4px 9px;border-radius:999px;background:linear-gradient(120deg,#F2B01E,#FFD76A);color:#3A2600}
@@ -465,7 +465,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-16-0115";
+const BUILD = "2026-10-16-0130";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -677,7 +677,7 @@ function approachSVG(dir, tap){
   const zone = (k, shape, lx, ly, label, arrow) => `<g class="az ${sel(k)?"on-sel":""}" role="button" tabindex="0" data-act="dir" data-v="${k}" aria-pressed="${sel(k)}" aria-label="${label}">
       ${shape}<text x="${lx}" y="${ly}" class="az-t">${arrow?arrow+" ":""}${label}</text></g>`;
   const b = dir && Z[dir];
-  const sx=18, sy=196; const tracer = b ? `<path class="tracer" d="M${sx} ${sy} Q ${(sx+b[0])/2} ${Math.min(sy,b[1])-90} ${b[0]} ${b[1]}" pathLength="1"/>` : "";
+  const sx=170, sy=196; const tracer = b ? `<path class="tracer" d="M${sx} ${sy} Q ${(sx+b[0])/2} ${Math.min(sy,b[1]) - (dir==="short"?70:dir==="long"?12:40)} ${b[0]} ${b[1]}" pathLength="1"/>` : "";
   return `<svg class="approach" viewBox="0 0 340 196" role="group" aria-label="グリーンを狙った1球目">
     <defs>
       <radialGradient id="gGreen" cx="45%" cy="40%" r="70%"><stop offset="0" stop-color="#5BE6A8"/><stop offset=".7" stop-color="#14A866"/><stop offset="1" stop-color="#0B8A52"/></radialGradient>
@@ -685,8 +685,8 @@ function approachSVG(dir, tap){
       <filter id="gShadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#083C26" flood-opacity=".35"/></filter>
     </defs>
     <rect class="az-rough" x="0" y="0" width="340" height="196" rx="18"/>
-    ${zone("long", `<path class="az-bg" d="M70 4 H270 Q286 4 286 20 V36 Q240 46 170 48 Q100 46 54 36 V20 Q54 4 70 4Z"/>`, 170, 30, "奥", "↑")}
-    ${zone("short", `<path class="az-bg" d="M54 160 Q100 150 170 148 Q240 150 286 160 V176 Q286 192 270 192 H70 Q54 192 54 176Z"/>`, 170, 180, "ショート", "↓")}
+    ${zone("long", `<path class="az-bg" d="M70 4 H270 Q286 4 286 20 V36 Q240 46 170 48 Q100 46 54 36 V20 Q54 4 70 4Z"/>`, 170, 30, "奥", "")}
+    ${zone("short", `<path class="az-bg" d="M54 160 Q100 150 170 148 Q240 150 286 160 V176 Q286 192 270 192 H70 Q54 192 54 176Z"/>`, 170, 180, "ショート", "")}
     ${zone("left", `<path class="az-bg" d="M4 22 Q4 6 20 6 H40 Q60 40 64 98 Q60 156 40 190 H20 Q4 190 4 174Z"/>`, 30, 104, "左", "")}
     ${zone("right", `<path class="az-bg" d="M336 22 Q336 6 320 6 H300 Q280 40 276 98 Q280 156 300 190 H320 Q336 190 336 174Z"/>`, 310, 104, "右", "")}
     <ellipse cx="96" cy="150" rx="24" ry="9" class="sand"/><ellipse cx="252" cy="58" rx="20" ry="8" class="sand"/>
@@ -698,11 +698,12 @@ function approachSVG(dir, tap){
       <ellipse cx="196" cy="84" rx="6" ry="2.6" fill="rgba(0,0,0,.45)"/>
       <line x1="196" y1="84" x2="196" y2="40" stroke="#fff" stroke-width="2"/>
       <path d="M197 41 L219 48 L197 55Z" fill="#F2B01E"/>
-      <path d="M196 84 L176 92" stroke="rgba(0,0,0,.18)" stroke-width="2"/>
+      <path d="M196 84 L224 94" stroke="rgba(0,0,0,.2)" stroke-width="2" stroke-linecap="round"/>
+      <path d="M224 94 L242 93 L215.5 91Z" fill="rgba(0,0,0,.2)"/>
       <text x="148" y="122" class="az-t on-t">オン</text>
     </g>
     ${tracer}
-    ${b?`<g class="ballg ${tap?"drop":""}"><ellipse cx="${b[0]+2}" cy="${b[1]+5}" rx="7" ry="2.5" fill="rgba(0,0,0,.25)"/><circle cx="${b[0]}" cy="${b[1]}" r="6.5" fill="#fff" stroke="rgba(0,0,0,.15)"/></g>`:""}
+    ${b?`<g class="ballg ${tap?"drop":""}"><ellipse cx="${b[0]+4}" cy="${b[1]+3}" rx="7" ry="3" fill="rgba(0,0,0,.25)"/><circle cx="${b[0]}" cy="${b[1]}" r="6.5" fill="#fff" stroke="rgba(0,0,0,.15)"/></g>`:""}
   </svg>`;
 }
 function viewRecordDraft(d){
@@ -713,7 +714,7 @@ function viewRecordDraft(d){
   const diff = h.strokes - h.par;
   const hio = h.strokes===1;
   const celebrate = state.tap && state.tap.startsWith("sv") && diff<0;
-  const confetti = celebrate ? `<div class="confetti">${Array.from({length: hio?40:18},(_,i)=>`<i style="left:${Math.round(Math.random()*100)}%;background:${["#F2B01E","#FFD76A","#5BE6A8","#fff","#38BDF8"][i%5]};animation-delay:${(Math.random()*.25).toFixed(2)}s"></i>`).join("")}</div>` : "";
+  const confetti = diff<0 ? `<div class="confetti ${hio?"big":""}">${Array.from({length: hio?46:22},(_,i)=>`<i style="left:${(Math.random()*100).toFixed(1)}%;background:${(hio?["#F2B01E","#FFD76A","#FFF3C4","#fff","#F59E0B"]:["#F2B01E","#FFD76A","#5BE6A8","#fff","#38BDF8"])[i%5]};animation-delay:${(-Math.random()*3).toFixed(2)}s;animation-duration:${(2.2+Math.random()*1.8).toFixed(2)}s;width:${5+Math.round(Math.random()*4)}px"></i>`).join("")}</div>` : "";
   const bestPace = (()=>{ const others = state.rounds.filter(r=>r.player===d.player && r.courseId===d.courseId && r.id!==d.id); if(!others.length || !done.length) return false;
     const best = others.reduce((a,r)=> roundTotals(r).diff < roundTotals(a).diff ? r : a);
     let mine=0, theirs=0; d.holes.forEach((x,i)=>{ if(x.entered && best.holes[i]){ mine += x.strokes-x.par; theirs += best.holes[i].strokes-best.holes[i].par; } });
