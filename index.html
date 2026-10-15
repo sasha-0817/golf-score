@@ -354,6 +354,9 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);bo
 .rc-sc .m-double{border-color:#FFB3A6;color:#FFB3A6;outline-color:#FFB3A6}
 .rc-sc .m-triple{background:#FF5A5F}
 
+.spark-w{display:flex;flex-direction:column;align-items:flex-end;gap:4px;width:46%;max-width:180px}
+.spark-w span{font-size:9px;letter-spacing:.08em;opacity:.7;font-weight:700;white-space:nowrap}
+.spark-w .spark{width:100%}
 /* stats */
 .who-pick{display:flex;gap:6px;overflow-x:auto;padding:2px}
 .who-pick button{flex:0 0 auto;font:inherit;font-weight:700;font-size:15px;padding:10px 18px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--muted);cursor:pointer}
@@ -492,7 +495,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-16-0145";
+const BUILD = "2026-10-16-0200";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -716,13 +719,14 @@ function approachSVG(dir, tap, stat){
   const tracer = b ? `<path class="tracer ${tap?"anim":""}" d="M${sx} ${sy} Q ${(sx+b[0])/2} ${Math.min(sy,b[1]) - (dir==="short"?70:dir==="long"?12:40)} ${b[0]} ${b[1]}" pathLength="1"/>` : "";
   // 光は左上から: 影はすべて同じ向き (28,10) に落ちる
   const SH = "rgba(0,0,0,.22)";
-  const ball = b ? `<g class="ballg ${tap?"drop":""}"><ellipse cx="${b[0]+5}" cy="${b[1]+2.5}" rx="8" ry="3.2" fill="${SH}" transform="rotate(20 ${b[0]+5} ${b[1]+2.5})"/><circle cx="${b[0]}" cy="${b[1]}" r="6.5" fill="#fff" stroke="rgba(0,0,0,.15)"/></g>` : "";
+  const ball = b ? `<g class="ballg ${tap?"drop":""}"><ellipse cx="${b[0]+4.5}" cy="${b[1]+2}" rx="8.5" ry="5.5" fill="rgba(0,0,0,.28)" filter="url(#soft)" transform="rotate(19 ${b[0]+4.5} ${b[1]+2})"/><circle cx="${b[0]}" cy="${b[1]}" r="6.5" fill="#fff" stroke="rgba(0,0,0,.15)"/></g>` : "";
   const greenAttrs = stat ? `class="az-s"` : `class="az az-green ${sel("on")?"on-sel":""}" role="button" tabindex="0" data-act="dir" data-v="on" aria-pressed="${sel("on")}" aria-label="オン"`;
   const onLabel = stat ? `<text x="150" y="112" class="az-t on-t" style="font-size:12px">オン</text><text x="150" y="132" class="on-p">${fmtPct(pctOf("on"))}%</text>` : `<text x="148" y="122" class="az-t on-t">オン</text>`;
   return `<svg class="approach" viewBox="0 0 340 196" role="${stat?"img":"group"}" aria-label="グリーンを狙った1球目">
     <defs>
       <radialGradient id="gGreen${stat?"S":""}" cx="45%" cy="40%" r="70%"><stop offset="0" stop-color="#5BE6A8"/><stop offset=".7" stop-color="#14A866"/><stop offset="1" stop-color="#0B8A52"/></radialGradient>
       <pattern id="mow${stat?"S":""}" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><rect width="8" height="16" fill="rgba(255,255,255,.07)"/></pattern>
+      <filter id="soft${stat?"S":""}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation=".7"/></filter>
       <filter id="gShadow${stat?"S":""}" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="6" dy="6" stdDeviation="6" flood-color="#083C26" flood-opacity=".3"/></filter>
     </defs>
     <rect class="az-rough" x="0" y="0" width="340" height="196" rx="18"/>
@@ -736,8 +740,8 @@ function approachSVG(dir, tap, stat){
       <ellipse cx="170" cy="98" rx="84" ry="48" fill="url(#gGreen${stat?"S":""})" filter="url(#gShadow${stat?"S":""})"/>
       <ellipse cx="170" cy="98" rx="84" ry="48" fill="url(#mow${stat?"S":""})"/>
       <ellipse cx="170" cy="98" rx="84" ry="48" class="g-ring"/>
-      <path d="M196 84 L224 94" stroke="${SH}" stroke-width="2" stroke-linecap="round"/>
-      <path d="M223.4 93.8 L240.9 92.2 L214.5 90.6Z" fill="${SH}"/>
+      <g filter="url(#soft${stat?"S":""})"><path d="M196 84 L236 98" stroke="${SH}" stroke-width="3" stroke-linecap="round"/>
+      <path d="M236 99 L252 96 L222 91.5Z" fill="${SH}"/></g>
       <ellipse cx="196" cy="84" rx="6" ry="2.6" fill="rgba(0,0,0,.45)"/>
       <line x1="196" y1="84" x2="196" y2="40" stroke="#fff" stroke-width="2"/>
       <path d="M197 41 L219 48 L197 55Z" fill="#E11D2E"/>
@@ -860,7 +864,7 @@ function viewStats(){
     <div class="main"><div><div class="big">${fx(s.avgScore)}</div><div class="topar">${s.avgDiff==null?"—":(s.avgDiff>0?"+":"")+s.avgDiff.toFixed(1)}</div></div>
   ${(()=>{ const t=rs.slice(-10).map(r=>roundTotals(r).diff/r.holes.length); if(t.length<2) return ""; const mn=Math.min(...t), mx=Math.max(...t), W=180, H=56, pad=6;
       const pts=t.map((v,i)=>[pad+i*(W-2*pad)/(t.length-1), mx===mn?H/2:pad+(v-mn)/(mx-mn)*(H-2*pad)]);
-      return `<svg class="spark" viewBox="0 0 ${W} ${H}" aria-hidden="true"><polyline points="${pts.map(p=>p.join(",")).join(" ")}" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>${pts.map((p,i)=>i===pts.length-1?`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#fff"/>`:"").join("")}</svg>`; })()}
+      return `<div class="spark-w"><span>直近${t.length}R・上ほど好調</span><svg class="spark" viewBox="0 0 ${W} ${H}" aria-hidden="true"><polyline points="${pts.map(p=>p.join(",")).join(" ")}" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>${pts.map((p,i)=>i===pts.length-1?`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#fff"/>`:`<circle cx="${p[0]}" cy="${p[1]}" r="2" fill="rgba(255,255,255,.7)"/>`).join("")}</svg></div>`; })()}
     </div>
     <div class="row"><div><span>BEST</span><b>${toPar(s.best)}</b></div><div><span>ROUNDS</span><b>${s.rounds}</b></div>${s.dist.hio?`<div><span>HOLE IN ONE</span><b>${s.dist.hio}</b></div>`:`<div><span>HOLES</span><b>${s.holes}</b></div>`}</div>
   </div>
