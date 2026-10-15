@@ -23,7 +23,7 @@
   --turf:#0E9F62; --turf-ink:#FFFFFF; --flag:#F2B01E; --accent2:#13A9C2;
   --under:#E5484D; --over:#3E63DD; --warn:#F08C1A;
   --c1:#0E9F62; --c2:#F2B01E; --c3:#3E63DD; --c4:#E5484D; --c5:#8B5CF6; --c6:#13A9C2;
-  --q-hio:#F5B700; --q-eagle:#1D4ED8; --q-birdie:#3B82F6; --q-par:#16A34A; --q-bogey:#F28C28; --q-double:#E5484D; --q-triple:#9F1D2A; --q-neutral:#C3CDD5;
+  --q-hio:#F5B700; --q-eagle:#1E3A8A; --q-birdie:#2563EB; --q-par:#4F9BEA; --q-bogey:#F28C28; --q-double:#E5484D; --q-triple:#9F1D2A; --q-neutral:#C3CDD5;
   --rec-bg:#EEF2F0; --rec-surface:#FFFFFF; --rec-raise:#EEF3F0; --rec-line:#DDE5E1; --rec-fg:#0B1310; --rec-muted:#6E7C75;
   --rec-sel:#0B1310; --rec-sel-ink:#FFFFFF; --rec-turf:#0E9F62; --rec-turf-hi:#2FD58C; --rec-under:#E5484D; --rec-over:#3E63DD; --rec-warn:#F08C1A; --rec-fade:rgba(238,242,240,0);
   --glow:rgba(14,159,98,.18); --shadow:0 1px 2px rgba(11,19,16,.04),0 8px 24px rgba(11,19,16,.06);
@@ -34,7 +34,7 @@
   --bg:#070C0A; --paper:#0F1714; --fg:#ECF4EF; --muted:#8B9A92; --line:#1F2C26; --soft:#16211C;
   --turf:#2EE59D; --turf-ink:#03130B; --flag:#FFC53D; --accent2:#3BD3EA; --under:#FF6B6B; --over:#7AA2FF; --warn:#FFA94D;
   --c1:#2EE59D; --c2:#FFC53D; --c3:#7AA2FF; --c4:#FF6B6B; --c5:#B59CFF; --c6:#3BD3EA;
-  --q-hio:#FFC53D; --q-eagle:#4F7BFF; --q-birdie:#6AA8FF; --q-par:#34D27A; --q-bogey:#FFA94D; --q-double:#FF5A5F; --q-triple:#C2323F; --q-neutral:#4A5965;
+  --q-hio:#FFC53D; --q-eagle:#3B5BDB; --q-birdie:#4C8DFF; --q-par:#6FB1F5; --q-bogey:#FFA94D; --q-double:#FF5A5F; --q-triple:#C2323F; --q-neutral:#4A5965;
   --rec-bg:#070C0A; --rec-surface:#0F1714; --rec-raise:#17221D; --rec-line:#22312A; --rec-fg:#ECF4EF; --rec-muted:#8B9A92;
   --rec-sel:#ECF4EF; --rec-sel-ink:#070C0A; --rec-turf:#17B877; --rec-turf-hi:#2EE59D; --rec-under:#FF6B6B; --rec-over:#7AA2FF; --rec-warn:#FFA94D; --rec-fade:rgba(7,12,10,0);
   --glow:rgba(46,229,157,.22); --shadow:none; color-scheme:dark}}
@@ -42,7 +42,7 @@
   --bg:#070C0A; --paper:#0F1714; --fg:#ECF4EF; --muted:#8B9A92; --line:#1F2C26; --soft:#16211C;
   --turf:#2EE59D; --turf-ink:#03130B; --flag:#FFC53D; --accent2:#3BD3EA; --under:#FF6B6B; --over:#7AA2FF; --warn:#FFA94D;
   --c1:#2EE59D; --c2:#FFC53D; --c3:#7AA2FF; --c4:#FF6B6B; --c5:#B59CFF; --c6:#3BD3EA;
-  --q-hio:#FFC53D; --q-eagle:#4F7BFF; --q-birdie:#6AA8FF; --q-par:#34D27A; --q-bogey:#FFA94D; --q-double:#FF5A5F; --q-triple:#C2323F; --q-neutral:#4A5965;
+  --q-hio:#FFC53D; --q-eagle:#3B5BDB; --q-birdie:#4C8DFF; --q-par:#6FB1F5; --q-bogey:#FFA94D; --q-double:#FF5A5F; --q-triple:#C2323F; --q-neutral:#4A5965;
   --rec-bg:#070C0A; --rec-surface:#0F1714; --rec-raise:#17221D; --rec-line:#22312A; --rec-fg:#ECF4EF; --rec-muted:#8B9A92;
   --rec-sel:#ECF4EF; --rec-sel-ink:#070C0A; --rec-turf:#17B877; --rec-turf-hi:#2EE59D; --rec-under:#FF6B6B; --rec-over:#7AA2FF; --rec-warn:#FFA94D; --rec-fade:rgba(7,12,10,0);
   --glow:rgba(46,229,157,.22); --shadow:none; color-scheme:dark}
@@ -224,7 +224,7 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);bo
 .hero-stat .big small{font-size:14px;opacity:.65;margin-left:6px;letter-spacing:.1em;font-weight:600}
 .hero-stat .topar{font-family:var(--f-num);font-size:22px;font-weight:700;margin-top:6px;opacity:.9}
 .hero-stat .spark{width:46%;max-width:180px;height:56px}
-.hero-stat .row{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.15)}
+.hero-stat .row{position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.15)}
 .hero-stat .row span{display:block;font-size:9px;letter-spacing:.16em;opacity:.65;font-weight:700}
 .hero-stat .row b{font-family:var(--f-num);font-size:24px;font-weight:700}
 .sec{display:flex;align-items:baseline;gap:8px;margin:0 0 12px}
@@ -388,6 +388,9 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);bo
 .rh .mk3{width:24px;height:24px;font-size:13px}
 .rh .m-eagle,.rh .m-double,.rh .m-hio{outline-offset:1.5px;outline-width:1.5px}
 
+.m-par{color:var(--fg)}
+.rc-sc .m-par{color:#fff}
+.rc-sc .m-birdie,.rc-sc .m-eagle{border-color:#9EC5FF;color:#9EC5FF;outline-color:#9EC5FF}
 /* stats */
 .who-pick{display:flex;gap:6px;overflow-x:auto;padding:2px}
 .who-pick button{flex:0 0 auto;font:inherit;font-weight:700;font-size:15px;padding:10px 18px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--muted);cursor:pointer}
@@ -526,7 +529,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-16-0800";
+const BUILD = "2026-10-16-0815";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -894,11 +897,8 @@ function viewStats(){
   <div class="hero-stat">
     <div class="who">${esc(state.fPlayer).toUpperCase()} ・ AVG SCORE</div>
     <div class="main"><div><div class="big">${fx(s.avgScore)}</div><div class="topar">${s.avgDiff==null?"—":(s.avgDiff>0?"+":"")+s.avgDiff.toFixed(1)}</div></div>
-  ${(()=>{ const t=rs.slice(-10).map(r=>roundTotals(r).diff/r.holes.length); if(t.length<2) return ""; const mn=Math.min(...t), mx=Math.max(...t), W=180, H=56, pad=6;
-      const pts=t.map((v,i)=>[pad+i*(W-2*pad)/(t.length-1), mx===mn?H/2:pad+(v-mn)/(mx-mn)*(H-2*pad)]);
-      return `<div class="spark-w"><span>直近${t.length}R・上ほど好調</span><svg class="spark" viewBox="0 0 ${W} ${H}" aria-hidden="true"><polyline points="${pts.map(p=>p.join(",")).join(" ")}" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>${pts.map((p,i)=>i===pts.length-1?`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#fff"/>`:`<circle cx="${p[0]}" cy="${p[1]}" r="2" fill="rgba(255,255,255,.7)"/>`).join("")}</svg></div>`; })()}
     </div>
-    <div class="row"><div><span>BEST</span><b>${toPar(s.best)}</b></div><div><span>ROUNDS</span><b>${s.rounds}</b></div>${s.dist.hio?`<div><span>HOLE IN ONE</span><b>${s.dist.hio}</b></div>`:`<div><span>HOLES</span><b>${s.holes}</b></div>`}</div>
+    <div class="row"><div><span>BEST</span><b>${toPar(s.best)}</b></div><div><span>前回</span><b>${toPar(roundTotals(rs[rs.length-1]).diff)}</b></div><div><span>ROUNDS</span><b>${s.rounds}</b></div>${s.dist.hio?`<div><span>HOLE IN ONE</span><b>${s.dist.hio}</b></div>`:`<div><span>HOLES</span><b>${s.holes}</b></div>`}</div>
   </div>
   <div class="panel"><div class="sec"><em>RECENT</em><span>直近5ラウンド</span></div><div class="recent">${rs.slice(-5).reverse().map(r=>{ const t=roundTotals(r); const [y,m,d]=r.date.split("-");
       return `<div class="rr"><div class="rd"><b>${+m}/${+d}</b><small>${toPar(t.diff)}</small></div><div class="rh">${r.holes.map(h=>mark(h)).join("")}</div></div>`; }).join("")}</div></div>
@@ -967,7 +967,7 @@ after.stats = () => {
   const o1 = opts(oneCourse?"スコア":"対パー", oneCourse?null:(v=>toPar(v)), Math.min(parN-2, ...vals), Math.max(parN+2*holesN+1, ...vals));
   o1.plugins.tooltip.callbacks.label = c => ` スコア ${tot[c.dataIndex].score}（${toPar(tot[c.dataIndex].diff)}）`;
   charts.push(new Chart($("#ch-score"), { type:"bar", data:{ labels, datasets:[
-    { label:"スコア", data: vals, backgroundColor: c=>{ const {ctx,chartArea:a}=c.chart; if(!a) return "#3B82F6"; const g=ctx.createLinearGradient(0,a.bottom,0,a.top); g.addColorStop(0,"#2563EB"); g.addColorStop(1,"#38BDF8"); return g; }, borderRadius:3, maxBarThickness:22, base: oneCourse ? undefined : 0 }
+    { label:"スコア", data: vals, backgroundColor: c=>{ const {ctx,chartArea:a}=c.chart; if(!a) return cssv("--q-neutral"); const g=ctx.createLinearGradient(0,a.bottom,0,a.top); g.addColorStop(0,"#64748B"); g.addColorStop(1,"#94A3B8"); return g; }, borderRadius:3, maxBarThickness:22, base: oneCourse ? undefined : 0 }
   ]}, options:o1, plugins:[refLines(scoreLines)] }));
   const pVals = tot.map(t=>t.putts);
   const o2 = opts("パット", null); o2.scales.y.min = Math.min(holesN+1, ...pVals); o2.scales.y.max = Math.max(holesN*2+6, ...pVals);
