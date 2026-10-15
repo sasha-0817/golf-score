@@ -9,8 +9,8 @@
 <meta name="apple-mobile-web-app-title" content="スコアカード">
 <meta name="theme-color" content="#F1F4F3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#070C0A" media="(prefers-color-scheme: dark)">
-<link rel="apple-touch-icon" href="icon.png">
-<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon.png?v=2">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;-webkit-text-size-adjust:100%}img{max-width:100%}[hidden]{display:none!important}button{-webkit-tap-highlight-color:transparent}</style>
 <title>ショートコース スコアカード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -495,7 +495,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-16-0200";
+const BUILD = "2026-10-16-0215";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -719,7 +719,7 @@ function approachSVG(dir, tap, stat){
   const tracer = b ? `<path class="tracer ${tap?"anim":""}" d="M${sx} ${sy} Q ${(sx+b[0])/2} ${Math.min(sy,b[1]) - (dir==="short"?70:dir==="long"?12:40)} ${b[0]} ${b[1]}" pathLength="1"/>` : "";
   // 光は左上から: 影はすべて同じ向き (28,10) に落ちる
   const SH = "rgba(0,0,0,.22)";
-  const ball = b ? `<g class="ballg ${tap?"drop":""}"><ellipse cx="${b[0]+4.5}" cy="${b[1]+2}" rx="8.5" ry="5.5" fill="rgba(0,0,0,.28)" filter="url(#soft)" transform="rotate(19 ${b[0]+4.5} ${b[1]+2})"/><circle cx="${b[0]}" cy="${b[1]}" r="6.5" fill="#fff" stroke="rgba(0,0,0,.15)"/></g>` : "";
+  const ball = b ? `<g class="ballg ${tap?"drop":""}"><ellipse cx="${b[0]+3.5}" cy="${b[1]+5}" rx="7.5" ry="4.8" fill="rgba(0,0,0,.26)" filter="url(#soft)" transform="rotate(15 ${b[0]+3.5} ${b[1]+5})"/><circle cx="${b[0]}" cy="${b[1]}" r="6.5" fill="#fff" stroke="rgba(0,0,0,.15)"/></g>` : "";
   const greenAttrs = stat ? `class="az-s"` : `class="az az-green ${sel("on")?"on-sel":""}" role="button" tabindex="0" data-act="dir" data-v="on" aria-pressed="${sel("on")}" aria-label="オン"`;
   const onLabel = stat ? `<text x="150" y="112" class="az-t on-t" style="font-size:12px">オン</text><text x="150" y="132" class="on-p">${fmtPct(pctOf("on"))}%</text>` : `<text x="148" y="122" class="az-t on-t">オン</text>`;
   return `<svg class="approach" viewBox="0 0 340 196" role="${stat?"img":"group"}" aria-label="グリーンを狙った1球目">
@@ -856,7 +856,7 @@ function viewStats(){
   <div class="who-pick" role="tablist" aria-label="プレーヤー">${pl.map(p=>`<button role="tab" data-act="pick-player" data-v="${esc(p)}" aria-selected="${p===state.fPlayer}">${esc(p)}</button>`).join("")}</div>
   <div class="panel"><div class="filters">
     <div class="field"><label for="f-course">コース</label><select id="f-course"><option value="all">すべて</option>${cs.map(c=>`<option value="${c.id}" ${c.id===state.fCourse?"selected":""}>${esc(c.name)}</option>`).join("")}</select></div>
-    <div class="field"><label for="f-range">期間</label><select id="f-range">${[["all","全ラウンド"],["5","直近5ラウンド"],["10","直近10ラウンド"]].map(([v,t])=>`<option value="${v}" ${v===state.fRange?"selected":""}>${t}</option>`).join("")}</select></div>
+    <div class="field"><label for="f-range">期間</label><select id="f-range">${[["1","直近1ラウンド"],["3","直近3ラウンド"],["5","直近5ラウンド"],["10","直近10ラウンド"],["all","全ラウンド"]].map(([v,t])=>`<option value="${v}" ${v===state.fRange?"selected":""}>${t}</option>`).join("")}</select></div>
   </div></div>
   ${!rs.length?`<div class="panel empty"><strong>条件に合うラウンドがありません</strong>フィルターを変えてみてください。</div>`:`
   <div class="hero-stat">
