@@ -327,6 +327,33 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);bo
 .result-wrap p{color:rgba(255,255,255,.8);font-size:12px;margin:10px 0 0}
 @media (prefers-reduced-motion:reduce){.confetti i,.hole-card.flash,.result-card,.result-back{animation:none}}
 
+
+/* v7 */
+.az.on-sel .az-bg{fill:color-mix(in srgb,#F2B01E 30%,var(--rec-surface));stroke:#F2B01E;stroke-width:2}
+.az.on-sel .az-t{fill:var(--rec-fg)}
+.az-green.on-sel .g-ring{stroke:#F2B01E}
+.tracer{animation:none}
+.tracer.anim{animation:trace .5s ease-out both}
+.ballg.drop{animation:drop .35s cubic-bezier(.2,1.4,.5,1) .48s both}
+.az-s .az-bg{stroke:var(--line)}
+.az-p{font:700 18px var(--f-num);fill:var(--fg);text-anchor:middle;dominant-baseline:middle}
+.az-p.worst{fill:var(--q-triple)}
+.on-p{font:700 26px var(--f-num);fill:#fff;text-anchor:middle;dominant-baseline:middle}
+.m-eagle{box-shadow:none!important;outline:2px solid var(--q-eagle);outline-offset:2px}
+.m-double{box-shadow:none!important;outline:2px solid var(--q-double);outline-offset:2px}
+.sc-legend .m-eagle,.sc-legend .m-double{outline-width:1.5px;outline-offset:1.5px}
+.rc-sc{display:flex;flex-direction:column;gap:6px}
+.rc-sc table{width:100%;border-collapse:collapse;font-family:var(--f-num);font-variant-numeric:tabular-nums;table-layout:fixed}
+.rc-sc td{text-align:center;padding:2px 0;font-size:13px}
+.rc-sc tr.h td{font-size:10px;opacity:.6}
+.rc-sc tr.p td{font-size:11px;opacity:.75}
+.rc-sc .mk3{width:22px;height:22px;font-size:14px}
+.rc-sc .m-par,.rc-sc .m-bogey{color:#fff}
+.rc-sc .m-bogey{border-color:rgba(255,255,255,.75)}
+.rc-sc .m-birdie{border-color:#9DF5C9;color:#9DF5C9}.rc-sc .m-eagle{border-color:#9DF5C9;color:#9DF5C9;outline-color:#9DF5C9}
+.rc-sc .m-double{border-color:#FFB3A6;color:#FFB3A6;outline-color:#FFB3A6}
+.rc-sc .m-triple{background:#FF5A5F}
+
 /* stats */
 .who-pick{display:flex;gap:6px;overflow-x:auto;padding:2px}
 .who-pick button{flex:0 0 auto;font:inherit;font-weight:700;font-size:15px;padding:10px 18px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--muted);cursor:pointer}
@@ -465,7 +492,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-16-0130";
+const BUILD = "2026-10-16-0145";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -616,7 +643,8 @@ function resultOverlay(r){
     <div class="result-card"><div class="rc-in">
       <div class="rc-top"><div><div class="k">ROUND COMPLETE</div><div class="n">${esc(r.player)}</div><div class="c">${esc(r.courseName)}・${+m}/${+d}</div></div>${flag?`<span class="rc-flag">${flag}</span>`:""}</div>
       <div class="rc-score"><b>${t.score}</b><span>${toPar(t.diff)}</span></div>
-      <div class="rc-strip">${r.holes.map(h=>`<i class="q-${TONE(h.strokes-h.par)}"></i>`).join("")}</div>
+      <div class="rc-sc">${(()=>{ const out=[]; for(let i=0;i<r.holes.length;i+=9){ const ch=r.holes.slice(i,i+9);
+        out.push(`<table><tr class="h">${ch.map((h,j)=>`<td>${i+j+1}</td>`).join("")}</tr><tr class="p">${ch.map(h=>`<td>${h.par}</td>`).join("")}</tr><tr>${ch.map(h=>`<td>${mark(h)}</td>`).join("")}</tr></table>`); } return out.join(""); })()}</div>
       <div class="rc-grid">
         <div><span>BIRDIE+</span><b>${n("hio")+n("eagle")+n("birdie")}</b></div>
         <div><span>PAR</span><b>${n("par")}</b></div>
@@ -671,39 +699,51 @@ const BALL_POS = { on:{left:"calc(50% + 16px)",top:"calc(50% + 4px)"}, left:{lef
 const AR = { long:'<svg viewBox="0 0 12 12"><path d="M6 10V2M2.5 5.5L6 2l3.5 3.5"/></svg>', short:'<svg viewBox="0 0 12 12"><path d="M6 2v8M2.5 6.5L6 10l3.5-3.5"/></svg>', left:'<svg viewBox="0 0 12 12"><path d="M10 6H2M5.5 2.5L2 6l3.5 3.5"/></svg>', right:'<svg viewBox="0 0 12 12"><path d="M2 6h8M6.5 2.5L10 6l-3.5 3.5"/></svg>' };
 
 /* アプローチ: 上から見たグリーン。エリアをタップすると球が飛んでいく */
-function approachSVG(dir, tap){
+function approachSVG(dir, tap, stat){
+  // stat が渡されたら分析用（読み取り専用・割合表示）
   const Z = { on:[218,106], long:[236,26], short:[238,178], left:[46,62], right:[294,62] };
-  const sel = k => dir===k;
-  const zone = (k, shape, lx, ly, label, arrow) => `<g class="az ${sel(k)?"on-sel":""}" role="button" tabindex="0" data-act="dir" data-v="${k}" aria-pressed="${sel(k)}" aria-label="${label}">
-      ${shape}<text x="${lx}" y="${ly}" class="az-t">${arrow?arrow+" ":""}${label}</text></g>`;
-  const b = dir && Z[dir];
-  const sx=170, sy=196; const tracer = b ? `<path class="tracer" d="M${sx} ${sy} Q ${(sx+b[0])/2} ${Math.min(sy,b[1]) - (dir==="short"?70:dir==="long"?12:40)} ${b[0]} ${b[1]}" pathLength="1"/>` : "";
-  return `<svg class="approach" viewBox="0 0 340 196" role="group" aria-label="グリーンを狙った1球目">
+  const sel = k => !stat && dir===k;
+  const pctOf = k => stat ? pct(stat.dirs[k], stat.dirN) : null;
+  const maxMiss = stat ? Math.max(1, ...["long","short","left","right"].map(k=>stat.dirs[k])) : 1;
+  const worst = stat ? ["long","short","left","right"].reduce((a,k)=>stat.dirs[k]>stat.dirs[a]?k:a,"long") : null;
+  const zone = (k, shape, lx, ly, label) => {
+    if(stat){ const v=pctOf(k), heat=(stat.dirs[k]/maxMiss)*.55, w=k===worst&&stat.dirs[k]>0;
+      return `<g class="az-s">${shape.replace('class="az-bg"', `class="az-bg" style="fill:color-mix(in srgb,#F2B01E ${Math.round(heat*100)}%,var(--paper))"`)}
+        <text x="${lx}" y="${ly-9}" class="az-t">${label}</text><text x="${lx}" y="${ly+9}" class="az-p ${w?"worst":""}">${fmtPct(v)}%</text></g>`; }
+    return `<g class="az ${sel(k)?"on-sel":""}" role="button" tabindex="0" data-act="dir" data-v="${k}" aria-pressed="${sel(k)}" aria-label="${label}">${shape}<text x="${lx}" y="${ly}" class="az-t">${label}</text></g>`; };
+  const b = !stat && dir && Z[dir];
+  const sx=170, sy=196;
+  const tracer = b ? `<path class="tracer ${tap?"anim":""}" d="M${sx} ${sy} Q ${(sx+b[0])/2} ${Math.min(sy,b[1]) - (dir==="short"?70:dir==="long"?12:40)} ${b[0]} ${b[1]}" pathLength="1"/>` : "";
+  // 光は左上から: 影はすべて同じ向き (28,10) に落ちる
+  const SH = "rgba(0,0,0,.22)";
+  const ball = b ? `<g class="ballg ${tap?"drop":""}"><ellipse cx="${b[0]+5}" cy="${b[1]+2.5}" rx="8" ry="3.2" fill="${SH}" transform="rotate(20 ${b[0]+5} ${b[1]+2.5})"/><circle cx="${b[0]}" cy="${b[1]}" r="6.5" fill="#fff" stroke="rgba(0,0,0,.15)"/></g>` : "";
+  const greenAttrs = stat ? `class="az-s"` : `class="az az-green ${sel("on")?"on-sel":""}" role="button" tabindex="0" data-act="dir" data-v="on" aria-pressed="${sel("on")}" aria-label="オン"`;
+  const onLabel = stat ? `<text x="150" y="112" class="az-t on-t" style="font-size:12px">オン</text><text x="150" y="132" class="on-p">${fmtPct(pctOf("on"))}%</text>` : `<text x="148" y="122" class="az-t on-t">オン</text>`;
+  return `<svg class="approach" viewBox="0 0 340 196" role="${stat?"img":"group"}" aria-label="グリーンを狙った1球目">
     <defs>
-      <radialGradient id="gGreen" cx="45%" cy="40%" r="70%"><stop offset="0" stop-color="#5BE6A8"/><stop offset=".7" stop-color="#14A866"/><stop offset="1" stop-color="#0B8A52"/></radialGradient>
-      <pattern id="mow" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><rect width="8" height="16" fill="rgba(255,255,255,.07)"/></pattern>
-      <filter id="gShadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#083C26" flood-opacity=".35"/></filter>
+      <radialGradient id="gGreen${stat?"S":""}" cx="45%" cy="40%" r="70%"><stop offset="0" stop-color="#5BE6A8"/><stop offset=".7" stop-color="#14A866"/><stop offset="1" stop-color="#0B8A52"/></radialGradient>
+      <pattern id="mow${stat?"S":""}" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><rect width="8" height="16" fill="rgba(255,255,255,.07)"/></pattern>
+      <filter id="gShadow${stat?"S":""}" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="6" dy="6" stdDeviation="6" flood-color="#083C26" flood-opacity=".3"/></filter>
     </defs>
     <rect class="az-rough" x="0" y="0" width="340" height="196" rx="18"/>
-    ${zone("long", `<path class="az-bg" d="M70 4 H270 Q286 4 286 20 V36 Q240 46 170 48 Q100 46 54 36 V20 Q54 4 70 4Z"/>`, 170, 30, "奥", "")}
-    ${zone("short", `<path class="az-bg" d="M54 160 Q100 150 170 148 Q240 150 286 160 V176 Q286 192 270 192 H70 Q54 192 54 176Z"/>`, 170, 180, "ショート", "")}
-    ${zone("left", `<path class="az-bg" d="M4 22 Q4 6 20 6 H40 Q60 40 64 98 Q60 156 40 190 H20 Q4 190 4 174Z"/>`, 30, 104, "左", "")}
-    ${zone("right", `<path class="az-bg" d="M336 22 Q336 6 320 6 H300 Q280 40 276 98 Q280 156 300 190 H320 Q336 190 336 174Z"/>`, 310, 104, "右", "")}
+    ${zone("long", `<path class="az-bg" d="M70 4 H270 Q286 4 286 20 V36 Q240 46 170 48 Q100 46 54 36 V20 Q54 4 70 4Z"/>`, 170, stat?24:30, "奥")}
+    ${zone("short", `<path class="az-bg" d="M54 160 Q100 150 170 148 Q240 150 286 160 V176 Q286 192 270 192 H70 Q54 192 54 176Z"/>`, 170, stat?174:180, "ショート")}
+    ${zone("left", `<path class="az-bg" d="M4 22 Q4 6 20 6 H40 Q60 40 64 98 Q60 156 40 190 H20 Q4 190 4 174Z"/>`, 30, 100, "左")}
+    ${zone("right", `<path class="az-bg" d="M336 22 Q336 6 320 6 H300 Q280 40 276 98 Q280 156 300 190 H320 Q336 190 336 174Z"/>`, 310, 100, "右")}
     <ellipse cx="96" cy="150" rx="24" ry="9" class="sand"/><ellipse cx="252" cy="58" rx="20" ry="8" class="sand"/>
-    <g class="az az-green ${sel("on")?"on-sel":""}" role="button" tabindex="0" data-act="dir" data-v="on" aria-pressed="${sel("on")}" aria-label="オン">
+    <g ${greenAttrs}>
       <ellipse cx="170" cy="98" rx="94" ry="56" class="fringe"/>
-      <ellipse cx="170" cy="98" rx="84" ry="48" fill="url(#gGreen)" filter="url(#gShadow)"/>
-      <ellipse cx="170" cy="98" rx="84" ry="48" fill="url(#mow)"/>
+      <ellipse cx="170" cy="98" rx="84" ry="48" fill="url(#gGreen${stat?"S":""})" filter="url(#gShadow${stat?"S":""})"/>
+      <ellipse cx="170" cy="98" rx="84" ry="48" fill="url(#mow${stat?"S":""})"/>
       <ellipse cx="170" cy="98" rx="84" ry="48" class="g-ring"/>
+      <path d="M196 84 L224 94" stroke="${SH}" stroke-width="2" stroke-linecap="round"/>
+      <path d="M223.4 93.8 L240.9 92.2 L214.5 90.6Z" fill="${SH}"/>
       <ellipse cx="196" cy="84" rx="6" ry="2.6" fill="rgba(0,0,0,.45)"/>
       <line x1="196" y1="84" x2="196" y2="40" stroke="#fff" stroke-width="2"/>
-      <path d="M197 41 L219 48 L197 55Z" fill="#F2B01E"/>
-      <path d="M196 84 L224 94" stroke="rgba(0,0,0,.2)" stroke-width="2" stroke-linecap="round"/>
-      <path d="M224 94 L242 93 L215.5 91Z" fill="rgba(0,0,0,.2)"/>
-      <text x="148" y="122" class="az-t on-t">オン</text>
+      <path d="M197 41 L219 48 L197 55Z" fill="#E11D2E"/>
+      ${onLabel}
     </g>
-    ${tracer}
-    ${b?`<g class="ballg ${tap?"drop":""}"><ellipse cx="${b[0]+4}" cy="${b[1]+3}" rx="7" ry="3" fill="rgba(0,0,0,.25)"/><circle cx="${b[0]}" cy="${b[1]}" r="6.5" fill="#fff" stroke="rgba(0,0,0,.15)"/></g>`:""}
+    ${tracer}${ball}
   </svg>`;
 }
 function viewRecordDraft(d){
@@ -848,25 +888,10 @@ function viewStats(){
   `}`;
 }
 function greenMap(s){
-  if(!s.dirN) return `<p class="muted" style="font-size:13px">まだ記録がありません。記録画面で「オン・左・右・奥・ショート」を選ぶとここに出ます。</p>`;
-  const p = k => fmtPct(pct(s.dirs[k], s.dirN));
+  if(!s.dirN) return `<p class="muted" style="font-size:13px">まだ記録がありません。記録画面でグリーンのどこに行ったかを選ぶとここに出ます。</p>`;
   const miss = s.dirN - s.dirs.on;
   const worst = miss ? ["left","right","long","short"].reduce((a,b)=>s.dirs[b]>s.dirs[a]?b:a) : null;
-  const col = k => k===worst ? "var(--under)" : "var(--fg)";
-  return `<svg class="greenmap" viewBox="0 0 300 260" role="img" aria-label="グリーンを狙った球の行き先">
-    <ellipse cx="150" cy="130" rx="78" ry="62" fill="var(--turf)" opacity=".22" stroke="var(--turf)" stroke-width="2"/>
-    <line x1="150" y1="104" x2="150" y2="140" stroke="var(--fg)" stroke-width="2"/><path d="M151 105 L170 111 L151 117 Z" fill="var(--flag)"/>
-    <text x="150" y="168" text-anchor="middle" font-family="var(--f-num)" font-size="30" font-weight="700" fill="var(--turf)">${p("on")}%</text>
-    <text x="150" y="186" text-anchor="middle" font-size="11" fill="var(--muted)">オン</text>
-    <text x="150" y="40" text-anchor="middle" font-family="var(--f-num)" font-size="26" font-weight="700" fill="${col("long")}">${p("long")}%</text>
-    <text x="150" y="56" text-anchor="middle" font-size="11" fill="var(--muted)">奥</text>
-    <text x="150" y="230" text-anchor="middle" font-family="var(--f-num)" font-size="26" font-weight="700" fill="${col("short")}">${p("short")}%</text>
-    <text x="150" y="246" text-anchor="middle" font-size="11" fill="var(--muted)">ショート</text>
-    <text x="36" y="134" text-anchor="middle" font-family="var(--f-num)" font-size="26" font-weight="700" fill="${col("left")}">${p("left")}%</text>
-    <text x="36" y="150" text-anchor="middle" font-size="11" fill="var(--muted)">左</text>
-    <text x="264" y="134" text-anchor="middle" font-family="var(--f-num)" font-size="26" font-weight="700" fill="${col("right")}">${p("right")}%</text>
-    <text x="264" y="150" text-anchor="middle" font-size="11" fill="var(--muted)">右</text>
-  </svg><p class="muted" style="font-size:12px;text-align:center;margin:4px 0 0">${s.dirN}球の記録${worst?`・一番多いミスは<b style="color:var(--under)">${DIRS[worst]}</b>`:""}</p>`;
+  return approachSVG(null,false,s) + `<p class="muted" style="font-size:12px;text-align:center;margin:8px 0 0">${s.dirN}球の記録${worst?`・一番多いミスは<b style="color:var(--q-triple)">${DIRS[worst]}</b>`:""}</p>`;
 }
 function cssv(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 after.stats = () => {
@@ -908,7 +933,7 @@ after.stats = () => {
     { label:"スコア", data: vals, backgroundColor: c=>{ const {ctx,chartArea:a}=c.chart; if(!a) return "#3B82F6"; const g=ctx.createLinearGradient(0,a.bottom,0,a.top); g.addColorStop(0,"#2563EB"); g.addColorStop(1,"#38BDF8"); return g; }, borderRadius:3, maxBarThickness:22, base: oneCourse ? undefined : 0 }
   ]}, options:o1, plugins:[refLines(scoreLines)] }));
   const pVals = tot.map(t=>t.putts);
-  const o2 = opts("パット", null); o2.scales.y.min = Math.min(holesN+1, ...pVals); o2.scales.y.max = Math.max(holesN*2+7, ...pVals);
+  const o2 = opts("パット", null); o2.scales.y.min = Math.min(holesN+1, ...pVals); o2.scales.y.max = Math.max(holesN*2+6, ...pVals);
   o2.plugins.tooltip.callbacks.label = c => ` ${tot[c.dataIndex].putts}パット`;
   charts.push(new Chart($("#ch-putt"), { type:"bar", data:{ labels, datasets:[
     { label:"パット", data: pVals, backgroundColor: c=>{ const {ctx,chartArea:a}=c.chart; if(!a) return cssv("--c3"); const g=ctx.createLinearGradient(0,a.bottom,0,a.top); g.addColorStop(0,cssv("--c3")); g.addColorStop(1,cssv("--c5")); return g; }, borderRadius:3, maxBarThickness:22 }
