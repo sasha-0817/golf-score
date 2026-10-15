@@ -253,6 +253,30 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);bo
 
 .mk2{display:inline-flex;width:26px;height:26px;border-radius:7px;align-items:center;justify-content:center;font-weight:700;color:#fff}
 .mk2.q-par,.mk2.q-bogey{color:#0B1310}
+
+/* v5: approach map */
+.approach{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:none}
+.approach .az{cursor:pointer;outline:none}
+.az-rough{fill:var(--rec-raise)}
+.az-bg{fill:var(--rec-surface);stroke:var(--rec-line);stroke-width:1;transition:fill .15s}
+.az:active .az-bg{fill:var(--rec-line)}
+.az.on-sel .az-bg{fill:var(--rec-fg);stroke:var(--rec-fg)}
+.az-t{font:700 13px var(--f-body);fill:var(--rec-fg);text-anchor:middle;dominant-baseline:middle;pointer-events:none}
+.az.on-sel .az-t{fill:var(--rec-bg)}
+.sand{fill:#E9D8A6;stroke:#D6C38C;stroke-width:1;pointer-events:none}
+.fringe{fill:color-mix(in srgb,var(--rec-turf) 22%,var(--rec-raise))}
+.g-ring{fill:none;stroke:transparent;stroke-width:4}
+.az-green.on-sel .g-ring{stroke:var(--rec-fg)}
+.on-t{fill:#fff;font-size:14px}
+.az-green.on-sel .on-t{fill:#fff}
+.az:focus-visible .az-bg,.az-green:focus-visible .g-ring{stroke:var(--flag);stroke-width:3}
+.tracer{fill:none;stroke:#F2B01E;stroke-width:2.5;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:0;animation:trace .45s ease-out;opacity:.9;pointer-events:none}
+@keyframes trace{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.ballg{pointer-events:none}
+.ballg.drop{animation:drop .45s cubic-bezier(.2,1.4,.5,1)}
+@keyframes drop{0%{opacity:0;transform:translateY(-14px)}60%{opacity:1}100%{transform:none}}
+@media (prefers-reduced-motion:reduce){.tracer,.ballg.drop{animation:none}}
+
 /* stats */
 .who-pick{display:flex;gap:6px;overflow-x:auto;padding:2px}
 .who-pick button{flex:0 0 auto;font:inherit;font-weight:700;font-size:15px;padding:10px 18px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--muted);cursor:pointer}
@@ -391,7 +415,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-16-0045";
+const BUILD = "2026-10-16-0100";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -567,6 +591,42 @@ const TERM = d => d<=-3?"ALBATROSS":d===-2?"EAGLE":d===-1?"BIRDIE":d===0?"PAR":d
 const TONE = d => d<=-2?"eagle":d===-1?"birdie":d===0?"par":d===1?"bogey":d===2?"double":"triple";
 const BALL_POS = { on:{left:"calc(50% + 16px)",top:"calc(50% + 4px)"}, left:{left:"calc(19% + 9px)",top:"calc(50% - 7px)"}, right:{left:"calc(81% - 23px)",top:"calc(50% - 7px)"}, long:{left:"calc(67% + 8px)",top:"14px"}, short:{left:"calc(67% + 8px)",top:"calc(100% - 28px)"} };
 const AR = { long:'<svg viewBox="0 0 12 12"><path d="M6 10V2M2.5 5.5L6 2l3.5 3.5"/></svg>', short:'<svg viewBox="0 0 12 12"><path d="M6 2v8M2.5 6.5L6 10l3.5-3.5"/></svg>', left:'<svg viewBox="0 0 12 12"><path d="M10 6H2M5.5 2.5L2 6l3.5 3.5"/></svg>', right:'<svg viewBox="0 0 12 12"><path d="M2 6h8M6.5 2.5L10 6l-3.5 3.5"/></svg>' };
+
+/* アプローチ: 上から見たグリーン。エリアをタップすると球が飛んでいく */
+function approachSVG(dir, tap){
+  const Z = { on:[218,106], long:[170,26], short:[170,178], left:[46,100], right:[294,100] };
+  const sel = k => dir===k;
+  const zone = (k, shape, lx, ly, label, arrow) => `<g class="az ${sel(k)?"on-sel":""}" role="button" tabindex="0" data-act="dir" data-v="${k}" aria-pressed="${sel(k)}" aria-label="${label}">
+      ${shape}<text x="${lx}" y="${ly}" class="az-t">${arrow?arrow+" ":""}${label}</text></g>`;
+  const b = dir && Z[dir];
+  const tracer = b ? `<path class="tracer" d="M170 214 Q ${(170+b[0])/2 + (b[0]===170?0:(b[0]<170?-30:30))} ${b[1]-70} ${b[0]} ${b[1]}" pathLength="1"/>` : "";
+  return `<svg class="approach" viewBox="0 0 340 196" role="group" aria-label="グリーンを狙った1球目">
+    <defs>
+      <radialGradient id="gGreen" cx="45%" cy="40%" r="70%"><stop offset="0" stop-color="#5BE6A8"/><stop offset=".7" stop-color="#14A866"/><stop offset="1" stop-color="#0B8A52"/></radialGradient>
+      <pattern id="mow" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><rect width="8" height="16" fill="rgba(255,255,255,.07)"/></pattern>
+      <filter id="gShadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#083C26" flood-opacity=".35"/></filter>
+    </defs>
+    <rect class="az-rough" x="0" y="0" width="340" height="196" rx="18"/>
+    ${zone("long", `<path class="az-bg" d="M70 4 H270 Q286 4 286 20 V36 Q240 46 170 48 Q100 46 54 36 V20 Q54 4 70 4Z"/>`, 170, 30, "奥", "↑")}
+    ${zone("short", `<path class="az-bg" d="M54 160 Q100 150 170 148 Q240 150 286 160 V176 Q286 192 270 192 H70 Q54 192 54 176Z"/>`, 170, 180, "ショート", "↓")}
+    ${zone("left", `<path class="az-bg" d="M4 22 Q4 6 20 6 H40 Q60 40 64 98 Q60 156 40 190 H20 Q4 190 4 174Z"/>`, 30, 104, "左", "")}
+    ${zone("right", `<path class="az-bg" d="M336 22 Q336 6 320 6 H300 Q280 40 276 98 Q280 156 300 190 H320 Q336 190 336 174Z"/>`, 310, 104, "右", "")}
+    <ellipse cx="96" cy="150" rx="24" ry="9" class="sand"/><ellipse cx="252" cy="58" rx="20" ry="8" class="sand"/>
+    <g class="az az-green ${sel("on")?"on-sel":""}" role="button" tabindex="0" data-act="dir" data-v="on" aria-pressed="${sel("on")}" aria-label="オン">
+      <ellipse cx="170" cy="98" rx="94" ry="56" class="fringe"/>
+      <ellipse cx="170" cy="98" rx="84" ry="48" fill="url(#gGreen)" filter="url(#gShadow)"/>
+      <ellipse cx="170" cy="98" rx="84" ry="48" fill="url(#mow)"/>
+      <ellipse cx="170" cy="98" rx="84" ry="48" class="g-ring"/>
+      <ellipse cx="196" cy="84" rx="6" ry="2.6" fill="rgba(0,0,0,.45)"/>
+      <line x1="196" y1="84" x2="196" y2="40" stroke="#fff" stroke-width="2"/>
+      <path d="M197 41 L219 48 L197 55Z" fill="#F2B01E"/>
+      <path d="M196 84 L176 92" stroke="rgba(0,0,0,.18)" stroke-width="2"/>
+      <text x="148" y="122" class="az-t on-t">オン</text>
+    </g>
+    ${tracer}
+    ${b?`<g class="ballg ${tap?"drop":""}"><ellipse cx="${b[0]+2}" cy="${b[1]+5}" rx="7" ry="2.5" fill="rgba(0,0,0,.25)"/><circle cx="${b[0]}" cy="${b[1]}" r="6.5" fill="#fff" stroke="rgba(0,0,0,.15)"/></g>`:""}
+  </svg>`;
+}
 function viewRecordDraft(d){
   const h = d.holes[state.hole];
   const N = d.holes.length;
@@ -606,11 +666,8 @@ function viewRecordDraft(d){
       <div><div class="seg-head"><span class="eyebrow">SCORE<b>打数</b></span></div><div class="seg s8">${[1,2,3,4,5,6,7,8].map(sBtn).join("")}</div></div>
       <div><div class="seg-head"><span class="eyebrow">PUTTS<b>パット</b></span><span class="hint">${hint}</span></div><div class="seg s6">${[0,1,2,3,4,5].map(pBtn).join("")}</div></div>
       <div><div class="seg-head"><span class="eyebrow">APPROACH<b>グリーンを狙った1球目</b></span></div>
-        <div class="greenpad"><div class="rough"></div>
-          ${gp("long","gp-long","奥")}${gp("left","gp-left","左")}${gp("right","gp-right","右")}${gp("short","gp-short","ショート")}
-          <button class="gp-on ${state.tap==="dir"+"on"?"pop":""}" data-act="dir" data-v="on" aria-pressed="${h.dir==="on"}" aria-label="オン"><i class="cup"></i>${ICON.flag}<span>オン</span></button>
-          ${ball}
-        </div></div>
+        ${approachSVG(h.dir, state.tap&&state.tap.startsWith("dir"))}
+      </div>
       <div class="trouble">
         <button class="bk" data-act="tog" data-k="bunker" aria-pressed="${!!h.bunker}"><svg viewBox="0 0 18 18" aria-hidden="true"><ellipse cx="9" cy="11" rx="7.5" ry="4" fill="currentColor" opacity=".35"/><circle cx="6" cy="10.5" r=".9" fill="currentColor"/><circle cx="10" cy="12" r=".9" fill="currentColor"/><circle cx="12.5" cy="10" r=".9" fill="currentColor"/></svg>バンカー</button>
         <button class="ob" data-act="tog" data-k="ob" aria-pressed="${!!h.ob}"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="7.5" y="2" width="3" height="14" rx="1" fill="currentColor"/><rect x="7.5" y="4" width="3" height="2.5" fill="#fff" opacity=".9"/><rect x="7.5" y="9" width="3" height="2.5" fill="#fff" opacity=".9"/></svg>OB</button>
