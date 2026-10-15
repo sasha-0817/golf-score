@@ -310,7 +310,7 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);bo
 .result-card{position:relative;width:100%;max-width:380px;border-radius:28px;overflow:hidden;color:#fff;background:linear-gradient(150deg,#08261C 0%,#0B6B44 50%,#0E8FA0 100%);box-shadow:0 30px 60px -20px rgba(0,0,0,.6);animation:rise .5s cubic-bezier(.2,1.2,.4,1)}
 @keyframes rise{from{transform:translateY(30px) scale(.96);opacity:0}to{transform:none;opacity:1}}
 .result-card::before{content:"";position:absolute;right:-90px;top:-80px;width:320px;height:280px;border-radius:50%;background:repeating-radial-gradient(ellipse at center,rgba(255,255,255,.12) 0 1px,transparent 1px 14px)}
-.rc-in{position:relative;padding:22px 22px 18px;display:flex;flex-direction:column;gap:14px}
+.rc-in{position:relative;z-index:4;padding:22px 22px 18px;display:flex;flex-direction:column;gap:14px}
 .rc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .rc-top .k{font-size:10px;letter-spacing:.22em;font-weight:700;opacity:.7}
 .rc-top .n{font-size:18px;font-weight:900;margin-top:2px}
@@ -576,7 +576,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-16-0915";
+const BUILD = "2026-10-16-0930";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -724,9 +724,9 @@ function resultOverlay(r){
   const n = k => s.dist[k];
   const [y,m,d] = r.date.split("-");
   const best = flag==="COURSE BEST!";
-  const conf = best ? `<div class="confetti full">${Array.from({length:60},(_,i)=>`<i style="left:${(Math.random()*100).toFixed(1)}%;background:${["#F2B01E","#FFD76A","#FFFFFF","#4F9BEA","#FF8A65"][i%5]};animation-delay:${(-Math.random()*4).toFixed(2)}s;animation-duration:${(3+Math.random()*2.5).toFixed(2)}s;width:${5+Math.round(Math.random()*5)}px"></i>`).join("")}</div>` : "";
-  return `<div class="result-back" role="dialog" aria-label="ラウンド結果">${conf}<div class="result-wrap">
-    <div class="result-card"><div class="rc-in">
+  const conf = best ? `<div class="confetti">${Array.from({length:22},(_,i)=>`<i style="left:${(Math.random()*100).toFixed(1)}%;background:${["#F2B01E","#FFD76A","#5BE6A8","#fff","#38BDF8"][i%5]};animation-delay:${(-Math.random()*3).toFixed(2)}s;animation-duration:${(2.2+Math.random()*1.8).toFixed(2)}s;width:${5+Math.round(Math.random()*4)}px"></i>`).join("")}</div>` : "";
+  return `<div class="result-back" role="dialog" aria-label="ラウンド結果"><div class="result-wrap">
+    <div class="result-card">${conf}<div class="rc-in">
       <div class="rc-top"><div><div class="k">ROUND COMPLETE</div><div class="n">${esc(r.player)}</div><div class="c">${esc(r.courseName)}・${+m}/${+d}</div></div>${flag?`<span class="rc-flag">${flag}</span>`:""}</div>
       <div class="rc-score"><b>${t.score}</b><span>${toPar(t.diff)}</span></div>
       <div class="rc-sc">${(()=>{ const out=[]; for(let i=0;i<r.holes.length;i+=9){ const ch=r.holes.slice(i,i+9);
@@ -1037,13 +1037,13 @@ after.stats = () => {
   const o1 = opts(oneCourse?"スコア":"対パー", oneCourse?null:(v=>toPar(v)), Math.min(parN-2, ...vals), Math.max(parN+2*holesN+1, ...vals));
   o1.plugins.tooltip.callbacks.label = c => ` スコア ${tot[c.dataIndex].score}（${toPar(tot[c.dataIndex].diff)}）`;
   charts.push(new Chart($("#ch-score"), { type:"bar", data:{ labels, datasets:[
-    { label:"スコア", data: vals, backgroundColor: zoneFill(i=>scoreZone(i)), borderColor: rs.map((r,i)=>zoneColor(scoreZone(i))), borderWidth:0, borderSkipped:"start", borderRadius:5, maxBarThickness:16, base: oneCourse ? undefined : 0 }
+    { label:"スコア", data: vals, backgroundColor: "#2F7DE1", borderColor: rs.map((r,i)=>zoneColor(scoreZone(i))), borderWidth:0, borderSkipped:"start", borderRadius:5, maxBarThickness:16, base: oneCourse ? undefined : 0 }
   ]}, options:o1, plugins:[refLines(scoreLines)] }));
   const pVals = tot.map(t=>t.putts);
   const o2 = opts("パット", null); o2.scales.y.min = Math.min(holesN+1, ...pVals); o2.scales.y.max = Math.max(holesN*2+6, ...pVals);
   o2.plugins.tooltip.callbacks.label = c => ` ${tot[c.dataIndex].putts}パット`;
   charts.push(new Chart($("#ch-putt"), { type:"bar", data:{ labels, datasets:[
-    { label:"パット", data: pVals, backgroundColor: zoneFill(i=>puttZone(i)), borderColor: rs.map((r,i)=>zoneColor(puttZone(i))), borderWidth:0, borderSkipped:"start", borderRadius:5, maxBarThickness:16 }
+    { label:"パット", data: pVals, backgroundColor: "#22A06B", borderColor: rs.map((r,i)=>zoneColor(puttZone(i))), borderWidth:0, borderSkipped:"start", borderRadius:5, maxBarThickness:16 }
   ]}, options:o2, plugins:[refLines([{ v:2*holesN, label:`${2*holesN}`, color: cssv("--q-par") }])] }));
   const donut = (id, segs) => { const el=$(id); if(!el) return;
     charts.push(new Chart(el, {type:"doughnut", data:{labels:segs.map(x=>x.label), datasets:[{data:segs.map(x=>x.n), backgroundColor:segs.map(x=>cssv(x.tone)), borderWidth:0, borderRadius:0, spacing:2, hoverOffset:4}]},
@@ -1154,7 +1154,7 @@ document.addEventListener("click", async ev => {
       const card=$(".result-card"); if(!card || !window.html2canvas){ toast("画像を作れませんでした"); break; }
       b.disabled=true; b.textContent="作成中…";
       try{
-        const cv = await html2canvas(card,{scale:3, backgroundColor:null, useCORS:true});
+        const cv = await html2canvas(card,{scale:3, backgroundColor:null, useCORS:true, ignoreElements: el=>el.classList && el.classList.contains("confetti")});
         const blob = await new Promise(r=>cv.toBlob(r,"image/png"));
         const file = new File([blob], `golfsc-${state.result.date}.png`, {type:"image/png"});
         if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:"GOLF SC."}); }
