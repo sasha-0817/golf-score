@@ -391,6 +391,25 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);bo
 .m-par{color:var(--fg)}
 .rc-sc .m-par{color:#fff}
 .rc-sc .m-birdie,.rc-sc .m-eagle{border-color:#9EC5FF;color:#9EC5FF;outline-color:#9EC5FF}
+
+/* v9: recent 5 — symbols only */
+.rr{grid-template-columns:62px minmax(0,1fr)!important}
+.rd small{display:block;font-family:var(--f-num);font-size:12px;color:var(--muted);font-weight:700}
+.rd b{font-family:var(--f-num);font-size:20px!important;white-space:nowrap}
+.rd b i{font-style:normal;font-size:12px;color:var(--muted);margin-left:2px}
+.mk4{display:inline-block;width:14px;height:14px;box-sizing:border-box;position:relative}
+.mk4.m-par{width:12px;height:2px;background:var(--muted);border-radius:2px;margin:6px 1px}
+.mk4.m-birdie{border:2px solid var(--q-birdie);border-radius:50%}
+.mk4.m-eagle{border:2px solid var(--q-eagle);border-radius:50%;outline:1.5px solid var(--q-eagle);outline-offset:1.5px}
+.mk4.m-hio{background:var(--q-hio);border-radius:50%}
+.mk4.m-bogey{border:2px solid var(--q-bogey)}
+.mk4.m-double{border:2px solid var(--q-double);outline:1.5px solid var(--q-double);outline-offset:1.5px}
+.mk4.m-triple{background:var(--q-triple)}
+.rh{align-items:center;min-height:22px}
+.mk-legend{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px 10px;margin-top:12px;font-size:10px;color:var(--muted)}
+.mk-legend span{display:inline-flex;align-items:center;gap:4px}
+.mk-legend .mk4{transform:scale(.8)}
+
 /* stats */
 .who-pick{display:flex;gap:6px;overflow-x:auto;padding:2px}
 .who-pick button{flex:0 0 auto;font:inherit;font-weight:700;font-size:15px;padding:10px 18px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--muted);cursor:pointer}
@@ -529,7 +548,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-16-0815";
+const BUILD = "2026-10-16-0830";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -754,7 +773,7 @@ function approachSVG(dir, tap, stat){
   const tracer = b ? `<path class="tracer ${tap?"anim":""}" d="M${sx} ${sy} Q ${(sx+b[0])/2} ${Math.min(sy,b[1]) - (dir==="short"?70:dir==="long"?12:40)} ${b[0]} ${b[1]}" pathLength="1"/>` : "";
   // 光は左上から: 影はすべて同じ向き (28,10) に落ちる
   const SH = "rgba(0,0,0,.22)";
-  const ball = b ? `<g class="ballg ${tap?"drop":""}"><ellipse cx="${b[0]+3.5}" cy="${b[1]+5}" rx="7.5" ry="4.8" fill="rgba(0,0,0,.26)" filter="url(#soft)" transform="rotate(15 ${b[0]+3.5} ${b[1]+5})"/><circle cx="${b[0]}" cy="${b[1]}" r="6.5" fill="#fff" stroke="rgba(0,0,0,.15)"/></g>` : "";
+  const ball = b ? `<g class="ballg ${tap?"drop":""}"><ellipse cx="${b[0]+3.5}" cy="${b[1]+5}" rx="7.5" ry="4.8" fill="rgba(0,0,0,.26)" filter="url(#soft)" transform="rotate(15 ${b[0]+3.5} ${b[1]+5})"/><image href="ball.png" x="${b[0]-7.5}" y="${b[1]-7.5}" width="15" height="15"/></g>` : "";
   const greenAttrs = stat ? `class="az-s"` : `class="az az-green ${sel("on")?"on-sel":""}" role="button" tabindex="0" data-act="dir" data-v="on" aria-pressed="${sel("on")}" aria-label="オン"`;
   const onLabel = stat ? `<text x="150" y="112" class="az-t on-t" style="font-size:12px">オン</text><text x="150" y="132" class="on-p">${fmtPct(pctOf("on"))}%</text>` : `<text x="148" y="122" class="az-t on-t">オン</text>`;
   return `<svg class="approach" viewBox="0 0 340 196" role="${stat?"img":"group"}" aria-label="グリーンを狙った1球目">
@@ -901,7 +920,8 @@ function viewStats(){
     <div class="row"><div><span>BEST</span><b>${toPar(s.best)}</b></div><div><span>前回</span><b>${toPar(roundTotals(rs[rs.length-1]).diff)}</b></div><div><span>ROUNDS</span><b>${s.rounds}</b></div>${s.dist.hio?`<div><span>HOLE IN ONE</span><b>${s.dist.hio}</b></div>`:`<div><span>HOLES</span><b>${s.holes}</b></div>`}</div>
   </div>
   <div class="panel"><div class="sec"><em>RECENT</em><span>直近5ラウンド</span></div><div class="recent">${rs.slice(-5).reverse().map(r=>{ const t=roundTotals(r); const [y,m,d]=r.date.split("-");
-      return `<div class="rr"><div class="rd"><b>${+m}/${+d}</b><small>${toPar(t.diff)}</small></div><div class="rh">${r.holes.map(h=>mark(h)).join("")}</div></div>`; }).join("")}</div></div>
+      return `<div class="rr"><div class="rd"><small>${+m}/${+d}</small><b>${t.score}<i>(${toPar(t.diff)})</i></b></div><div class="rh">${r.holes.map(h=>`<span class="mk4 m-${TONEH(h)}" title="${h.strokes}"></span>`).join("")}</div></div>`; }).join("")}</div>
+    <div class="mk-legend"><span><i class="mk4 m-par"></i>パー</span><span><i class="mk4 m-birdie"></i>バーディ</span><span><i class="mk4 m-eagle"></i>イーグル</span><span><i class="mk4 m-bogey"></i>ボギー</span><span><i class="mk4 m-double"></i>ダボ</span><span><i class="mk4 m-triple"></i>トリプル+</span></div></div>
   <div class="panel"><div class="sec"><em>SHOTS</em><span>ショット</span></div><div class="gauges">
     ${gauge("パーオン率", s.gir, "パー−2打以内でオン", "--turf")}
     ${gauge("ボギーオン率", s.bon, "パー−1打以内でオン", "--accent2")}
