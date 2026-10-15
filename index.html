@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="スコアカード">
 <meta name="theme-color" content="#F1F4F3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#070C0A" media="(prefers-color-scheme: dark)">
-<link rel="apple-touch-icon" sizes="180x180" href="icon.png?v=3">
+<link rel="apple-touch-icon" sizes="180x180" href="icon.png?v=4">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;-webkit-text-size-adjust:100%}img{max-width:100%}[hidden]{display:none!important}button{-webkit-tap-highlight-color:transparent}</style>
 <title>ショートコース スコアカード</title>
@@ -52,7 +52,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15
 .wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(96px + env(safe-area-inset-bottom,0px))}
 header.top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:14px 4px}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
-.brand img{width:40px;height:40px;border-radius:10px;box-shadow:0 4px 12px -4px rgba(11,40,20,.45);flex:0 0 40px}
+.brand img{width:44px;height:44px;flex:0 0 44px;object-fit:contain}
 .brand .wm{display:flex;flex-direction:column;line-height:1}
 .brand .wm b{font-family:var(--f-num);font-size:26px;font-weight:700;letter-spacing:.04em}
 .brand .wm small{font-size:8.5px;font-weight:700;letter-spacing:.24em;color:var(--muted);margin-top:3px;white-space:nowrap}
@@ -459,7 +459,7 @@ table.sc tr.hn td{background:var(--soft);color:var(--muted);font-size:13px}
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="brand"><img src="icon-192.png" alt=""><div class="wm"><b>GOLF SC.</b><small>SHORT COURSE SCORECARD</small></div></div>
+    <div class="brand"><img src="mark.png" alt=""><div class="wm"><b>GOLF SC.</b><small>SHORT COURSE SCORECARD</small></div></div>
     <div class="sync" id="sync">接続中…</div>
   </header>
   <nav class="tabs" role="tablist">
@@ -498,7 +498,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-16-0230";
+const BUILD = "2026-10-16-0300";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
