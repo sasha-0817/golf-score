@@ -50,10 +50,13 @@
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.6}
 .wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(96px + env(safe-area-inset-bottom,0px))}
-header.top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:14px 2px;flex-wrap:wrap}
-.brand{font-weight:900;font-size:17px;letter-spacing:.02em;display:flex;align-items:center;gap:10px}
-.brand svg{width:22px;height:26px}
-.sync{font-size:12px;color:var(--muted)}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:14px 4px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand img{width:40px;height:40px;border-radius:10px;box-shadow:0 4px 12px -4px rgba(11,40,20,.45);flex:0 0 40px}
+.brand .wm{display:flex;flex-direction:column;line-height:1}
+.brand .wm b{font-family:var(--f-num);font-size:26px;font-weight:700;letter-spacing:.04em}
+.brand .wm small{font-size:8.5px;font-weight:700;letter-spacing:.24em;color:var(--muted);margin-top:3px;white-space:nowrap}
+.sync{font-size:11px;color:var(--muted);background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:5px 10px;white-space:nowrap;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .sync b{color:var(--turf);font-weight:700}
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--paper);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:4px max(8px,env(safe-area-inset-right,0px)) calc(4px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
 nav.tabs button{font:inherit;font-weight:700;font-size:11px;background:none;border:0;color:var(--muted);padding:6px 0 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;letter-spacing:.04em}
@@ -456,7 +459,7 @@ table.sc tr.hn td{background:var(--soft);color:var(--muted);font-size:13px}
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="brand"><svg viewBox="0 0 22 26" aria-hidden="true"><line x1="4" y1="2" x2="4" y2="24" stroke="currentColor" stroke-width="2"/><path d="M5 3 L19 7.5 L5 12 Z" fill="var(--flag)"/><ellipse cx="9" cy="24" rx="8" ry="1.8" fill="var(--turf)"/></svg>ショートコース スコアカード</div>
+    <div class="brand"><img src="icon-192.png" alt=""><div class="wm"><b>GOLF SC.</b><small>SHORT COURSE SCORECARD</small></div></div>
     <div class="sync" id="sync">接続中…</div>
   </header>
   <nav class="tabs" role="tablist">
@@ -495,7 +498,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-16-0220";
+const BUILD = "2026-10-16-0230";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -625,7 +628,7 @@ function render(){
   document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", String(b.dataset.tab===state.tab)));
   const s=$("#sync");
   if(state.mode==="cloud") s.innerHTML = pending.length ? `未送信 ${pending.length}件` : "<b>●</b> 同期済み";
-  else if(state.mode==="offline") s.textContent = "オフライン（前回のデータを表示中）";
+  else if(state.mode==="offline") s.textContent = "オフライン";
   else if(state.mode==="local") s.textContent="この端末だけに保存中";
   else s.textContent="接続中…";
   killCharts();
