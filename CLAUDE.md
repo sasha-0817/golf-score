@@ -75,6 +75,9 @@
 
 ## 今後の候補
 
+- App Store 版（本命）: アプリ名は「GOLF SC.」のまま（SC = Short Course / ScoreCard）。サブタイトルで検索語を拾う（例: Short Course & Par 3 Scorecard / ショートコースのスコア記録・分析）。「My Score」系は既存アプリが多く不採用。
+  - 形: 無料ダウンロード → 数ラウンドまで無料 → 300〜500円の買い切りで全機能開放。まず日本語と英語。
+  - 技術: データは端末内保存に変更（サーバー代0）、Capacitor でiPhoneアプリ化、Mac + Xcode + Apple Developer Program（年99ドル、手数料は Small Business Program で15%）。
 - 有料化（フリーミアム想定）: ログインと個人ごとのデータ（Supabase / Firebase 等）、決済（Stripe 等）、規約・特商法表記、ロゴの商標確認。全国のショートコースを事前登録しておくのが売りになりそう。
   - GitHub Pages は規約上、商用サービス（有料のWebサービス等）の運用には使えない。有料化する時点で公開先を Vercel / Netlify / Cloudflare Pages など商用可のサービスへ移す。
 - 分析の追加案: どこでスコアを落としているかの内訳、「3パットがなかったら」スコア、ホール別の傾向、クラブ記録、バッジ/記録集。
