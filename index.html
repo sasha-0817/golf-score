@@ -424,6 +424,8 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);bo
 .rc-actions button{flex:1;height:50px;border-radius:16px;border:0;font:inherit;font-weight:900;font-size:15px;cursor:pointer}
 .rc-save{background:linear-gradient(120deg,var(--turf),var(--accent2));color:#fff}
 .rc-actions .rc-close{margin:0;background:#fff;color:#0B1310}
+.rc-sub{margin-top:10px}
+.rc-actions .rc-back{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.35)}
 .resume{display:flex;flex-direction:column;gap:10px}
 .resume .rinfo{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .resume .rinfo b{font-size:15px}
@@ -576,7 +578,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-16-0945";
+const BUILD = "2026-10-16-0950";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -743,7 +745,8 @@ function resultOverlay(r){
       </div>
       <div class="rc-brand">SHORT COURSE SCORECARD</div>
     </div></div>
-    <div class="rc-actions"><button class="rc-save" data-act="save-card">画像を保存・送る</button><button class="rc-close" data-act="close-result">閉じる</button></div>
+    <div class="rc-actions"><button class="rc-save" data-act="save-card">画像を保存・送る</button></div>
+    <div class="rc-actions rc-sub"><button class="rc-back" data-act="back-to-input">スコア入力に戻る</button><button class="rc-close" data-act="close-result">閉じる</button></div>
   </div></div>`;
 }
 const after = {};
@@ -1161,6 +1164,11 @@ document.addEventListener("click", async ev => {
         else { const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=file.name; document.body.appendChild(a); a.click(); a.remove(); toast("画像を保存しました"); }
       }catch(e){ if(e && e.name!=="AbortError") toast("画像を作れませんでした"); }
       b.disabled=false; b.textContent="画像を保存・送る"; break;
+    }
+    case "back-to-input": {
+      const r=state.result; state.result=null; if(!r) { render(); break; }
+      state.draft={...JSON.parse(JSON.stringify(r)), editing:true}; state.draft.holes.forEach(x=>x.entered=true);
+      state.hole=r.holes.length-1; state.tab="record"; LS.set("sc.tab","record"); saveDraft(); render(); break;
     }
     case "close-result": state.result=null; render(); break;
     case "toggle-round": state.openRound = state.openRound===b.dataset.id ? null : b.dataset.id; state.confirm=null; render(); break;
