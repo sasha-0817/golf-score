@@ -578,7 +578,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-16-0950";
+const BUILD = "2026-10-16-1010";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1012,7 +1012,10 @@ after.stats = () => {
   const seen={}; const circ="①②③④⑤⑥⑦⑧⑨";
   const byDay={}; rs.forEach(r=>{ byDay[r.date]=(byDay[r.date]||0)+1; });
   const lbl = rs.map(r=>{ const [y,m,d]=(r.date||"").split("-"); seen[r.date]=(seen[r.date]||0)+1; return `${+m}/${+d}` + (byDay[r.date]>1 ? circ[seen[r.date]-1]||"" : ""); });
-  const labels = lbl;
+  // データが少ないときは左詰め: 最低10本分の枠を確保して、空き枠は右側に置く
+  const SLOTS = Math.max(10, rs.length);
+  const pad = arr => arr.concat(Array(SLOTS-arr.length).fill(null));
+  const labels = lbl.concat(Array(SLOTS-lbl.length).fill(""));
   const oneCourse = state.fCourse!=="all";
   const tot = rs.map(roundTotals);
   // 基準線: 横いっぱいに引く太めの線（パー・ボギー・ダボ）
@@ -1034,19 +1037,19 @@ after.stats = () => {
   const puttZone = i => { const per = tot[i].putts / rs[i].holes.length; return per<=2 ? "par" : per<=2.5 ? "bogey" : "double"; };
   const zoneColor = z => cssv("--q-"+z);
   const zoneFill = zf => c => zoneColor(zf(c.dataIndex));
-  const tip = { callbacks:{ title: items => { const r=rs[items[0].dataIndex]; return `${r.date}  ${r.courseName}（${r.holes.length}H）`; } } };
+  const tip = { filter: it => it.dataIndex < rs.length, callbacks:{ title: items => { const r=rs[items[0].dataIndex]; if(!r) return ""; return `${r.date}  ${r.courseName}（${r.holes.length}H）`; } } };
   const opts = (yTitle, yFmt, lo, hi) => ({ maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:tip },
     scales:{ x:{ ticks:{ maxRotation:0, autoSkip:true, autoSkipPadding:14, maxTicksLimit:6 }, grid:{display:false} }, y:{ title:{display:true,text:yTitle}, ticks:{ precision:0, callback: yFmt || (v=>v) }, suggestedMin:lo, suggestedMax:hi, grid:{ color: cssv("--soft") } } } });
   const o1 = opts(oneCourse?"スコア":"対パー", oneCourse?null:(v=>toPar(v)), Math.min(parN-2, ...vals), Math.max(parN+2*holesN+1, ...vals));
   o1.plugins.tooltip.callbacks.label = c => ` スコア ${tot[c.dataIndex].score}（${toPar(tot[c.dataIndex].diff)}）`;
   charts.push(new Chart($("#ch-score"), { type:"bar", data:{ labels, datasets:[
-    { label:"スコア", data: vals, backgroundColor: "#2F7DE1", borderColor: rs.map((r,i)=>zoneColor(scoreZone(i))), borderWidth:0, borderSkipped:"start", borderRadius:5, maxBarThickness:16, base: oneCourse ? undefined : 0 }
+    { label:"スコア", data: pad(vals), backgroundColor: "#2F7DE1", borderColor: rs.map((r,i)=>zoneColor(scoreZone(i))), borderWidth:0, borderSkipped:"start", borderRadius:5, maxBarThickness:16, base: oneCourse ? undefined : 0 }
   ]}, options:o1, plugins:[refLines(scoreLines)] }));
   const pVals = tot.map(t=>t.putts);
   const o2 = opts("パット", null); o2.scales.y.min = Math.min(holesN+1, ...pVals); o2.scales.y.max = Math.max(holesN*2+6, ...pVals);
   o2.plugins.tooltip.callbacks.label = c => ` ${tot[c.dataIndex].putts}パット`;
   charts.push(new Chart($("#ch-putt"), { type:"bar", data:{ labels, datasets:[
-    { label:"パット", data: pVals, backgroundColor: "#22A06B", borderColor: rs.map((r,i)=>zoneColor(puttZone(i))), borderWidth:0, borderSkipped:"start", borderRadius:5, maxBarThickness:16 }
+    { label:"パット", data: pad(pVals), backgroundColor: "#22A06B", borderColor: rs.map((r,i)=>zoneColor(puttZone(i))), borderWidth:0, borderSkipped:"start", borderRadius:5, maxBarThickness:16 }
   ]}, options:o2, plugins:[refLines([{ v:2*holesN, label:`${2*holesN}`, color: cssv("--q-par") }])] }));
   const donut = (id, segs) => { const el=$(id); if(!el) return;
     charts.push(new Chart(el, {type:"doughnut", data:{labels:segs.map(x=>x.label), datasets:[{data:segs.map(x=>x.n), backgroundColor:segs.map(x=>cssv(x.tone)), borderWidth:0, borderRadius:0, spacing:2, hoverOffset:4}]},
