@@ -407,7 +407,7 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);bo
 .mk4.m-double{border:2px solid var(--q-double);outline:1.5px solid var(--q-double);outline-offset:1.5px}
 .mk4.m-triple{background:var(--q-triple)}
 .rh{align-items:center;min-height:22px}
-.mk-legend{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px 10px;margin-top:12px;font-size:10px;color:var(--muted)}
+.mk-legend{display:flex;flex-wrap:nowrap;justify-content:flex-end;gap:10px;margin-top:12px;font-size:11px;font-family:var(--f-num);font-weight:700;color:var(--muted);white-space:nowrap}
 .mk-legend span{display:inline-flex;align-items:center;gap:4px}
 .mk-legend .mk4{transform:scale(.8)}
 
@@ -576,7 +576,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-16-0935";
+const BUILD = "2026-10-16-0945";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -724,7 +724,7 @@ function resultOverlay(r){
   const n = k => s.dist[k];
   const [y,m,d] = r.date.split("-");
   const best = flag==="COURSE BEST!";
-  const conf = best ? `<div class="confetti">${Array.from({length:22},(_,i)=>`<i style="left:${(Math.sqrt(Math.random())*100).toFixed(1)}%;background:${["#F2B01E","#FFD76A","#5BE6A8","#fff","#38BDF8"][i%5]};animation-delay:${(-Math.random()*3).toFixed(2)}s;animation-duration:${(2.2+Math.random()*1.8).toFixed(2)}s;width:${5+Math.round(Math.random()*4)}px"></i>`).join("")}</div>` : "";
+  const conf = best ? `<div class="confetti">${Array.from({length:22},(_,i)=>`<i style="left:${(Math.cbrt(Math.random())*100).toFixed(1)}%;background:${["#F2B01E","#FFD76A","#5BE6A8","#fff","#38BDF8"][i%5]};animation-delay:${(-Math.random()*3).toFixed(2)}s;animation-duration:${(2.2+Math.random()*1.8).toFixed(2)}s;width:${5+Math.round(Math.random()*4)}px"></i>`).join("")}</div>` : "";
   return `<div class="result-back" role="dialog" aria-label="ラウンド結果"><div class="result-wrap">
     <div class="result-card">${conf}<div class="rc-in">
       <div class="rc-top"><div><div class="k">ROUND COMPLETE</div><div class="n">${esc(r.player)}</div><div class="c">${esc(r.courseName)}・${+m}/${+d}</div></div>${flag?`<span class="rc-flag">${flag}</span>`:""}</div>
@@ -857,7 +857,7 @@ function viewRecordDraft(d){
   const diff = h.strokes - h.par;
   const hio = h.strokes===1;
   const celebrate = state.tap && state.tap.startsWith("sv") && diff<0;
-  const confetti = diff<0 ? `<div class="confetti ${hio?"big":""}">${Array.from({length: hio?46:22},(_,i)=>`<i style="left:${(Math.sqrt(Math.random())*100).toFixed(1)}%;background:${(hio?["#F2B01E","#FFD76A","#FFF3C4","#fff","#F59E0B"]:["#F2B01E","#FFD76A","#5BE6A8","#fff","#38BDF8"])[i%5]};animation-delay:${(-Math.random()*3).toFixed(2)}s;animation-duration:${(2.2+Math.random()*1.8).toFixed(2)}s;width:${5+Math.round(Math.random()*4)}px"></i>`).join("")}</div>` : "";
+  const confetti = diff<0 ? `<div class="confetti ${hio?"big":""}">${Array.from({length: hio?46:22},(_,i)=>`<i style="left:${(Math.cbrt(Math.random())*100).toFixed(1)}%;background:${(hio?["#F2B01E","#FFD76A","#FFF3C4","#fff","#F59E0B"]:["#F2B01E","#FFD76A","#5BE6A8","#fff","#38BDF8"])[i%5]};animation-delay:${(-Math.random()*3).toFixed(2)}s;animation-duration:${(2.2+Math.random()*1.8).toFixed(2)}s;width:${5+Math.round(Math.random()*4)}px"></i>`).join("")}</div>` : "";
   const bestPace = (()=>{ const others = state.rounds.filter(r=>r.player===d.player && r.courseId===d.courseId && r.id!==d.id); if(!others.length || !done.length) return false;
     const best = others.reduce((a,r)=> roundTotals(r).diff < roundTotals(a).diff ? r : a);
     let mine=0, theirs=0; d.holes.forEach((x,i)=>{ if(x.entered && best.holes[i]){ mine += x.strokes-x.par; theirs += best.holes[i].strokes-best.holes[i].par; } });
@@ -966,7 +966,7 @@ function viewStats(){
   </div>
   <div class="panel"><div class="sec"><em>RECENT</em><span>直近3ラウンド</span></div><div class="recent">${rs.slice(-3).reverse().map(r=>{ const t=roundTotals(r); const [y,m,d]=r.date.split("-");
       return `<div class="rr"><div class="rd"><small>${+m}/${+d}</small><b>${t.score}<i>(${toPar(t.diff)})</i></b></div><div class="rh">${r.holes.map(h=>`<span class="mk4 m-${TONEH(h)}" title="${h.strokes}"></span>`).join("")}</div></div>`; }).join("")}</div>
-    <div class="mk-legend"><span><i class="mk4 m-par"></i>パー</span><span><i class="mk4 m-birdie"></i>バーディ</span><span><i class="mk4 m-eagle"></i>イーグル</span><span><i class="mk4 m-bogey"></i>ボギー</span><span><i class="mk4 m-double"></i>ダボ</span><span><i class="mk4 m-triple"></i>トリプル+</span></div></div>
+    <div class="mk-legend"><span><i class="mk4 m-eagle"></i>−2</span><span><i class="mk4 m-birdie"></i>−1</span><span><i class="mk4 m-par"></i>±0</span><span><i class="mk4 m-bogey"></i>+1</span><span><i class="mk4 m-double"></i>+2</span><span><i class="mk4 m-triple"></i>+3以上</span></div></div>
   <div class="panel"><div class="sec"><em>SHOTS</em><span>ショット</span></div><div class="gauges">
     ${gauge("パーオン率", s.gir, "パー−2打以内でオン", "--turf")}
     ${gauge("ボギーオン率", s.bon, "パー−1打以内でオン", "--accent2")}
