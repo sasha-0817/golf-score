@@ -904,6 +904,7 @@ table.sc tr.hn td{background:var(--soft);color:var(--muted);font-size:13px}
 @keyframes twinkle{0%,100%{transform:scale(.3) rotate(0);opacity:.2}50%{transform:scale(1) rotate(25deg);opacity:1}}
 @keyframes twinkleBig{0%,100%{transform:scale(.7) rotate(0);opacity:.55}50%{transform:scale(1.08) rotate(20deg);opacity:1}}
 @media (prefers-reduced-motion:reduce){.rc-stars svg{animation:none}}
+.sc tr.tr td{font-family:var(--f-body);font-size:10px;font-weight:700;color:var(--q-double);line-height:1.15}
 </style>
 
 </head>
@@ -1003,7 +1004,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1555";
+const BUILD = "2026-10-19-1600";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1819,6 +1820,8 @@ function viewHistory(){
     const t=roundTotals(r); const [y,m,d]=r.date.split("-"); const wd=W[new Date(+y,+m-1,+d).getDay()];
     const mh = `${y}-${m}`!==lastMonth ? `<div class="month">${+y}年${+m}月</div>` : ""; lastMonth = `${y}-${m}`;
     const open = state.openRound===r.id;
+    // グリーンの行き先はパー4・5に無いので出さない。OB・1ペナ・バンカーは、どれかあったラウンドだけ1行で出す
+    const hasTr = r.holes.some(h=>h.ob||h.pen||h.bunker);
     const chunks=[]; for(let i=0;i<r.holes.length;i+=9) chunks.push(r.holes.slice(i,i+9).map((h,j)=>({h,no:i+j+1})));
     const legend = `<div class="sc-legend"><span><i class="mk3 m-hio"></i>ホールインワン</span><span><i class="mk3 m-eagle"></i>イーグル</span><span><i class="mk3 m-birdie"></i>バーディ</span><span><i class="mk3 m-bogey"></i>ボギー</span><span><i class="mk3 m-double"></i>ダボ</span><span><i class="mk3 m-triple"></i>トリプル以上</span></div>`;
     const tables = chunks.map(ch=>`<div class="sc-wrap"><table class="sc">
@@ -1826,7 +1829,7 @@ function viewHistory(){
       <tr><th>PAR</th>${ch.map(x=>`<td>${x.h.par}</td>`).join("")}<td>${sum(ch,x=>x.h.par)}</td></tr>
       <tr><th>打数</th>${ch.map(x=>`<td>${mark(x.h)}</td>`).join("")}<td><b>${sum(ch,x=>x.h.strokes)}</b></td></tr>
       <tr><th>パット</th>${ch.map(x=>`<td>${x.h.putts}</td>`).join("")}<td>${sum(ch,x=>x.h.putts)}</td></tr>
-      <tr><th>グリーン</th>${ch.map(x=>`<td style="font-family:var(--f-body);font-size:11px">${x.h.dir?(x.h.dir==="on"?"◎":DIRS[x.h.dir]):"–"}${x.h.bunker||x.h.ob?`<div class="flags">${x.h.bunker?"B":""}${x.h.ob?" OB":""}</div>`:""}</td>`).join("")}<td></td></tr>
+      ${hasTr?`<tr class="tr"><th>OB・B</th>${ch.map(x=>`<td>${[x.h.ob?"OB":"",x.h.pen?"1P":"",x.h.bunker?"B":""].filter(Boolean).join("<br>")||""}</td>`).join("")}<td></td></tr>`:""}
     </table></div>`).join("");
     const conf = state.confirm==="del:"+r.id;
     const tcol = t.diff/r.holes.length<=0 ? "var(--turf)" : t.diff/r.holes.length<=1 ? "var(--muted)" : "var(--q-triple)";
