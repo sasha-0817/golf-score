@@ -214,7 +214,7 @@ select.ph{color:var(--muted)}
 .hc2 .live b small{font-size:13px;margin-left:2px;opacity:.85;font-weight:600}
 
 /* v26: stats tabs */
-.stat-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:0 0 14px;position:sticky;top:0;z-index:5;background:var(--bg);padding:6px 0}
+.stat-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 14px;position:sticky;top:0;z-index:5;background:var(--bg);padding:6px 0}
 .stat-tabs button{height:50px;border-radius:14px;border:1px solid var(--line);background:var(--paper);color:var(--muted);font:700 14px var(--f-body);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer}
 .stat-tabs button em{font-style:normal;font:700 9px var(--f-num);letter-spacing:.16em;opacity:.8}
 .stat-tabs button[aria-selected="true"]{background:linear-gradient(135deg,#1E3A8A,#2F7DE1);color:#fff;border-color:transparent;box-shadow:0 8px 18px -10px #2F7DE1}
@@ -876,6 +876,21 @@ table.sc tr.hn td{background:var(--soft);color:var(--muted);font-size:13px}
 .cs-bar{display:inline-block;width:34px;height:6px;border-radius:3px;background:var(--soft);margin-right:6px;vertical-align:middle;overflow:hidden}
 .cs-bar i{display:block;height:100%;background:var(--turf);border-radius:3px}
 .cs-note{font-size:11px;margin:8px 0 0}
+
+/* v30 */
+.rc-logo{display:inline-flex;align-items:center;gap:7px;background:#fff;border-radius:999px;padding:5px 12px 5px 6px;box-shadow:0 4px 12px -6px rgba(0,0,0,.4);opacity:1}
+.rc-logo img{width:26px;height:26px;filter:none}
+.rc-logo b{color:#0B1310}.rc-logo small{color:#0B6B44;opacity:1}
+.stat-tabs button{font-size:13px}
+.hole-tbl td:first-child small{display:block;font-size:9.5px;color:var(--muted)}
+.hole-tbl td small{font-size:10.5px;color:var(--muted);margin-left:4px}
+.hv{display:inline-block;min-width:34px;text-align:center;padding:2px 6px;border-radius:7px;font-weight:700;color:#fff}
+.hv.t-birdie{background:var(--q-birdie)}.hv.t-par{background:var(--q-par)}.hv.t-bogey{background:var(--q-bogey)}.hv.t-double{background:var(--q-double)}.hv.t-triple{background:var(--q-triple)}
+
+.demo-link{display:block;margin:-4px 0 0 auto;background:none;border:0;color:var(--muted);font:700 12px var(--f-body);cursor:pointer;padding:2px 4px}
+
+.rc-brand .rc-logo{flex-direction:row;align-items:center}
+.rc-brand .rc-logo>span{display:flex;flex-direction:column;align-items:flex-start}
 </style>
 
 </head>
@@ -974,7 +989,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1640";
+const BUILD = "2026-10-19-1700";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1181,7 +1196,7 @@ function resultOverlay(r){
         <div><span>3パット</span><b>${s.putt[3]}</b></div>
         <div><span>OB</span><b>${s.obN}</b></div>
       </div>
-      <div class="rc-brand"><img src="mark.png" alt=""><span><b>GOLF SC.</b><small>SHORT COURSE SCORECARD</small></span></div>
+      <div class="rc-brand"><span class="rc-logo"><img src="mark.png" alt=""><span><b>GOLF SC.</b><small>SHORT COURSE SCORECARD</small></span></span></div>
     </div></div>
     <div class="rc-actions"><button class="rc-save" data-act="save-card">画像を保存・送る</button></div>
     <div class="rc-actions rc-sub"><button class="rc-back" data-act="back-to-input">スコア入力に戻る</button><button class="rc-close" data-act="close-result">閉じる</button></div>
@@ -1549,13 +1564,14 @@ function viewStats(){
   const kpi = (k,v,unit,d) => `<div class="kpi"><div class="k">${k}</div><div class="v">${v}${unit?`<small>${unit}</small>`:""}</div>${d?`<div class="d">${d}</div>`:""}</div>`;
   const fx = v => v==null? "—" : v.toFixed(1);
   return `${demoBand}
+  ${state.demo?"":`<button class="demo-link" data-act="demo-on">サンプルデータ（20ラウンド）で見てみる ›</button>`}
   <div class="who-pick" role="tablist" aria-label="プレーヤー">${pl.map(p=>`<button role="tab" data-act="pick-player" data-v="${esc(p)}" aria-selected="${p===state.fPlayer}">${esc(p)}</button>`).join("")}</div>
   <div class="panel"><div class="filters">
     <div class="field"><label for="f-course">コース</label><select id="f-course"><option value="all">すべて</option>${cs.map(c=>`<option value="${c.id}" ${c.id===state.fCourse?"selected":""}>${esc(c.name)}</option>`).join("")}</select></div>
     <div class="field"><label for="f-range">期間</label><select id="f-range">${[["1","直近1ラウンド"],["3","直近3ラウンド"],["5","直近5ラウンド"],["10","直近10ラウンド"],["all","全ラウンド"]].map(([v,t])=>`<option value="${v}" ${v===state.fRange?"selected":""}>${t}</option>`).join("")}</select></div>
   </div></div>
   ${!rs.length?`<div class="panel empty"><strong>条件に合うラウンドがありません</strong>フィルターを変えてみてください。</div>`:`
-  <div class="stat-tabs" role="tablist">${[["score","SCORE","スコア"],["shot","SHOT","ショット"],["putt","PUTT","パット"]].map(([k,e,j])=>`<button role="tab" data-act="stat-tab" data-v="${k}" aria-selected="${ST===k}"><em>${e}</em>${j}</button>`).join("")}</div>
+  <div class="stat-tabs" role="tablist">${[["score","SCORE","スコア"],["shot","SHOT","ショット"],["putt","PUTT","パット"],["hole","HOLE","ホール"]].map(([k,e,j])=>`<button role="tab" data-act="stat-tab" data-v="${k}" aria-selected="${ST===k}"><em>${e}</em>${j}</button>`).join("")}</div>
   ${ST==="score"?`
   <div class="hero-stat">
     <div class="who">${esc(state.fPlayer).toUpperCase()} ・ AVG SCORE</div>
@@ -1568,7 +1584,7 @@ function viewStats(){
     <div class="mk-legend"><span><i class="mk4 m-eagle"></i>−2</span><span><i class="mk4 m-birdie"></i>−1</span><span><i class="mk4 m-par"></i>±0</span><span><i class="mk4 m-bogey"></i>+1</span><span><i class="mk4 m-double"></i>+2</span><span><i class="mk4 m-triple"></i>+3以上</span></div></div>
   <div class="panel"><div class="sec"><em>TREND</em><span>${state.fCourse==="all"?"スコアの推移（対パー）":"スコアの推移"}</span></div><div class="chartbox"><canvas id="ch-score" aria-label="スコア推移"></canvas></div></div>
   ${donutPanel("スコアの内訳","ch-dist",DIST_SEGS(s),s.holes,fmtPct(s.parOrBetter)+"<small>%</small>","パー以内")}
-  ${state.fCourse!=="all"?`<div class="panel"><div class="sec"><em>BY HOLE</em><span>ホール別の平均打数</span></div><div class="chartbox"><canvas id="ch-hole" aria-label="ホール別平均"></canvas></div></div>`:""}
+
 `:""}
   ${ST==="shot"?`
   <div class="panel"><div class="sec"><em>SHOTS</em><span>ショット</span></div><div class="gauges">
@@ -1583,9 +1599,9 @@ function viewStats(){
   <div class="panel"><div class="sec"><em>TREND</em><span>パーオン率・ボギーオン率の推移</span></div><div class="chartbox"><canvas id="ch-on" aria-label="パーオン率とボギーオン率の推移"></canvas></div></div>
   <div class="panel"><div class="sec"><em>SHOT</em><span>グリーンの行き先</span></div>${greenMap(s)}</div>
   ${clubPanel(rs)}
-  ${yardPanel(rs)}
   ${s.teeN?`<div class="panel"><div class="sec"><em>TEE</em><span>ティーショットの行き先</span></div>${fairwaySVG(null,false,s)}<p class="muted" style="font-size:12px;text-align:center;margin:8px 0 0">${s.teeN}回の記録・フェアウェイキープ率 <b>${fmtPct(s.fwRate)}%</b></p></div>`:""}
 `:""}
+  ${ST==="hole"?holePanel(rs):""}
   ${ST==="putt"?`
   <div class="panel"><div class="sec"><em>PUTTING</em><span>パット</span></div><div class="putts">
     <div><span class="eyebrow">1R平均</span><span class="num">${fx(s.avgPuttsRound)}</span></div>
@@ -1597,41 +1613,47 @@ function viewStats(){
 `:""}
   `}`;
 }
-/* クラブ別: そのクラブで打ったティーショットの結果（パー3はオン率、パー4以上はフェアウェイキープ率） */
+/* クラブ別パーオン率: そのホールのティーショットに使ったクラブごとに、パーオンできた割合 */
 function clubPanel(rs){
   const m = {};
-  rs.forEach(r=>r.holes.forEach(h=>{ if(!h.club) return; const x = m[h.club] || (m[h.club]={n:0,p3:0,on:0,p4:0,fw:0,diff:0,miss:{}});
-    x.n++; x.diff += h.strokes-h.par;
-    if(h.par===3 && h.dir){ x.p3++; if(h.dir==="on") x.on++; else x.miss[h.dir]=(x.miss[h.dir]||0)+1; }
-    if(h.par>=4 && h.tee){ x.p4++; if(h.tee==="fw") x.fw++; else x.miss[h.tee]=(x.miss[h.tee]||0)+1; } }));
+  rs.forEach(r=>r.holes.forEach(h=>{ if(!h.club) return; const x = m[h.club] || (m[h.club]={n:0,gir:0,diff:0,miss:{}});
+    x.n++; x.diff += h.strokes-h.par; if(h.strokes-h.putts<=h.par-2) x.gir++;
+    const d = h.par>=4 ? (h.tee!=="fw"?h.tee:null) : (h.dir!=="on"?h.dir:null); if(d) x.miss[d]=(x.miss[d]||0)+1; }));
   const cl = sortClubs(Object.keys(m));
-  if(!cl.length) return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別</span></div><p class="muted" style="font-size:13px;margin:0">記録する項目で「ショットの方向」と「使用クラブ」をONにすると、クラブごとのオン率や得意・苦手がここに出ます。</p></div>`;
+  if(!cl.length) return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別パーオン率</span></div><p class="muted" style="font-size:13px;margin:0">記録する項目で「使用クラブ」をONにすると、クラブごとのパーオン率や得意・苦手がここに出ます。</p></div>`;
   const ML = {left:"左",right:"右",long:"オーバー",short:"ショート",miss:"ミスヒット",rl:"左",rr:"右"};
-  const rate = x => x.p3 ? x.on/x.p3*100 : x.p4 ? x.fw/x.p4*100 : null;
-  const ok = cl.filter(c=>rate(m[c])!=null && m[c].p3+m[c].p4>=3);
+  const rate = x => x.gir/x.n*100;
+  const ok = cl.filter(c=>m[c].n>=3);
   const best = ok.length>1 ? ok.reduce((a,c)=>rate(m[c])>rate(m[a])?c:a) : null, worst = ok.length>1 ? ok.reduce((a,c)=>rate(m[c])<rate(m[a])?c:a) : null;
-  return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別</span></div>
+  return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別パーオン率</span></div>
     ${best&&worst&&best!==worst?`<div class="cs-tags"><span class="good">得意 <b>${esc(best)}</b> ${fmtPct(rate(m[best]))}%</span><span class="bad">苦手 <b>${esc(worst)}</b> ${fmtPct(rate(m[worst]))}%</span></div>`:""}
-    <table class="cs-tbl"><tr><th>クラブ</th><th>回数</th><th>オン率<small>／FW</small></th><th>平均</th><th>多いミス</th></tr>
+    <table class="cs-tbl"><tr><th>クラブ</th><th>回数</th><th>パーオン率</th><th>平均</th><th>多いミス</th></tr>
     ${cl.map(c=>{ const x=m[c], r=rate(x), mk=Object.keys(x.miss).sort((a,b)=>x.miss[b]-x.miss[a])[0];
-      return `<tr class="${c===best?"good":c===worst?"bad":""}"><td><b>${esc(c)}</b></td><td>${x.n}</td><td><span class="cs-bar"><i style="width:${r==null?0:r}%"></i></span>${r==null?"—":fmtPct(r)+"%"}</td><td>${toPar(Math.round(x.diff/x.n*10)/10)}</td><td>${mk?ML[mk]:"—"}</td></tr>`; }).join("")}
-    </table><p class="muted cs-note">オン率はパー3のティーショット、FWはパー4以上でフェアウェイに残った割合。得意・苦手は3回以上打ったクラブで比べています。</p></div>`;
+      return `<tr class="${c===best?"good":c===worst?"bad":""}"><td><b>${esc(c)}</b></td><td>${x.n}</td><td><span class="cs-bar"><i style="width:${r}%"></i></span>${fmtPct(r)}%</td><td>${toPar(Math.round(x.diff/x.n*10)/10)}</td><td>${mk?ML[mk]:"—"}</td></tr>`; }).join("")}
+    </table><p class="muted cs-note">ティーショットに使ったクラブ別。得意・苦手は3回以上打ったクラブで比べています。</p></div>`;
 }
-/* ヤード別（パー3のみ）: コースに登録したヤードで分ける */
-function yardPanel(rs){
-  const bands = [[0,80,"〜79y"],[80,100,"80〜99y"],[100,120,"100〜119y"],[120,140,"120〜139y"],[140,160,"140〜159y"],[160,999,"160y〜"]];
-  const B = bands.map(b=>({lab:b[2], lo:b[0], hi:b[1], n:0, gir:0, on:0, dirN:0, diff:0, clubs:{}}));
-  rs.forEach(r=>{ const c = state.courses.find(x=>x.id===r.courseId) || PRESET_COURSES.find(p=>p.name===r.courseName); if(!c) return;
-    r.holes.forEach((h,i)=>{ const y = c.holes[i] && c.holes[i].yards; if(!y || h.par!==3) return; const b = B.find(b=>y>=b.lo && y<b.hi); if(!b) return;
-      b.n++; b.diff += h.strokes-h.par; if(h.strokes-h.putts<=1) b.gir++; if(h.dir){ b.dirN++; if(h.dir==="on") b.on++; }
-      if(h.club) b.clubs[h.club]=(b.clubs[h.club]||0)+1; }); });
-  const used = B.filter(b=>b.n);
-  if(!used.length) return "";
-  return `<div class="panel"><div class="sec"><em>YARDAGE</em><span>ヤード別（パー3）</span></div>
-    <table class="cs-tbl"><tr><th>距離</th><th>回数</th><th>パーオン率</th><th>平均</th><th>よく使うクラブ</th></tr>
-    ${used.map(b=>{ const r=b.gir/b.n*100, top=Object.keys(b.clubs).sort((a,c)=>b.clubs[c]-b.clubs[a])[0];
-      return `<tr><td><b>${b.lab}</b></td><td>${b.n}</td><td><span class="cs-bar"><i style="width:${r}%"></i></span>${fmtPct(r)}%</td><td>${toPar(Math.round(b.diff/b.n*10)/10)}</td><td>${top?esc(top):"—"}</td></tr>`; }).join("")}
-    </table><p class="muted cs-note">コースに登録したヤード（2グリーンのコースは1つ目のヤード）で分けています。</p></div>`;
+/* ホール別: そのコースの各ホールの平均・パー以内の割合・多いミス */
+function holePanel(rs){
+  const cnt={}; rs.forEach(r=>{ cnt[r.courseId]=(cnt[r.courseId]||0)+1; });
+  const cid = state.fCourse!=="all" ? state.fCourse : Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];
+  const c = courses().find(x=>x.id===cid); const rr = rs.filter(r=>r.courseId===cid);
+  if(!rr.length) return `<div class="panel empty"><strong>記録がありません</strong></div>`;
+  const n = Math.max(...rr.map(r=>r.holes.length));
+  const ML = {left:"左",right:"右",long:"オーバー",short:"ショート",miss:"ミスヒット",rl:"左",rr:"右"};
+  const H = Array.from({length:n},(_,i)=>{ const hs=rr.map(r=>r.holes[i]).filter(Boolean); if(!hs.length) return null;
+    const par=hs[0].par, avg=hs.reduce((a,h)=>a+h.strokes,0)/hs.length, miss={};
+    hs.forEach(h=>{ const d = par>=4 ? (h.tee&&h.tee!=="fw"?h.tee:null) : (h.dir&&h.dir!=="on"?h.dir:null); if(d) miss[d]=(miss[d]||0)+1; });
+    const mk=Object.keys(miss).sort((a,b)=>miss[b]-miss[a])[0];
+    return { i, par, yards: c && c.holes[i] ? c.holes[i].yards : null, n:hs.length, avg, diff:avg-par, po: hs.filter(h=>h.strokes<=h.par).length/hs.length*100, gir: hs.filter(h=>h.strokes-h.putts<=h.par-2).length/hs.length*100, mk: mk && miss[mk]>=2 ? ML[mk] : null }; }).filter(Boolean);
+  const sorted = H.slice().sort((a,b)=>b.diff-a.diff);
+  const worst = sorted.slice(0,Math.min(3,H.length)).filter(h=>h.diff>0), best = sorted.slice().reverse().slice(0,2);
+  const tone = d => d<=-0.5?"birdie":d<0.35?"par":d<1.2?"bogey":d<2.2?"double":"triple";
+  return `<div class="panel"><div class="sec"><em>BY HOLE</em><span>${esc(c?c.name:rr[0].courseName)}</span></div>
+    ${state.fCourse==="all"?`<p class="muted" style="font-size:12px;margin:-6px 0 10px">いちばん回っているコースを表示中（上のコースで切りかえ）・${rr.length}ラウンド</p>`:`<p class="muted" style="font-size:12px;margin:-6px 0 10px">${rr.length}ラウンド</p>`}
+    <div class="cs-tags">${worst.map(h=>`<span class="bad">苦手 <b>${h.i+1}H</b> ${toPar(Math.round(h.diff*10)/10)}</span>`).join("")}${best.map(h=>`<span class="good">得意 <b>${h.i+1}H</b> ${toPar(Math.round(h.diff*10)/10)}</span>`).join("")}</div>
+    <table class="cs-tbl hole-tbl"><tr><th>H</th><th>PAR</th><th>平均</th><th>パー以内</th><th>多いミス</th></tr>
+    ${H.map(h=>`<tr><td><b>${h.i+1}</b>${h.yards?`<small>${h.yards}y</small>`:""}</td><td>${h.par}</td><td><span class="hv t-${tone(h.diff)}">${h.avg.toFixed(1)}</span><small>${toPar(Math.round(h.diff*10)/10)}</small></td><td><span class="cs-bar"><i style="width:${h.po}%"></i></span>${fmtPct(h.po)}%</td><td>${h.mk||"—"}</td></tr>`).join("")}
+    </table><p class="muted cs-note">多いミスは同じ方向に2回以上外したときに出します（パー3はグリーン、パー4以上はティーショット）。</p></div>`;
 }
 function donutPanel(title, id, segs, total, centerVal, centerLbl){
   return `<div class="panel"><div class="sec"><em>BREAKDOWN</em><span>${title}</span></div>${donutSVG(segs, total, centerVal, centerLbl, title)}</div>`;
@@ -1862,7 +1884,9 @@ document.addEventListener("click", async ev => {
       const card=$(".result-card"); if(!card || !window.html2canvas){ toast("画像を作れませんでした"); break; }
       b.disabled=true; b.textContent="作成中…";
       try{
-        const cv = await html2canvas(card,{scale:3, backgroundColor:null, useCORS:true, ignoreElements: el=>el.classList && el.classList.contains("confetti")});
+        const cv = await html2canvas(card,{scale:3, backgroundColor:null, useCORS:true, ignoreElements: el=>el.classList && el.classList.contains("confetti"),
+          onclone: doc => { const st=doc.createElement("style"); st.textContent="*,*::before,*::after{animation:none!important;transition:none!important;opacity:1}"; doc.head.appendChild(st);
+            doc.querySelectorAll(".result-card,.result-card *").forEach(el=>{ el.style.animation="none"; }); }});
         const blob = await new Promise(r=>cv.toBlob(r,"image/png"));
         const file = new File([blob], `golfsc-${state.result.date}.png`, {type:"image/png"});
         if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:"GOLF SC."}); }
@@ -1981,20 +2005,33 @@ function newCourse(){ return { id:uid(), name:"", isNew:true, pref:LS.get("sc.pr
 
 /* ---------- demo data (never saved) ---------- */
 const DEMO = (() => {
-  const pars=[3,3,3,4,3,3,3,3,4];
-  const c={id:"demo-c", name:"サンプル・パー3コース", holes:pars.map(p=>({par:p,yards:p===3?95:210}))};
-  let seed=7; const rnd=()=>{ seed=(seed*16807)%2147483647; return seed/2147483647; };
-  const dirs=["on","on","on","left","right","long","short","short","right"];
+  // ファーツリーと同じ並び（パー3が7つ、パー4が2つ）で、全部の項目を記録した20ラウンド分
+  const L=[[3,76],[3,102],[3,88],[4,284],[3,109],[3,84],[4,366],[3,55],[3,160]];
+  const c={id:"demo-c", name:"サンプル・ショートコース", holes:L.map(([p,y],i)=>({par:p,yards:y, ...(i?{}:{pref:"宮崎県",area:"延岡市"})}))};
+  let seed=11; const rnd=()=>{ seed=(seed*16807)%2147483647; return seed/2147483647; };
+  const pick=(o)=>{ let r=rnd(), t=0; for(const k in o){ t+=o[k]; if(r<t) return k; } return Object.keys(o)[0]; };
+  const CL={55:"58°",76:"PW",84:"9I",88:"9I",102:"8I",109:"7I",160:"5I"};
+  const ON={"58°":.6,PW:.55,"9I":.5,"8I":.42,"7I":.34,"5I":.2,"1W":0,"5W":0};
   const rs=[];
-  const mk=(player,skill,dates)=>dates.forEach((dt,ri)=>{
-    const holes=pars.map(p=>{ const dir=dirs[Math.floor(rnd()*dirs.length)]; const gir=dir==="on"&&p===3 || (p===4&&rnd()<.4);
-      const putts = rnd()<.15?1:(rnd()<skill-ri*0.03?3:2); const bunker=!gir&&rnd()<.18; const ob=rnd()<.05;
-      const strokes=Math.max(putts+1,(gir?p-2:p-1+(rnd()<.35?1:0))+putts+(bunker?1:0)+(ob?2:0)-(!gir&&putts===1?0:0));
-      return {par:p,strokes,putts,dir,bunker,ob}; });
+  const mk=(player,lvl,missBias,dates)=>dates.forEach((dt,ri)=>{
+    const g = ri/dates.length*0.12; // だんだん上手くなる
+    const holes=L.map(([p,y])=>{
+      let club, dir=null, tee=null, ob=false, pen=false, bunker=false, toGreen;
+      if(p===3){ club=CL[y]; const on = rnd() < ON[club]+lvl+g; dir = on ? "on" : pick(missBias);
+        bunker = !on && rnd()<.22; pen = !on && y>=100 && rnd()<.05; ob = !on && rnd()<.03;
+        toGreen = on ? 1 : 2 + (bunker && rnd()<.4 ? 1 : 0) + (dir==="miss" && rnd()<.5 ? 1 : 0); }
+      else { club = y>300 ? "1W" : (rnd()<.5?"1W":"5W"); tee = rnd()<.45+lvl+g ? "fw" : pick({rl:.35,rr:.45,miss:.2});
+        ob = tee!=="fw" && rnd()<.12; pen = tee!=="fw" && !ob && rnd()<.08; bunker = rnd()<.15;
+        const gir = rnd() < (tee==="fw" ? .38 : .14)+g; toGreen = gir ? 2 : 3 + (bunker && rnd()<.4 ? 1 : 0); }
+      const onGir = toGreen <= p-2;
+      const putts = onGir ? (rnd()<.12?1:rnd()<.85-g?2:3) : (rnd()<.38+g?1:rnd()<.93?2:3);
+      const strokes = toGreen + putts + (ob?2:0) + (pen?1:0);
+      return {par:p, strokes, putts, dir, tee, club, bunker, ob, pen}; });
     rs.push({id:"demo-"+player+ri, player, courseId:c.id, courseName:c.name, date:dt, createdAt:ri, holes});
   });
-  mk("たろう",.35,["2026-07-05","2026-07-26","2026-08-16","2026-09-06","2026-09-27","2026-10-11"]);
-  mk("はなこ",.22,["2026-07-05","2026-08-16","2026-09-27","2026-10-11"]);
+  const d0=new Date("2026-04-05"); const dates=(k,step)=>Array.from({length:k},(_,i)=>{ const d=new Date(d0); d.setDate(d.getDate()+i*step); return d.toISOString().slice(0,10); });
+  mk("たろう",0,{right:.42,short:.24,left:.14,long:.1,miss:.1},dates(20,9));
+  mk("はなこ",.06,{short:.4,left:.3,right:.15,long:.1,miss:.05},dates(10,18));
   return {courses:[c], rounds:rs};
 })();
 
