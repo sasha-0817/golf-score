@@ -196,6 +196,12 @@ select.ph{color:var(--muted)}
 .sheet .cg-chip{min-width:0;padding:0;height:36px;font-size:14px}
 .cg .cl-custom{grid-column:span 3;display:flex}
 .cg .cl-custom input{flex:1;width:auto;min-width:0}
+
+.cg .cl-custom2{display:flex;gap:6px}
+.cg .cl-custom2 input{flex:1;height:38px;border-radius:10px;font-size:13px;padding:0 10px}
+.sheet .cg .cl-custom2 button{height:38px;width:auto;padding:0 16px;font-size:14px;border-radius:10px}
+
+.cg{gap:6px}.sheet .cg-chip{height:34px}.clubs-sheet{gap:8px}.cg-h{padding-bottom:2px}
 </style>
 <title>ショートコース スコアカード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -907,7 +913,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1415";
+const BUILD = "2026-10-19-1425";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1394,7 +1400,7 @@ function clubsSheet(){
   const extra = [...new Set([...list, ...(state.clubCustom||[])])].filter(c=>!CLUB_SUGGEST.includes(c));
   return `<div class="sheet-back" data-act="close-clubs"><div class="sheet clubs-sheet" data-stop="1"><p>クラブの設定<small class="${full?"full":""}">${list.length} / ${CLUB_MAX}本（パター除く）</small></p>
     <div class="cg">${CLUB_GROUPS.map(([g,cs])=>`<div class="cg-row ${g?"":"cont"}"><div class="cg-h">${g}</div><div class="cg-chips">${cs.map(chip).join("")}</div></div>`).join("")}
-      <div class="cg-row"><div class="cg-h">その他</div><div class="cg-chips">${extra.map(chip).join("")}<span class="cl-custom"><input id="cl-new" maxlength="6" placeholder="名前"><button data-act="club-custom" aria-label="追加">＋</button></span></div></div></div>
+      <div class="cg-row"><div class="cg-h">その他</div>${extra.length?`<div class="cg-chips" style="margin-bottom:5px">${extra.map(chip).join("")}</div>`:""}<div class="cl-custom cl-custom2"><input id="cl-new" maxlength="6" placeholder="候補にないクラブの名前（例：LW、5H）"><button data-act="club-custom">追加</button></div></div></div>
     <div class="cl-tools"><button data-act="club-reset">初期設定に戻す</button><button class="cl-done" data-act="close-clubs">完了</button></div></div></div>`;
 }
 function fieldsSheet(){
