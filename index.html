@@ -851,6 +851,31 @@ table.sc tr.hn td{background:var(--soft);color:var(--muted);font-size:13px}
 .rc-sc td.sum{font-size:11px;opacity:.85}.rc-sc td.sum b{font-size:15px}
 .rc-sc table.half .mk3{width:18px;height:18px;font-size:12px}
 .rc-sc .m-par{background:rgba(255,255,255,.14);border-radius:6px}
+
+/* v29: brand on result card, advice, club/yard tables */
+.rc-brand{display:flex;align-items:center;justify-content:flex-end;gap:8px;opacity:.9;letter-spacing:0}
+.rc-brand img{width:30px;height:30px;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))}
+.rc-brand span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.05}
+.rc-brand b{font-family:var(--f-num);font-size:16px;letter-spacing:.04em}
+.rc-brand small{font-size:7.5px;letter-spacing:.18em;opacity:.7;font-weight:700}
+.hc2 .advice{grid-column:1/-1;font-size:11px;line-height:1.35;background:rgba(0,0,0,.18);border-radius:10px;padding:5px 9px;margin-top:-2px;position:relative}
+.hc2 .advice b{font-family:var(--f-num);font-size:13px}
+.hc2 .advice em{font-style:normal;font-weight:700;color:#FFE08A}
+.fs-sec{font-size:11px;font-weight:700;color:var(--rec-muted);letter-spacing:.1em;margin:10px 0 -4px}
+.cs-tags{display:flex;gap:8px;margin:0 0 10px;flex-wrap:wrap}
+.cs-tags span{font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px}
+.cs-tags b{font-family:var(--f-num);font-size:15px;margin:0 2px}
+.cs-tags .good{background:color-mix(in srgb,var(--q-birdie) 14%,var(--paper));color:var(--q-birdie)}
+.cs-tags .bad{background:color-mix(in srgb,var(--q-double) 12%,var(--paper));color:var(--q-double)}
+.cs-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.cs-tbl th{font-size:10px;color:var(--muted);font-weight:700;text-align:left;padding:4px 4px 6px;border-bottom:1px solid var(--line)}
+.cs-tbl th small{font-weight:600}
+.cs-tbl td{padding:7px 4px;border-bottom:1px solid var(--line);font-family:var(--f-num);white-space:nowrap}
+.cs-tbl td:last-child{font-family:var(--f-body)}
+.cs-tbl tr.good td:first-child b{color:var(--q-birdie)}.cs-tbl tr.bad td:first-child b{color:var(--q-double)}
+.cs-bar{display:inline-block;width:34px;height:6px;border-radius:3px;background:var(--soft);margin-right:6px;vertical-align:middle;overflow:hidden}
+.cs-bar i{display:block;height:100%;background:var(--turf);border-radius:3px}
+.cs-note{font-size:11px;margin:8px 0 0}
 </style>
 
 </head>
@@ -932,6 +957,7 @@ const FIELD_DEFS = [
   {k:"pen",    label:"1ペナ（池・赤杭など）", def:false},
   {k:"shot",   label:"ショットの方向", def:false},
   {k:"club",   label:"使用クラブ", def:false},
+  {k:"advice", label:"ホールのアドバイス", def:true, show:true},
 ];
 function fields(){ const saved = LS.get("sc.fields", {}); const f={}; if(saved.shot==null && (saved.approach||saved.tee)) saved.shot=true; FIELD_DEFS.forEach(d=>f[d.k] = saved[d.k]!=null ? saved[d.k] : d.def); return f; }
 
@@ -948,7 +974,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1620";
+const BUILD = "2026-10-19-1640";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1155,7 +1181,7 @@ function resultOverlay(r){
         <div><span>3パット</span><b>${s.putt[3]}</b></div>
         <div><span>OB</span><b>${s.obN}</b></div>
       </div>
-      <div class="rc-brand">SHORT COURSE SCORECARD</div>
+      <div class="rc-brand"><img src="mark.png" alt=""><span><b>GOLF SC.</b><small>SHORT COURSE SCORECARD</small></span></div>
     </div></div>
     <div class="rc-actions"><button class="rc-save" data-act="save-card">画像を保存・送る</button></div>
     <div class="rc-actions rc-sub"><button class="rc-back" data-act="back-to-input">スコア入力に戻る</button><button class="rc-close" data-act="close-result">閉じる</button></div>
@@ -1365,6 +1391,20 @@ function fairwaySVG(tee, tap, stat){
     ${tracer}${ball}
   </svg>`;
 }
+/* 同じコース・同じホールの過去の記録から、ひとことアドバイス */
+const TERMJ = d => d<=-2?"イーグル以上":d===-1?"バーディ":d===0?"パー":d===1?"ボギー":d===2?"ダボ":"トリプル以上";
+function holeAdvice(d, i){
+  const past = state.rounds.filter(r=>r.player===d.player && r.courseId===d.courseId && r.id!==d.id && r.holes[i]).sort((a,b)=>(a.date+(a.createdAt||0)).localeCompare(b.date+(b.createdAt||0)));
+  if(!past.length) return "";
+  const hs = past.map(r=>r.holes[i]), last = hs[hs.length-1];
+  const parts = [`前回 <b>${last.strokes}</b>（${TERMJ(last.strokes-last.par)}）`];
+  if(hs.length>=2) parts.push(`平均 <b>${(hs.reduce((a,h)=>a+h.strokes,0)/hs.length).toFixed(1)}</b>`);
+  const key = last.par>=4 ? "tee" : "dir", lab = last.par>=4 ? {rl:"左",rr:"右",miss:"ミスショット"} : {left:"左",right:"右",long:"オーバー",short:"ショート",miss:"手前のミスヒット"};
+  const cnt = {}; let n=0; hs.forEach(h=>{ if(h[key]){ n++; if(lab[h[key]]) cnt[h[key]]=(cnt[h[key]]||0)+1; } });
+  const top = Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];
+  if(top && cnt[top]>=2 && cnt[top]/n>=0.4) parts.push(`<em>${lab[top]}に外しやすい</em>`);
+  return parts.join("・");
+}
 function viewRecordDraft(d){
   const h = d.holes[state.hole];
   const N = d.holes.length;
@@ -1379,6 +1419,7 @@ function viewRecordDraft(d){
     let mine=0, theirs=0; d.holes.forEach((x,i)=>{ if(x.entered && best.holes[i]){ mine += x.strokes-x.par; theirs += best.holes[i].strokes-best.holes[i].par; } });
     return mine < theirs; })();
   const onIn = h.strokes - h.putts;
+  const advice = fields().advice ? holeAdvice(d, state.hole) : "";
   const hint = onIn<=h.par-2 ? "パーオン" : onIn<=h.par-1 ? "ボギーオン" : (h.putts===0 ? "チップイン" : "");
   const sBtn = v => { const isMax=v===8; const val = isMax && h.strokes>8 ? h.strokes : v; const pressed = isMax ? h.strokes>=8 : h.strokes===v; const dd=val-h.par;
     return `<button data-act="sv" data-v="${v}" class="t-${val===1?"hio":TONE(dd)} ${state.tap==="sv"+v?"pop":""}" aria-pressed="${pressed}" aria-label="${val}打">${isMax&&h.strokes<=8?"8+":val}<small>${val===1?"HIO":TERM(dd)}</small></button>`; };
@@ -1410,6 +1451,7 @@ function viewRecordDraft(d){
       <div class="hc-m"><div class="par"><span>PAR</span>${h.par}</div>${d.gn && h.ys && h.ys[0] && h.ys[1] ? `<div class="gsw" role="group" aria-label="グリーン">${d.gn.map((n,i)=>`<button data-act="set-g" data-g="${i}" aria-pressed="${(h.gi||0)===i}">${esc(n)}</button>`).join("")}</div><div class="yd">${h.yards} YDS</div>` : h.yards?`<div class="yd">${h.yards} YDS</div>`:""}
         <span class="badge ${hio?"hio":"b-"+TONE(diff)} ${/^s[vt]/.test(state.tap||"")?"pop":""}"><i></i>${hio?"HOLE IN ONE":TERM(diff)}</span></div>
       <div class="live"><div><span>TOTAL</span><b>${totLabel}</b></div><div><span>PUTTS</span><b>${tot.putts||0}</b></div></div>
+      ${advice?`<div class="advice">${advice}</div>`:""}
     </div>
     <div class="rec-card rc2 ${slide}" id="rec-card">
       <div class="stp-row ${F.putts?"":"one"}">
@@ -1455,7 +1497,7 @@ function fieldsSheet(){
   return `<div class="sheet-back" data-act="close-sheet"><div class="sheet fields-sheet" data-stop="1"><p>記録する項目</p>
     <div class="fs-note">打数はいつも記録します。ほかはONにした項目だけ入力画面に出ます。</div>
     ${state.mode==="cloud" && (state.serverVer||1)<2 ? `<div class="fs-warn">1ペナ・ティーショット・クラブ・ミスヒットを保存するには、スプレッドシート側のプログラムの更新が必要です。</div>`:""}
-    ${FIELD_DEFS.map(d=>`<label class="fs-row ${d.k==="club"?"has-sub":""}"><span>${d.label}</span><input type="checkbox" id="fld-${d.k}" data-fld="${d.k}" ${F[d.k]?"checked":""}><i class="sw"></i></label>${d.k==="club"?`<button class="fs-sub" data-act="open-clubs"><span>マイクラブを編集</span><small>${myClubs().length}本 ›</small></button>`:""}`).join("")}
+    ${FIELD_DEFS.map(d=>`${d.k==="advice"?`<div class="fs-sec">表示</div>`:""}<label class="fs-row ${d.k==="club"?"has-sub":""}"><span>${d.label}</span><input type="checkbox" id="fld-${d.k}" data-fld="${d.k}" ${F[d.k]?"checked":""}><i class="sw"></i></label>${d.k==="club"?`<button class="fs-sub" data-act="open-clubs"><span>マイクラブを編集</span><small>${myClubs().length}本 ›</small></button>`:""}`).join("")}
     <button data-act="close-sheet">閉じる</button></div></div>`;
 }
 after.record = () => {
@@ -1540,6 +1582,8 @@ function viewStats(){
   </div></div>
   <div class="panel"><div class="sec"><em>TREND</em><span>パーオン率・ボギーオン率の推移</span></div><div class="chartbox"><canvas id="ch-on" aria-label="パーオン率とボギーオン率の推移"></canvas></div></div>
   <div class="panel"><div class="sec"><em>SHOT</em><span>グリーンの行き先</span></div>${greenMap(s)}</div>
+  ${clubPanel(rs)}
+  ${yardPanel(rs)}
   ${s.teeN?`<div class="panel"><div class="sec"><em>TEE</em><span>ティーショットの行き先</span></div>${fairwaySVG(null,false,s)}<p class="muted" style="font-size:12px;text-align:center;margin:8px 0 0">${s.teeN}回の記録・フェアウェイキープ率 <b>${fmtPct(s.fwRate)}%</b></p></div>`:""}
 `:""}
   ${ST==="putt"?`
@@ -1552,6 +1596,42 @@ function viewStats(){
   ${donutPanel("パット数の割合","ch-pie",PUTT_SEGS(s),s.holes,s.puttsPerHole==null?"—":s.puttsPerHole.toFixed(2),"平均パット / H")}
 `:""}
   `}`;
+}
+/* クラブ別: そのクラブで打ったティーショットの結果（パー3はオン率、パー4以上はフェアウェイキープ率） */
+function clubPanel(rs){
+  const m = {};
+  rs.forEach(r=>r.holes.forEach(h=>{ if(!h.club) return; const x = m[h.club] || (m[h.club]={n:0,p3:0,on:0,p4:0,fw:0,diff:0,miss:{}});
+    x.n++; x.diff += h.strokes-h.par;
+    if(h.par===3 && h.dir){ x.p3++; if(h.dir==="on") x.on++; else x.miss[h.dir]=(x.miss[h.dir]||0)+1; }
+    if(h.par>=4 && h.tee){ x.p4++; if(h.tee==="fw") x.fw++; else x.miss[h.tee]=(x.miss[h.tee]||0)+1; } }));
+  const cl = sortClubs(Object.keys(m));
+  if(!cl.length) return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別</span></div><p class="muted" style="font-size:13px;margin:0">記録する項目で「ショットの方向」と「使用クラブ」をONにすると、クラブごとのオン率や得意・苦手がここに出ます。</p></div>`;
+  const ML = {left:"左",right:"右",long:"オーバー",short:"ショート",miss:"ミスヒット",rl:"左",rr:"右"};
+  const rate = x => x.p3 ? x.on/x.p3*100 : x.p4 ? x.fw/x.p4*100 : null;
+  const ok = cl.filter(c=>rate(m[c])!=null && m[c].p3+m[c].p4>=3);
+  const best = ok.length>1 ? ok.reduce((a,c)=>rate(m[c])>rate(m[a])?c:a) : null, worst = ok.length>1 ? ok.reduce((a,c)=>rate(m[c])<rate(m[a])?c:a) : null;
+  return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別</span></div>
+    ${best&&worst&&best!==worst?`<div class="cs-tags"><span class="good">得意 <b>${esc(best)}</b> ${fmtPct(rate(m[best]))}%</span><span class="bad">苦手 <b>${esc(worst)}</b> ${fmtPct(rate(m[worst]))}%</span></div>`:""}
+    <table class="cs-tbl"><tr><th>クラブ</th><th>回数</th><th>オン率<small>／FW</small></th><th>平均</th><th>多いミス</th></tr>
+    ${cl.map(c=>{ const x=m[c], r=rate(x), mk=Object.keys(x.miss).sort((a,b)=>x.miss[b]-x.miss[a])[0];
+      return `<tr class="${c===best?"good":c===worst?"bad":""}"><td><b>${esc(c)}</b></td><td>${x.n}</td><td><span class="cs-bar"><i style="width:${r==null?0:r}%"></i></span>${r==null?"—":fmtPct(r)+"%"}</td><td>${toPar(Math.round(x.diff/x.n*10)/10)}</td><td>${mk?ML[mk]:"—"}</td></tr>`; }).join("")}
+    </table><p class="muted cs-note">オン率はパー3のティーショット、FWはパー4以上でフェアウェイに残った割合。得意・苦手は3回以上打ったクラブで比べています。</p></div>`;
+}
+/* ヤード別（パー3のみ）: コースに登録したヤードで分ける */
+function yardPanel(rs){
+  const bands = [[0,80,"〜79y"],[80,100,"80〜99y"],[100,120,"100〜119y"],[120,140,"120〜139y"],[140,160,"140〜159y"],[160,999,"160y〜"]];
+  const B = bands.map(b=>({lab:b[2], lo:b[0], hi:b[1], n:0, gir:0, on:0, dirN:0, diff:0, clubs:{}}));
+  rs.forEach(r=>{ const c = state.courses.find(x=>x.id===r.courseId) || PRESET_COURSES.find(p=>p.name===r.courseName); if(!c) return;
+    r.holes.forEach((h,i)=>{ const y = c.holes[i] && c.holes[i].yards; if(!y || h.par!==3) return; const b = B.find(b=>y>=b.lo && y<b.hi); if(!b) return;
+      b.n++; b.diff += h.strokes-h.par; if(h.strokes-h.putts<=1) b.gir++; if(h.dir){ b.dirN++; if(h.dir==="on") b.on++; }
+      if(h.club) b.clubs[h.club]=(b.clubs[h.club]||0)+1; }); });
+  const used = B.filter(b=>b.n);
+  if(!used.length) return "";
+  return `<div class="panel"><div class="sec"><em>YARDAGE</em><span>ヤード別（パー3）</span></div>
+    <table class="cs-tbl"><tr><th>距離</th><th>回数</th><th>パーオン率</th><th>平均</th><th>よく使うクラブ</th></tr>
+    ${used.map(b=>{ const r=b.gir/b.n*100, top=Object.keys(b.clubs).sort((a,c)=>b.clubs[c]-b.clubs[a])[0];
+      return `<tr><td><b>${b.lab}</b></td><td>${b.n}</td><td><span class="cs-bar"><i style="width:${r}%"></i></span>${fmtPct(r)}%</td><td>${toPar(Math.round(b.diff/b.n*10)/10)}</td><td>${top?esc(top):"—"}</td></tr>`; }).join("")}
+    </table><p class="muted cs-note">コースに登録したヤード（2グリーンのコースは1つ目のヤード）で分けています。</p></div>`;
 }
 function donutPanel(title, id, segs, total, centerVal, centerLbl){
   return `<div class="panel"><div class="sec"><em>BREAKDOWN</em><span>${title}</span></div>${donutSVG(segs, total, centerVal, centerLbl, title)}</div>`;
