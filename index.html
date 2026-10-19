@@ -214,7 +214,7 @@ select.ph{color:var(--muted)}
 .hc2 .live b small{font-size:13px;margin-left:2px;opacity:.85;font-weight:600}
 
 /* v26: stats tabs */
-.stat-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 14px;position:sticky;top:0;z-index:5;background:var(--bg);padding:6px 0}
+.stat-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:0 0 14px;position:sticky;top:0;z-index:5;background:var(--bg);padding:6px 0}
 .stat-tabs button{height:50px;border-radius:14px;border:1px solid var(--line);background:var(--paper);color:var(--muted);font:700 14px var(--f-body);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer}
 .stat-tabs button em{font-style:normal;font:700 9px var(--f-num);letter-spacing:.16em;opacity:.8}
 .stat-tabs button[aria-selected="true"]{background:linear-gradient(135deg,#1E3A8A,#2F7DE1);color:#fff;border-color:transparent;box-shadow:0 8px 18px -10px #2F7DE1}
@@ -891,6 +891,9 @@ table.sc tr.hn td{background:var(--soft);color:var(--muted);font-size:13px}
 
 .rc-brand .rc-logo{flex-direction:row;align-items:center}
 .rc-brand .rc-logo>span{display:flex;flex-direction:column;align-items:flex-start}
+
+.result-card::before{display:none}
+.rc-rings{position:absolute;right:-90px;top:-80px;width:320px;height:280px;pointer-events:none}
 </style>
 
 </head>
@@ -989,7 +992,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1700";
+const BUILD = "2026-10-19-1720";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1180,7 +1183,7 @@ function resultOverlay(r){
   const best = flag==="COURSE BEST!";
   const conf = best ? `<div class="confetti">${Array.from({length:22},(_,i)=>`<i style="left:${(Math.cbrt(Math.random())*100).toFixed(1)}%;background:${["#F2B01E","#FFD76A","#5BE6A8","#fff","#38BDF8"][i%5]};animation-delay:${(-Math.random()*3).toFixed(2)}s;animation-duration:${(2.2+Math.random()*1.8).toFixed(2)}s;width:${5+Math.round(Math.random()*4)}px"></i>`).join("")}</div>` : "";
   return `<div class="result-back" role="dialog" aria-label="ラウンド結果"><div class="result-wrap">
-    <div class="result-card">${conf}<div class="rc-in">
+    <div class="result-card"><svg class="rc-rings" viewBox="0 0 320 280" aria-hidden="true">${Array.from({length:10},(_,k)=>`<ellipse cx="160" cy="140" rx="${16+k*16}" ry="${14+k*14}" fill="none" stroke="rgba(255,255,255,.13)" stroke-width="1"/>`).join("")}<circle cx="160" cy="140" r="1.5" fill="rgba(255,255,255,.3)"/></svg>${conf}<div class="rc-in">
       <div class="rc-top"><div><div class="k">ROUND COMPLETE</div><div class="n">${esc(r.player)}</div><div class="c">${esc(r.courseName)}・${+m}/${+d}</div></div>${flag?`<span class="rc-flag">${flag}</span>`:""}</div>
       <div class="rc-score"><b>${t.score}</b><span>${toPar(t.diff)}</span></div>
       <div class="rc-sc">${(()=>{ const out=[]; for(let i=0;i<r.holes.length;i+=9){ const ch=r.holes.slice(i,i+9);
@@ -1554,7 +1557,7 @@ function viewStats(){
   const cs = courses().filter(c=>all.some(r=>r.courseId===c.id));
   const rs = filteredRounds();
   const s = computeStats(rs);
-  const ST = state.statTab || (state.statTab = LS.get("sc.statTab","score"));
+  let ST = state.statTab || (state.statTab = LS.get("sc.statTab","score")); if(!["score","shot","putt"].includes(ST)) ST = state.statTab = "score";
   const gauge = (label,v,sub,tone) => { const C=2*Math.PI*30, p=v==null?0:Math.min(v,100)/100;
     return `<div class="gauge"><svg viewBox="0 0 74 74" aria-hidden="true"><circle class="trk" cx="37" cy="37" r="30"/><circle class="val" cx="37" cy="37" r="30" stroke="var(${tone})" stroke-dasharray="${(C*p).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 37 37)"/></svg><div class="gv">${v==null?"—":fmtPct(v)}${v==null?"":"<small>%</small>"}</div><div class="gl">${label}</div><div class="gs">${sub}</div></div>`; };
   const hbar = (label,v,sub,bad) => `<div class="hb"><div class="hb-top"><span>${label}</span><b>${v==null?"—":fmtPct(v)}<small>${v==null?"":"%"}</small></b></div><div class="hb-trk"><i style="width:${v==null?0:Math.min(100,v)}%;background:${bad?"var(--q-bogey)":"var(--q-birdie)"}"></i></div><div class="hb-sub">${sub}</div></div>`;
@@ -1571,7 +1574,7 @@ function viewStats(){
     <div class="field"><label for="f-range">期間</label><select id="f-range">${[["1","直近1ラウンド"],["3","直近3ラウンド"],["5","直近5ラウンド"],["10","直近10ラウンド"],["all","全ラウンド"]].map(([v,t])=>`<option value="${v}" ${v===state.fRange?"selected":""}>${t}</option>`).join("")}</select></div>
   </div></div>
   ${!rs.length?`<div class="panel empty"><strong>条件に合うラウンドがありません</strong>フィルターを変えてみてください。</div>`:`
-  <div class="stat-tabs" role="tablist">${[["score","SCORE","スコア"],["shot","SHOT","ショット"],["putt","PUTT","パット"],["hole","HOLE","ホール"]].map(([k,e,j])=>`<button role="tab" data-act="stat-tab" data-v="${k}" aria-selected="${ST===k}"><em>${e}</em>${j}</button>`).join("")}</div>
+  <div class="stat-tabs" role="tablist">${[["score","SCORE","スコア"],["shot","SHOT","ショット"],["putt","PUTT","パット"]].map(([k,e,j])=>`<button role="tab" data-act="stat-tab" data-v="${k}" aria-selected="${ST===k}"><em>${e}</em>${j}</button>`).join("")}</div>
   ${ST==="score"?`
   <div class="hero-stat">
     <div class="who">${esc(state.fPlayer).toUpperCase()} ・ AVG SCORE</div>
@@ -1601,7 +1604,6 @@ function viewStats(){
   ${clubPanel(rs)}
   ${s.teeN?`<div class="panel"><div class="sec"><em>TEE</em><span>ティーショットの行き先</span></div>${fairwaySVG(null,false,s)}<p class="muted" style="font-size:12px;text-align:center;margin:8px 0 0">${s.teeN}回の記録・フェアウェイキープ率 <b>${fmtPct(s.fwRate)}%</b></p></div>`:""}
 `:""}
-  ${ST==="hole"?holePanel(rs):""}
   ${ST==="putt"?`
   <div class="panel"><div class="sec"><em>PUTTING</em><span>パット</span></div><div class="putts">
     <div><span class="eyebrow">1R平均</span><span class="num">${fx(s.avgPuttsRound)}</span></div>
@@ -1616,21 +1618,21 @@ function viewStats(){
 /* クラブ別パーオン率: そのホールのティーショットに使ったクラブごとに、パーオンできた割合 */
 function clubPanel(rs){
   const m = {};
-  rs.forEach(r=>r.holes.forEach(h=>{ if(!h.club) return; const x = m[h.club] || (m[h.club]={n:0,gir:0,diff:0,miss:{}});
+  rs.forEach(r=>r.holes.forEach(h=>{ if(!h.club || h.par!==3) return; const x = m[h.club] || (m[h.club]={n:0,gir:0,diff:0,miss:{}});
     x.n++; x.diff += h.strokes-h.par; if(h.strokes-h.putts<=h.par-2) x.gir++;
     const d = h.par>=4 ? (h.tee!=="fw"?h.tee:null) : (h.dir!=="on"?h.dir:null); if(d) x.miss[d]=(x.miss[d]||0)+1; }));
   const cl = sortClubs(Object.keys(m));
-  if(!cl.length) return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別パーオン率</span></div><p class="muted" style="font-size:13px;margin:0">記録する項目で「使用クラブ」をONにすると、クラブごとのパーオン率や得意・苦手がここに出ます。</p></div>`;
+  if(!cl.length) return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別パーオン率（パー3）</span></div><p class="muted" style="font-size:13px;margin:0">記録する項目で「使用クラブ」をONにすると、クラブごとのパーオン率や得意・苦手がここに出ます。</p></div>`;
   const ML = {left:"左",right:"右",long:"オーバー",short:"ショート",miss:"ミスヒット",rl:"左",rr:"右"};
   const rate = x => x.gir/x.n*100;
   const ok = cl.filter(c=>m[c].n>=3);
   const best = ok.length>1 ? ok.reduce((a,c)=>rate(m[c])>rate(m[a])?c:a) : null, worst = ok.length>1 ? ok.reduce((a,c)=>rate(m[c])<rate(m[a])?c:a) : null;
-  return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別パーオン率</span></div>
+  return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別パーオン率（パー3）</span></div>
     ${best&&worst&&best!==worst?`<div class="cs-tags"><span class="good">得意 <b>${esc(best)}</b> ${fmtPct(rate(m[best]))}%</span><span class="bad">苦手 <b>${esc(worst)}</b> ${fmtPct(rate(m[worst]))}%</span></div>`:""}
     <table class="cs-tbl"><tr><th>クラブ</th><th>回数</th><th>パーオン率</th><th>平均</th><th>多いミス</th></tr>
     ${cl.map(c=>{ const x=m[c], r=rate(x), mk=Object.keys(x.miss).sort((a,b)=>x.miss[b]-x.miss[a])[0];
       return `<tr class="${c===best?"good":c===worst?"bad":""}"><td><b>${esc(c)}</b></td><td>${x.n}</td><td><span class="cs-bar"><i style="width:${r}%"></i></span>${fmtPct(r)}%</td><td>${toPar(Math.round(x.diff/x.n*10)/10)}</td><td>${mk?ML[mk]:"—"}</td></tr>`; }).join("")}
-    </table><p class="muted cs-note">ティーショットに使ったクラブ別。得意・苦手は3回以上打ったクラブで比べています。</p></div>`;
+    </table><p class="muted cs-note">パー3のティーショットに使ったクラブ別。得意・苦手は3回以上打ったクラブで比べています。</p></div>`;
 }
 /* ホール別: そのコースの各ホールの平均・パー以内の割合・多いミス */
 function holePanel(rs){
@@ -1884,9 +1886,13 @@ document.addEventListener("click", async ev => {
       const card=$(".result-card"); if(!card || !window.html2canvas){ toast("画像を作れませんでした"); break; }
       b.disabled=true; b.textContent="作成中…";
       try{
-        const cv = await html2canvas(card,{scale:3, backgroundColor:null, useCORS:true, ignoreElements: el=>el.classList && el.classList.contains("confetti"),
+        const cv = await html2canvas(card,{scale:3, backgroundColor:null, useCORS:true,
           onclone: doc => { const st=doc.createElement("style"); st.textContent="*,*::before,*::after{animation:none!important;transition:none!important;opacity:1}"; doc.head.appendChild(st);
-            doc.querySelectorAll(".result-card,.result-card *").forEach(el=>{ el.style.animation="none"; }); }});
+            doc.querySelectorAll(".result-card,.result-card *").forEach(el=>{ el.style.animation="none"; });
+            // 紙吹雪は止まった1枚の絵として写す（右側に多く、左の大きな数字の上はまばら）
+            const cf = doc.querySelector(".result-card .confetti"); if(cf){ const cols=["#F2B01E","#FFD76A","#5BE6A8","#fff","#38BDF8"];
+              cf.innerHTML = Array.from({length:34},(_,i)=>{ const x=Math.cbrt(Math.random())*100, y=Math.random()*92+2;
+                return `<i style="position:absolute;left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;width:${5+Math.round(Math.random()*4)}px;height:${9+Math.round(Math.random()*4)}px;border-radius:2px;background:${cols[i%5]};opacity:.9;transform:rotate(${Math.round(Math.random()*360)}deg);animation:none"></i>`; }).join(""); } }});
         const blob = await new Promise(r=>cv.toBlob(r,"image/png"));
         const file = new File([blob], `golfsc-${state.result.date}.png`, {type:"image/png"});
         if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:"GOLF SC."}); }
