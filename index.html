@@ -915,6 +915,8 @@ input,select,textarea{font-size:max(16px,1em)}
 .ctag{display:inline-block;font-size:10px;font-weight:700;padding:2px 6px;border-radius:999px;margin-right:5px;vertical-align:1px}
 .ctag.good{background:color-mix(in srgb,var(--q-birdie) 14%,var(--paper));color:var(--q-birdie)}
 .ctag.bad{background:color-mix(in srgb,var(--q-double) 12%,var(--paper));color:var(--q-double)}
+.club-tbl td.tg,.club-tbl th:first-child{width:40px;padding-right:0}
+.club-tbl .ctag{margin-right:0}
 </style>
 
 </head>
@@ -1014,7 +1016,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1640";
+const BUILD = "2026-10-19-1630b";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1669,10 +1671,10 @@ function clubPanel(rs){
   let best = ok.length>1 ? ok.reduce((a,c)=>rate(m[c])>rate(m[a])?c:a) : null, worst = ok.length>1 ? ok.reduce((a,c)=>rate(m[c])<rate(m[a])?c:a) : null;
   if(best===worst){ best=null; worst=null; }
   return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別パーオン率（パー3）</span></div>
-    <table class="cs-tbl"><tr><th>クラブ</th><th>回数</th><th>パーオン率</th><th>対パー</th><th>多いミス</th></tr>
+    <table class="cs-tbl club-tbl"><tr><th></th><th>クラブ</th><th>回数</th><th>パーオン率</th><th>多いミス</th></tr>
     ${cl.map(c=>{ const x=m[c], r=rate(x), mk=Object.keys(x.miss).sort((a,b)=>x.miss[b]-x.miss[a])[0];
-      return `<tr class="${c===best?"good":c===worst?"bad":""}"><td>${c===best?`<span class="ctag good">得意</span>`:c===worst?`<span class="ctag bad">苦手</span>`:""}<b>${esc(c)}</b></td><td>${x.n}</td><td><span class="cs-bar"><i style="width:${r}%"></i></span>${fmtPct(r)}%</td><td>${toPar(Math.round(x.diff/x.n*10)/10)}</td><td>${mk?ML[mk]:"—"}</td></tr>`; }).join("")}
-    </table><p class="muted cs-note">パー3のティーショットに使ったクラブ別。対パーは、そのクラブで打ったホールの平均スコア（パーとの差）。得意・苦手は3回以上打ったクラブのパーオン率で比べています。</p></div>`;
+      return `<tr class="${c===best?"good":c===worst?"bad":""}"><td class="tg">${c===best?`<span class="ctag good">得意</span>`:c===worst?`<span class="ctag bad">苦手</span>`:""}</td><td><b>${esc(c)}</b></td><td>${x.n}</td><td><span class="cs-bar"><i style="width:${r}%"></i></span>${fmtPct(r)}%</td><td>${mk?ML[mk]:"—"}</td></tr>`; }).join("")}
+    </table><p class="muted cs-note">パー3のティーショットに使ったクラブ別。得意・苦手は3回以上打ったクラブのパーオン率で比べています。</p></div>`;
 }
 /* ホール別: そのコースの各ホールの平均・パー以内の割合・多いミス */
 function holePanel(rs){
