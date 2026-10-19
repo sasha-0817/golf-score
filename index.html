@@ -1030,7 +1030,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1700b";
+const BUILD = "2026-10-19-1710";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1187,6 +1187,7 @@ function computeStats(rs){
     bunkerRate: pct(bunker.length,n), sandSave: pct(sandSave.length,bunker.length), bunkerN: bunker.length,
     obRate: pct(ob.length,n), obN: ob.length,
     penRate: pct(pen.length,n), penN: pen.length,
+    troubleN: holes.filter(h=>h.ob||h.pen).length,
     teeN: teeH.length, teeC, fwRate: pct(teeC.fw, teeH.length),
     parOrBetter: pct(dist.eagle+dist.birdie+dist.par, n),
     putt, dirs, dirN, dist, byPar
@@ -1448,10 +1449,10 @@ function fairwaySVG(tee, tap, stat){
     <rect class="az-rough" x="0" y="0" width="340" height="222" rx="18"/>
     ${zone("rl", `<path class="az-bg" d="M40 72 Q40 58 54 58 H114 Q126 58 126 70 V166 Q126 178 114 178 H54 Q40 178 40 164Z"/>`, 83, stat?122:118, "左")}
     ${zone("rr", `<path class="az-bg" d="M300 72 Q300 58 286 58 H226 Q214 58 214 70 V166 Q214 178 226 178 H286 Q300 178 300 164Z"/>`, 257, stat?122:118, "右")}
-    ${zone("fw", `<path d="${fwPath}" fill="#86D9A2" stroke="#86D9A2" stroke-width="10" stroke-linejoin="round"/>
-      <path d="${fwPath}" fill="url(#gFw${id})" filter="url(#fwShadow${id})"/><path d="${fwPath}" fill="url(#fwMow${id})"/><path d="${fwPath}" class="g-ring"/>
+    ${zone("fw", `<g transform="translate(171 0) scale(1.22 1) translate(-171 0)"><path d="${fwPath}" fill="#86D9A2" stroke="#86D9A2" stroke-width="10" stroke-linejoin="round"/>
+      <path d="${fwPath}" fill="url(#gFw${id})" filter="url(#fwShadow${id})"/><path d="${fwPath}" fill="url(#fwMow${id})"/><path d="${fwPath}" class="g-ring"/></g>
       <g pointer-events="none">
-        <path d="M204 132 C210 135 211 144 207 150 C205 153 201 151 202 146 C203 141 199 137 201 133 C202 131 203 131 204 132Z" class="sand"/>
+        <path transform="translate(7 0)" d="M204 132 C210 135 211 144 207 150 C205 153 201 151 202 146 C203 141 199 137 201 133 C202 131 203 131 204 132Z" class="sand"/>
         <ellipse cx="176" cy="31" rx="33" ry="17" transform="rotate(-6 176 31)" fill="#86D9A2"/>
         <ellipse cx="176" cy="31" rx="28" ry="13.5" transform="rotate(-6 176 31)" fill="url(#gGr${id})" filter="url(#fwShadow${id})"/>
         <path d="M140 30 C136 36 140 44 147 44 C152 44 152 38 148 35 C146 33 144 28 140 30Z" class="sand"/>
@@ -1648,11 +1649,10 @@ function viewStats(){
   <div class="panel"><div class="sec"><em>SHOTS</em><span>ショット</span></div><div class="gauges">
     ${gauge("パーオン率", s.gir, `${s.holes}H中 ${s.girN}回`, "--c-gir")}
     ${gauge("ボギーオン率", s.bon, `${s.holes}H中 ${s.bonN}回`, "--c-bon")}
-    ${gauge("リカバリー率", s.scramble, `パーオンを逃した${s.scrambleN}Hのうちパー以内`, "--c3")}
+    ${gauge("リカバリー率", s.scramble, `パーオンを逃した${s.scrambleN}Hのうちパー以内`, "--accent2")}
     ${gauge("サンドセーブ率", s.sandSave, `バンカー${s.bunkerN}Hのうちパー以内`, "--c5")}
     ${gauge("バンカー率", s.bunkerRate, `${s.holes}H中 ${s.bunkerN}回`, "--warn")}
-    ${gauge("OB率", s.obRate, `${s.holes}H中 ${s.obN}回`, "--under")}
-    ${s.penN?gauge("1ペナ率", s.penRate, `${s.holes}H中 ${s.penN}回`, "--under"):""}
+    ${gauge("OB・ペナ率", pct(s.troubleN,s.holes), `${s.holes}H中 ${s.troubleN}回`, "--under")}
   </div></div>
   <div class="panel"><div class="sec"><em>TREND</em><span>パーオン率・ボギーオン率の推移</span></div><div class="chartbox"><canvas id="ch-on" aria-label="パーオン率とボギーオン率の推移"></canvas></div><p class="muted cs-note">各ラウンドまでの直近5ラウンドの平均。</p></div>
   <div class="panel"><div class="sec"><em>TEE SHOT</em><span>ティーショットの行き先</span></div>
@@ -2004,8 +2004,8 @@ document.addEventListener("click", async ev => {
     case "pt": h.putts=Math.max(0,Math.min(9,h.putts+ +b.dataset.d)); if(h.strokes<h.putts+1) h.strokes=Math.min(15,h.putts+1); h.entered=true; state.tap="pt"; saveDraft(); render(); break;
     case "dir": h.dir = h.dir===b.dataset.v ? null : b.dataset.v; h.entered=true; state.tap="dir"; saveDraft(); render(); askClub(h.dir); break;
     case "tog": h[b.dataset.k]=!h[b.dataset.k]; h.entered=true; saveDraft();
-      // OB・1ペナを付けたとき、まだクラブを選んでいなければクラブ選択を出す（どのクラブでやらかしたか分かるように）
-      if((b.dataset.k==="ob"||b.dataset.k==="pen") && h[b.dataset.k] && fields().club && !h.club) state.sheet="club";
+      // OB・1ペナを付けたら、どのクラブでやらかしたか分かるようにクラブ選択を出す（選び直しもここで）
+      if((b.dataset.k==="ob"||b.dataset.k==="pen") && h[b.dataset.k] && fields().club) state.sheet="club";
       render(); break;
     case "prev": mark_entered(); state.slide="r"; state.hole--; saveDraft(); render(); break;
     case "next": mark_entered(); state.slide="l"; state.hole++; saveDraft(); render(); window.scrollTo({top:0}); break;
