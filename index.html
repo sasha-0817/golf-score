@@ -996,7 +996,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1745";
+const BUILD = "2026-10-19-1800";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1181,7 +1181,7 @@ function render(){
 function resultOverlay(r){
   const t=roundTotals(r); const s=computeStats([r]);
   const others = state.rounds.filter(x=>x.player===r.player && x.courseId===r.courseId && x.id!==r.id);
-  const flag = !others.length ? "FIRST ROUND" : (t.diff < Math.min(...others.map(x=>roundTotals(x).diff)) ? "COURSE BEST!" : "");
+  const flag = others.length && t.diff < Math.min(...others.map(x=>roundTotals(x).diff)) ? "COURSE BEST!" : "";
   const n = k => s.dist[k];
   const [y,m,d] = r.date.split("-");
   const best = flag==="COURSE BEST!";
