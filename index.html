@@ -1004,7 +1004,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1600";
+const BUILD = "2026-10-19-1610";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1918,7 +1918,9 @@ document.addEventListener("click", async ev => {
       b.disabled=true; b.textContent="作成中…";
       try{
         const cv = await html2canvas(card,{scale:3, backgroundColor:null, useCORS:true,
-          onclone: doc => { const st=doc.createElement("style"); st.textContent="*,*::before,*::after{animation:none!important;transition:none!important;opacity:1}"; doc.head.appendChild(st);
+          onclone: doc => { const st=doc.createElement("style"); st.textContent="*,*::before,*::after{animation:none!important;transition:none!important;opacity:1}"
+              // html2canvas は Barlow Condensed の数字を約1.7px下・少し左に描くので、記号の中の数字だけ逆向きに寄せて真ん中に見せる
+              +".rc-sc .mk3{box-sizing:border-box!important;padding:0 0 3px 1.5px!important}"; doc.head.appendChild(st);
             doc.querySelectorAll(".result-card,.result-card *").forEach(el=>{ el.style.animation="none"; });
             // キラキラは画面と同じ位置のまま、アニメーションを止めて写す
           }});
