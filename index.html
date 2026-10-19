@@ -925,7 +925,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1535";
+const BUILD = "2026-10-19-1545";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1290,7 +1290,7 @@ function approachSVG(dir, tap, stat){
 }
 /* ティーショット: 上から見たホール。手前がティー、奥にグリーン。光は左上から（影は右下） */
 function fairwaySVG(tee, tap, stat){
-  const Z = { fw:[192,94], rl:[66,148], rr:[276,148], miss:[150,200] };
+  const Z = { fw:[186,96], rl:[66,148], rr:[276,148], miss:[150,200] };
   const id = stat?"S":"";
   const sel = k => !stat && tee===k;
   const maxMiss = stat ? Math.max(1, ...["rl","rr","miss"].map(k=>stat.teeC[k]||0)) : 1;
@@ -1303,15 +1303,15 @@ function fairwaySVG(tee, tap, stat){
     return `<g class="az ${extra} ${sel(k)?"on-sel":""}" role="button" tabindex="0" data-act="tee" data-v="${k}" aria-pressed="${sel(k)}" aria-label="${label}">${shape}<text x="${lx}" y="${ly}" class="az-t ${k==="fw"?"on-t":""}">${label}</text></g>`; };
   const b = !stat && tee && Z[tee];
   const sx=170, sy=224;
-  const cy = Math.min(sy,b?b[1]:sy) - (tee==="miss"?36:64);
+  const cy = tee==="fw" ? (b?b[1]:sy)+34 : Math.min(sy,b?b[1]:sy) - (tee==="miss"?36:64);
   // 弾道はボールの手前で止める（線とボールが重ならないように）
-  const cx2 = tee==="fw" ? sx-12 : (sx+(b?b[0]:sx))/2;
+  const cx2 = tee==="fw" ? sx-26 : (sx+(b?b[0]:sx))/2;
   const ex = b ? b[0]-(b[0]-cx2)*0.12 : 0, ey = b ? b[1]-(b[1]-cy)*0.12 : 0;
   const tpath = b ? `M${sx} ${sy} Q ${cx2} ${cy} ${ex.toFixed(1)} ${ey.toFixed(1)}` : "";
   const tracer = b ? `<g class="tr ${tap?"anim":""}"><path class="tr-shadow" d="M${sx+6} ${sy} L${b[0]+5} ${b[1]+3}" pathLength="1" filter="url(#soft${id})"/><path class="tr-glow" d="${tpath}" pathLength="1" filter="url(#trGlow${id})"/><path class="tr-core" d="${tpath}" pathLength="1" stroke="url(#trGrad${id})"/><path class="tr-hi" d="${tpath}" pathLength="1"/></g>` : "";
   const ball = b ? `<g class="ballg ${tap?"drop":""}"><ellipse cx="${b[0]+3.5}" cy="${b[1]+5}" rx="7.5" ry="4.8" fill="rgba(0,0,0,.26)" filter="url(#soft${id})" transform="rotate(15 ${b[0]+3.5} ${b[1]+5})"/><image href="ball.png" x="${b[0]-7.5}" y="${b[1]-7.5}" width="15" height="15"/></g>` : "";
   // ゆるいドッグレッグのフェアウェイ（手前にティー、奥に別のグリーン）
-  const fwPath = `M184.3 147.6 L184.8 145.5 L185.9 144.0 L187.1 142.9 L188.4 142.1 L189.7 141.6 L191.0 141.1 L192.3 140.7 L193.5 140.2 L194.7 139.5 L195.9 138.7 L197.0 137.7 L198.2 136.5 L199.3 135.0 L200.5 133.2 L201.6 131.2 L202.8 128.9 L203.9 126.4 L205.1 123.6 L206.1 120.6 L207.1 117.4 L208.0 113.8 L208.8 110.1 L209.5 106.1 L209.9 101.9 L210.2 97.6 L210.1 93.0 L209.8 88.3 L209.2 83.5 L208.1 78.6 L206.6 73.8 L204.7 69.1 L202.4 64.5 L200.1 60.1 L198.4 55.5 L196.2 51.0 L193.8 46.9 A21 21 0 0 0 158.2 69.1 L159.1 70.7 L159.7 71.8 L160.0 72.8 L159.2 74.0 L157.8 75.0 L156.4 75.9 L154.9 76.6 L153.5 77.3 L152.0 78.1 L150.5 78.9 L149.0 79.9 L147.6 81.0 L146.1 82.4 L144.5 83.9 L143.0 85.7 L141.5 87.6 L139.9 89.9 L138.4 92.4 L137.0 95.1 L135.6 98.1 L134.2 101.3 L133.0 104.8 L131.9 108.6 L131.0 112.6 L130.3 116.9 L129.9 121.4 L129.7 126.1 L129.9 131.0 L130.6 136.1 L131.6 141.2 L133.2 146.3 L135.2 151.3 L137.7 156.1 L140.7 160.7 L144.1 164.8 L147.7 168.4 A21 21 0 0 0 184.3 147.6 Z`;
+  const fwPath = `M188.9 151.5 L189.4 149.3 L190.1 147.3 L190.8 145.5 L191.7 143.8 L192.6 142.1 L193.5 140.4 L194.4 138.8 L195.3 137.1 L196.3 135.4 L197.2 133.7 L198.0 131.8 L198.9 129.8 L199.7 127.8 L200.4 125.6 L201.2 123.3 L201.8 120.8 L202.4 118.2 L203.0 115.5 L203.4 112.6 L203.8 109.6 L204.0 106.5 L204.2 103.3 L204.2 99.9 L204.1 96.5 L203.9 92.9 L203.5 89.2 L202.9 85.5 L202.2 81.8 L201.3 78.0 L200.1 74.2 L198.8 70.5 L197.3 66.7 L195.9 63.0 L195.1 59.1 L194.1 55.3 L192.9 51.5 A20 20 0 0 0 155.1 64.5 L155.7 66.4 L156.2 68.2 L156.5 69.9 L155.9 71.8 L155.0 73.7 L153.9 75.5 L152.9 77.3 L151.7 79.0 L150.6 80.8 L149.4 82.7 L148.3 84.6 L147.1 86.5 L146.0 88.6 L144.9 90.7 L143.9 93.0 L142.9 95.4 L141.9 97.9 L141.0 100.5 L140.2 103.3 L139.5 106.2 L138.9 109.2 L138.4 112.4 L138.1 115.8 L137.9 119.2 L137.8 122.8 L137.9 126.4 L138.2 130.2 L138.8 134.0 L139.5 137.9 L140.4 141.9 L141.6 145.8 L143.1 149.7 L144.7 153.6 L146.6 157.4 L148.8 161.1 L151.1 164.5 A20 20 0 0 0 188.9 151.5 Z`;
   return `<svg class="approach fairway" viewBox="0 0 340 222" preserveAspectRatio="xMidYMid meet" role="${stat?"img":"group"}" aria-label="ティーショットの行き先">
     <defs>
       <linearGradient id="gFw${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#46C77B"/><stop offset="1" stop-color="#1F9E57"/></linearGradient>
@@ -1328,7 +1328,7 @@ function fairwaySVG(tee, tap, stat){
     ${zone("fw", `<path d="${fwPath}" fill="#86D9A2" stroke="#86D9A2" stroke-width="10" stroke-linejoin="round"/>
       <path d="${fwPath}" fill="url(#gFw${id})" filter="url(#fwShadow${id})"/><path d="${fwPath}" fill="url(#fwMow${id})"/><path d="${fwPath}" class="g-ring"/>
       <g pointer-events="none">
-        <path d="M226 100 C234 104 236 116 231 124 C228 128 223 125 224 119 C225 113 220 107 222 102 C223 99 224 99 226 100Z" class="sand"/>
+        <path d="M216 104 C224 108 226 120 221 128 C218 132 213 129 214 123 C215 117 210 111 212 106 C213 103 214 103 216 104Z" class="sand"/>
         <ellipse cx="176" cy="31" rx="33" ry="17" transform="rotate(-6 176 31)" fill="#86D9A2"/>
         <ellipse cx="176" cy="31" rx="28" ry="13.5" transform="rotate(-6 176 31)" fill="url(#gGr${id})" filter="url(#fwShadow${id})"/>
         <path d="M140 30 C136 36 140 44 147 44 C152 44 152 38 148 35 C146 33 144 28 140 30Z" class="sand"/>
@@ -1398,7 +1398,7 @@ function viewRecordDraft(d){
           <div class="stp-v ${state.tap&&state.tap.startsWith("pt")?"pop":""}"><b>${h.putts}</b><span class="tm p-${h.putts<=1?"birdie":h.putts===2?"par":h.putts===3?"bogey":"double"}">${h.putts===0?"CHIP IN":h.putts+" PUTT"+(h.putts>1?"S":"")}</span></div>
           <button data-act="pt" data-d="1" aria-label="パットを1つ増やす" ${h.putts>=9?"disabled":""}>${ICON.up}</button></div></div>`:""}
       </div>
-      ${F.shot?`<div class="ap-wrap"><div class="seg-head"><span class="eyebrow">${isLong?"TEE SHOT<b>ティーショットの行き先</b>":"SHOT<b>1打目の行き先</b>"}</span>${F.club?`<button class="club-tag ${h.club?"has":""}" data-act="open-club">${h.club?esc(h.club):"クラブ"}</button>`:""}</div>${isLong?fairwaySVG(h.tee, state.tap&&state.tap.startsWith("tee")):approachSVG(h.dir, state.tap&&state.tap.startsWith("dir"))}</div>`:""}
+      ${F.shot?`<div class="ap-wrap"><div class="seg-head"><span class="eyebrow">TEE SHOT<b>ティーショットの行き先</b></span>${F.club?`<button class="club-tag ${h.club?"has":""}" data-act="open-club">${h.club?esc(h.club):"クラブ"}</button>`:""}</div>${isLong?fairwaySVG(h.tee, state.tap&&state.tap.startsWith("tee")):approachSVG(h.dir, state.tap&&state.tap.startsWith("dir"))}</div>`:""}
       ${troubles.length?`<div class="trouble t${troubles.length}">${troubles.join("")}</div>`:""}
     </div>
     <div class="rec-bar">
@@ -1407,7 +1407,7 @@ function viewRecordDraft(d){
     </div>
     ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p><button data-act="pause">中断してホームへ（あとで続きから）</button>${d.editing?"":`<button data-act="rechoose">${done.length?"コースを選び直す（入力した分は消えます）":"コースを選び直す"}</button>`}<button class="danger" data-act="discard">${d.editing?"編集をやめる（変更は保存されません）":"記録を破棄する"}</button><button data-act="cancel-confirm">入力に戻る</button></div></div>`:""}
     ${state.sheet==="fields"?fieldsSheet():""}
-    ${state.sheet==="club"?`<div class="sheet-back club-back" data-act="close-sheet"><div class="sheet club-sheet" data-stop="1"><p>クラブ選択<small>${isLong?"ティーショット":"1打目"}・${h.yards?h.yards+"y":"PAR "+h.par}</small></p>
+    ${state.sheet==="club"?`<div class="sheet-back club-back" data-act="close-sheet"><div class="sheet club-sheet" data-stop="1"><p>クラブ選択<small>ティーショット・${h.yards?h.yards+"y":"PAR "+h.par}</small></p>
       <div class="club-grid">${myClubs().map(c=>`<button data-act="club" data-v="${esc(c)}" aria-pressed="${h.club===c}">${esc(c)}</button>`).join("")}</div>
       <div class="club-foot"><button data-act="open-clubs">クラブの設定</button><button data-act="close-sheet">${h.club?"このまま":"選ばない"}</button></div></div></div>`:""}
     ${state.sheet==="clubs"?clubsSheet():""}
