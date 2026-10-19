@@ -1050,7 +1050,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1750";
+const BUILD = "2026-10-19-1810";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1733,17 +1733,17 @@ function clubTable(rs, kind){
 }
 /* OB・ペナが多いクラブ: そのクラブを選んだホールのうち OB か 1ペナ があった割合のワースト3 */
 function troublePanel(rs){
-  const m = {};
-  const get = c => m[c]||(m[c]={n:0,t:0});
-  rs.forEach(r=>r.holes.forEach(h=>{ const used=new Set(); if(h.club){ get(h.club).n++; used.add(h.club); }
-    // 古い記録（OBの回ごとのクラブなし）はティーショットのクラブに付ける
-    const ev = [...evs(h,"ob"), ...evs(h,"pen")].map(c=>c || (!Array.isArray(h.obC)&&!Array.isArray(h.penC) ? h.club : null)).filter(Boolean);
-    ev.forEach(c=>{ const x=get(c); x.t++; if(!used.has(c)){ x.n++; used.add(c); } }); }));
-  const L = Object.keys(m).filter(c=>m[c].t>0).map(c=>({c, n:m[c].n, t:m[c].t, r:m[c].t/m[c].n*100}))
-    .sort((a,b)=>b.r-a.r || b.t-a.t).slice(0,3);
-  if(!Object.keys(m).length) return "";
-  return `<div class="panel"><div class="sec"><em>TROUBLE</em><span>OB・ペナ率ワースト</span></div>
-    ${L.length ? `<ol class="tr-rank">${L.map((x,i)=>`<li><span class="rk">${i+1}</span><b>${esc(x.c)}</b><span class="cs-bar"><i style="width:${Math.max(4,x.r)}%"></i></span><span class="tp">${fmtPct(x.r)}%</span><small>${x.n}回中${x.t}回</small></li>`).join("")}</ol>`
+  // 2打目以降はそのクラブを何回使ったか分からないので、率ではなく「回数」で並べる
+  const m = {}; let any=false;
+  rs.forEach(r=>r.holes.forEach(h=>{ if(h.club) any=true;
+    const legacy = !Array.isArray(h.obC)&&!Array.isArray(h.penC); // 古い記録はティーショットのクラブに付ける
+    [["ob",evs(h,"ob")],["pen",evs(h,"pen")]].forEach(([k,e])=>e.forEach(c=>{ c = c || (legacy ? h.club : null); if(!c) return; any=true;
+      const x=m[c]||(m[c]={ob:0,pen:0}); x[k]++; })); }));
+  if(!any) return "";
+  const L = Object.keys(m).map(c=>({c, ob:m[c].ob, pen:m[c].pen, t:m[c].ob+m[c].pen})).sort((a,b)=>b.t-a.t || b.ob-a.ob).slice(0,3);
+  const max = L.length ? L[0].t : 1;
+  return `<div class="panel"><div class="sec"><em>TROUBLE</em><span>OB・ペナが多いクラブ</span></div>
+    ${L.length ? `<ol class="tr-rank">${L.map((x,i)=>`<li><span class="rk">${i+1}</span><b>${esc(x.c)}</b><span class="cs-bar"><i style="width:${x.t/max*100}%"></i></span><span class="tp">${x.t}回</span><small>${[x.ob?`OB ${x.ob}回`:"",x.pen?`1ペナ ${x.pen}回`:""].filter(Boolean).join("・")}</small></li>`).join("")}</ol>`
       : `<p class="muted" style="font-size:13px;margin:0">まだOB・1ペナの記録はありません。</p>`}</div>`;
 }
 function clubPanel(rs){
