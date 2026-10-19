@@ -137,6 +137,22 @@ select.ph{color:var(--muted)}
 .cl-custom input{flex:1;min-width:0;height:42px;border-radius:12px;font-size:14px}
 .sheet .cl-custom button{height:42px;padding:0 16px}
 .cl-tools .cl-done{color:var(--rec-bg)!important}
+
+/* v21 */
+.cp-field{width:100%;min-height:58px;display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;padding:8px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--fg);font:inherit;cursor:pointer}
+.cp-field span{display:flex;flex-direction:column;gap:2px}
+.cp-field b{font-size:16px}.cp-field small{font-size:12px;color:var(--muted)}
+.cp-field i{font-style:normal;font-size:24px;color:var(--muted)}
+.cp-field.ph{border:2px dashed var(--turf);color:var(--turf);font-weight:700}
+.cp-sub{font-size:12px;font-weight:700;color:var(--rec-muted);margin:6px 0 -2px}
+.cp-check{color:var(--turf);font-size:20px;font-weight:700;padding:0 10px}
+.cl-col{border:0;overflow:visible;gap:6px}
+.cl-h{border:0;background:none;padding:0 2px 2px}
+.cl-scroll{gap:6px;padding:2px}
+.sheet .cl-in,.sheet .cl-cand{height:40px;border-radius:10px;justify-content:center;padding:0 10px;font:700 16px var(--f-num)}
+.sheet .cl-in{background:var(--rec-fg);color:var(--rec-bg);border:1px solid var(--rec-fg)}
+.sheet .cl-cand{background:var(--rec-bg);color:var(--rec-fg);border:1px solid var(--rec-line)}
+.sheet .cl-in:active,.sheet .cl-cand:active{transform:scale(.96)}
 </style>
 <title>ショートコース スコアカード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -840,7 +856,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1340";
+const BUILD = "2026-10-19-1350";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1055,21 +1071,17 @@ function resultOverlay(r){
 const after = {};
 
 /* ----- 記録 ----- */
-/* ラウンド開始のコース欄: プルダウン1つ。★お気に入り・前に回ったコース・前回のコース、最後に「その他のコースを探す…」 */
+/* ラウンド開始のコース欄: 1つの枠。タップすると「コースを選ぶ」画面が開く */
+function myCourses(all){
+  const F=favs(), last=LS.get("sc.lastCourse",""), played=new Set(state.rounds.map(r=>r.courseId));
+  return all.filter(c=>F.includes(c.id) || played.has(c.id) || c.id===last).sort((a,b)=>(F.includes(b.id)-F.includes(a.id)) || (b.id===last)-(a.id===last) || a.name.localeCompare(b.name,"ja"));
+}
 function coursePickField(){
-  const all = pickableCourses(), F = favs(), last = LS.get("sc.lastCourse","");
-  const played = new Set(state.rounds.map(r=>r.courseId));
-  let mine = all.filter(c=>F.includes(c.id) || played.has(c.id) || c.id===last || c.id===state.pick);
-  if(!mine.length && all.length<=12) mine = all.slice();
-  const cur = all.find(c=>c.id===state.pick) || all.find(c=>c.id===last) || null;
+  const all = pickableCourses();
+  const cur = all.find(c=>c.id===state.pick) || all.find(c=>c.id===LS.get("sc.lastCourse","")) || null;
   state.pick = cur && cur.id;
-  const fav = mine.filter(c=>F.includes(c.id)), rest = mine.filter(c=>!F.includes(c.id));
-  const opt = c => `<option value="${esc(c.id)}" ${cur&&c.id===cur.id?"selected":""}>${F.includes(c.id)?"★ ":""}${esc(c.name)}（${c.holes.length}H パー${sum(c.holes,h=>h.par)}）</option>`;
-  return `<div class="field"><label for="r-course">コース</label>
-    <select id="r-course" class="${cur?"":"ph"}">${cur?"":`<option value="" selected disabled>コースを選ぶ</option>`}
-      ${fav.length?`<optgroup label="★ お気に入り">${fav.map(opt).join("")}</optgroup>`:""}
-      ${rest.length?(fav.length?`<optgroup label="ほかのコース">${rest.map(opt).join("")}</optgroup>`:rest.map(opt).join("")):""}
-      <option value="__more">その他のコースを探す…</option></select></div>`;
+  return `<div class="field"><label>コース</label><input type="hidden" id="r-course" value="${cur?esc(cur.id):""}">
+    <button class="cp-field ${cur?"":"ph"}" data-act="open-pick">${cur?`<span><b>${esc(cur.name)}</b><small>${esc(cur.area||cur.pref||"")}${cur.area||cur.pref?"・":""}${cur.holes.length}H パー${sum(cur.holes,h=>h.par)}</small></span>`:`<span>タップしてコースを選ぶ</span>`}<i aria-hidden="true">›</i></button></div>`;
 }
 /* コースの一覧（コース画面とラウンド開始で共通）。mode="pick" はタップで選ぶ、"edit" はタップで編集 */
 function courseRows(list, mode){
@@ -1079,7 +1091,7 @@ function courseRows(list, mode){
     return `<div class="cp-row ${mode==="pick"&&c.id===state.pick?"on":""}">
       <button class="cp-fav" data-act="fav" data-id="${esc(c.id)}" aria-pressed="${F.includes(c.id)}" aria-label="${esc(c.name)}をお気に入りに">${F.includes(c.id)?"★":"☆"}</button>
       <button class="cp-main" data-act="${mode==="pick"?"pick-course":"edit-course"}" data-id="${esc(c.id)}"><b>${esc(c.name)}</b><small>${esc(c.area||c.pref||"県が未設定")}・${c.holes.length}H パー${sum(c.holes,h=>h.par)}${courseGreens(c)?"・"+courseGreens(c).map(esc).join("/"):""}${n?`・${n}ラウンド`:""}</small></button>
-      ${mode==="edit"?`<span class="cp-go" aria-hidden="true">›</span>`:""}</div>`; }).join("")}</div>`;
+      ${mode==="edit"?`<span class="cp-go" aria-hidden="true">›</span>`:c.id===state.pick?`<span class="cp-check" aria-label="選択中">✓</span>`:""}</div>`; }).join("")}</div>`;
 }
 function prefSelect(all, pf, id){
   return `<select id="${id}" class="pref-sel" aria-label="都道府県"><option value="">すべての県（${all.length}）</option>${PREFS.map(p=>{ const n=all.filter(c=>c.pref===p).length; return `<option value="${p}" ${p===pf?"selected":""} ${n?"":"disabled"}>${p}${n?`（${n}）`:""}</option>`; }).join("")}${all.some(c=>!c.pref)?`<option value="_none" ${pf==="_none"?"selected":""}>県が未設定（${all.filter(c=>!c.pref).length}）</option>`:""}</select>`;
@@ -1087,13 +1099,15 @@ function prefSelect(all, pf, id){
 const curPref = all => state.pickPref ?? LS.get("sc.pref", ([...new Set(all.map(c=>c.pref).filter(Boolean))][0]||""));
 const byPref = (all,pf) => all.filter(c=>!pf || c.pref===pf || (pf==="_none" && !c.pref));
 function coursePickSheet(){
-  const all = pickableCourses(), F = favs();
+  const all = pickableCourses(), mine = myCourses(all);
   const pf = curPref(all);
   return `<div class="sheet-back" data-act="close-pick"><div class="sheet cp-sheet" data-stop="1"><p>コースを選ぶ</p>
+    ${mine.length?`<div class="cp-sub">★ お気に入り・最近のコース</div>${courseRows(mine,"pick")}`:""}
+    <div class="cp-sub">${mine.length?"ほかのコースを探す":"県を選んで探す"}</div>
     ${prefSelect(all,pf,"cp-pref")}
-    ${courseRows(byPref(all,pf),"pick")}
-    <div class="fs-note">☆をタップするとお気に入りになり、ラウンド開始の画面にすぐ出ます。</div>
-    <div class="club-foot"><button data-act="goto-courses">＋ コースを登録</button><button data-act="close-pick">閉じる</button></div></div></div>`;
+    ${courseRows(byPref(all,pf).filter(c=>!mine.some(m=>m.id===c.id)),"pick")}
+    <div class="fs-note">☆ をタップすると「お気に入り」になり、次から一番上に出ます。</div>
+    <div class="club-foot"><button data-act="goto-courses">＋ コースを追加</button><button data-act="close-pick">閉じる</button></div></div></div>`;
 }
 function viewRecord(){
   const cs = state.courses;
@@ -1323,10 +1337,10 @@ function clubsSheet(){
   const full = list.length>=CLUB_MAX;
   const cand = sortClubs([...new Set([...CLUB_SUGGEST, ...(state.clubCustom||[])])].filter(c=>!list.includes(c)));
   return `<div class="sheet-back" data-act="close-clubs"><div class="sheet clubs-sheet" data-stop="1"><p>クラブの設定<small>${list.length} / ${CLUB_MAX}本（パター除く）</small></p>
-    <div class="fs-note">タップで左右に移動します。左に入れたクラブが、長い順にクラブ選択に並びます。</div>
+    <div class="fs-note">タップで入れたり外したりできます。左のクラブが長い順にクラブ選択に並びます。</div>
     <div class="cl-cols">
-      <div class="cl-col"><div class="cl-h">使用クラブ</div><div class="cl-scroll">${list.map(c=>`<button class="cl-in" data-act="club-out" data-v="${esc(c)}">${esc(c)}<span aria-hidden="true">→</span></button>`).join("")||`<div class="muted" style="font-size:12px;padding:8px">右から選んでください</div>`}</div></div>
-      <div class="cl-col"><div class="cl-h">候補</div><div class="cl-scroll">${cand.map(c=>`<button class="cl-cand" data-act="club-in" data-v="${esc(c)}" ${full?"aria-disabled=\"true\"":""}><span aria-hidden="true">←</span>${esc(c)}</button>`).join("")}</div></div>
+      <div class="cl-col"><div class="cl-h">使用クラブ</div><div class="cl-scroll">${list.map(c=>`<button class="cl-in" data-act="club-out" data-v="${esc(c)}" aria-label="${esc(c)}を外す">${esc(c)}</button>`).join("")||`<div class="muted" style="font-size:12px;padding:8px">右から選んでください</div>`}</div></div>
+      <div class="cl-col"><div class="cl-h">候補</div><div class="cl-scroll">${cand.map(c=>`<button class="cl-cand" data-act="club-in" data-v="${esc(c)}" aria-label="${esc(c)}を入れる" ${full?"aria-disabled=\"true\"":""}>${esc(c)}</button>`).join("")}</div></div>
     </div>
     <div class="cl-custom"><input id="cl-new" maxlength="6" placeholder="候補にない名前（例：5H、ミニドラ）"><button data-act="club-custom">追加</button></div>
     <div class="cl-tools"><button data-act="club-reset">初期設定に戻す</button><button class="cl-done" data-act="close-clubs">完了</button></div></div></div>`;
@@ -1345,7 +1359,6 @@ after.record = () => {
   const rd=$("#r-date"); if(rd) rd.onchange=()=>{ state.sd=rd.value; };
   const cpp=$("#cp-pref"); if(cpp) cpp.onchange=()=>{ state.pickPref=cpp.value; if(cpp.value && cpp.value!=="_none") LS.set("sc.pref",cpp.value); render(); };
   const rc=$("#r-course"), gw=$("#r-gwrap");
-  if(rc) rc.addEventListener("change",()=>{ if(rc.value==="__more"){ state.sheet="pick"; state.pickPref=undefined; render(); } else { state.pick=rc.value; rc.classList.remove("ph"); } });
   if(rc && gw){ const upd=()=>{ const g=courseGreens(pickableCourses().find(x=>x.id===rc.value)); gw.hidden=!g; if(g) $("#r-green").innerHTML=g.map((n,i)=>`<option value="${i}">${esc(n)}</option>`).join(""); }; rc.addEventListener("change",upd); upd(); }
   document.querySelectorAll("[data-fld]").forEach(cb=>cb.onchange=()=>{ const f=fields(); f[cb.dataset.fld]=cb.checked; LS.set("sc.fields",f); render(); });
 
