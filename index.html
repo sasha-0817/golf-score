@@ -843,6 +843,14 @@ table.sc tr.hn td{background:var(--soft);color:var(--muted);font-size:13px}
 .hero-stat .row{margin-top:10px;padding-top:9px}
 .hero-stat .row b{font-size:20px}
 .stat-tabs{position:static;margin:0;padding:0;background:none}
+
+/* v28: result scorecard */
+.rc-sc table.half{background:rgba(255,255,255,.07);border-radius:12px}
+.rc-sc table.half col.lab{width:30px}.rc-sc table.half col.sum{width:30px}
+.rc-sc td.lab{font-size:9px!important;letter-spacing:.08em;opacity:.7;text-align:left;padding-left:6px}
+.rc-sc td.sum{font-size:11px;opacity:.85}.rc-sc td.sum b{font-size:15px}
+.rc-sc table.half .mk3{width:18px;height:18px;font-size:12px}
+.rc-sc .m-par{background:rgba(255,255,255,.14);border-radius:6px}
 </style>
 
 </head>
@@ -940,7 +948,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1610";
+const BUILD = "2026-10-19-1620";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1135,7 +1143,8 @@ function resultOverlay(r){
       <div class="rc-top"><div><div class="k">ROUND COMPLETE</div><div class="n">${esc(r.player)}</div><div class="c">${esc(r.courseName)}・${+m}/${+d}</div></div>${flag?`<span class="rc-flag">${flag}</span>`:""}</div>
       <div class="rc-score"><b>${t.score}</b><span>${toPar(t.diff)}</span></div>
       <div class="rc-sc">${(()=>{ const out=[]; for(let i=0;i<r.holes.length;i+=9){ const ch=r.holes.slice(i,i+9);
-        out.push(`<table><tr class="h">${ch.map((h,j)=>`<td>${i+j+1}</td>`).join("")}</tr><tr class="p">${ch.map(h=>`<td>${h.par}</td>`).join("")}</tr><tr>${ch.map(h=>`<td>${mark(h)}</td>`).join("")}</tr></table>`); } return out.join(""); })()}</div>
+        const two=r.holes.length>9, lab=two?(i===0?"OUT":"IN"):"", sub=ch.reduce((x,h)=>x+h.strokes,0), subp=ch.reduce((x,h)=>x+h.par,0);
+        out.push(`<table class="${two?"half":""}">${two?`<colgroup><col class="lab">${ch.map(()=>"<col>").join("")}<col class="sum"></colgroup>`:""}<tr class="h">${two?`<td class="lab">${lab}</td>`:""}${ch.map((h,j)=>`<td>${i+j+1}</td>`).join("")}${two?`<td class="sum">計</td>`:""}</tr><tr class="p">${two?`<td class="lab">PAR</td>`:""}${ch.map(h=>`<td>${h.par}</td>`).join("")}${two?`<td class="sum">${subp}</td>`:""}</tr><tr>${two?`<td class="lab"></td>`:""}${ch.map(h=>`<td>${mark(h)}</td>`).join("")}${two?`<td class="sum"><b>${sub}</b></td>`:""}</tr></table>`); } return out.join(""); })()}</div>
       <div class="rc-grid">
         <div><span>BIRDIE+</span><b>${n("hio")+n("eagle")+n("birdie")}</b></div>
         <div><span>PAR</span><b>${n("par")}</b></div>
