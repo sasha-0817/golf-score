@@ -202,6 +202,14 @@ select.ph{color:var(--muted)}
 .sheet .cg .cl-custom2 button{height:38px;width:auto;padding:0 16px;font-size:14px;border-radius:10px}
 
 .cg{gap:6px}.sheet .cg-chip{height:34px}.clubs-sheet{gap:8px}.cg-h{padding-bottom:2px}
+
+/* v25 */
+.gsw{display:inline-flex;border:1px solid rgba(255,255,255,.4);border-radius:999px;overflow:hidden;margin:1px 0}
+.gsw button{border:0;background:transparent;color:inherit;font:700 11px var(--f-num);letter-spacing:.06em;padding:3px 10px;opacity:.7;cursor:pointer}
+.gsw button[aria-pressed="true"]{background:#fff;color:#0B5F3F;opacity:1}
+.fs-row.has-sub{border-bottom:0;padding-bottom:4px}
+.sheet .fs-sub{height:40px;display:flex;justify-content:space-between;align-items:center;padding:0 12px;margin:0 0 6px;font-size:13px;color:var(--rec-fg);background:var(--rec-bg);border-radius:10px}
+.fs-sub small{color:var(--rec-muted);font-weight:700}
 </style>
 <title>ショートコース スコアカード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -897,8 +905,8 @@ const FIELD_DEFS = [
   {k:"ob",     label:"OB",                    def:true},
   {k:"bunker", label:"バンカー",              def:true},
   {k:"pen",    label:"1ペナ（池・赤杭など）", def:false},
-  {k:"shot",   label:"ショットの方向（パー3はグリーン／パー4・5はフェアウェイ）", def:false},
-  {k:"club",   label:"クラブ（方向を選んだあとに選ぶ）", def:false},
+  {k:"shot",   label:"ショットの方向", def:false},
+  {k:"club",   label:"使用クラブ", def:false},
 ];
 function fields(){ const saved = LS.get("sc.fields", {}); const f={}; if(saved.shot==null && (saved.approach||saved.tee)) saved.shot=true; FIELD_DEFS.forEach(d=>f[d.k] = saved[d.k]!=null ? saved[d.k] : d.def); return f; }
 
@@ -915,7 +923,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1445";
+const BUILD = "2026-10-19-1455";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1362,7 +1370,7 @@ function viewRecordDraft(d){
     <div class="dots ${N>9?"two":""}">${d.holes.map((x,i)=>`<button data-act="hole" data-i="${i}" class="${dotCls(x)} ${i===state.hole?"cur":""}" aria-label="${i+1}番ホール${x.entered?" "+x.strokes+"打":""}">${i+1}H</button>`).join("")}</div>
     <div class="hole-card hc2 ${slide} ${celebrate?"flash":""}">${confetti}${bestPace?`<span class="pace">BEST PACE</span>`:""}
       <div class="hc-l"><span class="lbl">HOLE</span><div class="hno">${state.hole+1}<small>/${N}</small></div></div>
-      <div class="hc-m"><div class="par"><span>PAR</span>${h.par}</div>${d.gn && h.ys && h.ys[0] && h.ys[1] ? `<button class="yd yd-sw" data-act="swap-g" aria-label="グリーンを切りかえる">${esc(d.gn[h.gi||0])} ${h.yards} YDS<svg viewBox="0 0 24 24"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg></button>` : h.yards?`<div class="yd">${h.yards} YDS</div>`:""}
+      <div class="hc-m"><div class="par"><span>PAR</span>${h.par}</div>${d.gn && h.ys && h.ys[0] && h.ys[1] ? `<div class="gsw" role="group" aria-label="グリーン">${d.gn.map((n,i)=>`<button data-act="set-g" data-g="${i}" aria-pressed="${(h.gi||0)===i}">${esc(n)}</button>`).join("")}</div><div class="yd">${h.yards} YDS</div>` : h.yards?`<div class="yd">${h.yards} YDS</div>`:""}
         <span class="badge ${hio?"hio":"b-"+TONE(diff)} ${/^s[vt]/.test(state.tap||"")?"pop":""}"><i></i>${hio?"HOLE IN ONE":TERM(diff)}</span></div>
       <div class="live"><div><span>TOTAL</span><b>${totLabel}</b></div><div><span>PUTTS</span><b>${tot.putts||0}</b></div></div>
     </div>
@@ -1410,8 +1418,7 @@ function fieldsSheet(){
   return `<div class="sheet-back" data-act="close-sheet"><div class="sheet fields-sheet" data-stop="1"><p>記録する項目</p>
     <div class="fs-note">打数はいつも記録します。ほかはONにした項目だけ入力画面に出ます。</div>
     ${state.mode==="cloud" && (state.serverVer||1)<2 ? `<div class="fs-warn">1ペナ・ティーショット・クラブ・ミスヒットを保存するには、スプレッドシート側のプログラムの更新が必要です。</div>`:""}
-    ${FIELD_DEFS.map(d=>`<label class="fs-row"><span>${d.label}</span><input type="checkbox" id="fld-${d.k}" data-fld="${d.k}" ${F[d.k]?"checked":""}><i class="sw"></i></label>`).join("")}
-    <button class="fs-link" data-act="open-clubs"><span>クラブの設定</span><small>${myClubs().length}本 ›</small></button>
+    ${FIELD_DEFS.map(d=>`<label class="fs-row ${d.k==="club"?"has-sub":""}"><span>${d.label}</span><input type="checkbox" id="fld-${d.k}" data-fld="${d.k}" ${F[d.k]?"checked":""}><i class="sw"></i></label>${d.k==="club"?`<button class="fs-sub" data-act="open-clubs"><span>マイクラブを編集</span><small>${myClubs().length}本 ›</small></button>`:""}`).join("")}
     <button data-act="close-sheet">閉じる</button></div></div>`;
 }
 after.record = () => {
@@ -1802,6 +1809,7 @@ document.addEventListener("click", async ev => {
     case "tee": h.tee = h.tee===b.dataset.v ? null : b.dataset.v; h.entered=true; state.tap="tee"; saveDraft(); render(); askClub(h.tee); break;
     case "club": h.club = h.club===b.dataset.v ? null : b.dataset.v; h.entered=true; state.sheet=null; saveDraft(); render(); break;
     case "open-club": state.sheet="club"; render(); break;
+    case "set-g": { const ni=+b.dataset.g; if((h.gi||0)===ni) break; d.holes.forEach(x=>{ if(x.ys && x.ys[ni]){ x.gi=ni; x.yards=x.ys[ni]; } }); saveDraft(); render(); toast(`全ホールを${d.gn[ni]}のヤードにしました`); break; }
     case "swap-g": { const ni=1-(h.gi||0); d.holes.forEach((x,i)=>{ if(i>=state.hole && x.ys && x.ys[ni]){ x.gi=ni; x.yards=x.ys[ni]; } }); saveDraft(); render(); toast(`${d.gn[ni]}にしました（このホールから先）`); break; }
     case "open-clubs": state.clubBack=state.sheet; state.clubEdit=myClubs(); state.sheet="clubs"; render(); break;
     case "close-clubs": { const l=(state.clubEdit||[]).map(x=>String(x).trim()).filter(Boolean); setClubs(l.length?l:CLUBS); state.clubCustom=null; state.clubEdit=null; state.sheet=state.clubBack||null; state.clubBack=null; render(); break; }
