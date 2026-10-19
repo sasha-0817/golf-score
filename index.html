@@ -1083,7 +1083,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-2020";
+const BUILD = "2026-10-19-2110";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1137,6 +1137,7 @@ setTimeout(maybeShowA2HS, 2500);
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw0sl0SbAukE3UDirc5iYePK-XaY9pD5gZvwg5g-IJMdAuiRRqwilifThZvbinzDTuO/exec";
 const hasBackend = /^https:\/\/script\.google\.com\//.test(SCRIPT_URL);
 let pending = LS.get("sc.pending", []); // 電波が悪くて送れなかった保存
+let pendingCourses = LS.get("sc.pendingCourses", []); // 電波がないときに始めた用意済みコース（あとで送る）
 
 async function api(action, payload){
   const res = await fetch(SCRIPT_URL, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify({ action, ...payload }) });
@@ -1172,7 +1173,12 @@ const encRound = r => ({...r, holes:r.holes.map(h=>({...h, club:encClub(h)}))});
 function upsert(arr, item){ const i=arr.findIndex(x=>x.id===item.id); if(i>=0) arr[i]=item; else arr.push(item); }
 
 async function flushPending(){
-  if(!hasBackend || !pending.length) return;
+  if(!hasBackend) return;
+  for(const c of pendingCourses.slice()){
+    try{ await api("saveCourse",{course:c}); pendingCourses=pendingCourses.filter(x=>x.id!==c.id); LS.set("sc.pendingCourses",pendingCourses); }
+    catch(e){ return; }
+  }
+  if(!pending.length) return;
   for(const r of pending.slice()){
     try{ await api("saveRound",{round:encRound(r)}); pending=pending.filter(p=>p.id!==r.id); LS.set("sc.pending",pending); }
     catch(e){ return; }
@@ -1191,9 +1197,9 @@ async function connect(){
     if(!j.ok) throw new Error(j.error);
     state.courses = j.courses; state.serverVer = j.version || 1;
     state.rounds = j.rounds.map(decRound);
-    pending.forEach(r=>upsert(state.rounds, r));
+    pending.forEach(r=>upsert(state.rounds, r)); pendingCourses.forEach(c=>upsert(state.courses, c));
     cache(); state.mode = "cloud";
-  }catch(e){ state.mode = "offline"; }
+  }catch(e){ state.mode = "offline"; pendingCourses.forEach(c=>upsert(state.courses, c)); }
   loading = false;
   render();
 }
@@ -1256,7 +1262,7 @@ function computeStats(rs){
     penRate: pct(pen.length,n), penN: pen.length,
     troubleN: holes.filter(h=>h.ob||h.pen).length,
     teeN: teeH.length, teeC, fwRate: pct(teeC.fw, teeH.length),
-    parOrBetter: pct(dist.eagle+dist.birdie+dist.par, n),
+    parOrBetter: pct(dist.hio+dist.eagle+dist.birdie+dist.par, n),
     putt, dirs, dirN, dist, byPar
   };
 }
@@ -1320,7 +1326,7 @@ function resultOverlay(r){
         <div><span>PUTTS</span><b>${puttsOn(r)?t.putts:"—"}</b></div>
         <div><span>パーオン</span><b>${fmtPct(s.gir)}${s.gir==null?"":`<small style="font-size:12px">%</small>`}</b></div>
         <div><span>3パット</span><b>${puttsOn(r)?s.putt[3]:"—"}</b></div>
-        <div><span>OB</span><b>${s.obN}</b></div>
+        <div><span>OB</span><b>${s.obN||fields().ob?s.obN:"—"}</b></div>
       </div>
       <div class="rc-brand"><span class="rc-logo"><img src="mark.png" alt=""><span><b>GOLF SC.</b><small>SHORT COURSE SCORECARD</small></span></span></div>
     </div></div>
@@ -1602,7 +1608,7 @@ function viewRecordDraft(d){
       <div class="hc-l"><span class="lbl">HOLE</span><div class="hno">${state.hole+1}<small>/${N}</small></div></div>
       <div class="hc-m"><div class="par"><span>PAR</span>${h.par}</div>${d.gn && h.ys && h.ys[0] && h.ys[1] ? `<div class="gsw" role="group" aria-label="グリーン">${d.gn.map((n,i)=>`<button data-act="set-g" data-g="${i}" aria-pressed="${(h.gi||0)===i}">${esc(n)}</button>`).join("")}</div><div class="yd">${h.yards} YDS</div>` : h.yards?`<div class="yd">${h.yards} YDS</div>`:""}
         <div class="badges"><span class="badge ${hio?"hio":"b-"+TONE(diff)} ${/^s[vt]/.test(state.tap||"")?"pop":""}"><i></i>${hio?"HOLE IN ONE":TERM(diff)}</span>${bestPace&&fields().pace?`<span class="pace2">BEST PACE</span>`:""}</div></div>
-      <div class="live"><div><span>TOTAL</span><b>${totLabel}</b></div><div><span>PUTTS</span><b>${tot.putts||0}</b></div></div>
+      <div class="live"><div><span>TOTAL</span><b>${totLabel}</b></div>${F.putts?`<div><span>PUTTS</span><b>${tot.putts||0}</b></div>`:""}</div>
       ${advice?`<div class="advice">${advice}</div>`:""}
     </div>
     <div class="rec-card rc2 ${slide}" id="rec-card">
@@ -1705,6 +1711,7 @@ function viewStats(){
   const pl = players();
   if(!pl.includes(state.fPlayer)) state.fPlayer = pl.includes(LS.get("sc.player","")) ? LS.get("sc.player","") : pl[0];
   const cs = courses().filter(c=>all.some(r=>r.courseId===c.id));
+  if(state.fCourse!=="all" && !cs.some(c=>c.id===state.fCourse)) state.fCourse="all"; // 消したコースで絞り込んだままにしない
   const rs = filteredRounds();
   const s = computeStats(rs);
   let ST = state.statTab || (state.statTab = LS.get("sc.statTab","score")); if(!["score","shot","putt"].includes(ST)) ST = state.statTab = "score";
@@ -1741,21 +1748,23 @@ function viewStats(){
 `:""}
   ${ST==="shot"?`
   <div class="panel"><div class="sec"><em>SHOTS</em><span>ショット</span></div><div class="gauges">
-    ${gauge("パーオン率", s.gir, s.puttHoles?`${s.puttHoles}H中 ${s.girN}回`:"パットの記録が必要", "--c-gir")}
-    ${gauge("ボギーオン率", s.bon, s.puttHoles?`${s.puttHoles}H中 ${s.bonN}回`:"パットの記録が必要", "--c-bon")}
-    ${gauge("リカバリー率", s.scramble, `<span class="nw">パーオン逃し${s.scrambleN}Hのうち</span><br><span class="nw">パー以内</span>`, "--accent2")}
+    ${!s.puttHoles?`<p class="muted" style="font-size:12.5px;grid-column:1/-1;margin:0 0 4px">パーオン率・ボギーオン率・リカバリー率は、パット数を記録したラウンドで出ます（歯車 → 記録する項目 → パット数）。</p>`:""}
+    ${!s.puttHoles?"":gauge("パーオン率", s.gir, `${s.puttHoles}H中 ${s.girN}回`, "--c-gir")}
+    ${!s.puttHoles?"":gauge("ボギーオン率", s.bon, `${s.puttHoles}H中 ${s.bonN}回`, "--c-bon")}
+    ${!s.puttHoles?"":gauge("リカバリー率", s.scramble, `<span class="nw">パーオン逃し${s.scrambleN}Hのうち</span><br><span class="nw">パー以内</span>`, "--accent2")}
     ${!(s.bunkerN||fields().bunker)?"":gauge("サンドセーブ率", s.sandSave, `<span class="nw">バンカー${s.bunkerN}Hのうち</span><br><span class="nw">パー以内</span>`, "--c5")}
     ${s.bunkerN||fields().bunker?gauge("バンカー率", s.bunkerRate, `${s.holes}H中 ${s.bunkerN}回`, "--warn"):""}
     ${s.troubleN||fields().ob||fields().pen?gauge("OB・ペナ率", pct(s.troubleN,s.holes), `${s.holes}H中 ${s.troubleN}回`, "--under"):""}
   </div></div>
-  <div class="panel"><div class="sec"><em>TREND</em><span>パーオン率・ボギーオン率の推移</span></div><div class="chartbox"><canvas id="ch-on" aria-label="パーオン率とボギーオン率の推移"></canvas></div><p class="muted cs-note">各ラウンドまでの直近5ラウンドの平均。</p></div>
-  <div class="panel"><div class="sec"><em>TEE SHOT</em><span>ティーショットの行き先</span></div>
+  ${s.puttHoles?`  <div class="panel"><div class="sec"><em>TREND</em><span>パーオン率・ボギーオン率の推移</span></div><div class="chartbox"><canvas id="ch-on" aria-label="パーオン率とボギーオン率の推移"></canvas></div><p class="muted cs-note">各ラウンドまでの直近5ラウンドの平均。</p></div>`:""}
+  ${!(s.dirN||s.teeN||fields().shot)?"":`<div class="panel"><div class="sec"><em>TEE SHOT</em><span>ティーショットの行き先</span></div>
     <div class="map-sub">パー3（グリーン）</div>${greenMap(s)}
-    ${s.teeN?`<div class="map-sub">パー4・5（フェアウェイ）</div>${fairwaySVG(null,false,s)}<p class="muted" style="font-size:12px;text-align:center;margin:8px 0 0">${s.teeN}回の記録・フェアウェイキープ率 <b>${fmtPct(s.fwRate)}%</b></p>`:""}</div>
+    ${s.teeN?`<div class="map-sub">パー4・5（フェアウェイ）</div>${fairwaySVG(null,false,s)}<p class="muted" style="font-size:12px;text-align:center;margin:8px 0 0">${s.teeN}回の記録・フェアウェイキープ率 <b>${fmtPct(s.fwRate)}%</b></p>`:""}</div>`}
   ${clubPanel(rs)}
   ${troublePanel(rs)}
 `:""}
-  ${ST==="putt"?`
+  ${ST==="putt"&&!s.puttHoles?`<div class="panel"><div class="sec"><em>PUTTING</em><span>パット</span></div><p class="muted" style="font-size:13px;margin:0">この期間はパット数を記録したラウンドがありません。歯車 → 記録する項目 →「パット数」をONにすると、ここにパットの分析が出ます。</p></div>`:""}
+  ${ST==="putt"&&s.puttHoles?`
   <div class="panel"><div class="sec"><em>PUTTING</em><span>パット</span></div><div class="putts">
     <div><span class="eyebrow">1R平均</span><span class="num">${fx(s.avgPuttsRound)}</span></div>
     <div><span class="eyebrow">パーオン時</span><span class="num">${s.puttsPerGir==null?"—":s.puttsPerGir.toFixed(2)}</span></div>
@@ -2076,7 +2085,9 @@ document.addEventListener("click", async ev => {
       b.disabled=false; b.textContent="画像を保存・送る"; break;
     }
     case "back-to-input": {
-      const r=state.result; state.result=null; if(!r) { render(); break; }
+      const r=state.result; if(!r) { render(); break; }
+      if(state.draft && !state.draft.editing && state.draft.id!==r.id && state.draft.holes.some(x=>x.entered)){ toast("記録中のラウンドがあります。保存か破棄をしてから編集してください"); break; }
+      state.result=null;
       state.draft={...JSON.parse(JSON.stringify(r)), editing:true}; state.draft.holes.forEach(x=>x.entered=true);
       state.hole=r.holes.length-1; state.tab="record"; LS.set("sc.tab","record"); saveDraft(); render(); break;
     }
@@ -2094,7 +2105,7 @@ document.addEventListener("click", async ev => {
       let c=state.courses.find(x=>x.id===cid);
       if(!c && cid.startsWith("preset:")){ const pc=PRESET_COURSES.find(x=>"preset:"+x.key===cid); if(!pc) return;
         c = { id:uid(), name:pc.name, presetKey:pc.key, holes:pc.holes.map((x,i)=>i?{...x}:{...x, pref:pc.pref, area:pc.area}), createdAt:Date.now() };
-        upsert(state.courses,c); cache(); store.saveCourse(c).catch(()=>{}); // 電波がなくても始められるように、保存は裏で
+        upsert(state.courses,c); cache(); store.saveCourse(c).catch(()=>{ pendingCourses=pendingCourses.filter(x=>x.id!==c.id).concat([c]); LS.set("sc.pendingCourses",pendingCourses); }); // 電波がなくても始められるように、保存は裏で（失敗したら次に接続したとき送る）
         const F=favs(); if(F.includes(cid)) LS.set("sc.favs", F.map(x=>x===cid?c.id:x)); }
       if(!c) return;
       { const F=favs(); if(!F.includes(c.id)) LS.set("sc.favs",[...F,c.id]); }
@@ -2117,7 +2128,7 @@ document.addEventListener("click", async ev => {
     case "finish": {
       mark_entered();
       const r={ id:d.id, player:d.player, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:d.createdAt||Date.now(),
-        holes:d.holes.map(x=>({par:x.par, strokes:x.strokes, putts:fields().putts?x.putts:0, dir:x.dir, bunker:!!x.bunker, ob:evs(x,"ob").length>0, pen:evs(x,"pen").length>0, tee:x.tee||null, club:x.club||null})) };
+        holes:d.holes.map(x=>({par:x.par, strokes:x.strokes, putts:(fields().putts||d.editing)?x.putts:0, dir:x.dir, bunker:!!x.bunker, ob:evs(x,"ob").length>0, pen:evs(x,"pen").length>0, tee:x.tee||null, club:x.club||null})) };
       b.disabled=true; rememberClubs(r);
       try{ await store.saveRound(r); state.draft=null; saveDraft(); state.tab="history"; LS.set("sc.tab","history"); state.fPlayer=r.player; state.openRound=r.id; state.result=r; render(); }
       catch(e){ b.disabled=false; writeErr(e); }
@@ -2167,12 +2178,14 @@ document.addEventListener("click", async ev => {
     case "del-round": try{ await store.delRound(b.dataset.id); state.confirm=null; toast("削除しました"); render(); }catch(e){ writeErr(e); } break;
     case "edit-round": {
       const r=state.rounds.find(x=>x.id===b.dataset.id); if(!r) return;
+      // 記録中・中断中のラウンドがあるときに上書きしない
+      if(state.draft && !state.draft.editing && state.draft.holes.some(x=>x.entered)){ toast("記録中のラウンドがあります。保存か破棄をしてから編集してください"); break; }
       state.draft={...JSON.parse(JSON.stringify(r)), editing:true}; state.draft.holes.forEach(x=>x.entered=true);
       state.hole=0; state.tab="record"; saveDraft(); render(); break;
     }
     case "new-course": state.courseEdit=newCourse(); render(); break;
     case "edit-course": { if(b.dataset.id.startsWith("preset:")){ const pc=PRESET_COURSES.find(x=>"preset:"+x.key===b.dataset.id); if(!pc) break;
-        state.courseEdit={ id:uid(), name:pc.name, presetKey:pc.key, presetId:b.dataset.id, isNew:false, fromPreset:true, pref:pc.pref, area:pc.area, two:false, gn:["MG","SG"], holes:pc.holes.map(x=>({...x})) }; render(); window.scrollTo({top:0}); break; }
+        state.courseEdit={ id:uid(), name:pc.name, presetKey:pc.key, presetId:b.dataset.id, isNew:false, fromPreset:true, pref:pc.pref, area:pc.area, two:pc.holes.some(x=>x.yards2), gn:(pc.holes[0].gn||["MG","SG"]).slice(), holes:pc.holes.map(x=>({...x})) }; render(); window.scrollTo({top:0}); break; }
       const c=state.courses.find(x=>x.id===b.dataset.id); const g=courseGreens(c); state.courseEdit={...JSON.parse(JSON.stringify(c)), isNew:false, two:!!g, gn:g||["MG","SG"], pref:cPref(c), area:cArea(c)}; render(); break; }
     case "cancel-course": state.courseEdit=null; render(); break;
     case "allpar": state.courseEdit.holes.forEach(x=>x.par=+b.dataset.p); render(); break;
