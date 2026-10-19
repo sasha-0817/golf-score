@@ -1010,7 +1010,10 @@ input,select,textarea{font-size:max(16px,1em)}
 const $ = (s, r=document) => r.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const LS = {
-  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  get(k, d){ try{ const v = localStorage.getItem(k); if(!v) return d; const x = JSON.parse(v);
+    // 壊れた値・型の違う値（null や配列のはずがオブジェクト等）は初期値に戻す
+    if(x==null || (Array.isArray(d) && !Array.isArray(x)) || (d && typeof d==="object" && !Array.isArray(d) && (typeof x!=="object" || Array.isArray(x)))) return d;
+    return x; }catch(e){ return d; } },
   set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
@@ -1075,16 +1078,17 @@ const state = {
   tab: LS.get("sc.tab","record"),
   mode: "connecting", // connecting | cloud | local
   courses: [], rounds: [],
-  draft: LS.get("sc.draft", null),
-  hole: 0,
+  draft: (d=>d && Array.isArray(d.holes) && d.holes.length ? d : null)(LS.get("sc.draft", null)), // 壊れた下書きは捨てる
+  hole: 0, // 下書きがあれば下で復元
   fPlayer: LS.get("sc.fPlayer", LS.get("sc.player","") || "all"), fCourse:"all", fRange:"all",
   courseEdit: null,
   confirm: null,
   demo: false
 };
 
+if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-2125";
+const BUILD = "2026-10-19-2140";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1945,7 +1949,8 @@ after.stats = () => {
   const perRound = rs.map(r=>{ const hs=puttsOn(r)?r.holes.filter(h=>h.strokes>0):[]; // パット未記録のラウンドは数えない
     return { g: hs.filter(h=>h.strokes-h.putts<=h.par-2).length, b: hs.filter(h=>h.strokes-h.putts<=h.par-1).length, n: hs.length }; })
     // 1ラウンドごとだと9ホールで上下に大きく跳ねるので、直近5ラウンドの合計でならした線にする
-    .map((_,i,a)=>{ const w=a.slice(Math.max(0,i-4),i+1), N=w.reduce((t,x)=>t+x.n,0)||1; return { gir: Math.round(w.reduce((t,x)=>t+x.g,0)/N*100), bon: Math.round(w.reduce((t,x)=>t+x.b,0)/N*100) }; });
+    .map((_,i,a)=>{ const w=a.slice(Math.max(0,i-4),i+1), N=w.reduce((t,x)=>t+x.n,0); if(!N) return {gir:null,bon:null}; // パットの記録がない区間は線を描かない（0%に見せない）
+      return { gir: Math.round(w.reduce((t,x)=>t+x.g,0)/N*100), bon: Math.round(w.reduce((t,x)=>t+x.b,0)/N*100) }; });
   const oOn = opts("%", v=>v+"%"); oOn.scales.y.min=0; oOn.scales.y.max=100; oOn.events=["click"];
   oOn.plugins.legend={display:true, position:"bottom", labels:{boxWidth:14, boxHeight:3, usePointStyle:false}};
   oOn.plugins.tooltip = { ...tip, displayColors:true, callbacks:{ ...tip.callbacks, label: c => ` ${c.dataset.label} ${c.raw}%` } };
@@ -2061,7 +2066,7 @@ after.courses = () => {
 };
 
 /* ---------- actions ---------- */
-function saveDraft(){ LS.set("sc.draft", state.draft); }
+function saveDraft(){ if(state.draft) state.draft.cur=state.hole; LS.set("sc.draft", state.draft); } // 今のホールも覚えておく（自動更新で読み直しても同じホールから）
 document.addEventListener("click", async ev => {
   const b = ev.target.closest("[data-act], nav.tabs button, [data-stop], label.fs-row");
   if(!b || b.dataset.stop || b.classList.contains("fs-row")) return;
