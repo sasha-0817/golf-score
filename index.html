@@ -1050,7 +1050,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1810";
+const BUILD = "2026-10-19-1815";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1539,9 +1539,9 @@ function viewRecordDraft(d){
   const isLong = h.par>=4;
   const _ring = `<div class="ring" aria-label="${done.length}/${N}ホール入力済み"><svg viewBox="0 0 46 46"><defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0E9F62"/><stop offset="1" stop-color="#13A9C2"/></linearGradient></defs><circle class="trk" cx="23" cy="23" r="19"/><circle class="val" cx="23" cy="23" r="19" stroke-dasharray="${(2*Math.PI*19*done.length/N).toFixed(1)} 200"/></svg><b>${done.length}<small>/${N}</small></b></div>`;
   const chip = (act,v,label,on) => `<button class="chip2" data-act="${act}" data-v="${v}" aria-pressed="${on}">${label}</button>`;
-  // OB・1ペナ: 押すとクラブ選択（複数選べる）。選んだクラブをボタンの中に「5I, 7I」と並べる
+  // OB・1ペナ: ティーショット（1打目）のOB・1ペナだけを記録する。タップでON/OFF（クラブはティーショットのクラブで数える）
   const tbBtn = (k,cls,label) => { const e=evs(h,k), cl=e.filter(Boolean);
-    return `<button class="${cls} tbm" data-act="tb" data-k="${k}" aria-pressed="${e.length>0}">${label}${cl.length?`<small>${cl.map(esc).join(", ")}</small>`:""}</button>`; };
+    return `<button class="${cls}" data-act="tb" data-k="${k}" aria-pressed="${e.length>0}">${label}</button>`; };
   const troubles = [
     F.ob ? tbBtn("ob","ob","OB") : "",
     F.pen ? tbBtn("pen","pn","1ペナ") : "",
@@ -1733,17 +1733,14 @@ function clubTable(rs, kind){
 }
 /* OB・ペナが多いクラブ: そのクラブを選んだホールのうち OB か 1ペナ があった割合のワースト3 */
 function troublePanel(rs){
-  // 2打目以降はそのクラブを何回使ったか分からないので、率ではなく「回数」で並べる
-  const m = {}; let any=false;
-  rs.forEach(r=>r.holes.forEach(h=>{ if(h.club) any=true;
-    const legacy = !Array.isArray(h.obC)&&!Array.isArray(h.penC); // 古い記録はティーショットのクラブに付ける
-    [["ob",evs(h,"ob")],["pen",evs(h,"pen")]].forEach(([k,e])=>e.forEach(c=>{ c = c || (legacy ? h.club : null); if(!c) return; any=true;
-      const x=m[c]||(m[c]={ob:0,pen:0}); x[k]++; })); }));
-  if(!any) return "";
-  const L = Object.keys(m).map(c=>({c, ob:m[c].ob, pen:m[c].pen, t:m[c].ob+m[c].pen})).sort((a,b)=>b.t-a.t || b.ob-a.ob).slice(0,3);
-  const max = L.length ? L[0].t : 1;
-  return `<div class="panel"><div class="sec"><em>TROUBLE</em><span>OB・ペナが多いクラブ</span></div>
-    ${L.length ? `<ol class="tr-rank">${L.map((x,i)=>`<li><span class="rk">${i+1}</span><b>${esc(x.c)}</b><span class="cs-bar"><i style="width:${x.t/max*100}%"></i></span><span class="tp">${x.t}回</span><small>${[x.ob?`OB ${x.ob}回`:"",x.pen?`1ペナ ${x.pen}回`:""].filter(Boolean).join("・")}</small></li>`).join("")}</ol>`
+  // OB・1ペナはティーショットだけを記録するので、ティーショットのクラブごとに「何回中何回」が正確に出せる
+  const m = {};
+  rs.forEach(r=>r.holes.forEach(h=>{ if(!h.club) return; const x=m[h.club]||(m[h.club]={n:0,t:0}); x.n++; if(h.ob||h.pen) x.t++; }));
+  if(!Object.keys(m).length) return "";
+  const L = Object.keys(m).filter(c=>m[c].t>0).map(c=>({c, n:m[c].n, t:m[c].t, r:m[c].t/m[c].n*100}))
+    .sort((a,b)=>b.r-a.r || b.t-a.t).slice(0,3);
+  return `<div class="panel"><div class="sec"><em>TROUBLE</em><span>OB・ペナ率ワースト</span></div>
+    ${L.length ? `<ol class="tr-rank">${L.map((x,i)=>`<li><span class="rk">${i+1}</span><b>${esc(x.c)}</b><span class="cs-bar"><i style="width:${Math.max(4,x.r)}%"></i></span><span class="tp">${fmtPct(x.r)}%</span><small>${x.n}回中${x.t}回</small></li>`).join("")}</ol>`
       : `<p class="muted" style="font-size:13px;margin:0">まだOB・1ペナの記録はありません。</p>`}</div>`;
 }
 function clubPanel(rs){
@@ -2064,7 +2061,7 @@ document.addEventListener("click", async ev => {
     case "finish": {
       mark_entered();
       const r={ id:d.id, player:d.player, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:d.createdAt||Date.now(),
-        holes:d.holes.map(x=>({par:x.par, strokes:x.strokes, putts:x.putts, dir:x.dir, bunker:!!x.bunker, ob:evs(x,"ob").length>0, pen:evs(x,"pen").length>0, obC:evs(x,"ob"), penC:evs(x,"pen"), tee:x.tee||null, club:x.club||null})) };
+        holes:d.holes.map(x=>({par:x.par, strokes:x.strokes, putts:x.putts, dir:x.dir, bunker:!!x.bunker, ob:evs(x,"ob").length>0, pen:evs(x,"pen").length>0, tee:x.tee||null, club:x.club||null})) };
       b.disabled=true;
       try{ await store.saveRound(r); state.draft=null; saveDraft(); state.tab="history"; LS.set("sc.tab","history"); state.fPlayer=r.player; state.openRound=r.id; state.result=r; render(); }
       catch(e){ b.disabled=false; writeErr(e); }
@@ -2091,9 +2088,7 @@ document.addEventListener("click", async ev => {
         h[k+"C"] = e.includes(v) ? e.filter(x=>x!==v) : e.concat([v]); h[k]=h[k+"C"].length>0; state.clubFor=null; }
       else h.club = h.club===b.dataset.v ? null : b.dataset.v;
       h.entered=true; state.sheet=null; saveDraft(); render(); break; }
-    case "tb": { const k=b.dataset.k;
-      if(fields().club){ state.clubFor=k; state.sheet="club"; render(); break; }
-      const on=!evs(h,k).length; h[k+"C"]=on?[null]:[]; h[k]=on; h.entered=true; saveDraft(); render(); break; }
+    case "tb": { const k=b.dataset.k; h[k]=!evs(h,k).length; delete h[k+"C"]; h.entered=true; saveDraft(); render(); break; }
     case "open-club": state.sheet="club"; render(); break;
     case "set-g": { const ni=+b.dataset.g; if((h.gi||0)===ni) break; d.holes.forEach(x=>{ if(x.ys && x.ys[ni]){ x.gi=ni; x.yards=x.ys[ni]; } }); saveDraft(); render(); toast(`全ホールを${d.gn[ni]}のヤードにしました`); break; }
     case "swap-g": { const ni=1-(h.gi||0); d.holes.forEach((x,i)=>{ if(i>=state.hole && x.ys && x.ys[ni]){ x.gi=ni; x.yards=x.ys[ni]; } }); saveDraft(); render(); toast(`${d.gn[ni]}にしました（このホールから先）`); break; }
