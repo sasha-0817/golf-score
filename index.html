@@ -897,6 +897,13 @@ table.sc tr.hn td{background:var(--soft);color:var(--muted);font-size:13px}
 
 .hc2 .badges{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .pace2{font-size:9px;font-weight:900;letter-spacing:.14em;padding:4px 8px;border-radius:999px;background:linear-gradient(120deg,#F2B01E,#FFD76A);color:#3A2600;white-space:nowrap}
+.rc-stars{position:absolute;inset:0;pointer-events:none;z-index:3}
+.rc-stars i{position:absolute;transform:translate(-50%,-50%);line-height:0}
+.rc-stars svg{display:block;transform-origin:50% 50%;animation:twinkle 2.2s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(255,215,106,.7))}
+.rc-stars i.big svg{animation-name:twinkleBig}
+@keyframes twinkle{0%,100%{transform:scale(.3) rotate(0);opacity:.2}50%{transform:scale(1) rotate(25deg);opacity:1}}
+@keyframes twinkleBig{0%,100%{transform:scale(.7) rotate(0);opacity:.55}50%{transform:scale(1.08) rotate(20deg);opacity:1}}
+@media (prefers-reduced-motion:reduce){.rc-stars svg{animation:none}}
 </style>
 
 </head>
@@ -996,7 +1003,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1800";
+const BUILD = "2026-10-19-1555";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1176,7 +1183,24 @@ function render(){
   const view = {record:viewRecord, stats:viewStats, history:viewHistory, courses:viewCourses}[state.tab] || viewRecord;
   m.innerHTML = `<section class="view">${view()}</section>`;
   after[state.tab] && after[state.tab]();
-  if(state.result) m.insertAdjacentHTML("beforeend", resultOverlay(state.result));
+  if(state.result){ m.insertAdjacentHTML("beforeend", resultOverlay(state.result)); fillStars(); }
+}
+// COURSE BEST のキラキラ（金と白の4つ角の星）。文字のない空き（大きなスコアの右〜スコアカードの上）に置き、画面ではゆっくり点滅させる。
+// 画像保存では onclone でアニメーションを止めるので、同じ星がそのまま止まった絵として写る。
+let starCache=null; // 画面を描き直しても星の位置が飛ばないよう、ラウンドごとに覚えておく
+function fillStars(){
+  const card=$(".result-card"), box=card&&card.querySelector(".rc-stars"); if(!box) return;
+  const key=state.result&&state.result.id; if(starCache&&starCache.key===key){ box.innerHTML=starCache.html; return; }
+  const cr=card.getBoundingClientRect(), rel=el=>{ const b=el.getBoundingClientRect(); return {l:(b.left-cr.left)/cr.width*100, r:(b.right-cr.left)/cr.width*100, t:(b.top-cr.top)/cr.height*100, b:(b.bottom-cr.top)/cr.height*100}; };
+  const sc=card.querySelector(".rc-score span")||card.querySelector(".rc-score b"), sheet=card.querySelector(".rc-sc"), flag=card.querySelector(".rc-flag");
+  const X0=(sc?rel(sc).r:55)+3, Y1=(sheet?rel(sheet).t:40)-2, fl=flag?rel(flag):null;
+  const spots=[]; let tries=0; while(spots.length<14 && tries++<600){ const x=X0+Math.sqrt(Math.random())*(95-X0), y=6+Math.random()*(Y1-8);
+    if(fl && x>fl.l-3 && x<fl.r+2 && y>fl.t-2 && y<fl.b+2) continue;
+    if(spots.some(([px,py])=>Math.abs(px-x)<6 && Math.abs(py-y)<5)) continue; spots.push([x,y]); }
+  const star=(sz,col,op)=>`<svg viewBox="0 0 24 24" width="${sz}" height="${sz}"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z" fill="${col}" fill-opacity="${op}"/></svg>`;
+  box.innerHTML = spots.map(([x,y],i)=>{ const big=i<3, sz=big?22+Math.round(Math.random()*8):8+Math.round(Math.random()*9), col=i%3===2?"#FFFFFF":"#FFD76A";
+    return `<i class="${big?"big":""}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%"><svg style="animation-delay:${(-Math.random()*2.4).toFixed(2)}s;animation-duration:${(1.6+Math.random()*1.4).toFixed(2)}s" ${star(sz,col,big?.95:(.55+Math.random()*.4).toFixed(2)).slice(5)}</i>`; }).join("");
+  starCache={key, html:box.innerHTML};
 }
 function resultOverlay(r){
   const t=roundTotals(r); const s=computeStats([r]);
@@ -1185,7 +1209,7 @@ function resultOverlay(r){
   const n = k => s.dist[k];
   const [y,m,d] = r.date.split("-");
   const best = flag==="COURSE BEST!";
-  const conf = best ? `<div class="confetti">${Array.from({length:22},(_,i)=>`<i style="left:${(Math.cbrt(Math.random())*100).toFixed(1)}%;background:${["#F2B01E","#FFD76A","#5BE6A8","#fff","#38BDF8"][i%5]};animation-delay:${(-Math.random()*3).toFixed(2)}s;animation-duration:${(2.2+Math.random()*1.8).toFixed(2)}s;width:${5+Math.round(Math.random()*4)}px"></i>`).join("")}</div>` : "";
+  const conf = best ? `<div class="rc-stars" aria-hidden="true"></div>` : "";
   return `<div class="result-back" role="dialog" aria-label="ラウンド結果"><div class="result-wrap">
     <div class="result-card"><svg class="rc-rings" viewBox="0 0 320 280" aria-hidden="true">${Array.from({length:10},(_,k)=>`<ellipse cx="160" cy="140" rx="${16+k*16}" ry="${14+k*14}" fill="none" stroke="rgba(255,255,255,.13)" stroke-width="1"/>`).join("")}<circle cx="160" cy="140" r="1.5" fill="rgba(255,255,255,.3)"/></svg>${conf}<div class="rc-in">
       <div class="rc-top"><div><div class="k">ROUND COMPLETE</div><div class="n">${esc(r.player)}</div><div class="c">${esc(r.courseName)}・${+m}/${+d}</div></div>${flag?`<span class="rc-flag">${flag}</span>`:""}</div>
@@ -1893,17 +1917,8 @@ document.addEventListener("click", async ev => {
         const cv = await html2canvas(card,{scale:3, backgroundColor:null, useCORS:true,
           onclone: doc => { const st=doc.createElement("style"); st.textContent="*,*::before,*::after{animation:none!important;transition:none!important;opacity:1}"; doc.head.appendChild(st);
             doc.querySelectorAll(".result-card,.result-card *").forEach(el=>{ el.style.animation="none"; });
-            // 紙吹雪は止まった1枚の絵として写す（右側に多く、左の大きな数字の上はまばら）
-            const cf = doc.querySelector(".result-card .confetti"); if(cf){ const cols=["#F2B01E","#FFD76A","#5BE6A8","#fff","#38BDF8"];
-              const cr=card.getBoundingClientRect(), rel=el=>{ const b=el.getBoundingClientRect(); return {l:(b.left-cr.left)/cr.width*100, r:(b.right-cr.left)/cr.width*100, t:(b.top-cr.top)/cr.height*100, b:(b.bottom-cr.top)/cr.height*100}; };
-              const sc=card.querySelector(".rc-score span")||card.querySelector(".rc-score b"), sheet=card.querySelector(".rc-sc"), flag=card.querySelector(".rc-flag");
-              const X0=(sc?rel(sc).r:55)+3, Y1=(sheet?rel(sheet).t:40)-2, fl=flag?rel(flag):null;
-              const spots=[]; let tries=0; while(spots.length<26 && tries++<600){ const x=X0+Math.sqrt(Math.random())*(95-X0), y=6+Math.random()*(Y1-8);
-                if(fl && x>fl.l-3 && x<fl.r+2 && y>fl.t-2 && y<fl.b+2) continue; spots.push([x,y]); }
-              // 保存画像は紙吹雪ではなく、金と白のキラキラ（4つ角の星）を空いている所に散らす
-              const star = (sz,col,op) => `<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" style="display:block"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z" fill="${col}" fill-opacity="${op}"/></svg>`;
-              cf.innerHTML = spots.slice(0,14).map(([x,y],i)=>{ const big=i<3, sz=big?22+Math.round(Math.random()*8):8+Math.round(Math.random()*9), col=i%3===2?"#FFFFFF":"#FFD76A";
-                return `<i style="position:absolute;left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;width:auto;height:auto;background:none;border-radius:0;transform:translate(-50%,-50%);animation:none">${star(sz,col,big?.95:.55+Math.random()*.4)}</i>`; }).join(""); } }});
+            // キラキラは画面と同じ位置のまま、アニメーションを止めて写す
+          }});
         const blob = await new Promise(r=>cv.toBlob(r,"image/png"));
         const file = new File([blob], `golfsc-${state.result.date}.png`, {type:"image/png"});
         if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:"GOLF SC."}); }
