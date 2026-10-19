@@ -210,6 +210,8 @@ select.ph{color:var(--muted)}
 .fs-row.has-sub{border-bottom:0;padding-bottom:4px}
 .sheet .fs-sub{height:40px;display:flex;justify-content:space-between;align-items:center;padding:0 12px;margin:0 0 6px;font-size:13px;color:var(--rec-fg);background:var(--rec-bg);border-radius:10px}
 .fs-sub small{color:var(--rec-muted);font-weight:700}
+
+.hc2 .live b small{font-size:13px;margin-left:2px;opacity:.85;font-weight:600}
 </style>
 <title>ショートコース スコアカード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -923,7 +925,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1455";
+const BUILD = "2026-10-19-1515";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1288,7 +1290,7 @@ function approachSVG(dir, tap, stat){
 }
 /* ティーショット: 上から見たホール。手前がティー、奥にグリーン。光は左上から（影は右下） */
 function fairwaySVG(tee, tap, stat){
-  const Z = { fw:[176,96], rl:[58,62], rr:[284,62], miss:[150,205] };
+  const Z = { fw:[182,110], rl:[58,62], rr:[284,62], miss:[150,205] };
   const id = stat?"S":"";
   const sel = k => !stat && tee===k;
   const maxMiss = stat ? Math.max(1, ...["rl","rr","miss"].map(k=>stat.teeC[k]||0)) : 1;
@@ -1305,11 +1307,13 @@ function fairwaySVG(tee, tap, stat){
   const tpath = b ? `M${sx} ${sy} Q ${(sx+b[0])/2} ${cy} ${b[0]} ${b[1]}` : "";
   const tracer = b ? `<g class="tr ${tap?"anim":""}"><path class="tr-shadow" d="M${sx+6} ${sy} L${b[0]+5} ${b[1]+3}" pathLength="1" filter="url(#soft${id})"/><path class="tr-glow" d="${tpath}" pathLength="1" filter="url(#trGlow${id})"/><path class="tr-core" d="${tpath}" pathLength="1" stroke="url(#trGrad${id})"/><path class="tr-hi" d="${tpath}" pathLength="1"/></g>` : "";
   const ball = b ? `<g class="ballg ${tap?"drop":""}"><ellipse cx="${b[0]+3.5}" cy="${b[1]+5}" rx="7.5" ry="4.8" fill="rgba(0,0,0,.26)" filter="url(#soft${id})" transform="rotate(15 ${b[0]+3.5} ${b[1]+5})"/><image href="ball.png" x="${b[0]-7.5}" y="${b[1]-7.5}" width="15" height="15"/></g>` : "";
-  const fwPath = `M124 186 C114 146 116 96 130 56 C138 30 202 30 210 56 C224 96 226 146 216 186 Z`;
+  // ゆるいドッグレッグのフェアウェイ（手前にティー、奥に別のグリーン）
+  const fwPath = `M178.3 169.4 L178.7 166.7 L179.6 164.5 L180.6 162.6 L181.8 160.9 L183.0 159.3 L184.3 157.8 L185.7 156.3 L187.0 154.7 L188.4 153.1 L189.7 151.2 L191.1 149.2 L192.5 147.0 L193.9 144.6 L195.2 142.0 L196.6 139.2 L197.9 136.2 L199.1 132.9 L200.3 129.5 L201.4 125.8 L202.3 122.0 L203.2 117.9 L203.9 113.7 L204.4 109.4 L204.6 104.9 L204.7 100.3 L204.5 95.6 L204.0 90.8 L203.2 86.0 L202.1 81.3 L200.7 76.6 L198.9 72.1 L196.8 67.7 L195.6 63.1 L194.3 58.6 L192.5 54.0 L190.5 49.7 A14 14 0 0 0 165.5 62.3 L166.8 65.0 L167.7 67.4 L168.4 69.9 L168.7 72.3 L167.5 74.9 L166.0 77.3 L164.5 79.6 L162.9 81.8 L161.2 84.0 L159.4 86.2 L157.6 88.4 L155.8 90.7 L154.0 93.1 L152.2 95.6 L150.4 98.2 L148.6 101.0 L146.9 103.9 L145.2 107.0 L143.7 110.3 L142.2 113.8 L140.8 117.4 L139.6 121.2 L138.6 125.2 L137.7 129.4 L137.1 133.8 L136.8 138.2 L136.7 142.9 L137.0 147.6 L137.6 152.4 L138.6 157.2 L140.1 162.0 L142.0 166.7 L144.3 171.2 L147.1 175.4 L150.3 179.3 L153.7 182.6 A14 14 0 0 0 178.3 169.4 Z`;
   return `<svg class="approach fairway" viewBox="0 0 340 222" preserveAspectRatio="xMidYMid meet" role="${stat?"img":"group"}" aria-label="ティーショットの行き先">
     <defs>
       <linearGradient id="gFw${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#46C77B"/><stop offset="1" stop-color="#1F9E57"/></linearGradient>
-      <pattern id="fwMow${id}" width="36" height="36" patternUnits="userSpaceOnUse" patternTransform="rotate(-6)"><rect width="36" height="18" fill="rgba(255,255,255,.10)"/></pattern>
+      <pattern id="fwMow${id}" width="22" height="22" patternUnits="userSpaceOnUse" patternTransform="rotate(-38)"><rect width="22" height="11" fill="rgba(255,255,255,.11)"/></pattern>
+      <radialGradient id="gGr${id}" cx="40%" cy="35%" r="75%"><stop offset="0" stop-color="#6BEDB4"/><stop offset="1" stop-color="#22B672"/></radialGradient>
       <filter id="trGlow${id}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.4"/></filter>
       <linearGradient id="trGrad${id}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FF8A00"/><stop offset="1" stop-color="#FFE066"/></linearGradient>
       <filter id="soft${id}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation=".7"/></filter>
@@ -1318,12 +1322,18 @@ function fairwaySVG(tee, tap, stat){
     <rect class="az-rough" x="0" y="0" width="340" height="222" rx="18"/>
     ${zone("rl", `<path class="az-bg" d="M6 22 Q6 8 20 8 H92 Q104 8 104 20 V174 Q104 186 92 186 H20 Q6 186 6 172Z"/>`, 55, stat?104:100, "左")}
     ${zone("rr", `<path class="az-bg" d="M334 22 Q334 8 320 8 H248 Q236 8 236 20 V174 Q236 186 248 186 H320 Q334 186 334 172Z"/>`, 285, stat?104:100, "右")}
-    ${zone("fw", `<path d="${fwPath}" class="fringe"/><path d="${fwPath}" fill="url(#gFw${id})" filter="url(#fwShadow${id})"/><path d="${fwPath}" fill="url(#fwMow${id})"/><path d="${fwPath}" class="g-ring"/>
-      <g pointer-events="none"><ellipse cx="217" cy="128" rx="9" ry="5" transform="rotate(-24 217 128)" class="sand"/>
-      <ellipse cx="170" cy="44" rx="24" ry="12" fill="#5FE3A6" stroke="#A8F0C8" stroke-width="2"/><ellipse cx="148" cy="52" rx="7" ry="3.5" class="sand"/>
-      <g filter="url(#soft${id})"><path d="M176 42 L192 47" stroke="rgba(0,0,0,.24)" stroke-width="1.8" stroke-linecap="round"/><path d="M192 47 L201 46 L186 43Z" fill="rgba(0,0,0,.2)"/></g>
-      <ellipse cx="176" cy="42" rx="2.6" ry="1.2" fill="rgba(0,0,0,.45)"/>
-      <line x1="176" y1="42" x2="176" y2="20" stroke="#fff" stroke-width="1.6"/><path d="M177 20.5 L190 24.5 L177 28.5Z" fill="#E11D2E"/></g>`, 170, stat?110:112, "フェアウェイ", "az-green")}
+    ${zone("fw", `<path d="${fwPath}" fill="#86D9A2" stroke="#86D9A2" stroke-width="10" stroke-linejoin="round"/>
+      <path d="${fwPath}" fill="url(#gFw${id})" filter="url(#fwShadow${id})"/><path d="${fwPath}" fill="url(#fwMow${id})"/><path d="${fwPath}" class="g-ring"/>
+      <g pointer-events="none">
+        <path d="M213 100 C221 104 223 116 218 124 C215 128 210 125 211 119 C212 113 207 107 209 102 C210 99 211 99 213 100Z" class="sand"/>
+        <ellipse cx="176" cy="31" rx="33" ry="17" transform="rotate(-6 176 31)" fill="#86D9A2"/>
+        <ellipse cx="176" cy="31" rx="28" ry="13.5" transform="rotate(-6 176 31)" fill="url(#gGr${id})" filter="url(#fwShadow${id})"/>
+        <path d="M140 30 C136 36 140 44 147 44 C152 44 152 38 148 35 C146 33 144 28 140 30Z" class="sand"/>
+        <ellipse cx="212" cy="18" rx="8" ry="4" transform="rotate(12 212 18)" class="sand"/>
+        <rect x="155" y="166" width="22" height="9" rx="3" fill="#A6EBC0" stroke="rgba(255,255,255,.8)" stroke-width="1"/>
+        <g filter="url(#soft${id})"><path d="M182 30 L196 35" stroke="rgba(0,0,0,.24)" stroke-width="1.8" stroke-linecap="round"/><path d="M196 35 L205 34 L190 31Z" fill="rgba(0,0,0,.2)"/></g>
+        <ellipse cx="182" cy="30" rx="2.6" ry="1.2" fill="rgba(0,0,0,.45)"/>
+        <line x1="182" y1="30" x2="182" y2="9" stroke="#fff" stroke-width="1.6"/><path d="M183 9.5 L196 13.5 L183 17.5Z" fill="#E11D2E"/></g>`, 170, stat?122:124, "フェアウェイ", "az-green")}
     ${zone("miss", `<path class="az-bg" d="M6 192 H334 V204 Q334 216 322 216 H18 Q6 216 6 204Z"/>`, 170, 205, "ミスショット")}
     ${tracer}${ball}
   </svg>`;
@@ -1347,7 +1357,7 @@ function viewRecordDraft(d){
     return `<button data-act="sv" data-v="${v}" class="t-${val===1?"hio":TONE(dd)} ${state.tap==="sv"+v?"pop":""}" aria-pressed="${pressed}" aria-label="${val}打">${isMax&&h.strokes<=8?"8+":val}<small>${val===1?"HIO":TERM(dd)}</small></button>`; };
   const pBtn = v => { const t = v<=1?"under":v===2?"worse":"bogey"; return `<button data-act="pv" data-v="${v}" class="t-${v<=1?"birdie":v===2?"par":v===3?"bogey":"double"} ${state.tap==="pv"+v?"pop":""}" aria-pressed="${h.putts===v}" aria-label="${v}パット">${v===5?"5+":v}</button>`; };
   const gp = (k,cls,txt) => `<button class="${cls}" data-act="dir" data-v="${k}" aria-pressed="${h.dir===k}">${AR[k]||""}${txt}</button>`;
-  const totLabel = done.length ? toPar(tot.diff) : "—";
+  const totLabel = done.length ? `${tot.score}<small>(${toPar(tot.diff)})</small>` : "—";
   const dotCls = x => { if(!x.entered) return ""; return "r-"+TONEH(x); };
   const ball = h.dir && BALL_POS[h.dir] ? `<span class="ball" style="left:${BALL_POS[h.dir].left};top:${BALL_POS[h.dir].top}"></span>` : "";
   const slide = state.slide ? (state.slide==="l"?"slide-l":"slide-r") : ""; state.slide = null;
