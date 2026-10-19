@@ -963,11 +963,13 @@ input,select,textarea{font-size:max(16px,1em)}
 .club-tbl th:nth-child(1){width:44px}.club-tbl th:nth-child(2){width:48px}.club-tbl th:nth-child(3){width:40px}.club-tbl th:nth-child(5){width:76px}
 .club-tbl td:nth-child(5),.club-tbl th:nth-child(5){padding-left:2px}
 .club-tbl .cs-bar{width:28px;margin-right:5px}
-/* 得意・苦手の札: 丸いピルをやめて、角を締めた塗りのタグに */
-.ctag{border-radius:4px;padding:3px 6px 2px;font-size:10px;font-weight:800;letter-spacing:.06em;line-height:1.2}
-.ctag.bad{background:linear-gradient(135deg,#E5484D,#B4232A);color:#fff;box-shadow:0 2px 6px -2px rgba(180,35,42,.55)}
-.ctag.good{background:linear-gradient(135deg,#3B82F6,#1E40AF);color:#fff;box-shadow:0 2px 6px -2px rgba(30,64,175,.5)}
 .club-tbl .rt{display:inline-flex;align-items:center}.club-tbl .rv{min-width:50px;text-align:left}
+/* クラブ別の表: 文字はすべて同じ大きさ・同じ書体。率の列は見出しと棒の左端をそろえる */
+.club-tbl td,.club-tbl td b,.club-tbl td:last-child{font-size:14px;font-family:var(--f-body)}
+.club-tbl td b{font-weight:700}
+.club-tbl th:nth-child(4),.club-tbl td:nth-child(4){text-align:left;padding-left:8px}
+.club-tbl .rv{min-width:0}
+.az-hatch{stroke:none}
 </style>
 
 </head>
@@ -1067,7 +1069,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1825";
+const BUILD = "2026-10-19-1835";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1403,6 +1405,14 @@ const BALL_POS = { on:{left:"calc(50% + 16px)",top:"calc(50% + 4px)"}, left:{lef
 const AR = { long:'<svg viewBox="0 0 12 12"><path d="M6 10V2M2.5 5.5L6 2l3.5 3.5"/></svg>', short:'<svg viewBox="0 0 12 12"><path d="M6 2v8M2.5 6.5L6 10l3.5-3.5"/></svg>', left:'<svg viewBox="0 0 12 12"><path d="M10 6H2M5.5 2.5L2 6l3.5 3.5"/></svg>', right:'<svg viewBox="0 0 12 12"><path d="M2 6h8M6.5 2.5L10 6l-3.5 3.5"/></svg>' };
 
 /* アプローチ: 上から見たグリーン。エリアをタップすると球が飛んでいく */
+/* 分析の絵: ミスの多さの塗り。べた塗りではなく、うすい赤＋赤い縁、一番多いところは斜線と濃い縁で目立たせる */
+function heatShape(shape, heat, worst){
+  const st = worst ? `fill:color-mix(in srgb,#E5484D 16%,var(--paper));stroke:#E5484D;stroke-width:2`
+    : `fill:color-mix(in srgb,#E5484D ${Math.round(heat*14)}%,var(--paper));stroke:color-mix(in srgb,#E5484D ${Math.round(20+heat*45)}%,var(--line));stroke-width:1.2`;
+  const base = shape.replace('class="az-bg"', `class="az-bg" style="${st}"`);
+  return worst ? base + shape.replace('class="az-bg"', 'class="az-hatch" fill="url(#hatchS)" pointer-events="none"') : base;
+}
+const HATCH = `<pattern id="hatchS" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2.4" height="8" fill="#E5484D" fill-opacity=".2"/></pattern>`;
 function approachSVG(dir, tap, stat){
   // stat が渡されたら分析用（読み取り専用・割合表示）
   const Z = { on:[218,106], long:[236,26], short:[238,172], left:[46,62], right:[294,62], miss:[214,208] };
@@ -1412,7 +1422,7 @@ function approachSVG(dir, tap, stat){
   const worst = stat ? ["long","short","left","right","miss"].reduce((a,k)=>(stat.dirs[k]||0)>(stat.dirs[a]||0)?k:a,"long") : null;
   const zone = (k, shape, lx, ly, label) => {
     if(stat){ const v=pctOf(k), heat=((stat.dirs[k]||0)/maxMiss)*.4, w=k===worst&&(stat.dirs[k]||0)>0;
-      return `<g class="az-s">${shape.replace('class="az-bg"', `class="az-bg" style="fill:color-mix(in srgb,#F2857A ${Math.round(heat*100)}%,var(--paper))"`)}
+      return `<g class="az-s">${heatShape(shape, (stat.dirs[k]||0)/maxMiss, w)}
         ${k==="miss"?`<text x="${lx}" y="${ly}" class="az-t">${label}<tspan dx="8" class="az-p ${w?"worst":""}">${fmtPct(v)}%</tspan></text>`:`<text x="${lx}" y="${ly-12}" class="az-t">${label}</text><text x="${lx}" y="${ly+10}" class="az-p ${w?"worst":""} ">${fmtPct(v)}%</text>`}</g>`; }
     return `<g class="az ${sel(k)?"on-sel":""}" role="button" tabindex="0" data-act="dir" data-v="${k}" aria-pressed="${sel(k)}" aria-label="${label}">${shape}<text x="${lx}" y="${ly}" class="az-t">${label}</text></g>`; };
   const b = !stat && dir && Z[dir];
@@ -1435,7 +1445,7 @@ function approachSVG(dir, tap, stat){
       <pattern id="mow${stat?"S":""}" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><rect width="8" height="16" fill="rgba(255,255,255,.07)"/></pattern>
       <filter id="trGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.4"/></filter>
       <linearGradient id="trGrad" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FF8A00"/><stop offset="1" stop-color="#FFE066"/></linearGradient>
-      <filter id="soft${stat?"S":""}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation=".7"/></filter>
+      ${stat?HATCH:""}<filter id="soft${stat?"S":""}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation=".7"/></filter>
       <filter id="gShadow${stat?"S":""}" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="6" dy="6" stdDeviation="6" flood-color="#083C26" flood-opacity=".3"/></filter>
     </defs>
     <rect class="az-rough" x="0" y="0" width="340" height="222" rx="18"/>
@@ -1469,7 +1479,7 @@ function fairwaySVG(tee, tap, stat){
   const worst = stat ? ["rl","rr","miss"].reduce((a,k)=>(stat.teeC[k]||0)>(stat.teeC[a]||0)?k:a,"rl") : null;
   const zone = (k, shape, lx, ly, label, extra="") => {
     if(stat){ const v=pct(stat.teeC[k]||0, stat.teeN), heat=k==="fw"?0:((stat.teeC[k]||0)/maxMiss)*.4, w=k===worst&&(stat.teeC[k]||0)>0;
-      const sh = k==="fw" ? shape : shape.replace('class="az-bg"', `class="az-bg" style="fill:color-mix(in srgb,#F2857A ${Math.round(heat*100)}%,var(--paper))"`);
+      const sh = k==="fw" ? shape : heatShape(shape, (stat.teeC[k]||0)/maxMiss, w);
       if(k==="miss") return `<g class="az-s ${extra}">${sh}<text x="${lx}" y="${ly}" class="az-t">${label}<tspan dx="8" class="az-p ${w?"worst":""}">${fmtPct(v)}%</tspan></text></g>`;
       return `<g class="az-s ${extra}">${sh}<text x="${lx}" y="${ly-13}" class="az-t ${k==="fw"?"on-t":""}">${label}</text><text x="${lx}" y="${ly+10}" class="${k==="fw"?"on-p":"az-p"} ${w?"worst":""}">${fmtPct(v)}%</text></g>`; }
     return `<g class="az ${extra} ${sel(k)?"on-sel":""}" role="button" tabindex="0" data-act="tee" data-v="${k}" aria-pressed="${sel(k)}" aria-label="${label}">${shape}<text x="${lx}" y="${ly}" class="az-t ${k==="fw"?"on-t":""}">${label}</text></g>`; };
@@ -1491,7 +1501,7 @@ function fairwaySVG(tee, tap, stat){
       <radialGradient id="gGr${id}" cx="40%" cy="35%" r="75%"><stop offset="0" stop-color="#6BEDB4"/><stop offset="1" stop-color="#22B672"/></radialGradient>
       <filter id="trGlow${id}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.4"/></filter>
       <linearGradient id="trGrad${id}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FF8A00"/><stop offset="1" stop-color="#FFE066"/></linearGradient>
-      <filter id="soft${id}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation=".7"/></filter>
+      ${stat?HATCH:""}<filter id="soft${id}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation=".7"/></filter>
       <filter id="fwShadow${id}" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="3" dy="3" stdDeviation="3" flood-color="#0B3A1E" flood-opacity=".28"/></filter>
     </defs>
     <rect class="az-rough" x="0" y="0" width="340" height="222" rx="18"/>
