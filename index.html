@@ -951,6 +951,23 @@ input,select,textarea{font-size:max(16px,1em)}
 .club-grid.ob button[aria-pressed="true"]{background:var(--rec-under);border-color:var(--rec-under);color:#fff}
 .club-grid.pen button[aria-pressed="true"]{background:var(--q-bogey);border-color:var(--q-bogey);color:#fff}
 .club-sheet p{white-space:nowrap;gap:8px}
+/* 分析の絵: パー3とパー4・5で文字サイズを統一 */
+.az-s .az-t,.az-s .on-t,.fairway .az-s.az-green .on-t{font-size:15px}
+.az-s .az-p,.az-s .az-p.side{font-size:21px}
+.az-s .on-p,.fairway .az-s.az-green .on-p{font-size:26px}
+/* クラブ別の表: Troubleと同じ文字サイズ、各列センター揃え */
+.club-tbl{font-size:15px}
+.club-tbl th{font-size:11px;text-align:center;padding:4px 2px 6px}
+.club-tbl td{text-align:center;padding:9px 2px}
+.club-tbl td b{font-size:15px}
+.club-tbl th:nth-child(1){width:44px}.club-tbl th:nth-child(2){width:48px}.club-tbl th:nth-child(3){width:40px}.club-tbl th:nth-child(5){width:76px}
+.club-tbl td:nth-child(5),.club-tbl th:nth-child(5){padding-left:2px}
+.club-tbl .cs-bar{width:28px;margin-right:5px}
+/* 得意・苦手の札: 丸いピルをやめて、角を締めた塗りのタグに */
+.ctag{border-radius:4px;padding:3px 6px 2px;font-size:10px;font-weight:800;letter-spacing:.06em;line-height:1.2}
+.ctag.bad{background:linear-gradient(135deg,#E5484D,#B4232A);color:#fff;box-shadow:0 2px 6px -2px rgba(180,35,42,.55)}
+.ctag.good{background:linear-gradient(135deg,#3B82F6,#1E40AF);color:#fff;box-shadow:0 2px 6px -2px rgba(30,64,175,.5)}
+.club-tbl .rt{display:inline-flex;align-items:center}.club-tbl .rv{min-width:50px;text-align:left}
 </style>
 
 </head>
@@ -1050,7 +1067,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1815";
+const BUILD = "2026-10-19-1825";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1396,7 +1413,7 @@ function approachSVG(dir, tap, stat){
   const zone = (k, shape, lx, ly, label) => {
     if(stat){ const v=pctOf(k), heat=((stat.dirs[k]||0)/maxMiss)*.4, w=k===worst&&(stat.dirs[k]||0)>0;
       return `<g class="az-s">${shape.replace('class="az-bg"', `class="az-bg" style="fill:color-mix(in srgb,#F2857A ${Math.round(heat*100)}%,var(--paper))"`)}
-        ${k==="miss"?`<text x="${lx}" y="${ly}" class="az-t">${label}<tspan dx="8" class="az-p ${w?"worst":""}">${fmtPct(v)}%</tspan></text>`:`<text x="${lx}" y="${ly-12}" class="az-t">${label}</text><text x="${lx}" y="${ly+10}" class="az-p ${w?"worst":""} ${k==="left"||k==="right"?"side":""}">${fmtPct(v)}%</text>`}</g>`; }
+        ${k==="miss"?`<text x="${lx}" y="${ly}" class="az-t">${label}<tspan dx="8" class="az-p ${w?"worst":""}">${fmtPct(v)}%</tspan></text>`:`<text x="${lx}" y="${ly-12}" class="az-t">${label}</text><text x="${lx}" y="${ly+10}" class="az-p ${w?"worst":""} ">${fmtPct(v)}%</text>`}</g>`; }
     return `<g class="az ${sel(k)?"on-sel":""}" role="button" tabindex="0" data-act="dir" data-v="${k}" aria-pressed="${sel(k)}" aria-label="${label}">${shape}<text x="${lx}" y="${ly}" class="az-t">${label}</text></g>`; };
   const b = !stat && dir && Z[dir];
   const sx=170, sy=222;
@@ -1728,7 +1745,7 @@ function clubTable(rs, kind){
   return `<div class="map-sub">${kind==="p3"?"パーオン率（パー3）":"フェアウェイキープ率（パー4・5）"}</div>
     <table class="cs-tbl club-tbl"><tr><th></th><th>クラブ</th><th>回数</th><th>${kind==="p3"?"パーオン率":"FWキープ率"}</th><th>多いミス</th></tr>
     ${cl.map(c=>{ const x=m[c], r=rate(x), mk=Object.keys(x.miss).sort((a,b)=>x.miss[b]-x.miss[a])[0];
-      return `<tr><td class="tg">${c===best?`<span class="ctag good">得意</span>`:c===worst?`<span class="ctag bad">苦手</span>`:""}</td><td><b>${esc(c)}</b></td><td>${x.n}</td><td><span class="cs-bar"><i style="width:${r}%"></i></span>${fmtPct(r)}%</td><td>${mk?ML[mk]:"—"}</td></tr>`; }).join("")}
+      return `<tr><td class="tg">${c===best?`<span class="ctag good">得意</span>`:c===worst?`<span class="ctag bad">苦手</span>`:""}</td><td><b>${esc(c)}</b></td><td>${x.n}</td><td><span class="rt"><span class="cs-bar"><i style="width:${r}%"></i></span><span class="rv">${fmtPct(r)}%</span></span></td><td>${mk?ML[mk]:"—"}</td></tr>`; }).join("")}
     </table>`;
 }
 /* OB・ペナが多いクラブ: そのクラブを選んだホールのうち OB か 1ペナ があった割合のワースト3 */
