@@ -119,6 +119,24 @@
 
 .add-course{width:100%;margin-top:12px;border-style:dashed}
 .btn.cp-empty{height:52px;border-style:dashed;font-size:15px;margin-top:0}
+
+/* v20: start form, club columns */
+.start-row{flex-wrap:nowrap}
+.start-row .field{min-width:0}
+select.ph{color:var(--muted)}
+.cl-cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cl-col{border:1px solid var(--rec-line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.cl-h{font-size:11px;font-weight:700;color:var(--rec-muted);padding:8px 10px;border-bottom:1px solid var(--rec-line);background:var(--rec-bg)}
+.cl-scroll{display:flex;flex-direction:column;max-height:min(46vh,380px);overflow:auto}
+.sheet .cl-in,.sheet .cl-cand{height:38px;border:0;border-bottom:1px solid var(--rec-line);border-radius:0;background:transparent;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font:700 16px var(--f-num);flex:0 0 auto}
+.sheet .cl-in{color:var(--rec-fg)}
+.sheet .cl-cand{color:var(--rec-muted);justify-content:flex-start;gap:10px}
+.cl-in span,.cl-cand span{font-size:13px;color:var(--rec-muted)}
+.sheet .cl-cand[aria-disabled="true"]{opacity:.45}
+.cl-custom{display:flex;gap:6px}
+.cl-custom input{flex:1;min-width:0;height:42px;border-radius:12px;font-size:14px}
+.sheet .cl-custom button{height:42px;padding:0 16px}
+.cl-tools .cl-done{color:var(--rec-bg)!important}
 </style>
 <title>ショートコース スコアカード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -787,9 +805,11 @@ const favs = () => LS.get("sc.favs", []);
 function courseGreens(c){ if(!c || !c.holes || !c.holes.some(h=>h.yards2)) return null; const g=c.holes[0].gn; return Array.isArray(g)&&g.length===2 ? g : ["A","B"]; }
 const TEES = { fw:"フェアウェイ", rl:"左", rr:"右", miss:"ミスショット" };
 const CLUBS = ["1W","3W","5W","UT","5I","6I","7I","8I","9I","PW","AW","SW"];
-const CLUB_SUGGEST = ["1W","3W","5W","7W","UT","3U","4U","5U","4I","5I","6I","7I","8I","9I","PW","AW","GW","SW","LW","48°","50°","52°","54°","56°","58°","60°"];
-function myClubs(){ const c = LS.get("sc.clubs", null); return Array.isArray(c) && c.length ? c : CLUBS.slice(); }
-function setClubs(list){ LS.set("sc.clubs", list.slice(0,14)); }
+const CLUB_SUGGEST = ["1W","3W","4W","5W","7W","UT","3U","4U","5U","6U","3I","4I","5I","6I","7I","8I","9I","PW","AW","SW","48°","50°","52°","54°","56°","58°","60°"];
+const CLUB_MAX = 13; // パターを除く
+const sortClubs = l => l.slice().sort((a,b)=>clubRank(a)-clubRank(b));
+function myClubs(){ const c = LS.get("sc.clubs", null); return sortClubs(Array.isArray(c) && c.length ? c.slice(0,13) : CLUBS.slice()); }
+function setClubs(list){ LS.set("sc.clubs", sortClubs(list.filter(Boolean)).slice(0,13)); }
 function clubRank(n){ const t=String(n).toUpperCase().replace(/\s/g,""); let m;
   if((m=t.match(/^(\d+)W$/))) return +m[1]; if(t==="DR"||t==="DRIVER") return 1;
   if((m=t.match(/^(\d+)(U|H|UT)$/))) return 100+ +m[1]; if(t==="UT"||t==="U") return 104;
@@ -820,7 +840,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1320";
+const BUILD = "2026-10-19-1340";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1035,18 +1055,21 @@ function resultOverlay(r){
 const after = {};
 
 /* ----- 記録 ----- */
+/* ラウンド開始のコース欄: プルダウン1つ。★お気に入り・前に回ったコース・前回のコース、最後に「その他のコースを探す…」 */
 function coursePickField(){
-  const all = pickableCourses(), F = favs();
-  const cur = all.find(c=>c.id===state.pick) || all.find(c=>c.id===LS.get("sc.lastCourse","")) || null;
+  const all = pickableCourses(), F = favs(), last = LS.get("sc.lastCourse","");
+  const played = new Set(state.rounds.map(r=>r.courseId));
+  let mine = all.filter(c=>F.includes(c.id) || played.has(c.id) || c.id===last || c.id===state.pick);
+  if(!mine.length && all.length<=12) mine = all.slice();
+  const cur = all.find(c=>c.id===state.pick) || all.find(c=>c.id===last) || null;
   state.pick = cur && cur.id;
-  const favList = all.filter(c=>F.includes(c.id));
-  const show = !cur || favList.some(c=>c.id===cur.id) ? favList : [cur, ...favList];
-  const card = c => `<button class="cp-card ${cur&&c.id===cur.id?"on":""}" data-act="pick-course" data-id="${esc(c.id)}" aria-pressed="${!!cur&&c.id===cur.id}">
-      <span class="cp-star">${F.includes(c.id)?"★":""}</span><b>${esc(c.name)}</b><small>${esc([c.pref.replace(/[都府県]$/,""),c.area].filter(Boolean).join("・"))}${c.pref||c.area?"・":""}${c.holes.length}H パー${sum(c.holes,h=>h.par)}</small></button>`;
-  return `<div class="field"><label>コース${favList.length?`<span class="muted" style="font-weight:400;margin-left:6px">★ お気に入り</span>`:""}</label>
-    <input type="hidden" id="r-course" value="${cur?esc(cur.id):""}">
-    ${show.length?`<div class="cp-list">${show.map(card).join("")}</div>`:""}
-    <button class="btn small cp-more ${show.length?"":"cp-empty"}" data-act="open-pick">${show.length?"ほかのコースを探す":"コースを選ぶ"}</button></div>`;
+  const fav = mine.filter(c=>F.includes(c.id)), rest = mine.filter(c=>!F.includes(c.id));
+  const opt = c => `<option value="${esc(c.id)}" ${cur&&c.id===cur.id?"selected":""}>${F.includes(c.id)?"★ ":""}${esc(c.name)}（${c.holes.length}H パー${sum(c.holes,h=>h.par)}）</option>`;
+  return `<div class="field"><label for="r-course">コース</label>
+    <select id="r-course" class="${cur?"":"ph"}">${cur?"":`<option value="" selected disabled>コースを選ぶ</option>`}
+      ${fav.length?`<optgroup label="★ お気に入り">${fav.map(opt).join("")}</optgroup>`:""}
+      ${rest.length?(fav.length?`<optgroup label="ほかのコース">${rest.map(opt).join("")}</optgroup>`:rest.map(opt).join("")):""}
+      <option value="__more">その他のコースを探す…</option></select></div>`;
 }
 /* コースの一覧（コース画面とラウンド開始で共通）。mode="pick" はタップで選ぶ、"edit" はタップで編集 */
 function courseRows(list, mode){
@@ -1090,10 +1113,10 @@ function viewRecord(){
     const pl = players();
     return `<div class="panel">
       <h2>新しいラウンド</h2>
-      <p class="muted" style="margin:4px 0 14px;font-size:13px">自分のスコアだけ入力すればOK。友達はそれぞれのスマホで記録すると、分析や履歴でみんなの分も見られます。</p>
-      <div class="row">
+      <p class="muted" style="margin:2px 0 12px;font-size:12px">自分のスコアだけ入力すればOK。友達の分は各自のスマホで。</p>
+      <div class="row start-row">
         <div class="field"><label for="r-player">あなたの名前</label><input id="r-player" list="plist" value="${esc(state.sp!=null?state.sp:last)}" placeholder="名前"><datalist id="plist">${pl.map(p=>`<option value="${esc(p)}">`).join("")}</datalist></div>
-        <div class="field" style="flex:0 1 160px"><label for="r-date">日付</label><input id="r-date" type="date" value="${state.sd||today()}"></div>
+        <div class="field" style="flex:0 0 150px"><label for="r-date">日付</label><input id="r-date" type="date" value="${state.sd||today()}"></div>
       </div>
       ${coursePickField()}
       <div class="field" id="r-gwrap" hidden><label for="r-green">今日のグリーン</label><select id="r-green"></select></div>
@@ -1296,17 +1319,17 @@ let clubTimer=null;
 function askClub(v){ clearTimeout(clubTimer); if(!v || !fields().club) return;
   const hole=state.hole; clubTimer=setTimeout(()=>{ if(state.draft && state.hole===hole && !state.sheet){ state.sheet="club"; render(); } }, matchMedia("(prefers-reduced-motion: reduce)").matches?150:900); }
 function clubsSheet(){
-  const list = state.clubEdit || (state.clubEdit = myClubs());
-  const full = list.length>=14;
-  const rest = CLUB_SUGGEST.filter(c=>!list.includes(c));
-  return `<div class="sheet-back" data-act="close-clubs"><div class="sheet clubs-sheet" data-stop="1"><p>クラブの設定<small>${list.filter(Boolean).length} / 14本</small></p>
-    <div class="fs-note">名前はタップして書きかえられます（例：SW → 58°）。ここに並べた順にクラブ選択に出ます。</div>
-    <div class="cl-list">${list.map((c,i)=>`<div class="cl-row"><input value="${esc(c)}" maxlength="6" placeholder="名前" data-club-i="${i}" aria-label="${i+1}本目のクラブ"><button data-act="club-del" data-i="${i}" aria-label="${esc(c)||"空欄"}を外す">×</button></div>`).join("")}
-      ${full?"":`<button class="cl-blank" data-act="club-blank">＋ 自由に追加</button>`}</div>
-    ${rest.length&&!full?`<div class="cl-sug"><span>よく使う名前から追加</span><div>${rest.map(c=>`<button data-act="club-add" data-v="${c}">${c}</button>`).join("")}</div></div>`:""}
-    ${full?`<div class="fs-note">14本まで登録できます。入れかえるときは × で外してから追加してください。</div>`:""}
-    <div class="cl-tools"><button data-act="club-sort">長いクラブ順に並べる</button><button data-act="club-reset">初期設定に戻す</button></div>
-    <button class="cl-done" data-act="close-clubs">完了</button></div></div>`;
+  const list = sortClubs(state.clubEdit || (state.clubEdit = myClubs()));
+  const full = list.length>=CLUB_MAX;
+  const cand = sortClubs([...new Set([...CLUB_SUGGEST, ...(state.clubCustom||[])])].filter(c=>!list.includes(c)));
+  return `<div class="sheet-back" data-act="close-clubs"><div class="sheet clubs-sheet" data-stop="1"><p>クラブの設定<small>${list.length} / ${CLUB_MAX}本（パター除く）</small></p>
+    <div class="fs-note">タップで左右に移動します。左に入れたクラブが、長い順にクラブ選択に並びます。</div>
+    <div class="cl-cols">
+      <div class="cl-col"><div class="cl-h">使用クラブ</div><div class="cl-scroll">${list.map(c=>`<button class="cl-in" data-act="club-out" data-v="${esc(c)}">${esc(c)}<span aria-hidden="true">→</span></button>`).join("")||`<div class="muted" style="font-size:12px;padding:8px">右から選んでください</div>`}</div></div>
+      <div class="cl-col"><div class="cl-h">候補</div><div class="cl-scroll">${cand.map(c=>`<button class="cl-cand" data-act="club-in" data-v="${esc(c)}" ${full?"aria-disabled=\"true\"":""}><span aria-hidden="true">←</span>${esc(c)}</button>`).join("")}</div></div>
+    </div>
+    <div class="cl-custom"><input id="cl-new" maxlength="6" placeholder="候補にない名前（例：5H、ミニドラ）"><button data-act="club-custom">追加</button></div>
+    <div class="cl-tools"><button data-act="club-reset">初期設定に戻す</button><button class="cl-done" data-act="close-clubs">完了</button></div></div></div>`;
 }
 function fieldsSheet(){
   const F=fields();
@@ -1322,10 +1345,10 @@ after.record = () => {
   const rd=$("#r-date"); if(rd) rd.onchange=()=>{ state.sd=rd.value; };
   const cpp=$("#cp-pref"); if(cpp) cpp.onchange=()=>{ state.pickPref=cpp.value; if(cpp.value && cpp.value!=="_none") LS.set("sc.pref",cpp.value); render(); };
   const rc=$("#r-course"), gw=$("#r-gwrap");
+  if(rc) rc.addEventListener("change",()=>{ if(rc.value==="__more"){ state.sheet="pick"; state.pickPref=undefined; render(); } else { state.pick=rc.value; rc.classList.remove("ph"); } });
   if(rc && gw){ const upd=()=>{ const g=courseGreens(pickableCourses().find(x=>x.id===rc.value)); gw.hidden=!g; if(g) $("#r-green").innerHTML=g.map((n,i)=>`<option value="${i}">${esc(n)}</option>`).join(""); }; rc.addEventListener("change",upd); upd(); }
   document.querySelectorAll("[data-fld]").forEach(cb=>cb.onchange=()=>{ const f=fields(); f[cb.dataset.fld]=cb.checked; LS.set("sc.fields",f); render(); });
-  document.querySelectorAll("[data-club-i]").forEach(inp=>inp.onchange=()=>{ state.clubEdit[+inp.dataset.clubI]=inp.value.trim().slice(0,6); setClubs(state.clubEdit.filter(Boolean)); });
-  if(state.clubFocus){ const el=document.querySelector(`[data-club-i="${state.clubFocus-1}"]`); state.clubFocus=0; if(el){ el.focus(); el.scrollIntoView({block:"nearest"}); } }
+
   const card = $("#rec-card"); if(!card) return;
   let x0=null, y0=null;
   card.addEventListener("touchstart", e=>{ const t=e.touches[0]; x0=t.clientX; y0=t.clientY; }, {passive:true});
@@ -1657,7 +1680,7 @@ document.addEventListener("click", async ev => {
     case "start": {
       const p=$("#r-player").value.trim(), cid=$("#r-course").value, dt=$("#r-date").value||today();
       if(!p){ $("#r-err").textContent="プレーヤーの名前を入れてください"; return; }
-      if(!cid){ $("#r-err").textContent="コースを選んでください"; return; }
+      if(!cid || cid==="__more"){ $("#r-err").textContent="コースを選んでください"; return; }
       let c=state.courses.find(x=>x.id===cid);
       if(!c && cid.startsWith("preset:")){ const pc=PRESET_COURSES.find(x=>"preset:"+x.key===cid); if(!pc) return;
         c = { id:uid(), name:pc.name, presetKey:pc.key, holes:pc.holes.map((x,i)=>i?{...x}:{...x, pref:pc.pref, area:pc.area}), createdAt:Date.now() };
@@ -1705,11 +1728,14 @@ document.addEventListener("click", async ev => {
     case "open-club": state.sheet="club"; render(); break;
     case "swap-g": { const ni=1-(h.gi||0); d.holes.forEach((x,i)=>{ if(i>=state.hole && x.ys && x.ys[ni]){ x.gi=ni; x.yards=x.ys[ni]; } }); saveDraft(); render(); toast(`${d.gn[ni]}にしました（このホールから先）`); break; }
     case "open-clubs": state.clubBack=state.sheet; state.clubEdit=myClubs(); state.sheet="clubs"; render(); break;
-    case "close-clubs": { const l=(state.clubEdit||[]).map(x=>String(x).trim()).filter(Boolean); setClubs(l.length?l:CLUBS); state.clubEdit=null; state.sheet=state.clubBack||null; state.clubBack=null; render(); break; }
-    case "club-del": state.clubEdit.splice(+b.dataset.i,1); setClubs(state.clubEdit.filter(Boolean)); render(); break;
-    case "club-add": if(state.clubEdit.length<14){ state.clubEdit.push(b.dataset.v); setClubs(state.clubEdit.filter(Boolean)); } render(); break;
-    case "club-blank": if(state.clubEdit.length<14){ state.clubEdit.push(""); state.clubFocus=state.clubEdit.length; } render(); break;
-    case "club-sort": state.clubEdit.sort((a,b)=>clubRank(a)-clubRank(b)); setClubs(state.clubEdit.filter(Boolean)); render(); break;
+    case "close-clubs": { const l=(state.clubEdit||[]).map(x=>String(x).trim()).filter(Boolean); setClubs(l.length?l:CLUBS); state.clubCustom=null; state.clubEdit=null; state.sheet=state.clubBack||null; state.clubBack=null; render(); break; }
+    case "club-out": state.clubEdit=state.clubEdit.filter(x=>x!==b.dataset.v); setClubs(state.clubEdit); render(); break;
+    case "club-in": if(state.clubEdit.length>=CLUB_MAX){ toast(`クラブは${CLUB_MAX}本まで（パター除く）。左から外してください`); break; }
+      state.clubEdit=sortClubs([...state.clubEdit, b.dataset.v]); setClubs(state.clubEdit); render(); break;
+    case "club-custom": { const el=$("#cl-new"), v=(el&&el.value||"").trim().slice(0,6); if(!v) break;
+      if(state.clubEdit.includes(v)){ toast("すでに入っています"); break; }
+      if(state.clubEdit.length>=CLUB_MAX){ state.clubCustom=[...(state.clubCustom||[]), v]; toast(`${CLUB_MAX}本入っているので候補に追加しました`); render(); break; }
+      state.clubEdit=sortClubs([...state.clubEdit, v]); setClubs(state.clubEdit); render(); break; }
     case "club-reset": state.clubEdit=CLUBS.slice(); setClubs(state.clubEdit); render(); break;
     case "pause": d.paused=true; state.confirm=null; saveDraft(); render(); window.scrollTo({top:0}); break;
     case "resume": d.paused=false; saveDraft(); render(); break;
