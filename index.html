@@ -59,16 +59,9 @@
 .dl-name{font:700 11px var(--f-body);fill:var(--muted)}
 .dl-pct{font:700 17px var(--f-num);fill:var(--fg)}
 .dl-pct tspan{font-size:11px;fill:var(--muted)}
-.dc-v{font:700 24px var(--f-num);fill:var(--fg);text-anchor:middle}
+.dc-v{font:700 30px var(--f-num);fill:var(--fg);text-anchor:middle}
 .dc-v .dc-u{font-size:12px;fill:var(--muted)}
-.dc-l{font:700 8.5px var(--f-body);fill:var(--muted);text-anchor:middle;letter-spacing:.04em}
-.fairway .fw-rough .az-bg{fill:#9CCB98;stroke:none}
-.fairway .fw-miss .az-bg{fill:#B9DDB2;stroke:none}
-.fairway .az.on-sel .az-bg{fill:color-mix(in srgb,#FFD45A 34%,#A8D6A0);stroke:#F2B01E;stroke-width:3}
-.fairway .az-t{fill:#0E2A17;paint-order:stroke;stroke:rgba(255,255,255,.75);stroke-width:3px;stroke-linejoin:round}
-.fairway .az-green .on-t{fill:#fff;stroke:rgba(8,60,30,.45)}
-.fairway .az-s .az-p{fill:#0E2A17;paint-order:stroke;stroke:rgba(255,255,255,.75);stroke-width:3px}
-.fairway .az-s .az-p.worst{fill:var(--q-triple)}
+.dc-l{font:700 10px var(--f-body);fill:var(--muted);text-anchor:middle;letter-spacing:.04em}
 .fairway .on-p{paint-order:stroke;stroke:rgba(8,60,30,.45);stroke-width:3px}
 .club-foot{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .fs-link{display:flex;justify-content:space-between;align-items:center;padding:0 14px!important;margin-top:4px}
@@ -96,6 +89,23 @@
 .par-cell input+input{margin-top:2px}
 .yd-sw{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:inherit;border-radius:999px;padding:3px 9px;font:inherit;font-family:var(--f-num);font-size:12px;cursor:pointer;opacity:1!important}
 .yd-sw svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* v18: course picker, simple fairway */
+.cp-list{display:flex;flex-direction:column;gap:6px}
+.cp-card{display:grid;grid-template-columns:16px 1fr;column-gap:6px;text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--fg);font:inherit;cursor:pointer}
+.cp-card b{font-size:15px}.cp-card small{grid-column:2;font-size:12px;color:var(--muted)}
+.cp-card .cp-star{color:#E0A100;font-size:13px;line-height:20px}
+.cp-card.on{border:2px solid var(--turf);background:color-mix(in srgb,var(--turf) 10%,var(--bg));padding:9px 11px}
+.cp-more{margin-top:6px;width:100%}
+.cp-sheet{max-height:86vh;overflow:auto}
+.cp-sheet select{width:100%;height:46px;border-radius:12px}
+.cp-rows{display:flex;flex-direction:column;border-top:1px solid var(--rec-line)}
+.cp-row{display:flex;align-items:center;border-bottom:1px solid var(--rec-line)}
+.cp-row.on .cp-main b{color:var(--turf)}
+.sheet .cp-fav{flex:0 0 48px;height:56px;border:0;background:transparent;font-size:22px;color:#E0A100;border-radius:0}
+.sheet .cp-main{flex:1;height:auto;min-height:56px;border:0;background:transparent;text-align:left;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:6px 4px;border-radius:0}
+.cp-main b{font-size:15px}.cp-main small{font-size:12px;color:var(--rec-muted);font-weight:500}
+.fairway .on-t{fill:#fff}
 </style>
 <title>ショートコース スコアカード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -745,10 +755,22 @@ const today = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.ge
 const DIRS = { on:"オン", left:"左", right:"右", long:"オーバー", short:"ショート", miss:"ミスヒット" };
 // あらかじめ用意したコース（公開情報より。ヤードは現地のスコアカードで要確認）
 const PRESET_COURSES = [
-  { key:"ooyodogawa", name:"大淀川ゴルフ場", area:"宮崎市", holes:[100,90,110,130,125,120,70,90,80].map(y=>({par:3, yards:y})) },
-  { key:"firtree", name:"ファーツリーカントリークラブ", area:"延岡市", holes:[[3,76],[3,102],[3,88],[4,284],[3,109],[3,84],[4,366],[3,55],[3,160]].map(([p,y])=>({par:p, yards:y})) },
+  { key:"ooyodogawa", name:"大淀川ゴルフ場", pref:"宮崎県", area:"宮崎市", holes:[100,90,110,130,125,120,70,90,80].map(y=>({par:3, yards:y})) },
+  { key:"firtree", name:"ファーツリーカントリークラブ", pref:"宮崎県", area:"延岡市", holes:[[3,76],[3,102],[3,88],[4,284],[3,109],[3,84],[4,366],[3,55],[3,160]].map(([p,y])=>({par:p, yards:y})) },
 ];
 /* グリーンが2つあるコース（例 MG / SG）: 2つ目のヤードは hole.yards2、名前は holes[0].gn に入れる（シートの列を増やさないため） */
+const PREFS = ["北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県"];
+/* 県・市町村もシートの列を増やさないよう holes[0] に入れる（第2段階で Cloudflare に移すときに正式な列にする） */
+const cPref = c => (c && (c.pref || (c.holes && c.holes[0] && c.holes[0].pref))) || "";
+const cArea = c => (c && (c.area || (c.holes && c.holes[0] && c.holes[0].area))) || "";
+const presetTaken = pc => state.courses.some(c=>c.presetKey===pc.key || c.name.replace(/\s/g,"").includes(pc.name.replace(/\s/g,"")));
+/* 選べるコース = 登録済み + まだ追加していない用意済みコース（id は "preset:キー"） */
+function pickableCourses(){
+  const list = state.courses.map(c=>({ id:c.id, name:c.name, pref:cPref(c), area:cArea(c), holes:c.holes }));
+  PRESET_COURSES.filter(pc=>!presetTaken(pc)).forEach(pc=>list.push({ id:"preset:"+pc.key, name:pc.name, pref:pc.pref, area:pc.area, holes:pc.holes, preset:true }));
+  return list.sort((a,b)=>a.name.localeCompare(b.name,"ja"));
+}
+const favs = () => LS.get("sc.favs", []);
 function courseGreens(c){ if(!c || !c.holes || !c.holes.some(h=>h.yards2)) return null; const g=c.holes[0].gn; return Array.isArray(g)&&g.length===2 ? g : ["A","B"]; }
 const TEES = { fw:"フェアウェイ", rl:"左", rr:"右", miss:"ミスショット" };
 const CLUBS = ["1W","3W","5W","UT","5I","6I","7I","8I","9I","PW","AW","SW"];
@@ -785,7 +807,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1230";
+const BUILD = "2026-10-19-1300";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1000,6 +1022,32 @@ function resultOverlay(r){
 const after = {};
 
 /* ----- 記録 ----- */
+function coursePickField(){
+  const all = pickableCourses(), F = favs();
+  let cur = all.find(c=>c.id===state.pick) || all.find(c=>c.id===LS.get("sc.lastCourse","")) || all.find(c=>F.includes(c.id)) || all[0];
+  state.pick = cur && cur.id;
+  const favList = all.filter(c=>F.includes(c.id));
+  const show = favList.some(c=>c.id===cur.id) ? favList : [cur, ...favList];
+  const card = c => `<button class="cp-card ${c.id===cur.id?"on":""}" data-act="pick-course" data-id="${esc(c.id)}" aria-pressed="${c.id===cur.id}">
+      <span class="cp-star">${F.includes(c.id)?"★":""}</span><b>${esc(c.name)}</b><small>${esc([c.pref.replace(/[都府県]$/,""),c.area].filter(Boolean).join("・"))}${c.pref||c.area?"・":""}${c.holes.length}H パー${sum(c.holes,h=>h.par)}</small></button>`;
+  return `<div class="field"><label>コース${favList.length?`<span class="muted" style="font-weight:400;margin-left:6px">★ お気に入り</span>`:""}</label>
+    <input type="hidden" id="r-course" value="${esc(cur.id)}">
+    <div class="cp-list">${show.map(card).join("")}</div>
+    <button class="btn small cp-more" data-act="open-pick">${favList.length?"ほかのコースを探す（県で絞り込み）":"コースを探す・★お気に入りに登録"}</button></div>`;
+}
+function coursePickSheet(){
+  const all = pickableCourses(), F = favs();
+  const prefs = [...new Set(all.map(c=>c.pref).filter(Boolean))].sort((a,b)=>PREFS.indexOf(a)-PREFS.indexOf(b));
+  const pf = state.pickPref ?? LS.get("sc.pref", prefs[0]||"");
+  const list = all.filter(c=>!pf || c.pref===pf || (pf==="_none" && !c.pref));
+  return `<div class="sheet-back" data-act="close-pick"><div class="sheet cp-sheet" data-stop="1"><p>コースを選ぶ</p>
+    <select id="cp-pref" aria-label="都道府県"><option value="">すべての県（${all.length}）</option>${PREFS.map(p=>{ const n=all.filter(c=>c.pref===p).length; return `<option value="${p}" ${p===pf?"selected":""} ${n?"":"disabled"}>${p}${n?`（${n}）`:""}</option>`; }).join("")}${all.some(c=>!c.pref)?`<option value="_none" ${pf==="_none"?"selected":""}>県が未設定（${all.filter(c=>!c.pref).length}）</option>`:""}</select>
+    <div class="cp-rows">${list.map(c=>`<div class="cp-row ${c.id===state.pick?"on":""}">
+      <button class="cp-fav" data-act="fav" data-id="${esc(c.id)}" aria-pressed="${F.includes(c.id)}" aria-label="${esc(c.name)}をお気に入りに">${F.includes(c.id)?"★":"☆"}</button>
+      <button class="cp-main" data-act="pick-course" data-id="${esc(c.id)}"><b>${esc(c.name)}</b><small>${esc(c.area||c.pref||"")}・${c.holes.length}H パー${sum(c.holes,h=>h.par)}${c.preset?"・用意済み":""}</small></button></div>`).join("")||`<div class="muted" style="font-size:13px;padding:10px 2px">この県のコースはまだありません。</div>`}</div>
+    <div class="fs-note">☆をタップするとお気に入りになり、ラウンド開始の画面にすぐ出ます。</div>
+    <div class="club-foot"><button data-act="goto-courses">＋ コースを登録</button><button data-act="close-pick">閉じる</button></div></div></div>`;
+}
 function viewRecord(){
   const cs = state.courses;
   const d = state.draft;
@@ -1013,21 +1061,21 @@ function viewRecord(){
   }
   if(!d){
     if(state.mode==="connecting") return `<div class="panel empty">読み込み中…</div>`;
-    if(!cs.length) return `<div class="panel empty"><strong>まずコースを登録しましょう</strong>ホールごとのパーを登録すると、ラウンドの記録を始められます。<div style="margin-top:14px"><button class="btn primary" data-act="goto-courses">コースを登録する</button></div></div>`;
+    if(!pickableCourses().length) return `<div class="panel empty"><strong>まずコースを登録しましょう</strong>ホールごとのパーを登録すると、ラウンドの記録を始められます。<div style="margin-top:14px"><button class="btn primary" data-act="goto-courses">コースを登録する</button></div></div>`;
     const last = LS.get("sc.player","");
     const pl = players();
     return `<div class="panel">
       <h2>新しいラウンド</h2>
       <p class="muted" style="margin:4px 0 14px;font-size:13px">自分のスコアだけ入力すればOK。友達はそれぞれのスマホで記録すると、分析や履歴でみんなの分も見られます。</p>
       <div class="row">
-        <div class="field"><label for="r-player">あなたの名前</label><input id="r-player" list="plist" value="${esc(last)}" placeholder="名前"><datalist id="plist">${pl.map(p=>`<option value="${esc(p)}">`).join("")}</datalist></div>
-        <div class="field"><label for="r-course">コース</label><select id="r-course">${cs.slice().sort((a,b)=>a.name.localeCompare(b.name,"ja")).map(c=>`<option value="${c.id}">${esc(c.name)}（${c.holes.length}H / パー${sum(c.holes,h=>h.par)}）</option>`).join("")}</select></div>
-        <div class="field" style="flex:0 1 160px"><label for="r-date">日付</label><input id="r-date" type="date" value="${today()}"></div>
+        <div class="field"><label for="r-player">あなたの名前</label><input id="r-player" list="plist" value="${esc(state.sp!=null?state.sp:last)}" placeholder="名前"><datalist id="plist">${pl.map(p=>`<option value="${esc(p)}">`).join("")}</datalist></div>
+        <div class="field" style="flex:0 1 160px"><label for="r-date">日付</label><input id="r-date" type="date" value="${state.sd||today()}"></div>
       </div>
+      ${coursePickField()}
       <div class="field" id="r-gwrap" hidden><label for="r-green">今日のグリーン</label><select id="r-green"></select></div>
       <div class="err" id="r-err"></div>
       <button class="btn primary" style="width:100%;margin-top:6px" data-act="start">1番ホールから始める</button>
-    </div>`;
+    </div>${state.sheet==="pick"?coursePickSheet():""}`;
   }
   return viewRecordDraft(d);
 }
@@ -1108,14 +1156,14 @@ function approachSVG(dir, tap, stat){
 }
 /* ティーショット: 上から見たホール。手前がティー、奥にグリーン。光は左上から（影は右下） */
 function fairwaySVG(tee, tap, stat){
-  const Z = { fw:[176,96], rl:[94,72], rr:[250,72], miss:[170,205] };
+  const Z = { fw:[176,96], rl:[58,62], rr:[284,62], miss:[150,205] };
   const id = stat?"S":"";
   const sel = k => !stat && tee===k;
   const maxMiss = stat ? Math.max(1, ...["rl","rr","miss"].map(k=>stat.teeC[k]||0)) : 1;
   const worst = stat ? ["rl","rr","miss"].reduce((a,k)=>(stat.teeC[k]||0)>(stat.teeC[a]||0)?k:a,"rl") : null;
   const zone = (k, shape, lx, ly, label, extra="") => {
     if(stat){ const v=pct(stat.teeC[k]||0, stat.teeN), heat=k==="fw"?0:((stat.teeC[k]||0)/maxMiss)*.45, w=k===worst&&(stat.teeC[k]||0)>0;
-      const sh = k==="fw" ? shape : shape.replace('class="az-bg"', `class="az-bg" style="fill:color-mix(in srgb,#F2B01E ${Math.round(heat*100)}%,#9CCB98)"`);
+      const sh = k==="fw" ? shape : shape.replace('class="az-bg"', `class="az-bg" style="fill:color-mix(in srgb,#F2B01E ${Math.round(heat*100)}%,var(--paper))"`);
       if(k==="miss") return `<g class="az-s ${extra}">${sh}<text x="${lx}" y="${ly}" class="az-t">${label}　${fmtPct(v)}%</text></g>`;
       return `<g class="az-s ${extra}">${sh}<text x="${lx}" y="${ly-10}" class="az-t ${k==="fw"?"on-t":""}">${label}</text><text x="${lx}" y="${ly+9}" class="${k==="fw"?"on-p":"az-p"} ${w?"worst":""}">${fmtPct(v)}%</text></g>`; }
     return `<g class="az ${extra} ${sel(k)?"on-sel":""}" role="button" tabindex="0" data-act="tee" data-v="${k}" aria-pressed="${sel(k)}" aria-label="${label}">${shape}<text x="${lx}" y="${ly}" class="az-t ${k==="fw"?"on-t":""}">${label}</text></g>`; };
@@ -1125,43 +1173,26 @@ function fairwaySVG(tee, tap, stat){
   const tpath = b ? `M${sx} ${sy} Q ${(sx+b[0])/2} ${cy} ${b[0]} ${b[1]}` : "";
   const tracer = b ? `<g class="tr ${tap?"anim":""}"><path class="tr-shadow" d="M${sx+6} ${sy} L${b[0]+5} ${b[1]+3}" pathLength="1" filter="url(#soft${id})"/><path class="tr-glow" d="${tpath}" pathLength="1" filter="url(#trGlow${id})"/><path class="tr-core" d="${tpath}" pathLength="1" stroke="url(#trGrad${id})"/><path class="tr-hi" d="${tpath}" pathLength="1"/></g>` : "";
   const ball = b ? `<g class="ballg ${tap?"drop":""}"><ellipse cx="${b[0]+3.5}" cy="${b[1]+5}" rx="7.5" ry="4.8" fill="rgba(0,0,0,.26)" filter="url(#soft${id})" transform="rotate(15 ${b[0]+3.5} ${b[1]+5})"/><image href="ball.png" x="${b[0]-7.5}" y="${b[1]-7.5}" width="15" height="15"/></g>` : "";
-  // 木: 葉のかたまりを数個重ね、それぞれ左上が明るい。影は右下へ
-  const BL = [[0,0,1],[-.42,.18,.72],[.42,.2,.7],[-.16,-.4,.66],[.3,-.3,.6],[.05,.42,.6]];
-  const tree = (x,y,R) => { const blobs = BL.map(([dx,dy,k])=>[x+dx*R, y+dy*R, k*R*.78]);
-    return `<g class="tree"><g fill="rgba(6,40,18,.30)" filter="url(#tShadow${id})" transform="translate(${(R*.5).toFixed(1)} ${(R*.4).toFixed(1)})">${blobs.map(([a,c,r])=>`<circle cx="${a.toFixed(1)}" cy="${c.toFixed(1)}" r="${r.toFixed(1)}"/>`).join("")}</g>
-      ${blobs.map(([a,c,r])=>`<circle cx="${a.toFixed(1)}" cy="${c.toFixed(1)}" r="${r.toFixed(1)}" fill="url(#leaf${id})"/>`).join("")}
-      <circle cx="${(x-R*.32).toFixed(1)}" cy="${(y-R*.36).toFixed(1)}" r="${(R*.18).toFixed(1)}" fill="rgba(210,255,190,.35)"/></g>`; };
-  const TREES = [[14,20,15],[44,10,11],[72,24,9],[10,54,11],[24,150,13],[50,178,11],[12,182,10],[80,170,8],[96,14,7],
-                 [326,22,15],[296,10,11],[268,26,9],[330,56,11],[318,148,13],[292,178,11],[330,182,10],[262,170,8],[246,12,7]];
-  const fwPath = `M126 192 C114 150 118 98 132 56 C140 30 200 30 208 56 C222 98 228 150 216 192 Z`;
+  const fwPath = `M124 186 C114 146 116 96 130 56 C138 30 202 30 210 56 C224 96 226 146 216 186 Z`;
   return `<svg class="approach fairway" viewBox="0 0 340 222" preserveAspectRatio="xMidYMid meet" role="${stat?"img":"group"}" aria-label="ティーショットの行き先">
     <defs>
-      <clipPath id="fwClip${id}"><rect x="0" y="0" width="340" height="222" rx="18"/></clipPath>
-      <clipPath id="fwIn${id}"><path d="${fwPath}"/></clipPath>
       <linearGradient id="gFw${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#46C77B"/><stop offset="1" stop-color="#1F9E57"/></linearGradient>
-      <radialGradient id="leaf${id}" cx="34%" cy="30%" r="80%"><stop offset="0" stop-color="#7CC56B"/><stop offset=".45" stop-color="#3A8A3E"/><stop offset="1" stop-color="#1C5A2A"/></radialGradient>
-      <pattern id="grass${id}" width="9" height="9" patternUnits="userSpaceOnUse"><path d="M1 8 l1 -3 M5 4 l1 -3 M7 9 l1 -3" stroke="rgba(20,80,35,.09)" stroke-width="1" stroke-linecap="round"/></pattern>
       <pattern id="fwMow${id}" width="36" height="36" patternUnits="userSpaceOnUse" patternTransform="rotate(-6)"><rect width="36" height="18" fill="rgba(255,255,255,.10)"/></pattern>
       <filter id="trGlow${id}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.4"/></filter>
       <linearGradient id="trGrad${id}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FF8A00"/><stop offset="1" stop-color="#FFE066"/></linearGradient>
       <filter id="soft${id}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation=".7"/></filter>
-      <filter id="tShadow${id}" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.6"/></filter>
       <filter id="fwShadow${id}" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="3" dy="3" stdDeviation="3" flood-color="#0B3A1E" flood-opacity=".28"/></filter>
     </defs>
-    <g clip-path="url(#fwClip${id})">
-    <rect x="0" y="0" width="340" height="222" fill="#9CCB98"/>
-    ${zone("rl", `<path class="az-bg" d="M0 0 H170 V189 H0Z"/>`, 54, stat?112:104, "左", "fw-rough")}
-    ${zone("rr", `<path class="az-bg" d="M340 0 H170 V189 H340Z"/>`, 288, stat?112:104, "右", "fw-rough")}
-    <rect x="0" y="0" width="340" height="189" fill="url(#grass${id})" pointer-events="none"/>
-    ${zone("fw", `<path d="${fwPath}" fill="#7DD89A" stroke="#7DD89A" stroke-width="9" stroke-linejoin="round"/><path d="${fwPath}" fill="url(#gFw${id})" filter="url(#fwShadow${id})"/><path d="${fwPath}" fill="url(#fwMow${id})"/><path d="${fwPath}" class="g-ring"/>
-      <g pointer-events="none"><ellipse cx="226" cy="122" rx="12" ry="6.5" transform="rotate(-24 226 122)" class="sand"/>
+    <rect class="az-rough" x="0" y="0" width="340" height="222" rx="18"/>
+    ${zone("rl", `<path class="az-bg" d="M6 22 Q6 8 20 8 H92 Q104 8 104 20 V174 Q104 186 92 186 H20 Q6 186 6 172Z"/>`, 55, stat?104:100, "左")}
+    ${zone("rr", `<path class="az-bg" d="M334 22 Q334 8 320 8 H248 Q236 8 236 20 V174 Q236 186 248 186 H320 Q334 186 334 172Z"/>`, 285, stat?104:100, "右")}
+    ${zone("fw", `<path d="${fwPath}" class="fringe"/><path d="${fwPath}" fill="url(#gFw${id})" filter="url(#fwShadow${id})"/><path d="${fwPath}" fill="url(#fwMow${id})"/><path d="${fwPath}" class="g-ring"/>
+      <g pointer-events="none"><ellipse cx="217" cy="128" rx="9" ry="5" transform="rotate(-24 217 128)" class="sand"/>
       <ellipse cx="170" cy="44" rx="24" ry="12" fill="#5FE3A6" stroke="#A8F0C8" stroke-width="2"/><ellipse cx="148" cy="52" rx="7" ry="3.5" class="sand"/>
       <g filter="url(#soft${id})"><path d="M176 42 L192 47" stroke="rgba(0,0,0,.24)" stroke-width="1.8" stroke-linecap="round"/><path d="M192 47 L201 46 L186 43Z" fill="rgba(0,0,0,.2)"/></g>
       <ellipse cx="176" cy="42" rx="2.6" ry="1.2" fill="rgba(0,0,0,.45)"/>
       <line x1="176" y1="42" x2="176" y2="20" stroke="#fff" stroke-width="1.6"/><path d="M177 20.5 L190 24.5 L177 28.5Z" fill="#E11D2E"/></g>`, 170, stat?110:112, "フェアウェイ", "az-green")}
-    ${TREES.map(([x,y,r])=>tree(x,y,r)).join("")}
-    ${zone("miss", `<path class="az-bg" d="M0 191 H340 V222 H0Z"/>`, 170, 206, "ミスショット", "fw-miss")}
-    </g>
+    ${zone("miss", `<path class="az-bg" d="M6 192 H334 V204 Q334 216 322 216 H18 Q6 216 6 204Z"/>`, 170, 205, "ミスショット")}
     ${tracer}${ball}
   </svg>`;
 }
@@ -1263,8 +1294,11 @@ function fieldsSheet(){
     <button data-act="close-sheet">閉じる</button></div></div>`;
 }
 after.record = () => {
+  const rp=$("#r-player"); if(rp) rp.oninput=()=>{ state.sp=rp.value; };
+  const rd=$("#r-date"); if(rd) rd.onchange=()=>{ state.sd=rd.value; };
+  const cpp=$("#cp-pref"); if(cpp) cpp.onchange=()=>{ state.pickPref=cpp.value; if(cpp.value && cpp.value!=="_none") LS.set("sc.pref",cpp.value); render(); };
   const rc=$("#r-course"), gw=$("#r-gwrap");
-  if(rc && gw){ const upd=()=>{ const g=courseGreens(state.courses.find(x=>x.id===rc.value)); gw.hidden=!g; if(g) $("#r-green").innerHTML=g.map((n,i)=>`<option value="${i}">${esc(n)}</option>`).join(""); }; rc.addEventListener("change",upd); upd(); }
+  if(rc && gw){ const upd=()=>{ const g=courseGreens(pickableCourses().find(x=>x.id===rc.value)); gw.hidden=!g; if(g) $("#r-green").innerHTML=g.map((n,i)=>`<option value="${i}">${esc(n)}</option>`).join(""); }; rc.addEventListener("change",upd); upd(); }
   document.querySelectorAll("[data-fld]").forEach(cb=>cb.onchange=()=>{ const f=fields(); f[cb.dataset.fld]=cb.checked; LS.set("sc.fields",f); render(); });
   document.querySelectorAll("[data-club-i]").forEach(inp=>inp.onchange=()=>{ state.clubEdit[+inp.dataset.clubI]=inp.value.trim().slice(0,6); setClubs(state.clubEdit.filter(Boolean)); });
   if(state.clubFocus){ const el=document.querySelector(`[data-club-i="${state.clubFocus-1}"]`); state.clubFocus=0; if(el){ el.focus(); el.scrollIntoView({block:"nearest"}); } }
@@ -1354,7 +1388,7 @@ function donutPanel(title, id, segs, total, centerVal, centerLbl){
 }
 /* ドーナツ: 各部分から引き出し線でラベルを直接つける */
 function donutSVG(segs, total, centerVal, centerLbl, title){
-  const W=340, H=200, cx=170, cy=100, R=56, r=40, t=segs.reduce((a,x)=>a+x.n,0);
+  const W=360, H=236, cx=180, cy=118, R=74, r=54, t=segs.reduce((a,x)=>a+x.n,0);
   if(!t) return `<p class="muted" style="font-size:13px">まだ記録がありません。</p>`;
   const P=(ang,rad)=>[cx+rad*Math.cos(ang), cy+rad*Math.sin(ang)];
   const gap = segs.length>1 ? .025 : 0;
@@ -1367,15 +1401,15 @@ function donutSVG(segs, total, centerVal, centerLbl, title){
     labels.push({ x, m, sx, sy, ex, ey, y:ey, right: Math.cos(m)>=0, pct: pct(x.n,total) });
     a0=a1; });
   // 同じ側のラベルが重ならないように上下にずらす
-  const GAP=31, TOP=16, BOT=H-18;
+  const GAP=32, TOP=18, BOT=H-14;
   [true,false].forEach(side=>{ const L=labels.filter(l=>l.right===side).sort((p,q)=>p.y-q.y);
     for(let i=0;i<L.length;i++){ L[i].y=Math.max(L[i].y, TOP, i?L[i-1].y+GAP:TOP); }
     for(let i=L.length-1;i>=0;i--){ L[i].y=Math.min(L[i].y, i<L.length-1?L[i+1].y-GAP:BOT); } });
-  const lines = labels.map(l=>{ const hx = l.right ? cx+R+26 : cx-R-26, tx = l.right ? hx+4 : hx-4, an = l.right?"start":"end", col=`var(${l.x.tone})`;
+  const lines = labels.map(l=>{ const hx = l.right ? cx+R+20 : cx-R-20, tx = l.right ? hx+4 : hx-4, an = l.right?"start":"end", col=`var(${l.x.tone})`;
     return `<g><circle cx="${l.sx.toFixed(1)}" cy="${l.sy.toFixed(1)}" r="1.8" fill="${col}"/><path d="M${l.sx.toFixed(1)} ${l.sy.toFixed(1)} L${l.ex.toFixed(1)} ${l.y.toFixed(1)} L${hx} ${l.y.toFixed(1)}" fill="none" stroke="${col}" stroke-width="1.2"/>
       <text x="${tx}" y="${(l.y-6).toFixed(1)}" text-anchor="${an}" class="dl-name">${l.x.label}</text><text x="${tx}" y="${(l.y+10).toFixed(1)}" text-anchor="${an}" class="dl-pct">${fmtPct(l.pct)}<tspan>%</tspan></text></g>`; }).join("");
   return `<svg class="dsvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${title}：${labels.map(l=>l.x.label+" "+fmtPct(l.pct)+"%").join("、")}">${arcs.join("")}${lines}
-    <text x="${cx}" y="${cy+2}" class="dc-v">${String(centerVal).replace(/<small>%<\/small>/,'<tspan class="dc-u">%</tspan>')}</text><text x="${cx}" y="${cy+17}" class="dc-l">${centerLbl}</text></svg>`;
+    <text x="${cx}" y="${cy+4}" class="dc-v">${String(centerVal).replace(/<small>%<\/small>/,'<tspan class="dc-u">%</tspan>')}</text><text x="${cx}" y="${cy+21}" class="dc-l">${centerLbl}</text></svg>`;
 }
 function greenMap(s){
   if(!s.dirN) return `<p class="muted" style="font-size:13px">まだ記録がありません。記録画面でグリーンのどこに行ったかを選ぶとここに出ます。</p>`;
@@ -1520,6 +1554,10 @@ function viewCourses(){
       </div>
       <div class="row" style="margin:12px 0 8px;justify-content:space-between;align-items:center"><span class="muted" style="font-size:13px">合計パー <b class="num" style="font-size:18px;color:var(--fg)">${sum(e.holes,h=>h.par)}</b></span>
         <span style="display:flex;gap:6px"><button class="btn small" data-act="allpar" data-p="3">全部パー3</button><button class="btn small" data-act="allpar" data-p="4">全部パー4</button></span></div>
+      <div class="row" style="margin:-2px 0 10px">
+        <div class="field" style="flex:0 1 150px"><label for="c-pref">都道府県</label><select id="c-pref"><option value="">選ぶ</option>${PREFS.map(p=>`<option ${p===e.pref?"selected":""}>${p}</option>`).join("")}</select></div>
+        <div class="field"><label for="c-area">市町村</label><input id="c-area" value="${esc(e.area||"")}" placeholder="例：宮崎市"></div>
+      </div>
       <label class="two-g"><input type="checkbox" id="c-two" ${e.two?"checked":""}><span>グリーンが2つある（ヤードを2つ入れる）</span></label>
       ${e.two?`<div class="row gnames"><div class="field"><label for="c-g0">1つ目の名前</label><input id="c-g0" maxlength="6" value="${esc(e.gn[0])}"></div><div class="field"><label for="c-g1">2つ目の名前</label><input id="c-g1" maxlength="6" value="${esc(e.gn[1])}"></div></div>`:""}
       <div class="par-grid">${e.holes.map((h,i)=>`<div class="par-cell"><div class="h">${i+1}H</div>
@@ -1535,12 +1573,12 @@ function viewCourses(){
     <div class="row" style="justify-content:space-between;align-items:center"><h2>登録コース</h2><button class="btn primary small" data-act="new-course">＋ コースを追加</button></div>
     ${!cs.length? (state.mode==="connecting"?`<div class="empty">読み込み中…</div>`:`<div class="empty"><strong>コースがまだありません</strong>よく行くショートコースを登録しておくと、次から選ぶだけで記録できます。</div>`) :
       `<div style="margin-top:8px">${cs.map(c=>{ const n=state.rounds.filter(r=>r.courseId===c.id).length; const conf=state.confirm==="delc:"+c.id; return `<div class="course-item">
-        <div><div class="nm">${esc(c.name)}</div><div class="muted" style="font-size:13px">${c.holes.length}ホール・パー<span class="num">${sum(c.holes,h=>h.par)}</span>${courseGreens(c)?"・"+courseGreens(c).map(esc).join("/"):""}・ラウンド ${n}回</div></div>
+        <div><div class="nm">${esc(c.name)}</div><div class="muted" style="font-size:13px">${c.holes.length}ホール・パー<span class="num">${sum(c.holes,h=>h.par)}</span>${courseGreens(c)?"・"+courseGreens(c).map(esc).join("/"):""}・ラウンド ${n}回</div>${cPref(c)?"":`<div style="font-size:12px;color:var(--q-bogey);margin-top:2px">県が未設定です（編集から入れられます）</div>`}</div>
         <div class="actions">${conf?`<span class="muted" style="font-size:12px;align-self:center">削除しますか？（過去の記録は残ります）</span><button class="btn small" data-act="cancel-confirm">やめる</button><button class="btn small danger" data-act="del-course" data-id="${c.id}">削除する</button>`:`<button class="btn small" data-act="edit-course" data-id="${c.id}">編集</button><button class="btn small" data-act="ask-del-course" data-id="${c.id}">削除</button>`}</div>
       </div>`; }).join("")}</div>`}
   </div>
   ${(()=>{ const left = PRESET_COURSES.filter(pc=>!cs.some(c=>c.presetKey===pc.key || c.name.replace(/\s/g,"").includes(pc.name.replace(/\s/g,""))));
-    return left.length ? `<div class="panel"><div class="sec"><em>PRESET</em><span>用意済みのコース</span></div>${left.map(pc=>`<div class="course-item"><div><div class="nm">${esc(pc.name)}</div><div class="muted" style="font-size:13px">${esc(pc.area)}・${pc.holes.length}ホール・パー<span class="num">${sum(pc.holes,h=>h.par)}</span></div></div><button class="btn small primary" data-act="add-preset" data-k="${pc.key}">追加</button></div>`).join("")}</div>` : ""; })()}
+    return left.length ? `<div class="panel"><div class="sec"><em>PRESET</em><span>用意済みのコース</span></div>${left.map(pc=>`<div class="course-item"><div><div class="nm">${esc(pc.name)}</div><div class="muted" style="font-size:13px">${esc(pc.pref)} ${esc(pc.area)}・${pc.holes.length}ホール・パー<span class="num">${sum(pc.holes,h=>h.par)}</span></div></div><button class="btn small primary" data-act="add-preset" data-k="${pc.key}">追加</button></div>`).join("")}</div>` : ""; })()}
   <p class="muted" style="font-size:12px;margin:0">${hasBackend?"コースとラウンドはスプレッドシートに保存され、URLを開いた全員で見られます。":"いまはこの端末のブラウザにだけ保存されています。"}</p>`;
 }
 after.courses = () => {
@@ -1550,6 +1588,8 @@ after.courses = () => {
   document.querySelectorAll("[data-yd]").forEach(inp=>inp.oninput=()=>{ const v=parseInt(inp.value,10); e.holes[+inp.dataset.yd].yards = isNaN(v)?null:v; });
   document.querySelectorAll("[data-yd2]").forEach(inp=>inp.oninput=()=>{ const v=parseInt(inp.value,10); e.holes[+inp.dataset.yd2].yards2 = isNaN(v)?null:v; });
   const two=$("#c-two"); if(two) two.onchange=()=>{ e.two=two.checked; render(); };
+  const cp=$("#c-pref"); if(cp) cp.onchange=()=>{ e.pref=cp.value; LS.set("sc.pref",cp.value); };
+  const ca=$("#c-area"); if(ca) ca.oninput=()=>{ e.area=ca.value.trim(); };
   [0,1].forEach(i=>{ const el=$("#c-g"+i); if(el) el.oninput=()=>{ e.gn[i]=el.value.trim()||(i?"B":"A"); }; });
 };
 
@@ -1562,7 +1602,7 @@ document.addEventListener("click", async ev => {
   const a=b.dataset.act, d=state.draft, h=d && d.holes[state.hole];
   state.tap = (a==="sv"||a==="pv"||a==="dir") ? a+b.dataset.v : null;
   switch(a){
-    case "goto-courses": state.tab="courses"; state.courseEdit=newCourse(); render(); break;
+    case "goto-courses": state.sheet=null; state.tab="courses"; LS.set("sc.tab","courses"); state.courseEdit=newCourse(); render(); window.scrollTo({top:0}); break;
     case "goto-record": state.tab="record"; render(); break;
     case "save-card": {
       const card=$(".result-card"); if(!card || !window.html2canvas){ toast("画像を作れませんでした"); break; }
@@ -1589,7 +1629,13 @@ document.addEventListener("click", async ev => {
     case "start": {
       const p=$("#r-player").value.trim(), cid=$("#r-course").value, dt=$("#r-date").value||today();
       if(!p){ $("#r-err").textContent="プレーヤーの名前を入れてください"; return; }
-      const c=state.courses.find(x=>x.id===cid); if(!c) return;
+      let c=state.courses.find(x=>x.id===cid);
+      if(!c && cid.startsWith("preset:")){ const pc=PRESET_COURSES.find(x=>"preset:"+x.key===cid); if(!pc) return;
+        c = { id:uid(), name:pc.name, presetKey:pc.key, holes:pc.holes.map((x,i)=>i?{...x}:{...x, pref:pc.pref, area:pc.area}), createdAt:Date.now() };
+        upsert(state.courses,c); cache(); store.saveCourse(c).catch(()=>{}); // 電波がなくても始められるように、保存は裏で
+        const F=favs(); if(F.includes(cid)) LS.set("sc.favs", F.map(x=>x===cid?c.id:x)); }
+      if(!c) return;
+      LS.set("sc.lastCourse", c.id); state.pick=null; state.sp=null; state.sd=null;
       LS.set("sc.player",p);
       const gs=courseGreens(c), gi=gs ? (+($("#r-green")||{}).value||0) : 0;
       state.draft={ id:uid(), player:p, courseId:c.id, courseName:c.name, date:dt, gn:gs, holes:c.holes.map(x=>({par:x.par, yards:(gi&&x.yards2)?x.yards2:(x.yards||null), ys:gs?[x.yards||null,x.yards2||null]:null, gi, strokes:x.par, putts:2, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null, entered:false})) };
@@ -1614,9 +1660,13 @@ document.addEventListener("click", async ev => {
       break;
     }
     case "ask-discard": state.confirm="discard"; render(); break;
+    case "pick-course": state.pick=b.dataset.id; state.sheet=null; render(); break;
+    case "open-pick": state.sheet="pick"; state.pickPref=undefined; render(); break;
+    case "close-pick": state.sheet=null; render(); break;
+    case "fav": { const F=favs(), id=b.dataset.id; LS.set("sc.favs", F.includes(id)?F.filter(x=>x!==id):[...F,id]); render(); break; }
     case "add-preset": {
       const pc = PRESET_COURSES.find(x=>x.key===b.dataset.k); if(!pc) break;
-      const c = { id:uid(), name:pc.name, presetKey:pc.key, holes:pc.holes.map(x=>({...x})), createdAt:Date.now() };
+      const c = { id:uid(), name:pc.name, presetKey:pc.key, holes:pc.holes.map((x,i)=>i?{...x}:{...x, pref:pc.pref, area:pc.area}), createdAt:Date.now() };
       try{ await store.saveCourse(c); toast(`${pc.name}を追加しました`); }catch(e){ writeErr(e); } break;
     }
     case "open-fields": state.sheet="fields"; render(); break;
@@ -1644,7 +1694,7 @@ document.addEventListener("click", async ev => {
       state.hole=0; state.tab="record"; saveDraft(); render(); break;
     }
     case "new-course": state.courseEdit=newCourse(); render(); break;
-    case "edit-course": { const c=state.courses.find(x=>x.id===b.dataset.id); const g=courseGreens(c); state.courseEdit={...JSON.parse(JSON.stringify(c)), isNew:false, two:!!g, gn:g||["MG","SG"]}; render(); break; }
+    case "edit-course": { const c=state.courses.find(x=>x.id===b.dataset.id); const g=courseGreens(c); state.courseEdit={...JSON.parse(JSON.stringify(c)), isNew:false, two:!!g, gn:g||["MG","SG"], pref:cPref(c), area:cArea(c)}; render(); break; }
     case "cancel-course": state.courseEdit=null; render(); break;
     case "allpar": state.courseEdit.holes.forEach(x=>x.par=+b.dataset.p); render(); break;
     case "setpar": state.courseEdit.holes[+b.dataset.i].par=+b.dataset.p; render(); break;
@@ -1653,6 +1703,7 @@ document.addEventListener("click", async ev => {
       if(!e.name.trim()){ $("#c-err").textContent="コース名を入れてください"; return; }
       const c={ id:e.id, name:e.name.trim(), holes:e.holes.map(x=>{ const o={par:x.par, yards:x.yards||null}; if(e.two && x.yards2) o.yards2=x.yards2; return o; }), createdAt:e.createdAt||Date.now() };
       if(e.two && c.holes.some(x=>x.yards2)) c.holes[0].gn=[e.gn[0]||"A", e.gn[1]||"B"];
+      if(e.pref) c.holes[0].pref=e.pref; if(e.area) c.holes[0].area=e.area;
       try{ await store.saveCourse(c); state.courseEdit=null; toast("コースを保存しました"); render(); }catch(err){ writeErr(err); }
       break;
     }
@@ -1661,7 +1712,7 @@ document.addEventListener("click", async ev => {
   }
 });
 function mark_entered(){ const d=state.draft; if(d) d.holes[state.hole].entered=true; }
-function newCourse(){ return { id:uid(), name:"", isNew:true, two:false, gn:["MG","SG"], holes:Array.from({length:9},()=>({par:3,yards:null})) }; }
+function newCourse(){ return { id:uid(), name:"", isNew:true, pref:LS.get("sc.pref",""), area:"", two:false, gn:["MG","SG"], holes:Array.from({length:9},()=>({par:3,yards:null})) }; }
 
 /* ---------- demo data (never saved) ---------- */
 const DEMO = (() => {
