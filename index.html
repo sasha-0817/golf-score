@@ -974,6 +974,16 @@ input,select,textarea{font-size:max(16px,1em)}
 .club-grid button{flex-direction:column}
 .dots{padding:3px 3px;margin:-3px 0}
 .rc-logo img{width:36px;height:36px}
+.club-strip{display:flex;flex-direction:column;gap:6px;min-width:0}
+.cs-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 4px;-webkit-overflow-scrolling:touch}
+.cs-chips::-webkit-scrollbar{display:none}
+.cs-chips button{flex:0 0 auto;min-width:46px;height:38px;padding:0 10px;border-radius:10px;border:1px solid var(--rec-line);background:var(--rec-surface);color:var(--rec-fg);font:700 14px var(--f-num);cursor:pointer;position:relative}
+.cs-chips button[aria-pressed="true"]{background:var(--rec-fg);color:var(--rec-bg);border-color:var(--rec-fg)}
+.cs-chips button.last{border:1.5px dashed var(--rec-turf)}
+.cs-chips button.last::after{content:"前回";position:absolute;top:-6px;right:-2px;font:700 8px var(--f-body);background:var(--rec-turf);color:#fff;border-radius:6px;padding:1px 3px}
+.cs-chips{display:grid;grid-template-columns:repeat(6,1fr);overflow:visible;padding:4px 2px 2px}
+.cs-chips button{min-width:0;padding:0;height:40px}
+.club-strip .eyebrow b{margin-left:6px}
 </style>
 
 </head>
@@ -1073,7 +1083,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-2005";
+const BUILD = "2026-10-19-2010";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1604,6 +1614,9 @@ function viewRecordDraft(d){
           <button data-act="pt" data-d="1" aria-label="パットを1つ増やす" ${h.putts>=9?"disabled":""}>${ICON.up}</button></div></div>`:""}
       </div>
       ${F.shot?`<div class="ap-wrap"><div class="seg-head"><span class="eyebrow">TEE SHOT<b>ティーショットの行き先</b></span>${F.club?`<button class="club-tag ${h.club?"has":""}" data-act="open-club">${h.club?esc(h.club):"クラブ"}</button>`:""}</div>${isLong?fairwaySVG(h.tee, state.tap&&state.tap.startsWith("tee")):approachSVG(h.dir, state.tap&&state.tap.startsWith("dir"))}</div>`:""}
+      ${F.club && !F.shot ? (()=>{ const lc = h.club ? null : lastClub(d, state.hole);
+        // ショットの方向がOFFでもクラブだけ記録できるよう、クラブを横に並べて1タップで選ぶ（前回のクラブには小さく「前回」）
+        return `<div class="club-strip"><span class="eyebrow">TEE SHOT<b>クラブ</b></span><div class="cs-chips">${myClubs().map(c=>`<button data-act="club-quick" data-v="${esc(c)}" aria-pressed="${h.club===c}" class="${lc===c?"last":""}">${esc(c)}</button>`).join("")}</div></div>`; })() : ""}
       ${troubles.length?`<div class="trouble t${troubles.length}">${troubles.join("")}</div>`:""}
     </div>
     <div class="rec-bar">
@@ -2130,6 +2143,7 @@ document.addEventListener("click", async ev => {
       h.entered=true; state.sheet=null; saveDraft(); render(); break; }
     case "tb": { const k=b.dataset.k; h[k]=!evs(h,k).length; delete h[k+"C"]; h.entered=true; saveDraft(); render(); break; }
     case "open-club": openClubSheet(); render(); break;
+    case "club-quick": h.club = h.club===b.dataset.v ? null : b.dataset.v; h.entered=true; saveDraft(); render(); break;
     case "set-g": { const ni=+b.dataset.g; if((h.gi||0)===ni) break; d.holes.forEach(x=>{ if(x.ys && x.ys[ni]){ x.gi=ni; x.yards=x.ys[ni]; } }); saveDraft(); render(); toast(`全ホールを${d.gn[ni]}のヤードにしました`); break; }
     case "swap-g": { const ni=1-(h.gi||0); d.holes.forEach((x,i)=>{ if(i>=state.hole && x.ys && x.ys[ni]){ x.gi=ni; x.yards=x.ys[ni]; } }); saveDraft(); render(); toast(`${d.gn[ni]}にしました（このホールから先）`); break; }
     case "open-clubs": state.clubBack=state.sheet; state.clubEdit=myClubs(); state.sheet="clubs"; render(); break;
