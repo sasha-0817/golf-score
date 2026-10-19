@@ -917,6 +917,10 @@ input,select,textarea{font-size:max(16px,1em)}
 .ctag.bad{background:color-mix(in srgb,var(--q-double) 12%,var(--paper));color:var(--q-double)}
 .club-tbl td.tg,.club-tbl th:first-child{width:40px;padding-right:0}
 .club-tbl .ctag{margin-right:0}
+.panel .club-tbl+.map-sub{margin-top:18px}
+.club-tbl{table-layout:fixed;width:100%}
+.club-tbl th:nth-child(1){width:44px}.club-tbl th:nth-child(2){width:52px}.club-tbl th:nth-child(3){width:42px}.club-tbl th:nth-child(5){width:86px}
+.club-tbl td:nth-child(5),.club-tbl th:nth-child(5){padding-left:12px}
 </style>
 
 </head>
@@ -1016,7 +1020,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1630b";
+const BUILD = "2026-10-19-1640b";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1657,24 +1661,32 @@ function viewStats(){
 `:""}
   `}`;
 }
-/* クラブ別パーオン率: そのホールのティーショットに使ったクラブごとに、パーオンできた割合 */
-function clubPanel(rs){
+/* クラブ別: パー3はティーショットのクラブごとのパーオン率、パー4・5はフェアウェイキープ率 */
+function clubTable(rs, kind){
   const m = {};
-  rs.forEach(r=>r.holes.forEach(h=>{ if(!h.club || h.par!==3) return; const x = m[h.club] || (m[h.club]={n:0,gir:0,diff:0,miss:{}});
-    x.n++; x.diff += h.strokes-h.par; if(h.strokes-h.putts<=h.par-2) x.gir++;
-    const d = h.par>=4 ? (h.tee!=="fw"?h.tee:null) : (h.dir!=="on"?h.dir:null); if(d) x.miss[d]=(x.miss[d]||0)+1; }));
+  rs.forEach(r=>r.holes.forEach(h=>{ if(!h.club) return;
+    if(kind==="p3" ? h.par!==3 : (h.par<4 || !h.tee)) return;
+    const x = m[h.club] || (m[h.club]={n:0,ok:0,miss:{}}); x.n++;
+    if(kind==="p3"){ if(h.strokes-h.putts<=h.par-2) x.ok++; if(h.dir && h.dir!=="on") x.miss[h.dir]=(x.miss[h.dir]||0)+1; }
+    else { if(h.tee==="fw") x.ok++; else x.miss[h.tee]=(x.miss[h.tee]||0)+1; } }));
   const cl = sortClubs(Object.keys(m));
-  if(!cl.length) return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別パーオン率（パー3）</span></div><p class="muted" style="font-size:13px;margin:0">記録する項目で「使用クラブ」をONにすると、クラブごとのパーオン率や得意・苦手がここに出ます。</p></div>`;
+  if(!cl.length) return "";
   const ML = {left:"左",right:"右",long:"オーバー",short:"ショート",miss:"ミスショット",rl:"左",rr:"右"};
-  const rate = x => x.gir/x.n*100;
+  const rate = x => x.ok/x.n*100;
   const ok = cl.filter(c=>m[c].n>=3);
   let best = ok.length>1 ? ok.reduce((a,c)=>rate(m[c])>rate(m[a])?c:a) : null, worst = ok.length>1 ? ok.reduce((a,c)=>rate(m[c])<rate(m[a])?c:a) : null;
   if(best===worst){ best=null; worst=null; }
-  return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別パーオン率（パー3）</span></div>
-    <table class="cs-tbl club-tbl"><tr><th></th><th>クラブ</th><th>回数</th><th>パーオン率</th><th>多いミス</th></tr>
+  return `<div class="map-sub">${kind==="p3"?"パー3 ・ パーオン率":"パー4・5 ・ フェアウェイキープ率"}</div>
+    <table class="cs-tbl club-tbl"><tr><th></th><th>クラブ</th><th>回数</th><th>${kind==="p3"?"パーオン率":"FWキープ率"}</th><th>多いミス</th></tr>
     ${cl.map(c=>{ const x=m[c], r=rate(x), mk=Object.keys(x.miss).sort((a,b)=>x.miss[b]-x.miss[a])[0];
-      return `<tr class="${c===best?"good":c===worst?"bad":""}"><td class="tg">${c===best?`<span class="ctag good">得意</span>`:c===worst?`<span class="ctag bad">苦手</span>`:""}</td><td><b>${esc(c)}</b></td><td>${x.n}</td><td><span class="cs-bar"><i style="width:${r}%"></i></span>${fmtPct(r)}%</td><td>${mk?ML[mk]:"—"}</td></tr>`; }).join("")}
-    </table><p class="muted cs-note">パー3のティーショットに使ったクラブ別。得意・苦手は3回以上打ったクラブのパーオン率で比べています。</p></div>`;
+      return `<tr><td class="tg">${c===best?`<span class="ctag good">得意</span>`:c===worst?`<span class="ctag bad">苦手</span>`:""}</td><td><b>${esc(c)}</b></td><td>${x.n}</td><td><span class="cs-bar"><i style="width:${r}%"></i></span>${fmtPct(r)}%</td><td>${mk?ML[mk]:"—"}</td></tr>`; }).join("")}
+    </table>`;
+}
+function clubPanel(rs){
+  const t3 = clubTable(rs,"p3"), t4 = clubTable(rs,"p4");
+  if(!t3 && !t4) return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別</span></div><p class="muted" style="font-size:13px;margin:0">記録する項目で「使用クラブ」をONにすると、クラブごとのパーオン率・フェアウェイキープ率や得意・苦手がここに出ます。</p></div>`;
+  return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別</span></div>${t3}${t4}
+    <p class="muted cs-note">ティーショットに使ったクラブ別。得意・苦手は3回以上打ったクラブで比べています。</p></div>`;
 }
 /* ホール別: そのコースの各ホールの平均・パー以内の割合・多いミス */
 function holePanel(rs){
