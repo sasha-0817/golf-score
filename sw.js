@@ -1,5 +1,5 @@
 /* GOLF SC. service worker — 電波がなくても開けるようにする */
-const CACHE = "golfsc-v1";
+const CACHE = "golfsc-v2";
 const CORE = [
   "./", "./index.html", "./manifest.webmanifest",
   "./icon.png", "./icon-192.png", "./icon-512.png", "./mark.png", "./ball.png",
