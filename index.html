@@ -12,7 +12,48 @@
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png?v=5">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
-<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;-webkit-text-size-adjust:100%}img{max-width:100%}[hidden]{display:none!important}button{-webkit-tap-highlight-color:transparent}</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;-webkit-text-size-adjust:100%}img{max-width:100%}[hidden]{display:none!important}button{-webkit-tap-highlight-color:transparent}
+/* v15: record steppers, gear, fairway map, club picker */
+.rec2 .rec-top .gear-btn{margin-left:auto}
+.icon-btn svg.gear{width:20px;height:20px;stroke-width:1.6}
+.rec2 .dots button{font-size:12px;letter-spacing:.02em}
+.stp-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stp-row.one{grid-template-columns:1fr}
+.stp{border:1px solid var(--rec-line);border-radius:14px;background:var(--rec-bg);padding:7px 7px 8px;min-width:0}
+.stp-h{display:flex;justify-content:space-between;align-items:center;margin:0 2px 4px;min-height:16px}
+.stp-h .hint{font-size:10px}
+.stp-h .eyebrow b,.ap-wrap .eyebrow b{margin-left:6px}
+.stp-b{display:grid;grid-template-columns:42px 1fr 42px;align-items:center;gap:4px}
+.stp-b button{height:54px;border-radius:12px;border:1px solid var(--rec-line);background:var(--rec-surface);color:var(--rec-fg);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:transform .08s}
+.stp-b button:active{transform:scale(.92)}
+.stp-b button:disabled{opacity:.3;cursor:default}
+.stp-b button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.stp-v{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
+.stp-v b{font-family:var(--f-num);font-size:40px;font-weight:700;line-height:.9}
+.stp-v.pop b{animation:pop .2s ease-out}
+.stp-v .tm{font-size:9px;font-weight:700;letter-spacing:.08em;padding:2px 7px;border-radius:999px;color:#fff;white-space:nowrap}
+.tm.t-hio{background:var(--q-hio);color:#3A2600}.tm.t-eagle{background:var(--q-eagle)}.tm.t-birdie,.tm.p-birdie{background:var(--q-birdie)}
+.tm.t-par,.tm.p-par{background:var(--q-par)}.tm.t-bogey,.tm.p-bogey{background:var(--q-bogey)}.tm.t-double,.tm.p-double{background:var(--q-double)}.tm.t-triple{background:var(--q-triple)}
+.ap-wrap .seg-head{display:flex;justify-content:space-between;align-items:center}
+.club-tag{height:26px;padding:0 12px;border-radius:999px;border:1px dashed var(--rec-line);background:transparent;color:var(--rec-muted);font:700 12px var(--f-body);cursor:pointer}
+.club-tag.has{border:1px solid #F2B01E;background:color-mix(in srgb,#F2B01E 22%,var(--rec-surface));color:var(--rec-fg);font-family:var(--f-num);font-size:14px}
+.fw-rough .az-bg{fill:color-mix(in srgb,var(--rec-turf) 12%,var(--rec-surface));stroke:none}
+.rc2:not(:has(.ap-wrap)) .stp-b{grid-template-columns:54px 1fr 54px}
+.rc2:not(:has(.ap-wrap)) .stp-b button{height:76px}
+.rc2:not(:has(.ap-wrap)) .stp-v b{font-size:54px}
+.rc2:not(:has(.ap-wrap)) .trouble button{height:64px;font-size:16px}
+.az-s.fw-rough .az-bg{stroke:var(--line)}
+.tree{pointer-events:none}
+.fairway .az-green .on-t{font-size:12px}
+.club-back{background:rgba(0,0,0,.5);align-items:center;padding:16px}
+.club-sheet{border-radius:20px;border:1px solid var(--rec-line);padding:18px 16px 16px;animation:rise .22s ease-out;max-width:420px}
+.club-sheet p{display:flex;justify-content:space-between;align-items:baseline;font-size:16px}
+.club-sheet p small{font-size:12px;color:var(--rec-muted);font-weight:700}
+.club-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.club-grid button{height:52px;font-family:var(--f-num);font-size:19px}
+.club-grid button[aria-pressed="true"]{background:#F2B01E;border-color:#F2B01E;color:#2A1B00}
+@media (max-height:700px){.stp-b button{height:48px}.stp-v b{font-size:36px}}
+</style>
 <title>ショートコース スコアカード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Barlow+Condensed:wght@500;600;700&display=swap">
@@ -663,7 +704,7 @@ const DIRS = { on:"オン", left:"左", right:"右", long:"オーバー", short:
 const PRESET_COURSES = [
   { key:"ooyodogawa", name:"大淀川ゴルフ場", area:"宮崎市", holes:[100,90,110,130,125,120,70,90,80].map(y=>({par:3, yards:y})) },
 ];
-const TEES = { fw:"フェアウェイ", rl:"ラフ左", rr:"ラフ右", miss:"ミスヒット" };
+const TEES = { fw:"フェアウェイ", rl:"左", rr:"右", miss:"ミスショット" };
 const CLUBS = ["1W","3W","5W","UT","5I","6I","7I","8I","9I","PW","AW","SW"];
 // 記録する項目（打数は常に記録）
 const FIELD_DEFS = [
@@ -671,11 +712,10 @@ const FIELD_DEFS = [
   {k:"ob",     label:"OB",                    def:true},
   {k:"bunker", label:"バンカー",              def:true},
   {k:"pen",    label:"1ペナ（池・赤杭など）", def:false},
-  {k:"approach",label:"グリーンを狙った1球目の行き先", def:false},
-  {k:"tee",    label:"ティーショットの結果（パー4以上）", def:false},
-  {k:"club",   label:"グリーンを狙ったクラブ", def:false},
+  {k:"shot",   label:"ショットの方向（パー3はグリーン／パー4・5はフェアウェイ）", def:false},
+  {k:"club",   label:"クラブ（方向を選んだあとに選ぶ）", def:false},
 ];
-function fields(){ const saved = LS.get("sc.fields", {}); const f={}; FIELD_DEFS.forEach(d=>f[d.k] = saved[d.k]!=null ? saved[d.k] : d.def); return f; }
+function fields(){ const saved = LS.get("sc.fields", {}); const f={}; if(saved.shot==null && (saved.approach||saved.tee)) saved.shot=true; FIELD_DEFS.forEach(d=>f[d.k] = saved[d.k]!=null ? saved[d.k] : d.def); return f; }
 
 const state = {
   tab: LS.get("sc.tab","record"),
@@ -690,7 +730,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1200";
+const BUILD = "2026-10-19-1130";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -938,11 +978,14 @@ function viewRecord(){
 
 
 const ICON = {
-  gear:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" class="gear"><path d="M19.76 10.07 L22.28 10.45 L22.28 13.55 L19.76 13.93 L18.85 16.13 L20.37 18.18 L18.18 20.37 L16.13 18.85 L13.93 19.76 L13.55 22.28 L10.45 22.28 L10.07 19.76 L7.87 18.85 L5.82 20.37 L3.63 18.18 L5.15 16.13 L4.24 13.93 L1.72 13.55 L1.72 10.45 L4.24 10.07 L5.15 7.87 L3.63 5.82 L5.82 3.63 L7.87 5.15 L10.07 4.24 L10.45 1.72 L13.55 1.72 L13.93 4.24 L16.13 5.15 L18.18 3.63 L20.37 5.82 L18.85 7.87Z" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.4"/></svg>',
+  up:'<svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg>',
+  down:'<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>',
   x:'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   back:'<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>',
   flag:'<svg viewBox="0 0 14 18" aria-hidden="true"><line x1="2" y1="1" x2="2" y2="17" stroke="#fff" stroke-width="1.6"/><path d="M3 1.5 L13 4.5 L3 7.5Z" fill="#F0BE3A"/></svg>'
 };
+const TERMS = d => d<=-3?"ALBA":d===-2?"EAGLE":d===-1?"BIRDIE":d===0?"PAR":d===1?"BOGEY":d===2?"DOUBLE":d===3?"TRIPLE":"+"+d;
 const TERM = d => d<=-3?"ALBATROSS":d===-2?"EAGLE":d===-1?"BIRDIE":d===0?"PAR":d===1?"BOGEY":d===2?"DOUBLE":d===3?"TRIPLE":"+"+d;
 const TONEH = h => h.strokes===1 ? "hio" : TONE(h.strokes-h.par);
 const TONE = d => d<=-2?"eagle":d===-1?"birdie":d===0?"par":d===1?"bogey":d===2?"double":"triple";
@@ -1007,6 +1050,48 @@ function approachSVG(dir, tap, stat){
     ${tracer}${ball}
   </svg>`;
 }
+/* ティーショット: 上から見たホール。手前がティー、奥にグリーン */
+function fairwaySVG(tee, tap, stat){
+  const Z = { fw:[178,92], rl:[56,104], rr:[286,104], miss:[170,204] };
+  const sel = k => !stat && tee===k;
+  const maxMiss = stat ? Math.max(1, ...["rl","rr","miss"].map(k=>stat.teeC[k]||0)) : 1;
+  const zone = (k, shape, lx, ly, label, extra="") => {
+    if(stat){ const v=pct(stat.teeC[k]||0, stat.teeN), heat=k==="fw"?0:((stat.teeC[k]||0)/maxMiss)*.55;
+      const sh = k==="fw" ? shape : shape.replace('class="az-bg"', `class="az-bg" style="fill:color-mix(in srgb,#F2B01E ${Math.round(heat*100)}%,var(--paper))"`);
+      if(k==="miss") return `<g class="az-s ${extra}">${sh}<text x="${lx}" y="${ly}" class="az-t">${label}　${fmtPct(v)}%</text></g>`;
+      return `<g class="az-s ${extra}">${sh}<text x="${lx}" y="${ly-10}" class="az-t ${k==="fw"?"on-t":""}">${label}</text><text x="${lx}" y="${ly+9}" class="${k==="fw"?"on-p":"az-p"}">${fmtPct(v)}%</text></g>`; }
+    return `<g class="az ${extra} ${sel(k)?"on-sel":""}" role="button" tabindex="0" data-act="tee" data-v="${k}" aria-pressed="${sel(k)}" aria-label="${label}">${shape}<text x="${lx}" y="${ly}" class="az-t ${k==="fw"?"on-t":""}">${label}</text></g>`; };
+  const b = !stat && tee && Z[tee];
+  const sx=170, sy=222, id=stat?"S":"";
+  const cy = Math.min(sy,b?b[1]:sy) - (tee==="miss"?40:60);
+  const tpath = b ? `M${sx} ${sy} Q ${(sx+b[0])/2} ${cy} ${b[0]} ${b[1]}` : "";
+  const tracer = b ? `<g class="tr ${tap?"anim":""}"><path class="tr-shadow" d="M${sx+6} ${sy} L${b[0]+5} ${b[1]+3}" pathLength="1" filter="url(#soft)"/><path class="tr-glow" d="${tpath}" pathLength="1" filter="url(#trGlow)"/><path class="tr-core" d="${tpath}" pathLength="1" stroke="url(#trGrad)"/><path class="tr-hi" d="${tpath}" pathLength="1"/></g>` : "";
+  const ball = b ? `<g class="ballg ${tap?"drop":""}"><ellipse cx="${b[0]+3.5}" cy="${b[1]+5}" rx="7.5" ry="4.8" fill="rgba(0,0,0,.26)" filter="url(#soft)" transform="rotate(15 ${b[0]+3.5} ${b[1]+5})"/><image href="ball.png" x="${b[0]-7.5}" y="${b[1]-7.5}" width="15" height="15"/></g>` : "";
+  // 木: 光は左上から、影は右下
+  const tree = (x,y,r) => `<g class="tree"><ellipse cx="${x+r*.55}" cy="${y+r*.45}" rx="${r}" ry="${r*.8}" fill="rgba(0,0,0,.18)" filter="url(#soft${id})"/><circle cx="${x}" cy="${y}" r="${r}" fill="url(#gTree${id})"/></g>`;
+  const fwPath = `M118 188 C110 140 114 84 128 34 Q170 14 212 34 C226 84 230 140 222 188 Z`;
+  return `<svg class="approach fairway" viewBox="0 0 340 222" preserveAspectRatio="xMidYMid meet" role="${stat?"img":"group"}" aria-label="ティーショットの行き先">
+    <defs>
+      <linearGradient id="gFw${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2FCB86"/><stop offset="1" stop-color="#12A363"/></linearGradient>
+      <radialGradient id="gTree${id}" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#3E9D5C"/><stop offset="1" stop-color="#1D6B3A"/></radialGradient>
+      <pattern id="fwMow${id}" width="340" height="24" patternUnits="userSpaceOnUse"><rect width="340" height="12" fill="rgba(255,255,255,.08)"/></pattern>
+      <filter id="trGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.4"/></filter>
+      <linearGradient id="trGrad" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FF8A00"/><stop offset="1" stop-color="#FFE066"/></linearGradient>
+      <filter id="soft${id}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation=".7"/></filter>
+      <filter id="fwShadow${id}" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="4" dy="4" stdDeviation="4" flood-color="#083C26" flood-opacity=".25"/></filter>
+    </defs>
+    <rect class="az-rough" x="0" y="0" width="340" height="222" rx="18"/>
+    ${zone("rl", `<path class="az-bg" d="M4 22 Q4 6 20 6 H170 V188 H4Z"/>`, 50, stat?112:104, "左", "fw-rough")}
+    ${zone("rr", `<path class="az-bg" d="M336 22 Q336 6 320 6 H170 V188 H336Z"/>`, 290, stat?112:104, "右", "fw-rough")}
+    ${tree(26,30,11)}${tree(48,168,9)}${tree(88,22,8)}${tree(314,40,10)}${tree(292,170,11)}${tree(254,18,7)}
+    ${zone("fw", `<path d="${fwPath}" class="fringe"/><path d="${fwPath}" fill="url(#gFw${id})" filter="url(#fwShadow${id})"/><path d="${fwPath}" fill="url(#fwMow${id})"/><path d="${fwPath}" class="g-ring"/>
+      <ellipse cx="170" cy="36" rx="24" ry="11" fill="#5BE6A8" stroke="rgba(255,255,255,.5)"/>
+      <g filter="url(#soft${id})"><path d="M176 33 L194 39" stroke="rgba(0,0,0,.22)" stroke-width="2" stroke-linecap="round"/></g>
+      <line x1="176" y1="33" x2="176" y2="13" stroke="#fff" stroke-width="1.6"/><path d="M177 13.5 L189 17 L177 20.5Z" fill="#E11D2E"/>`, 170, stat?110:112, "フェアウェイ", "az-green")}
+    ${zone("miss", `<path class="az-bg" d="M4 192 H336 V204 Q336 218 320 218 H20 Q4 218 4 204Z"/>`, 170, 206, "ミスショット")}
+    ${tracer}${ball}
+  </svg>`;
+}
 function viewRecordDraft(d){
   const h = d.holes[state.hole];
   const N = d.holes.length;
@@ -1014,7 +1099,7 @@ function viewRecordDraft(d){
   const tot = roundTotals({holes:done});
   const diff = h.strokes - h.par;
   const hio = h.strokes===1;
-  const celebrate = state.tap && state.tap.startsWith("sv") && diff<0;
+  const celebrate = /^s[vt]/.test(state.tap||"") && diff<0;
   const confetti = diff<0 ? `<div class="confetti ${hio?"big":""}">${Array.from({length: hio?46:22},(_,i)=>`<i style="left:${(Math.cbrt(Math.random())*100).toFixed(1)}%;background:${(hio?["#F2B01E","#FFD76A","#FFF3C4","#fff","#F59E0B"]:["#F2B01E","#FFD76A","#5BE6A8","#fff","#38BDF8"])[i%5]};animation-delay:${(-Math.random()*3).toFixed(2)}s;animation-duration:${(2.2+Math.random()*1.8).toFixed(2)}s;width:${5+Math.round(Math.random()*4)}px"></i>`).join("")}</div>` : "";
   const bestPace = (()=>{ const others = state.rounds.filter(r=>r.player===d.player && r.courseId===d.courseId && r.id!==d.id); if(!others.length || !done.length) return false;
     const best = others.reduce((a,r)=> roundTotals(r).diff < roundTotals(a).diff ? r : a);
@@ -1033,7 +1118,7 @@ function viewRecordDraft(d){
   queueMicrotask(()=>{ state.tap = null; });
   const F = fields();
   const isLong = h.par>=4;
-  const ring = `<div class="ring" aria-label="${done.length}/${N}ホール入力済み"><svg viewBox="0 0 46 46"><defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0E9F62"/><stop offset="1" stop-color="#13A9C2"/></linearGradient></defs><circle class="trk" cx="23" cy="23" r="19"/><circle class="val" cx="23" cy="23" r="19" stroke-dasharray="${(2*Math.PI*19*done.length/N).toFixed(1)} 200"/></svg><b>${done.length}<small>/${N}</small></b></div>`;
+  const _ring = `<div class="ring" aria-label="${done.length}/${N}ホール入力済み"><svg viewBox="0 0 46 46"><defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0E9F62"/><stop offset="1" stop-color="#13A9C2"/></linearGradient></defs><circle class="trk" cx="23" cy="23" r="19"/><circle class="val" cx="23" cy="23" r="19" stroke-dasharray="${(2*Math.PI*19*done.length/N).toFixed(1)} 200"/></svg><b>${done.length}<small>/${N}</small></b></div>`;
   const chip = (act,v,label,on) => `<button class="chip2" data-act="${act}" data-v="${v}" aria-pressed="${on}">${label}</button>`;
   const troubles = [
     F.ob ? `<button class="ob" data-act="tog" data-k="ob" aria-pressed="${!!h.ob}">OB</button>` : "",
@@ -1044,22 +1129,27 @@ function viewRecordDraft(d){
     <div class="rec-top">
       <button class="icon-btn" data-act="ask-discard" aria-label="記録を閉じる">${ICON.x}</button>
       <div class="rec-who"><b>${esc(d.player)}</b><span>${esc(d.courseName)}・${esc(d.date.slice(5).replace("-","/"))}${d.editing?"・編集中":""}</span></div>
-      <button class="icon-btn" data-act="open-fields" aria-label="記録する項目">${ICON.gear}</button>
-      ${ring}
+      <button class="icon-btn gear-btn" data-act="open-fields" aria-label="記録する項目の設定">${ICON.gear}</button>
     </div>
-    <div class="dots ${N>9?"two":""}">${d.holes.map((x,i)=>`<button data-act="hole" data-i="${i}" class="${dotCls(x)} ${i===state.hole?"cur":""}" aria-label="${i+1}番ホール">${x.entered?x.strokes:i+1}<small>${x.entered?(i+1)+"H":""}</small></button>`).join("")}</div>
+    <div class="dots ${N>9?"two":""}">${d.holes.map((x,i)=>`<button data-act="hole" data-i="${i}" class="${dotCls(x)} ${i===state.hole?"cur":""}" aria-label="${i+1}番ホール${x.entered?" "+x.strokes+"打":""}">${i+1}H</button>`).join("")}</div>
     <div class="hole-card hc2 ${slide} ${celebrate?"flash":""}">${confetti}${bestPace?`<span class="pace">BEST PACE</span>`:""}
       <div class="hc-l"><span class="lbl">HOLE</span><div class="hno">${state.hole+1}<small>/${N}</small></div></div>
       <div class="hc-m"><div class="par"><span>PAR</span>${h.par}</div>${h.yards?`<div class="yd">${h.yards} YDS</div>`:""}
-        <span class="badge ${hio?"hio":"b-"+TONE(diff)} ${state.tap&&state.tap.startsWith("sv")?"pop":""}"><i></i>${hio?"HOLE IN ONE":TERM(diff)}</span></div>
+        <span class="badge ${hio?"hio":"b-"+TONE(diff)} ${/^s[vt]/.test(state.tap||"")?"pop":""}"><i></i>${hio?"HOLE IN ONE":TERM(diff)}</span></div>
       <div class="live"><div><span>TOTAL</span><b>${totLabel}</b></div><div><span>PUTTS</span><b>${tot.putts||0}</b></div></div>
     </div>
     <div class="rec-card rc2 ${slide}" id="rec-card">
-      <div><div class="seg-head"><span class="eyebrow">SCORE<b>打数</b></span></div><div class="seg s8">${[1,2,3,4,5,6,7,8].map(sBtn).join("")}</div></div>
-      ${F.putts?`<div><div class="seg-head"><span class="eyebrow">PUTTS<b>パット</b></span><span class="hint">${hint}</span></div><div class="seg s6">${[0,1,2,3,4,5].map(pBtn).join("")}</div></div>`:""}
-      ${F.tee && isLong?`<div><div class="seg-head"><span class="eyebrow">TEE SHOT<b>ティーショット</b></span></div><div class="chips2 c4">${Object.entries(TEES).map(([k,l])=>chip("tee",k,l,h.tee===k)).join("")}</div></div>`:""}
-      ${F.approach?`<div class="ap-wrap"><div class="seg-head"><span class="eyebrow">APPROACH<b>${isLong?"グリーンを狙った球":"グリーンを狙った1球目"}</b></span></div>${approachSVG(h.dir, state.tap&&state.tap.startsWith("dir"))}</div>`:""}
-      ${F.club?`<div><div class="seg-head"><span class="eyebrow">CLUB<b>グリーンを狙ったクラブ</b></span></div><div class="chips2 scroll">${CLUBS.map(c=>chip("club",c,c,h.club===c)).join("")}</div></div>`:""}
+      <div class="stp-row ${F.putts?"":"one"}">
+        <div class="stp"><div class="stp-h"><span class="eyebrow">SCORE<b>打数</b></span></div>
+          <div class="stp-b"><button data-act="st" data-d="-1" aria-label="打数を1つ減らす" ${h.strokes<=1?"disabled":""}>${ICON.down}</button>
+          <div class="stp-v ${state.tap&&state.tap.startsWith("st")?"pop":""}"><b>${h.strokes}</b><span class="tm t-${hio?"hio":TONE(diff)}">${hio?"HIO":TERMS(diff)}</span></div>
+          <button data-act="st" data-d="1" aria-label="打数を1つ増やす" ${h.strokes>=15?"disabled":""}>${ICON.up}</button></div></div>
+        ${F.putts?`<div class="stp"><div class="stp-h"><span class="eyebrow">PUTTS<b>パット</b></span><span class="hint">${hint}</span></div>
+          <div class="stp-b"><button data-act="pt" data-d="-1" aria-label="パットを1つ減らす" ${h.putts<=0?"disabled":""}>${ICON.down}</button>
+          <div class="stp-v ${state.tap&&state.tap.startsWith("pt")?"pop":""}"><b>${h.putts}</b><span class="tm p-${h.putts<=1?"birdie":h.putts===2?"par":h.putts===3?"bogey":"double"}">${h.putts===0?"CHIP IN":h.putts+" PUTT"+(h.putts>1?"S":"")}</span></div>
+          <button data-act="pt" data-d="1" aria-label="パットを1つ増やす" ${h.putts>=9?"disabled":""}>${ICON.up}</button></div></div>`:""}
+      </div>
+      ${F.shot?`<div class="ap-wrap"><div class="seg-head"><span class="eyebrow">${isLong?"TEE SHOT<b>ティーショットの行き先</b>":"SHOT<b>1打目の行き先</b>"}</span>${F.club?`<button class="club-tag ${h.club?"has":""}" data-act="open-club">${h.club?esc(h.club):"クラブ"}</button>`:""}</div>${isLong?fairwaySVG(h.tee, state.tap&&state.tap.startsWith("tee")):approachSVG(h.dir, state.tap&&state.tap.startsWith("dir"))}</div>`:""}
       ${troubles.length?`<div class="trouble t${troubles.length}">${troubles.join("")}</div>`:""}
     </div>
     <div class="rec-bar">
@@ -1068,8 +1158,14 @@ function viewRecordDraft(d){
     </div>
     ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p><button data-act="pause">中断してホームへ（あとで続きから）</button><button class="danger" data-act="discard">${d.editing?"編集をやめる（変更は保存されません）":"記録を破棄する"}</button><button data-act="cancel-confirm">入力に戻る</button></div></div>`:""}
     ${state.sheet==="fields"?fieldsSheet():""}
+    ${state.sheet==="club"?`<div class="sheet-back club-back" data-act="close-sheet"><div class="sheet club-sheet" data-stop="1"><p>クラブは？<small>${isLong?"ティーショット":"1打目"}・${h.yards?h.yards+"y":"PAR "+h.par}</small></p>
+      <div class="club-grid">${CLUBS.map(c=>`<button data-act="club" data-v="${c}" aria-pressed="${h.club===c}">${c}</button>`).join("")}</div>
+      <button data-act="close-sheet">${h.club?"このまま":"選ばない"}</button></div></div>`:""}
   </div>`;
 }
+let clubTimer=null;
+function askClub(v){ clearTimeout(clubTimer); if(!v || !fields().club) return;
+  const hole=state.hole; clubTimer=setTimeout(()=>{ if(state.draft && state.hole===hole && !state.sheet){ state.sheet="club"; render(); } }, matchMedia("(prefers-reduced-motion: reduce)").matches?150:900); }
 function fieldsSheet(){
   const F=fields();
   return `<div class="sheet-back" data-act="close-sheet"><div class="sheet fields-sheet" data-stop="1"><p>記録する項目</p>
@@ -1142,15 +1238,14 @@ function viewStats(){
   <div class="panel"><div class="sec"><em>RECENT</em><span>直近3ラウンド</span></div><div class="recent">${rs.slice(-3).reverse().map(r=>{ const t=roundTotals(r); const [y,m,d]=r.date.split("-");
       return `<div class="rr"><div class="rd"><small>${+m}/${+d}</small><b>${t.score}<i>(${toPar(t.diff)})</i></b></div><div class="rh">${r.holes.map(h=>`<span class="mk4 m-${TONEH(h)}" title="${h.strokes}"></span>`).join("")}</div></div>`; }).join("")}</div>
     <div class="mk-legend"><span><i class="mk4 m-eagle"></i>−2</span><span><i class="mk4 m-birdie"></i>−1</span><span><i class="mk4 m-par"></i>±0</span><span><i class="mk4 m-bogey"></i>+1</span><span><i class="mk4 m-double"></i>+2</span><span><i class="mk4 m-triple"></i>+3以上</span></div></div>
-  <div class="panel"><div class="sec"><em>SHOTS</em><span>ショット</span></div><div class="hbars">
-    ${hbar("パーオン率", s.gir, "パー−2打以内でオン")}
-    ${hbar("ボギーオン率", s.bon, "パー−1打以内でオン")}
-    ${s.teeN?hbar("フェアウェイキープ率", s.fwRate, `パー4以上のティーショット${s.teeN}回`):""}
-    ${hbar("リカバリー率", s.scramble, `パーオンを逃した${s.scrambleN}Hのうちパー以内`)}
-    ${hbar("サンドセーブ率", s.sandSave, `バンカー${s.bunkerN}Hのうちパー以内`)}
-    ${hbar("バンカー率", s.bunkerRate, `${s.holes}H中 ${s.bunkerN}回`, true)}
-    ${hbar("OB率", s.obRate, `${s.holes}H中 ${s.obN}回`, true)}
-    ${s.penN?hbar("1ペナ率", s.penRate, `${s.holes}H中 ${s.penN}回`, true):""}
+  <div class="panel"><div class="sec"><em>SHOTS</em><span>ショット</span></div><div class="gauges">
+    ${gauge("パーオン率", s.gir, "パー−2打以内でオン", "--turf")}
+    ${gauge("ボギーオン率", s.bon, "パー−1打以内でオン", "--accent2")}
+    ${gauge("リカバリー率", s.scramble, `パーオンを逃した${s.scrambleN}Hのうちパー以内`, "--c3")}
+    ${gauge("サンドセーブ率", s.sandSave, `バンカー${s.bunkerN}Hのうちパー以内`, "--c5")}
+    ${gauge("バンカー率", s.bunkerRate, `${s.holes}H中 ${s.bunkerN}回`, "--warn")}
+    ${gauge("OB率", s.obRate, `${s.holes}H中 ${s.obN}回`, "--under")}
+    ${s.penN?gauge("1ペナ率", s.penRate, `${s.holes}H中 ${s.penN}回`, "--under"):""}
   </div></div>
   <div class="panel"><div class="sec"><em>PUTTING</em><span>パット</span></div><div class="putts">
     <div><span class="eyebrow">1R平均</span><span class="num">${fx(s.avgPuttsRound)}</span></div>
@@ -1160,13 +1255,20 @@ function viewStats(){
   <div class="panel"><div class="sec"><em>TREND</em><span>${state.fCourse==="all"?"スコアの推移（対パー）":"スコアの推移"}</span></div><div class="chartbox"><canvas id="ch-score" aria-label="スコア推移"></canvas></div></div>
   <div class="panel"><div class="sec"><em>TREND</em><span>パット数の推移</span></div><div class="chartbox"><canvas id="ch-putt" aria-label="パット数推移"></canvas></div></div>
   <div class="panel"><div class="sec"><em>TREND</em><span>パーオン率・ボギーオン率の推移</span></div><div class="chartbox"><canvas id="ch-on" aria-label="パーオン率とボギーオン率の推移"></canvas></div></div>
-  <div class="panel"><div class="sec"><em>BREAKDOWN</em><span>内訳</span></div>
-    ${stack("スコア", DIST_SEGS(s), s.holes)}
-    ${stack("パット数", PUTT_SEGS(s), s.holes)}
+  <div class="grid2">
+    ${donutPanel("パット数の割合","ch-pie",PUTT_SEGS(s),s.holes,s.puttsPerHole==null?"—":s.puttsPerHole.toFixed(2),"平均パット / H")}
+    ${donutPanel("スコアの内訳","ch-dist",DIST_SEGS(s),s.holes,fmtPct(s.parOrBetter)+"<small>%</small>","パー以内")}
   </div>
-  <div class="panel"><div class="sec"><em>APPROACH</em><span>グリーンを狙った球の行き先</span></div>${greenMap(s)}</div>
+  <div class="panel"><div class="sec"><em>SHOT</em><span>グリーンの行き先</span></div>${greenMap(s)}</div>
+  ${s.teeN?`<div class="panel"><div class="sec"><em>TEE</em><span>ティーショットの行き先</span></div>${fairwaySVG(null,false,s)}<p class="muted" style="font-size:12px;text-align:center;margin:8px 0 0">${s.teeN}回の記録・フェアウェイキープ率 <b>${fmtPct(s.fwRate)}%</b></p></div>`:""}
   ${state.fCourse!=="all"?`<div class="panel"><div class="sec"><em>BY HOLE</em><span>ホール別の平均打数</span></div><div class="chartbox"><canvas id="ch-hole" aria-label="ホール別平均"></canvas></div></div>`:""}
   `}`;
+}
+function donutPanel(title, id, segs, total, centerVal, centerLbl){
+  return `<div class="panel"><div class="sec"><em>BREAKDOWN</em><span>${title}</span></div><div class="donut">
+    <div class="dwrap"><canvas id="${id}" aria-label="${title}"></canvas><div class="dcenter"><span class="num">${centerVal}</span><small>${centerLbl}</small></div></div>
+    <ul class="dleg">${segs.map(x=>{ const v=pct(x.n,total); return `<li><i style="background:var(${x.tone})"></i><span>${x.label}</span><b class="num">${fmtPct(v)}<small>%</small></b><em><s style="width:${v}%;background:var(${x.tone})"></s></em></li>`; }).join("")}</ul>
+  </div></div>`;
 }
 function greenMap(s){
   if(!s.dirN) return `<p class="muted" style="font-size:13px">まだ記録がありません。記録画面でグリーンのどこに行ったかを選ぶとここに出ます。</p>`;
@@ -1239,6 +1341,11 @@ after.stats = () => {
     { label:"パット", data: pad(pVals), backgroundColor: labels.map((_,i)=>fade(PUTT_C,i)), borderColor: rs.map((r,i)=>zoneColor(puttZone(i))), borderWidth:0, borderSkipped:"start", borderRadius:5, maxBarThickness:16 }
   ]}, options:o2, plugins:[refLines([{ v:2*holesN, label:`${2*holesN}`, color: cssv("--q-par") }])] }));
   scoreChart.options.onClick = onTap(scoreChart); puttChart.options.onClick = onTap(puttChart);
+  const donut = (id, segs) => { const el=$(id); if(!el) return;
+    charts.push(new Chart(el, {type:"doughnut", data:{labels:segs.map(x=>x.label), datasets:[{data:segs.map(x=>x.n), backgroundColor:segs.map(x=>cssv(x.tone)), borderWidth:0, borderRadius:0, spacing:2, hoverOffset:4}]},
+      options:{maintainAspectRatio:false, cutout:"74%", plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>` ${c.raw}ホール`}}}}})); };
+  donut("#ch-pie", PUTT_SEGS(s));
+  donut("#ch-dist", DIST_SEGS(s));
   // パーオン率・ボギーオン率の推移（1ラウンドごと）
   const perRound = rs.map(r=>{ const hs=r.holes.filter(h=>h.strokes>0); const n=hs.length||1;
     return { gir: Math.round(hs.filter(h=>h.strokes-h.putts<=h.par-2).length/n*100), bon: Math.round(hs.filter(h=>h.strokes-h.putts<=h.par-1).length/n*100) }; });
@@ -1382,9 +1489,9 @@ document.addEventListener("click", async ev => {
     case "hole": mark_entered(); state.slide = +b.dataset.i>state.hole?"l":"r"; state.hole=+b.dataset.i; saveDraft(); render(); break;
     case "sv": { const v=+b.dataset.v; h.strokes = v===8 ? (h.strokes>=8 ? h.strokes+1 : 8) : v; if(h.strokes>15) h.strokes=8; if(h.putts>h.strokes-1) h.putts=Math.max(0,h.strokes-1); h.entered=true; saveDraft(); render(); break; }
     case "pv": h.putts=+b.dataset.v; if(h.strokes<h.putts+1) h.strokes=h.putts+1; h.entered=true; saveDraft(); render(); break;
-    case "st": h.strokes=Math.max(1,Math.min(15,h.strokes+ +b.dataset.d)); if(h.putts>h.strokes) h.putts=h.strokes; h.entered=true; saveDraft(); render(); break;
-    case "pt": h.putts=Math.max(0,Math.min(h.strokes,h.putts+ +b.dataset.d)); h.entered=true; saveDraft(); render(); break;
-    case "dir": h.dir = h.dir===b.dataset.v ? null : b.dataset.v; h.entered=true; saveDraft(); render(); break;
+    case "st": h.strokes=Math.max(1,Math.min(15,h.strokes+ +b.dataset.d)); if(h.putts>h.strokes-1) h.putts=Math.max(0,h.strokes-1); h.entered=true; state.tap="st"; saveDraft(); render(); break;
+    case "pt": h.putts=Math.max(0,Math.min(9,h.putts+ +b.dataset.d)); if(h.strokes<h.putts+1) h.strokes=Math.min(15,h.putts+1); h.entered=true; state.tap="pt"; saveDraft(); render(); break;
+    case "dir": h.dir = h.dir===b.dataset.v ? null : b.dataset.v; h.entered=true; state.tap="dir"; saveDraft(); render(); askClub(h.dir); break;
     case "tog": h[b.dataset.k]=!h[b.dataset.k]; h.entered=true; saveDraft(); render(); break;
     case "prev": mark_entered(); state.slide="r"; state.hole--; saveDraft(); render(); break;
     case "next": mark_entered(); state.slide="l"; state.hole++; saveDraft(); render(); window.scrollTo({top:0}); break;
@@ -1405,8 +1512,9 @@ document.addEventListener("click", async ev => {
     }
     case "open-fields": state.sheet="fields"; render(); break;
     case "close-sheet": state.sheet=null; render(); break;
-    case "tee": h.tee = h.tee===b.dataset.v ? null : b.dataset.v; h.entered=true; saveDraft(); render(); break;
-    case "club": h.club = h.club===b.dataset.v ? null : b.dataset.v; h.entered=true; saveDraft(); render(); break;
+    case "tee": h.tee = h.tee===b.dataset.v ? null : b.dataset.v; h.entered=true; state.tap="tee"; saveDraft(); render(); askClub(h.tee); break;
+    case "club": h.club = h.club===b.dataset.v ? null : b.dataset.v; h.entered=true; state.sheet=null; saveDraft(); render(); break;
+    case "open-club": state.sheet="club"; render(); break;
     case "pause": d.paused=true; state.confirm=null; saveDraft(); render(); window.scrollTo({top:0}); break;
     case "resume": d.paused=false; saveDraft(); render(); break;
     case "discard": state.draft=null; state.confirm=null; saveDraft(); render(); break;
