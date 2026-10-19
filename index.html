@@ -852,6 +852,8 @@ const DIRS = { on:"オン", left:"左", right:"右", long:"オーバー", short:
 // あらかじめ用意したコース（公開情報より。ヤードは現地のスコアカードで要確認）
 const PRESET_COURSES = [
   { key:"ooyodogawa", name:"大淀川ゴルフ場", pref:"宮崎県", area:"宮崎市", holes:[100,90,110,130,125,120,70,90,80].map(y=>({par:3, yards:y})) },
+  { key:"hyuga-seaside", name:"日向シーサイドゴルフクラブ", pref:"宮崎県", area:"日向市", // 公式サイトのホール図より（MG / SG）
+    holes:[[152,125],[92,78],[154,132],[218,188],[148,121],[93,73],[138,110],[94,104],[160,142]].map(([m,s2],i)=>({par:3, yards:m, yards2:s2, ...(i?{}:{gn:["MG","SG"]})})) },
   { key:"firtree", name:"ファーツリーカントリークラブ", pref:"宮崎県", area:"延岡市", holes:[[3,76],[3,102],[3,88],[4,284],[3,109],[3,84],[4,366],[3,55],[3,160]].map(([p,y])=>({par:p, yards:y})) },
 ];
 /* グリーンが2つあるコース（例 MG / SG）: 2つ目のヤードは hole.yards2、名前は holes[0].gn に入れる（シートの列を増やさないため） */
@@ -913,7 +915,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1425";
+const BUILD = "2026-10-19-1435";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
