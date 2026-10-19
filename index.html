@@ -894,6 +894,9 @@ table.sc tr.hn td{background:var(--soft);color:var(--muted);font-size:13px}
 
 .result-card::before{display:none}
 .rc-rings{position:absolute;right:-90px;top:-80px;width:320px;height:280px;pointer-events:none}
+
+.hc2 .badges{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pace2{font-size:9px;font-weight:900;letter-spacing:.14em;padding:4px 8px;border-radius:999px;background:linear-gradient(120deg,#F2B01E,#FFD76A);color:#3A2600;white-space:nowrap}
 </style>
 
 </head>
@@ -993,7 +996,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1735";
+const BUILD = "2026-10-19-1745";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1465,10 +1468,10 @@ function viewRecordDraft(d){
       <button class="icon-btn gear-btn" data-act="open-fields" aria-label="記録する項目の設定">${ICON.gear}</button>
     </div>
     <div class="dots ${N>9?"two":""}">${d.holes.map((x,i)=>`<button data-act="hole" data-i="${i}" class="${dotCls(x)} ${i===state.hole?"cur":""}" aria-label="${i+1}番ホール${x.entered?" "+x.strokes+"打":""}">${i+1}H</button>`).join("")}</div>
-    <div class="hole-card hc2 ${slide} ${celebrate?"flash":""}">${confetti}${bestPace&&fields().pace?`<span class="pace">BEST PACE</span>`:""}
+    <div class="hole-card hc2 ${slide} ${celebrate?"flash":""}">${confetti}
       <div class="hc-l"><span class="lbl">HOLE</span><div class="hno">${state.hole+1}<small>/${N}</small></div></div>
       <div class="hc-m"><div class="par"><span>PAR</span>${h.par}</div>${d.gn && h.ys && h.ys[0] && h.ys[1] ? `<div class="gsw" role="group" aria-label="グリーン">${d.gn.map((n,i)=>`<button data-act="set-g" data-g="${i}" aria-pressed="${(h.gi||0)===i}">${esc(n)}</button>`).join("")}</div><div class="yd">${h.yards} YDS</div>` : h.yards?`<div class="yd">${h.yards} YDS</div>`:""}
-        <span class="badge ${hio?"hio":"b-"+TONE(diff)} ${/^s[vt]/.test(state.tap||"")?"pop":""}"><i></i>${hio?"HOLE IN ONE":TERM(diff)}</span></div>
+        <div class="badges"><span class="badge ${hio?"hio":"b-"+TONE(diff)} ${/^s[vt]/.test(state.tap||"")?"pop":""}"><i></i>${hio?"HOLE IN ONE":TERM(diff)}</span>${bestPace&&fields().pace?`<span class="pace2">BEST PACE</span>`:""}</div></div>
       <div class="live"><div><span>TOTAL</span><b>${totLabel}</b></div><div><span>PUTTS</span><b>${tot.putts||0}</b></div></div>
       ${advice?`<div class="advice">${advice}</div>`:""}
     </div>
@@ -1895,10 +1898,12 @@ document.addEventListener("click", async ev => {
               const cr=card.getBoundingClientRect(), rel=el=>{ const b=el.getBoundingClientRect(); return {l:(b.left-cr.left)/cr.width*100, r:(b.right-cr.left)/cr.width*100, t:(b.top-cr.top)/cr.height*100, b:(b.bottom-cr.top)/cr.height*100}; };
               const sc=card.querySelector(".rc-score span")||card.querySelector(".rc-score b"), sheet=card.querySelector(".rc-sc"), flag=card.querySelector(".rc-flag");
               const X0=(sc?rel(sc).r:55)+3, Y1=(sheet?rel(sheet).t:40)-2, fl=flag?rel(flag):null;
-              const spots=[]; let tries=0; while(spots.length<26 && tries++<600){ const x=X0+Math.sqrt(Math.random())*(97-X0), y=2+Math.random()*(Y1-4);
+              const spots=[]; let tries=0; while(spots.length<26 && tries++<600){ const x=X0+Math.sqrt(Math.random())*(95-X0), y=6+Math.random()*(Y1-8);
                 if(fl && x>fl.l-3 && x<fl.r+2 && y>fl.t-2 && y<fl.b+2) continue; spots.push([x,y]); }
-              cf.innerHTML = spots.map(([x,y],i)=>{
-                return `<i style="position:absolute;left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;width:${5+Math.round(Math.random()*4)}px;height:${9+Math.round(Math.random()*4)}px;border-radius:2px;background:${cols[i%5]};opacity:.9;transform:rotate(${Math.round(Math.random()*360)}deg);animation:none"></i>`; }).join(""); } }});
+              // 保存画像は紙吹雪ではなく、金と白のキラキラ（4つ角の星）を空いている所に散らす
+              const star = (sz,col,op) => `<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" style="display:block"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z" fill="${col}" fill-opacity="${op}"/></svg>`;
+              cf.innerHTML = spots.slice(0,14).map(([x,y],i)=>{ const big=i<3, sz=big?22+Math.round(Math.random()*8):8+Math.round(Math.random()*9), col=i%3===2?"#FFFFFF":"#FFD76A";
+                return `<i style="position:absolute;left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;width:auto;height:auto;background:none;border-radius:0;transform:translate(-50%,-50%);animation:none">${star(sz,col,big?.95:.55+Math.random()*.4)}</i>`; }).join(""); } }});
         const blob = await new Promise(r=>cv.toBlob(r,"image/png"));
         const file = new File([blob], `golfsc-${state.result.date}.png`, {type:"image/png"});
         if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:"GOLF SC."}); }
