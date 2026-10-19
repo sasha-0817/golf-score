@@ -931,6 +931,14 @@ input,select,textarea{font-size:max(16px,1em)}
 .fairway .az-s.az-green .on-t{font-size:13px}
 .fairway .az-s.az-green .on-p{font-size:24px}
 .az-s .az-p.side{font-size:19px}
+.tr-rank{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.tr-rank li{display:grid;grid-template-columns:26px 48px 1fr 54px;align-items:center;gap:8px;font-size:15px}
+.tr-rank li small{grid-column:3/5;margin-top:-6px;font-size:11px;color:var(--muted)}
+.tr-rank .rk{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:700 13px var(--f-num);background:color-mix(in srgb,var(--q-double) 14%,var(--paper));color:var(--q-double)}
+.tr-rank li:first-child .rk{background:var(--q-double);color:#fff}
+.tr-rank .cs-bar{width:100%;display:block}
+.tr-rank .cs-bar i{background:var(--q-double)}
+.tr-rank .tp{font:700 17px var(--f-num);text-align:right;color:var(--q-double)}
 </style>
 
 </head>
@@ -1030,7 +1038,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1710";
+const BUILD = "2026-10-19-1715";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1659,6 +1667,7 @@ function viewStats(){
     <div class="map-sub">パー3（グリーン）</div>${greenMap(s)}
     ${s.teeN?`<div class="map-sub">パー4・5（フェアウェイ）</div>${fairwaySVG(null,false,s)}<p class="muted" style="font-size:12px;text-align:center;margin:8px 0 0">${s.teeN}回の記録・フェアウェイキープ率 <b>${fmtPct(s.fwRate)}%</b></p>`:""}</div>
   ${clubPanel(rs)}
+  ${troublePanel(rs)}
 `:""}
   ${ST==="putt"?`
   <div class="panel"><div class="sec"><em>PUTTING</em><span>パット</span></div><div class="putts">
@@ -1689,14 +1698,26 @@ function clubTable(rs, kind){
   return `<div class="map-sub">${kind==="p3"?"パーオン率（パー3）":"フェアウェイキープ率（パー4・5）"}</div>
     <table class="cs-tbl club-tbl"><tr><th></th><th>クラブ</th><th>回数</th><th>${kind==="p3"?"パーオン率":"FWキープ率"}</th><th>多いミス</th></tr>
     ${cl.map(c=>{ const x=m[c], r=rate(x), mk=Object.keys(x.miss).sort((a,b)=>x.miss[b]-x.miss[a])[0];
-      return `<tr><td class="tg">${c===best?`<span class="ctag good">得意</span>`:c===worst?`<span class="ctag bad">苦手</span>`:""}</td><td><b>${esc(c)}</b></td><td>${x.n}</td><td><span class="cs-bar"><i style="width:${r}%"></i></span>${fmtPct(r)}%</td><td>${mk?ML[mk]:(x.ob?"":"—")}${x.ob?`<span class="cob">OB・ペナ${x.ob}</span>`:""}</td></tr>`; }).join("")}
+      return `<tr><td class="tg">${c===best?`<span class="ctag good">得意</span>`:c===worst?`<span class="ctag bad">苦手</span>`:""}</td><td><b>${esc(c)}</b></td><td>${x.n}</td><td><span class="cs-bar"><i style="width:${r}%"></i></span>${fmtPct(r)}%</td><td>${mk?ML[mk]:"—"}</td></tr>`; }).join("")}
     </table>`;
+}
+/* OB・ペナが多いクラブ: そのクラブを選んだホールのうち OB か 1ペナ があった割合のワースト3 */
+function troublePanel(rs){
+  const m = {};
+  rs.forEach(r=>r.holes.forEach(h=>{ if(!h.club) return; const x=m[h.club]||(m[h.club]={n:0,t:0}); x.n++; if(h.ob||h.pen) x.t++; }));
+  const L = Object.keys(m).filter(c=>m[c].t>0).map(c=>({c, n:m[c].n, t:m[c].t, r:m[c].t/m[c].n*100}))
+    .sort((a,b)=>b.r-a.r || b.t-a.t).slice(0,3);
+  if(!Object.keys(m).length) return "";
+  return `<div class="panel"><div class="sec"><em>TROUBLE</em><span>OB・ペナ率ワースト</span></div>
+    ${L.length ? `<ol class="tr-rank">${L.map((x,i)=>`<li><span class="rk">${i+1}</span><b>${esc(x.c)}</b><span class="cs-bar"><i style="width:${Math.max(4,x.r)}%"></i></span><span class="tp">${fmtPct(x.r)}%</span><small>${x.n}回中${x.t}回</small></li>`).join("")}</ol>`
+      : `<p class="muted" style="font-size:13px;margin:0">まだOB・1ペナの記録はありません。</p>`}
+    <p class="muted cs-note">そのクラブで打ったホールのうち、OBか1ペナがあった割合。</p></div>`;
 }
 function clubPanel(rs){
   const t3 = clubTable(rs,"p3"), t4 = clubTable(rs,"p4");
   if(!t3 && !t4) return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別</span></div><p class="muted" style="font-size:13px;margin:0">記録する項目で「使用クラブ」をONにすると、クラブごとのパーオン率・フェアウェイキープ率や得意・苦手がここに出ます。</p></div>`;
   return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別</span></div>${t3}${t4}
-    <p class="muted cs-note">ティーショットに使ったクラブ別。得意・苦手は3回以上打ったクラブで比べています。OB・ペナは、そのクラブで打ったホールでOBか1ペナがあった回数。</p></div>`;
+    <p class="muted cs-note">ティーショットに使ったクラブ別。得意・苦手は3回以上打ったクラブで比べています。</p></div>`;
 }
 /* ホール別: そのコースの各ホールの平均・パー以内の割合・多いミス */
 function holePanel(rs){
