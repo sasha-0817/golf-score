@@ -972,6 +972,8 @@ input,select,textarea{font-size:max(16px,1em)}
 .az-hatch{stroke:none}
 .club-grid button small{display:block;font-size:9px;font-weight:700;opacity:.75;margin-top:1px}
 .club-grid button{flex-direction:column}
+.dots{padding:3px 3px;margin:-3px 0}
+.rc-logo img{width:36px;height:36px}
 </style>
 
 </head>
@@ -1071,7 +1073,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1940";
+const BUILD = "2026-10-19-1950";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1625,7 +1627,9 @@ let clubTimer=null;
 function lastClub(d, i){
   const past = state.rounds.filter(r=>r.player===d.player && r.courseId===d.courseId && r.id!==d.id && r.holes[i] && r.holes[i].club)
     .sort((a,b)=>(a.date+(a.createdAt||0)).localeCompare(b.date+(b.createdAt||0)));
-  return past.length ? past[past.length-1].holes[i].club : null; }
+  const mem = LS.get("sc.lastClubs", {})[[d.player,d.courseId,i].join("|")];
+  return past.length ? past[past.length-1].holes[i].club : (mem || null); }
+function rememberClubs(r){ const m=LS.get("sc.lastClubs", {}); r.holes.forEach((h,i)=>{ if(h.club) m[[r.player,r.courseId,i].join("|")]=h.club; }); LS.set("sc.lastClubs", m); }
 // クラブ選択を開くとき、まだ選んでいなければ前回のクラブを最初から選んでおく（同じなら「このまま」で済む）
 function openClubSheet(){ const d=state.draft, h=d&&d.holes[state.hole]; if(h && !h.club){ const c=lastClub(d,state.hole); if(c && myClubs().includes(c)){ h.club=c; h.clubAuto=true; saveDraft(); } } state.sheet="club"; }
 function askClub(v){ clearTimeout(clubTimer); if(!v || !fields().club) return;
@@ -2098,7 +2102,7 @@ document.addEventListener("click", async ev => {
       mark_entered();
       const r={ id:d.id, player:d.player, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:d.createdAt||Date.now(),
         holes:d.holes.map(x=>({par:x.par, strokes:x.strokes, putts:x.putts, dir:x.dir, bunker:!!x.bunker, ob:evs(x,"ob").length>0, pen:evs(x,"pen").length>0, tee:x.tee||null, club:x.club||null})) };
-      b.disabled=true;
+      b.disabled=true; rememberClubs(r);
       try{ await store.saveRound(r); state.draft=null; saveDraft(); state.tab="history"; LS.set("sc.tab","history"); state.fPlayer=r.player; state.openRound=r.id; state.result=r; render(); }
       catch(e){ b.disabled=false; writeErr(e); }
       break;
