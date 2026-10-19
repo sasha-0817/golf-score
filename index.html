@@ -984,6 +984,7 @@ input,select,textarea{font-size:max(16px,1em)}
 .cs-chips{display:grid;grid-template-columns:repeat(6,1fr);overflow:visible;padding:4px 2px 2px}
 .cs-chips button{min-width:0;padding:0;height:40px}
 .club-strip .eyebrow b{margin-left:6px}
+.az-s .az-p.side{font-size:16px}
 </style>
 
 </head>
@@ -1083,7 +1084,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-2110";
+const BUILD = "2026-10-19-2125";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1196,7 +1197,11 @@ async function connect(){
     const j = await res.json();
     if(!j.ok) throw new Error(j.error);
     state.courses = j.courses; state.serverVer = j.version || 1;
-    state.rounds = j.rounds.map(decRound);
+    // シートのプログラムが古い（v1）とクラブ・1ペナ・ティーショットが保存されないので、端末に残っている分で補う（移行までのつなぎ）
+    const localById = Object.fromEntries((LS.get("sc.rounds", [])||[]).map(r=>[r.id, r]));
+    state.rounds = j.rounds.map(decRound).map(r=>{ const lr=localById[r.id]; if(!lr || !lr.holes) return r;
+      return {...r, holes:r.holes.map((h,i)=>{ const lh=lr.holes[i]; if(!lh) return h; const x={...h};
+        ["club","tee","dir"].forEach(k=>{ if(x[k]==null && lh[k]!=null) x[k]=lh[k]; }); if(!x.pen && lh.pen) x.pen=true; return x; })}; });
     pending.forEach(r=>upsert(state.rounds, r)); pendingCourses.forEach(c=>upsert(state.courses, c));
     cache(); state.mode = "cloud";
   }catch(e){ state.mode = "offline"; pendingCourses.forEach(c=>upsert(state.courses, c)); }
@@ -1446,7 +1451,7 @@ function approachSVG(dir, tap, stat){
   const zone = (k, shape, lx, ly, label) => {
     if(stat){ const v=pctOf(k), heat=((stat.dirs[k]||0)/maxMiss)*.4, w=k===worst&&(stat.dirs[k]||0)>0;
       return `<g class="az-s">${heatShape(shape, (stat.dirs[k]||0)/maxMiss, w)}
-        ${k==="miss"||k==="short"?`<text x="${lx}" y="${ly}" class="az-t">${label}<tspan dx="8" class="az-p ${w?"worst":""}">${fmtPct(v)}%</tspan></text>`:`<text x="${lx}" y="${ly-12}" class="az-t">${label}</text><text x="${lx}" y="${ly+10}" class="az-p ${w?"worst":""} ">${fmtPct(v)}%</text>`}</g>`; }
+        ${k==="miss"||k==="short"?`<text x="${lx}" y="${ly}" class="az-t">${label}<tspan dx="8" class="az-p ${w?"worst":""}">${fmtPct(v)}%</tspan></text>`:`<text x="${lx}" y="${ly-12}" class="az-t">${label}</text><text x="${lx}" y="${ly+10}" class="az-p ${w?"worst":""} ${k==="left"||k==="right"?"side":""}">${fmtPct(v)}%</text>`}</g>`; }
     return `<g class="az ${sel(k)?"on-sel":""}" role="button" tabindex="0" data-act="dir" data-v="${k}" aria-pressed="${sel(k)}" aria-label="${label}">${shape}<text x="${lx}" y="${ly}" class="az-t">${label}</text></g>`; };
   const b = !stat && dir && Z[dir];
   const sx=170, sy=222;
@@ -1608,7 +1613,7 @@ function viewRecordDraft(d){
       <div class="hc-l"><span class="lbl">HOLE</span><div class="hno">${state.hole+1}<small>/${N}</small></div></div>
       <div class="hc-m"><div class="par"><span>PAR</span>${h.par}</div>${d.gn && h.ys && h.ys[0] && h.ys[1] ? `<div class="gsw" role="group" aria-label="グリーン">${d.gn.map((n,i)=>`<button data-act="set-g" data-g="${i}" aria-pressed="${(h.gi||0)===i}">${esc(n)}</button>`).join("")}</div><div class="yd">${h.yards} YDS</div>` : h.yards?`<div class="yd">${h.yards} YDS</div>`:""}
         <div class="badges"><span class="badge ${hio?"hio":"b-"+TONE(diff)} ${/^s[vt]/.test(state.tap||"")?"pop":""}"><i></i>${hio?"HOLE IN ONE":TERM(diff)}</span>${bestPace&&fields().pace?`<span class="pace2">BEST PACE</span>`:""}</div></div>
-      <div class="live"><div><span>TOTAL</span><b>${totLabel}</b></div>${F.putts?`<div><span>PUTTS</span><b>${tot.putts||0}</b></div>`:""}</div>
+      <div class="live"><div><span>TOTAL</span><b>${totLabel}</b></div>${F.putts?`<div><span>PUTTS</span><b>${done.length?tot.putts:"—"}</b></div>`:""}</div>
       ${advice?`<div class="advice">${advice}</div>`:""}
     </div>
     <div class="rec-card rc2 ${slide}" id="rec-card">
@@ -1737,7 +1742,7 @@ function viewStats(){
     <div class="who">${esc(state.fPlayer).toUpperCase()} ・ AVG SCORE</div>
     <div class="main"><div class="big">${fx(s.avgScore)}<span class="tp">(${s.avgDiff==null?"—":(s.avgDiff>0?"+":s.avgDiff<0?"":"±")+s.avgDiff.toFixed(1)})</span></div>
     </div>
-    <div class="row"><div><span>BEST</span><b>${toPar(s.best)}</b></div><div><span>前回</span><b>${toPar(roundTotals(rs[rs.length-1]).diff)}</b></div><div><span>ROUNDS</span><b>${s.rounds}</b></div>${s.dist.hio?`<div><span>HOLE IN ONE</span><b>${s.dist.hio}</b></div>`:`<div><span>HOLES</span><b>${s.holes}</b></div>`}</div>
+    <div class="row"><div><span>BEST</span><b>${toPar(s.best)}</b></div><div><span>前回</span><b>${toPar(roundTotals(rs[rs.length-1]).diff)}</b></div><div><span>ROUNDS</span><b>${s.rounds}</b></div>${s.dist.hio?`<div><span>HIO</span><b>${s.dist.hio}</b></div>`:`<div><span>HOLES</span><b>${s.holes}</b></div>`}</div>
   </div>
   <div class="panel"><div class="sec"><em>RECENT</em><span>直近3ラウンド</span></div><div class="recent">${rs.slice(-3).reverse().map(r=>{ const t=roundTotals(r); const [y,m,d]=r.date.split("-");
       return `<div class="rr"><div class="rd"><small>${+m}/${+d}</small><b>${t.score}<i>(${toPar(t.diff)})</i></b></div><div class="rh">${r.holes.map(h=>`<span class="mk4 m-${TONEH(h)}" title="${h.strokes}"></span>`).join("")}</div></div>`; }).join("")}</div>
@@ -1852,7 +1857,7 @@ function donutSVG(segs, total, centerVal, centerLbl, title){
     else { const [x1,y1]=P(s0,R),[x2,y2]=P(s1,R),[x3,y3]=P(s1,r),[x4,y4]=P(s0,r);
       arcs.push(`<path d="M${x1.toFixed(2)} ${y1.toFixed(2)} A${R} ${R} 0 ${big} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} L${x3.toFixed(2)} ${y3.toFixed(2)} A${r} ${r} 0 ${big} 0 ${x4.toFixed(2)} ${y4.toFixed(2)}Z" fill="${col}"/>`); }
     const m=(a0+a1)/2, [ex,ey]=P(m,R+12), [sx,sy]=P(m,R+2);
-    labels.push({ x, m, sx, sy, ex, ey, y:ey, right: Math.cos(m)>=0, pct: pct(x.n,total) });
+    labels.push({ x, m, sx, sy, ex, ey, y:ey, right: Math.cos(m)>=0, pct: pct(x.n,t) }); // 割合は描いた部分の合計で（パット未記録のホールが混ざってもずれない）
     a0=a1; });
   // 同じ側のラベルが重ならないように上下にずらす
   const GAP=32, TOP=18, BOT=H-14;
