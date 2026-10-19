@@ -940,6 +940,14 @@ input,select,textarea{font-size:max(16px,1em)}
 .tr-rank .cs-bar i{background:var(--q-double)}
 .tr-rank .tp{font:700 17px var(--f-num);text-align:right;color:var(--q-double)}
 .gauge .nw{white-space:nowrap}
+/* 記録画面の絵の文字を大きく */
+.az .az-t{font-size:16px}
+.az .on-t,.az-green .on-t{font-size:17px}
+.fairway .az-green .on-t{font-size:15px}
+/* OB・1ペナ: 回数とクラブを中に表示 */
+.trouble button.tbm{flex-direction:column;gap:0;line-height:1.1}
+.trouble button.tbm small{font-size:11px;font-weight:700;opacity:.92;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trouble button.tbm i{font-style:normal;font-size:12px;margin-left:3px}
 </style>
 
 </head>
@@ -1039,7 +1047,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1720";
+const BUILD = "2026-10-19-1740";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1107,19 +1115,30 @@ const store = {
   async saveRound(r){
     upsert(state.rounds,r); cache();
     if(hasBackend){
-      try{ await api("saveRound",{round:r}); }
+      try{ await api("saveRound",{round:encRound(r)}); }
       catch(e){ pending = pending.filter(p=>p.id!==r.id).concat([r]); LS.set("sc.pending",pending); toast("電波が弱いので端末に保存しました。あとで自動で送ります"); }
     }
     render();
   },
   async delRound(id){ if(hasBackend) await api("deleteRound",{id}); state.rounds=state.rounds.filter(r=>r.id!==id); pending=pending.filter(p=>p.id!==id); LS.set("sc.pending",pending); cache(); render(); }
 };
+/* OB・1ペナは1ホールに何回でも記録でき、1回ごとに使ったクラブを持つ（h.obC / h.penC、クラブ未選択は null）。
+   古い記録（ob:true だけ）は1回として扱う。シートの列を増やさないよう、送るときは club 列に「7I|OB:5I,7I|P:9I」の形でまとめる */
+const evs = (h,k) => Array.isArray(h[k+"C"]) ? h[k+"C"] : (h[k] ? [null] : []);
+function encClub(h){ let s=h.club||""; const o=evs(h,"ob"), p=evs(h,"pen");
+  if(Array.isArray(h.obC)&&o.length) s+="|OB:"+o.map(c=>c||"-").join(","); if(Array.isArray(h.penC)&&p.length) s+="|P:"+p.map(c=>c||"-").join(","); return s||null; }
+function decHole(h){ if(typeof h.club!=="string" || h.club.indexOf("|")<0) return h;
+  const [c,...rest]=h.club.split("|"); const x={...h, club:c||null};
+  rest.forEach(t=>{ const [k,v]=t.split(":"); const arr=(v||"").split(",").filter(z=>z!=="").map(z=>z==="-"?null:z); if(k==="OB") x.obC=arr; if(k==="P") x.penC=arr; });
+  return x; }
+const decRound = r => ({...r, holes:(r.holes||[]).map(decHole)});
+const encRound = r => ({...r, holes:r.holes.map(h=>({...h, club:encClub(h)}))});
 function upsert(arr, item){ const i=arr.findIndex(x=>x.id===item.id); if(i>=0) arr[i]=item; else arr.push(item); }
 
 async function flushPending(){
   if(!hasBackend || !pending.length) return;
   for(const r of pending.slice()){
-    try{ await api("saveRound",{round:r}); pending=pending.filter(p=>p.id!==r.id); LS.set("sc.pending",pending); }
+    try{ await api("saveRound",{round:encRound(r)}); pending=pending.filter(p=>p.id!==r.id); LS.set("sc.pending",pending); }
     catch(e){ return; }
   }
   toast("未送信だったラウンドを送りました");
@@ -1135,7 +1154,7 @@ async function connect(){
     const j = await res.json();
     if(!j.ok) throw new Error(j.error);
     state.courses = j.courses; state.serverVer = j.version || 1;
-    state.rounds = j.rounds;
+    state.rounds = j.rounds.map(decRound);
     pending.forEach(r=>upsert(state.rounds, r));
     cache(); state.mode = "cloud";
   }catch(e){ state.mode = "offline"; }
@@ -1423,7 +1442,7 @@ function approachSVG(dir, tap, stat){
 }
 /* ティーショット: 上から見たホール。手前がティー、奥にグリーン。光は左上から（影は右下） */
 function fairwaySVG(tee, tap, stat){
-  const Z = { fw:[186,96], rl:[98,150], rr:[244,150], miss:[150,200] };
+  const Z = { fw:[186,96], rl:[78,150], rr:[262,150], miss:[150,200] };
   const id = stat?"S":"";
   const sel = k => !stat && tee===k;
   const maxMiss = stat ? Math.max(1, ...["rl","rr","miss"].map(k=>stat.teeC[k]||0)) : 1;
@@ -1456,12 +1475,12 @@ function fairwaySVG(tee, tap, stat){
       <filter id="fwShadow${id}" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="3" dy="3" stdDeviation="3" flood-color="#0B3A1E" flood-opacity=".28"/></filter>
     </defs>
     <rect class="az-rough" x="0" y="0" width="340" height="222" rx="18"/>
-    ${zone("rl", `<path class="az-bg" d="M40 72 Q40 58 54 58 H114 Q126 58 126 70 V166 Q126 178 114 178 H54 Q40 178 40 164Z"/>`, 83, stat?122:118, "左")}
-    ${zone("rr", `<path class="az-bg" d="M300 72 Q300 58 286 58 H226 Q214 58 214 70 V166 Q214 178 226 178 H286 Q300 178 300 164Z"/>`, 257, stat?122:118, "右")}
-    ${zone("fw", `<g transform="translate(171 0) scale(1.22 1) translate(-171 0)"><path d="${fwPath}" fill="#86D9A2" stroke="#86D9A2" stroke-width="10" stroke-linejoin="round"/>
+    ${zone("rl", `<path class="az-bg" d="M34 72 Q34 58 48 58 H106 Q118 58 118 70 V166 Q118 178 106 178 H48 Q34 178 34 164Z"/>`, 76, stat?122:118, "左")}
+    ${zone("rr", `<path class="az-bg" d="M306 72 Q306 58 292 58 H234 Q222 58 222 70 V166 Q222 178 234 178 H292 Q306 178 306 164Z"/>`, 264, stat?122:118, "右")}
+    ${zone("fw", `<g transform="translate(171 0) scale(1.4 1) translate(-171 0)"><path d="${fwPath}" fill="#86D9A2" stroke="#86D9A2" stroke-width="10" stroke-linejoin="round"/>
       <path d="${fwPath}" fill="url(#gFw${id})" filter="url(#fwShadow${id})"/><path d="${fwPath}" fill="url(#fwMow${id})"/><path d="${fwPath}" class="g-ring"/></g>
       <g pointer-events="none">
-        <path transform="translate(7 0)" d="M204 132 C210 135 211 144 207 150 C205 153 201 151 202 146 C203 141 199 137 201 133 C202 131 203 131 204 132Z" class="sand"/>
+        <path transform="translate(13 0)" d="M204 132 C210 135 211 144 207 150 C205 153 201 151 202 146 C203 141 199 137 201 133 C202 131 203 131 204 132Z" class="sand"/>
         <ellipse cx="176" cy="31" rx="33" ry="17" transform="rotate(-6 176 31)" fill="#86D9A2"/>
         <ellipse cx="176" cy="31" rx="28" ry="13.5" transform="rotate(-6 176 31)" fill="url(#gGr${id})" filter="url(#fwShadow${id})"/>
         <path d="M140 30 C136 36 140 44 147 44 C152 44 152 38 148 35 C146 33 144 28 140 30Z" class="sand"/>
@@ -1470,7 +1489,7 @@ function fairwaySVG(tee, tap, stat){
         <g filter="url(#soft${id})"><path d="M182 30 L196 35" stroke="rgba(0,0,0,.24)" stroke-width="1.8" stroke-linecap="round"/><path d="M196 35 L205 34 L190 31Z" fill="rgba(0,0,0,.2)"/></g>
         <ellipse cx="182" cy="30" rx="2.6" ry="1.2" fill="rgba(0,0,0,.45)"/>
         <line x1="182" y1="30" x2="182" y2="9" stroke="#fff" stroke-width="1.6"/><path d="M183 9.5 L196 13.5 L183 17.5Z" fill="#E11D2E"/></g>`, 170, stat?122:124, "フェアウェイ", "az-green")}
-    ${zone("miss", `<path class="az-bg" d="M40 184 H300 V202 Q300 216 286 216 H54 Q40 216 40 202Z"/>`, 170, 200, "ミスショット")}
+    ${zone("miss", `<path class="az-bg" d="M34 184 H306 V202 Q306 216 292 216 H48 Q34 216 34 202Z"/>`, 170, 200, "ミスショット")}
     ${tracer}${ball}
   </svg>`;
 }
@@ -1517,9 +1536,12 @@ function viewRecordDraft(d){
   const isLong = h.par>=4;
   const _ring = `<div class="ring" aria-label="${done.length}/${N}ホール入力済み"><svg viewBox="0 0 46 46"><defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0E9F62"/><stop offset="1" stop-color="#13A9C2"/></linearGradient></defs><circle class="trk" cx="23" cy="23" r="19"/><circle class="val" cx="23" cy="23" r="19" stroke-dasharray="${(2*Math.PI*19*done.length/N).toFixed(1)} 200"/></svg><b>${done.length}<small>/${N}</small></b></div>`;
   const chip = (act,v,label,on) => `<button class="chip2" data-act="${act}" data-v="${v}" aria-pressed="${on}">${label}</button>`;
+  // OB・1ペナ: 押すたびに1回追加。中に使ったクラブ（5I・7I）を出す。2回目以降はメニュー（もう1回／取り消す）
+  const tbBtn = (k,cls,label) => { const e=evs(h,k), cl=e.filter(Boolean);
+    return `<button class="${cls} tbm" data-act="tb" data-k="${k}" aria-pressed="${e.length>0}">${label}${e.length>1&&!cl.length?`<i>×${e.length}</i>`:""}${cl.length?`<small>${cl.map(esc).join("・")}${e.length>cl.length?"・?":""}</small>`:""}</button>`; };
   const troubles = [
-    F.ob ? `<button class="ob" data-act="tog" data-k="ob" aria-pressed="${!!h.ob}">OB</button>` : "",
-    F.pen ? `<button class="pn" data-act="tog" data-k="pen" aria-pressed="${!!h.pen}">1ペナ</button>` : "",
+    F.ob ? tbBtn("ob","ob","OB") : "",
+    F.pen ? tbBtn("pen","pn","1ペナ") : "",
     F.bunker ? `<button class="bk" data-act="tog" data-k="bunker" aria-pressed="${!!h.bunker}">バンカー</button>` : "",
   ].filter(Boolean);
   return `<div class="rec rec2">
@@ -1556,9 +1578,13 @@ function viewRecordDraft(d){
     </div>
     ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p><button data-act="pause">中断してホームへ（あとで続きから）</button><button class="danger" data-act="discard">${d.editing?"編集をやめる（変更は保存されません）":"記録を破棄する"}</button><button data-act="cancel-confirm">入力に戻る</button></div></div>`:""}
     ${state.sheet==="fields"?fieldsSheet():""}
-    ${state.sheet==="club"?`<div class="sheet-back club-back" data-act="close-sheet"><div class="sheet club-sheet" data-stop="1"><p>クラブ選択<small>ティーショット・${h.yards?h.yards+"y":"PAR "+h.par}</small></p>
-      <div class="club-grid">${myClubs().map(c=>`<button data-act="club" data-v="${esc(c)}" aria-pressed="${h.club===c}">${esc(c)}</button>`).join("")}</div>
-      <div class="club-foot"><button data-act="open-clubs">クラブの設定</button><button data-act="close-sheet">${h.club?"このまま":"選ばない"}</button></div></div></div>`:""}
+    ${state.sheet==="club"?`<div class="sheet-back club-back" data-act="close-sheet"><div class="sheet club-sheet" data-stop="1">${(()=>{ const ev=state.clubFor?evs(h,state.clubFor):null, cur=ev?ev[ev.length-1]:h.club;
+      return `<p>${state.clubFor==="ob"?"OBしたクラブ":state.clubFor==="pen"?"1ペナのクラブ":"クラブ選択"}<small>${state.clubFor?(ev.length>1?ev.length+"回目":""):"ティーショット・"+(h.yards?h.yards+"y":"PAR "+h.par)}</small></p>
+      <div class="club-grid">${myClubs().map(c=>`<button data-act="club" data-v="${esc(c)}" aria-pressed="${cur===c}">${esc(c)}</button>`).join("")}</div>
+      <div class="club-foot"><button data-act="open-clubs">クラブの設定</button><button data-act="close-sheet">${cur?"このまま":"選ばない"}</button></div>`; })()}</div></div>`:""}
+    ${state.sheet==="tb"?(()=>{ const k=state.tbK, e=evs(h,k), nm=k==="ob"?"OB":"1ペナ";
+      return `<div class="sheet-back" data-act="close-sheet"><div class="sheet" data-stop="1"><p>${nm} ${e.length}回${e.some(Boolean)?`（${e.map(c=>c?esc(c):"?").join("・")}）`:""}</p>
+      <button data-act="tb-add" data-k="${k}">もう1回${nm}</button><button class="danger" data-act="tb-undo" data-k="${k}">最後の${nm}を取り消す</button><button data-act="close-sheet">閉じる</button></div></div>`; })():""}
     ${state.sheet==="clubs"?clubsSheet():""}
   </div>`;
 }
@@ -1705,7 +1731,11 @@ function clubTable(rs, kind){
 /* OB・ペナが多いクラブ: そのクラブを選んだホールのうち OB か 1ペナ があった割合のワースト3 */
 function troublePanel(rs){
   const m = {};
-  rs.forEach(r=>r.holes.forEach(h=>{ if(!h.club) return; const x=m[h.club]||(m[h.club]={n:0,t:0}); x.n++; if(h.ob||h.pen) x.t++; }));
+  const get = c => m[c]||(m[c]={n:0,t:0});
+  rs.forEach(r=>r.holes.forEach(h=>{ const used=new Set(); if(h.club){ get(h.club).n++; used.add(h.club); }
+    // 古い記録（OBの回ごとのクラブなし）はティーショットのクラブに付ける
+    const ev = [...evs(h,"ob"), ...evs(h,"pen")].map(c=>c || (!Array.isArray(h.obC)&&!Array.isArray(h.penC) ? h.club : null)).filter(Boolean);
+    ev.forEach(c=>{ const x=get(c); x.t++; if(!used.has(c)){ x.n++; used.add(c); } }); }));
   const L = Object.keys(m).filter(c=>m[c].t>0).map(c=>({c, n:m[c].n, t:m[c].t, r:m[c].t/m[c].n*100}))
     .sort((a,b)=>b.r-a.r || b.t-a.t).slice(0,3);
   if(!Object.keys(m).length) return "";
@@ -1887,7 +1917,7 @@ function viewHistory(){
       <tr><th>PAR</th>${ch.map(x=>`<td>${x.h.par}</td>`).join("")}<td>${sum(ch,x=>x.h.par)}</td></tr>
       <tr><th>打数</th>${ch.map(x=>`<td>${mark(x.h)}</td>`).join("")}<td><b>${sum(ch,x=>x.h.strokes)}</b></td></tr>
       <tr><th>パット</th>${ch.map(x=>`<td>${x.h.putts}</td>`).join("")}<td>${sum(ch,x=>x.h.putts)}</td></tr>
-      ${hasTr?`<tr class="tr"><th>OB・B</th>${ch.map(x=>`<td>${[x.h.ob?"OB":"",x.h.pen?"1P":"",x.h.bunker?"B":""].filter(Boolean).join("<br>")||""}</td>`).join("")}<td></td></tr>`:""}
+      ${hasTr?`<tr class="tr"><th>OB・B</th>${ch.map(x=>`<td>${[evs(x.h,"ob").length?"OB"+(evs(x.h,"ob").length>1?"×"+evs(x.h,"ob").length:""):"",evs(x.h,"pen").length?"1P"+(evs(x.h,"pen").length>1?"×"+evs(x.h,"pen").length:""):"",x.h.bunker?"B":""].filter(Boolean).join("<br>")||""}</td>`).join("")}<td></td></tr>`:""}
     </table></div>`).join("");
     const conf = state.confirm==="del:"+r.id;
     const tcol = t.diff/r.holes.length<=0 ? "var(--turf)" : t.diff/r.holes.length<=1 ? "var(--muted)" : "var(--q-triple)";
@@ -2025,15 +2055,13 @@ document.addEventListener("click", async ev => {
     case "pt": h.putts=Math.max(0,Math.min(9,h.putts+ +b.dataset.d)); if(h.strokes<h.putts+1) h.strokes=Math.min(15,h.putts+1); h.entered=true; state.tap="pt"; saveDraft(); render(); break;
     case "dir": h.dir = h.dir===b.dataset.v ? null : b.dataset.v; h.entered=true; state.tap="dir"; saveDraft(); render(); askClub(h.dir); break;
     case "tog": h[b.dataset.k]=!h[b.dataset.k]; h.entered=true; saveDraft();
-      // OB・1ペナを付けたら、どのクラブでやらかしたか分かるようにクラブ選択を出す（選び直しもここで）
-      if((b.dataset.k==="ob"||b.dataset.k==="pen") && h[b.dataset.k] && fields().club) state.sheet="club";
       render(); break;
     case "prev": mark_entered(); state.slide="r"; state.hole--; saveDraft(); render(); break;
     case "next": mark_entered(); state.slide="l"; state.hole++; saveDraft(); render(); window.scrollTo({top:0}); break;
     case "finish": {
       mark_entered();
       const r={ id:d.id, player:d.player, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:d.createdAt||Date.now(),
-        holes:d.holes.map(x=>({par:x.par, strokes:x.strokes, putts:x.putts, dir:x.dir, bunker:!!x.bunker, ob:!!x.ob, pen:!!x.pen, tee:x.tee||null, club:x.club||null})) };
+        holes:d.holes.map(x=>({par:x.par, strokes:x.strokes, putts:x.putts, dir:x.dir, bunker:!!x.bunker, ob:evs(x,"ob").length>0, pen:evs(x,"pen").length>0, obC:evs(x,"ob"), penC:evs(x,"pen"), tee:x.tee||null, club:x.club||null})) };
       b.disabled=true;
       try{ await store.saveRound(r); state.draft=null; saveDraft(); state.tab="history"; LS.set("sc.tab","history"); state.fPlayer=r.player; state.openRound=r.id; state.result=r; render(); }
       catch(e){ b.disabled=false; writeErr(e); }
@@ -2052,9 +2080,17 @@ document.addEventListener("click", async ev => {
       try{ await store.saveCourse(c); toast(`${pc.name}を追加しました`); }catch(e){ writeErr(e); } break;
     }
     case "open-fields": state.sheet="fields"; render(); break;
-    case "close-sheet": state.sheet=null; render(); break;
+    case "close-sheet": state.sheet=null; state.clubFor=null; render(); break;
     case "tee": h.tee = h.tee===b.dataset.v ? null : b.dataset.v; h.entered=true; state.tap="tee"; saveDraft(); render(); askClub(h.tee); break;
-    case "club": h.club = h.club===b.dataset.v ? null : b.dataset.v; h.entered=true; state.sheet=null; saveDraft(); render(); break;
+    case "club": {
+      if(state.clubFor){ const k=state.clubFor, e=evs(h,k).slice(); e[e.length-1]=b.dataset.v; h[k+"C"]=e; h[k]=true; state.clubFor=null; }
+      else h.club = h.club===b.dataset.v ? null : b.dataset.v;
+      h.entered=true; state.sheet=null; saveDraft(); render(); break; }
+    case "tb": { const k=b.dataset.k; if(evs(h,k).length){ state.tbK=k; state.sheet="tb"; render(); break; } }
+    // fallthrough: 1回目はすぐ追加
+    case "tb-add": { const k=b.dataset.k; h[k+"C"]=evs(h,k).concat([null]); h[k]=true; h.entered=true; saveDraft();
+      if(fields().club){ state.clubFor=k; state.sheet="club"; } else state.sheet=null; render(); break; }
+    case "tb-undo": { const k=b.dataset.k; const e=evs(h,k).slice(0,-1); h[k+"C"]=e; h[k]=e.length>0; saveDraft(); state.sheet=null; render(); break; }
     case "open-club": state.sheet="club"; render(); break;
     case "set-g": { const ni=+b.dataset.g; if((h.gi||0)===ni) break; d.holes.forEach(x=>{ if(x.ys && x.ys[ni]){ x.gi=ni; x.yards=x.ys[ni]; } }); saveDraft(); render(); toast(`全ホールを${d.gn[ni]}のヤードにしました`); break; }
     case "swap-g": { const ni=1-(h.gi||0); d.holes.forEach((x,i)=>{ if(i>=state.hole && x.ys && x.ys[ni]){ x.gi=ni; x.yards=x.ys[ni]; } }); saveDraft(); render(); toast(`${d.gn[ni]}にしました（このホールから先）`); break; }
