@@ -218,6 +218,7 @@ select.ph{color:var(--muted)}
 .stat-tabs button{height:50px;border-radius:14px;border:1px solid var(--line);background:var(--paper);color:var(--muted);font:700 14px var(--f-body);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer}
 .stat-tabs button em{font-style:normal;font:700 9px var(--f-num);letter-spacing:.16em;opacity:.8}
 .stat-tabs button[aria-selected="true"]{background:linear-gradient(135deg,#1E3A8A,#2F7DE1);color:#fff;border-color:transparent;box-shadow:0 8px 18px -10px #2F7DE1}
+
 </style>
 <title>ショートコース スコアカード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -834,6 +835,14 @@ table.sc tr.hn td{background:var(--soft);color:var(--muted);font-size:13px}
 .demo-band{background:var(--flag);color:#1b1404;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 @media (max-width:560px){.grid2{grid-template-columns:1fr}.holehead .no{font-size:38px}.stepper .val{font-size:42px}.stepper button{width:44px;height:44px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* v27 */
+.hero-stat{padding:14px 18px}
+.hero-stat .main{margin-top:4px}
+.hero-stat .big{font-size:48px;line-height:1}
+.hero-stat .big .tp{font-size:22px;margin-left:8px;opacity:.85;font-weight:700}
+.hero-stat .row{margin-top:10px;padding-top:9px}
+.hero-stat .row b{font-size:20px}
+.stat-tabs{position:static;margin:0;padding:0;background:none}
 </style>
 
 </head>
@@ -931,7 +940,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1600";
+const BUILD = "2026-10-19-1610";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1343,7 +1352,7 @@ function fairwaySVG(tee, tap, stat){
         <g filter="url(#soft${id})"><path d="M182 30 L196 35" stroke="rgba(0,0,0,.24)" stroke-width="1.8" stroke-linecap="round"/><path d="M196 35 L205 34 L190 31Z" fill="rgba(0,0,0,.2)"/></g>
         <ellipse cx="182" cy="30" rx="2.6" ry="1.2" fill="rgba(0,0,0,.45)"/>
         <line x1="182" y1="30" x2="182" y2="9" stroke="#fff" stroke-width="1.6"/><path d="M183 9.5 L196 13.5 L183 17.5Z" fill="#E11D2E"/></g>`, 170, stat?122:124, "フェアウェイ", "az-green")}
-    ${zone("miss", `<path class="az-bg" d="M6 184 H334 V202 Q334 216 320 216 H20 Q6 216 6 202Z"/>`, 170, 200, "ミスショット")}
+    ${zone("miss", `<path class="az-bg" d="M40 184 H300 V202 Q300 216 286 216 H54 Q40 216 40 202Z"/>`, 170, 200, "ミスショット")}
     ${tracer}${ball}
   </svg>`;
 }
@@ -1499,7 +1508,7 @@ function viewStats(){
   ${ST==="score"?`
   <div class="hero-stat">
     <div class="who">${esc(state.fPlayer).toUpperCase()} ・ AVG SCORE</div>
-    <div class="main"><div><div class="big">${fx(s.avgScore)}</div><div class="topar">${s.avgDiff==null?"—":(s.avgDiff>0?"+":"")+s.avgDiff.toFixed(1)}</div></div>
+    <div class="main"><div class="big">${fx(s.avgScore)}<span class="tp">(${s.avgDiff==null?"—":(s.avgDiff>0?"+":s.avgDiff<0?"":"±")+s.avgDiff.toFixed(1)})</span></div>
     </div>
     <div class="row"><div><span>BEST</span><b>${toPar(s.best)}</b></div><div><span>前回</span><b>${toPar(roundTotals(rs[rs.length-1]).diff)}</b></div><div><span>ROUNDS</span><b>${s.rounds}</b></div>${s.dist.hio?`<div><span>HOLE IN ONE</span><b>${s.dist.hio}</b></div>`:`<div><span>HOLES</span><b>${s.holes}</b></div>`}</div>
   </div>
@@ -1609,7 +1618,7 @@ after.stats = () => {
   const zoneFill = zf => c => zoneColor(zf(c.dataIndex));
   const tip = { filter: it => it.dataIndex < rs.length, displayColors:false, callbacks:{ title: items => { const r=rs[items[0].dataIndex]; if(!r) return ""; const [y,m,d]=r.date.split("-"); return `${+m}/${+d}  ${r.courseName}（${r.holes.length}H）`; }, label: () => [] } };
   // 2つの推移グラフを連動: タップした棒以外を薄くする
-  const SCORE_C="#2F7DE1", PUTT_C="#22A06B";
+  const SCORE_C="#22A06B", PUTT_C="#22A06B";
   const fade = (col, i) => state.trendSel==null || state.trendSel===i ? col : col+"38";
   let scoreChart, puttChart;
   const paintTrend = () => { [[scoreChart,SCORE_C],[puttChart,PUTT_C]].forEach(([ch,col])=>{ if(!ch) return; ch.data.datasets[0].backgroundColor = labels.map((_,i)=>fade(col,i)); ch.update("none"); }); };
