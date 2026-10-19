@@ -939,6 +939,7 @@ input,select,textarea{font-size:max(16px,1em)}
 .tr-rank .cs-bar{width:100%;display:block}
 .tr-rank .cs-bar i{background:var(--q-double)}
 .tr-rank .tp{font:700 17px var(--f-num);text-align:right;color:var(--q-double)}
+.gauge .nw{white-space:nowrap}
 </style>
 
 </head>
@@ -1038,7 +1039,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1715";
+const BUILD = "2026-10-19-1720";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1657,8 +1658,8 @@ function viewStats(){
   <div class="panel"><div class="sec"><em>SHOTS</em><span>ショット</span></div><div class="gauges">
     ${gauge("パーオン率", s.gir, `${s.holes}H中 ${s.girN}回`, "--c-gir")}
     ${gauge("ボギーオン率", s.bon, `${s.holes}H中 ${s.bonN}回`, "--c-bon")}
-    ${gauge("リカバリー率", s.scramble, `パーオンを逃した${s.scrambleN}Hのうちパー以内`, "--accent2")}
-    ${gauge("サンドセーブ率", s.sandSave, `バンカー${s.bunkerN}Hのうちパー以内`, "--c5")}
+    ${gauge("リカバリー率", s.scramble, `<span class="nw">パーオン逃し${s.scrambleN}Hのうち</span><br><span class="nw">パー以内</span>`, "--accent2")}
+    ${gauge("サンドセーブ率", s.sandSave, `<span class="nw">バンカー${s.bunkerN}Hのうち</span><br><span class="nw">パー以内</span>`, "--c5")}
     ${gauge("バンカー率", s.bunkerRate, `${s.holes}H中 ${s.bunkerN}回`, "--warn")}
     ${gauge("OB・ペナ率", pct(s.troubleN,s.holes), `${s.holes}H中 ${s.troubleN}回`, "--under")}
   </div></div>
@@ -1710,8 +1711,7 @@ function troublePanel(rs){
   if(!Object.keys(m).length) return "";
   return `<div class="panel"><div class="sec"><em>TROUBLE</em><span>OB・ペナ率ワースト</span></div>
     ${L.length ? `<ol class="tr-rank">${L.map((x,i)=>`<li><span class="rk">${i+1}</span><b>${esc(x.c)}</b><span class="cs-bar"><i style="width:${Math.max(4,x.r)}%"></i></span><span class="tp">${fmtPct(x.r)}%</span><small>${x.n}回中${x.t}回</small></li>`).join("")}</ol>`
-      : `<p class="muted" style="font-size:13px;margin:0">まだOB・1ペナの記録はありません。</p>`}
-    <p class="muted cs-note">そのクラブで打ったホールのうち、OBか1ペナがあった割合。</p></div>`;
+      : `<p class="muted" style="font-size:13px;margin:0">まだOB・1ペナの記録はありません。</p>`}</div>`;
 }
 function clubPanel(rs){
   const t3 = clubTable(rs,"p3"), t4 = clubTable(rs,"p4");
