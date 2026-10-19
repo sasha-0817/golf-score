@@ -1083,7 +1083,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-2010";
+const BUILD = "2026-10-19-2020";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1206,6 +1206,8 @@ let toastT;
 function toast(msg){ const t=$("#toast"); t.textContent=msg; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,2600); }
 const sum = (a,f=x=>x) => a.reduce((s,x)=>s+f(x),0);
 const pct = (n,d) => d ? Math.round(n/d*1000)/10 : null;
+/* パットを記録していないラウンド（パットOFFで保存 → シートでは空欄＝全ホール0）は、パーオン・パット系の計算から外す */
+const puttsOn = r => r.holes.some(h=>h.putts>0);
 const fmtPct = v => v==null ? "—" : (v%1===0? v.toFixed(0): v.toFixed(1));
 const toPar = n => n===0 ? "±0" : (n>0? "+"+n : String(n));
 function roundTotals(r){ const s=sum(r.holes,h=>h.strokes), p=sum(r.holes,h=>h.par), pt=sum(r.holes,h=>h.putts); return {score:s, par:p, putts:pt, diff:s-p}; }
@@ -1218,9 +1220,10 @@ function byDate(a,b){ return (a.date||"").localeCompare(b.date||"") || (a.create
 function computeStats(rs){
   const holes = rs.flatMap(r=>r.holes.filter(h=>h.strokes>0));
   const n = holes.length;
-  const gir = holes.filter(h=>h.strokes-h.putts <= h.par-2);
-  const bon = holes.filter(h=>h.strokes-h.putts <= h.par-1);
-  const missGir = holes.filter(h=>h.strokes-h.putts > h.par-2);
+  const ph = rs.filter(puttsOn).flatMap(r=>r.holes.filter(h=>h.strokes>0)), pn = ph.length; // パットを記録したホールだけ
+  const gir = ph.filter(h=>h.strokes-h.putts <= h.par-2);
+  const bon = ph.filter(h=>h.strokes-h.putts <= h.par-1);
+  const missGir = ph.filter(h=>h.strokes-h.putts > h.par-2);
   const scramble = missGir.filter(h=>h.strokes<=h.par);
   const bunker = holes.filter(h=>h.bunker);
   const sandSave = bunker.filter(h=>h.strokes<=h.par);
@@ -1228,7 +1231,7 @@ function computeStats(rs){
   const pen = holes.filter(h=>h.pen);
   const teeH = holes.filter(h=>h.par>=4 && h.tee); const teeC = {fw:0,rl:0,rr:0,miss:0}; teeH.forEach(h=>{ if(teeC[h.tee]!=null) teeC[h.tee]++; });
   const putt = {0:0,1:0,2:0,3:0};
-  holes.forEach(h=>{ putt[Math.min(h.putts,3)]++; });
+  ph.forEach(h=>{ putt[Math.min(h.putts,3)]++; });
   const dirs = {on:0,left:0,right:0,long:0,short:0,miss:0}; let dirN=0;
   holes.forEach(h=>{ if(h.dir && dirs[h.dir]!=null){ dirs[h.dir]++; dirN++; } });
   const dist = {hio:0,eagle:0,birdie:0,par:0,bogey:0,double:0,triple:0};
@@ -1241,12 +1244,12 @@ function computeStats(rs){
     avgScore: tots.length? sum(tots,t=>t.score)/tots.length : null,
     avgDiff: tots.length? sum(tots,t=>t.diff)/tots.length : null,
     best: tots.length? Math.min(...tots.map(t=>t.diff)) : null,
-    avgPuttsRound: tots.length? sum(tots,t=>t.putts)/tots.length : null,
-    puttsPerHole: n? sum(holes,h=>h.putts)/n : null,
+    avgPuttsRound: (()=>{ const pr=rs.filter(puttsOn); return pr.length? sum(pr.map(roundTotals),t=>t.putts)/pr.length : null; })(),
+    puttsPerHole: pn? sum(ph,h=>h.putts)/pn : null, puttHoles: pn,
     puttsPerGir: gir.length? sum(gir,h=>h.putts)/gir.length : null,
     puttsPerMiss: missGir.length? sum(missGir,h=>h.putts)/missGir.length : null,
-    gir: pct(gir.length,n), bon: pct(bon.length,n), girN: gir.length, bonN: bon.length,
-    one: pct(putt[1],n), three: pct(putt[3],n),
+    gir: pct(gir.length,pn), bon: pct(bon.length,pn), girN: gir.length, bonN: bon.length,
+    one: pct(putt[1],pn), three: pct(putt[3],pn),
     scramble: pct(scramble.length, missGir.length), scrambleN: missGir.length,
     bunkerRate: pct(bunker.length,n), sandSave: pct(sandSave.length,bunker.length), bunkerN: bunker.length,
     obRate: pct(ob.length,n), obN: ob.length,
@@ -1314,9 +1317,9 @@ function resultOverlay(r){
         <div><span>PAR</span><b>${n("par")}</b></div>
         <div><span>BOGEY</span><b>${n("bogey")}</b></div>
         <div><span>DOUBLE+</span><b>${n("double")+n("triple")}</b></div>
-        <div><span>PUTTS</span><b>${t.putts}</b></div>
-        <div><span>パーオン</span><b>${fmtPct(s.gir)}<small style="font-size:12px">%</small></b></div>
-        <div><span>3パット</span><b>${s.putt[3]}</b></div>
+        <div><span>PUTTS</span><b>${puttsOn(r)?t.putts:"—"}</b></div>
+        <div><span>パーオン</span><b>${fmtPct(s.gir)}${s.gir==null?"":`<small style="font-size:12px">%</small>`}</b></div>
+        <div><span>3パット</span><b>${puttsOn(r)?s.putt[3]:"—"}</b></div>
         <div><span>OB</span><b>${s.obN}</b></div>
       </div>
       <div class="rc-brand"><span class="rc-logo"><img src="mark.png" alt=""><span><b>GOLF SC.</b><small>SHORT COURSE SCORECARD</small></span></span></div>
@@ -1614,7 +1617,7 @@ function viewRecordDraft(d){
           <button data-act="pt" data-d="1" aria-label="パットを1つ増やす" ${h.putts>=9?"disabled":""}>${ICON.up}</button></div></div>`:""}
       </div>
       ${F.shot?`<div class="ap-wrap"><div class="seg-head"><span class="eyebrow">TEE SHOT<b>ティーショットの行き先</b></span>${F.club?`<button class="club-tag ${h.club?"has":""}" data-act="open-club">${h.club?esc(h.club):"クラブ"}</button>`:""}</div>${isLong?fairwaySVG(h.tee, state.tap&&state.tap.startsWith("tee")):approachSVG(h.dir, state.tap&&state.tap.startsWith("dir"))}</div>`:""}
-      ${F.club && !F.shot ? (()=>{ const lc = h.club ? null : lastClub(d, state.hole);
+      ${F.club && !F.shot ? (()=>{ const lc = lastClub(d, state.hole);
         // ショットの方向がOFFでもクラブだけ記録できるよう、クラブを横に並べて1タップで選ぶ（前回のクラブには小さく「前回」）
         return `<div class="club-strip"><span class="eyebrow">TEE SHOT<b>クラブ</b></span><div class="cs-chips">${myClubs().map(c=>`<button data-act="club-quick" data-v="${esc(c)}" aria-pressed="${h.club===c}" class="${lc===c?"last":""}">${esc(c)}</button>`).join("")}</div></div>`; })() : ""}
       ${troubles.length?`<div class="trouble t${troubles.length}">${troubles.join("")}</div>`:""}
@@ -1630,7 +1633,7 @@ function viewRecordDraft(d){
       <div class="club-grid ${k}">${myClubs().map(c=>`<button data-act="club" data-v="${esc(c)}" aria-pressed="${ev.includes(c)}">${esc(c)}</button>`).join("")}</div>
       <div class="club-foot"><button data-act="open-clubs">クラブの設定</button><button data-act="close-sheet">閉じる</button></div>`;
       return `<p>クラブ選択<small>ティーショット・${h.yards?h.yards+"y":"PAR "+h.par}</small></p>
-      <div class="club-grid">${myClubs().map(c=>`<button data-act="club" data-v="${esc(c)}" aria-pressed="${h.club===c}">${esc(c)}${h.clubAuto&&h.club===c?"<small>前回</small>":""}</button>`).join("")}</div>
+      <div class="club-grid">${(()=>{ const lc=lastClub(d,state.hole); return myClubs().map(c=>`<button data-act="club" data-v="${esc(c)}" aria-pressed="${h.club===c}">${esc(c)}${lc===c?"<small>前回</small>":""}</button>`).join(""); })()}</div>
       <div class="club-foot"><button data-act="open-clubs">クラブの設定</button><button data-act="close-sheet">${h.club?"このまま":"選ばない"}</button></div>`; })()}</div></div>`:""}
     ${state.sheet==="clubs"?clubsSheet():""}
   </div>`;
@@ -1738,12 +1741,12 @@ function viewStats(){
 `:""}
   ${ST==="shot"?`
   <div class="panel"><div class="sec"><em>SHOTS</em><span>ショット</span></div><div class="gauges">
-    ${gauge("パーオン率", s.gir, `${s.holes}H中 ${s.girN}回`, "--c-gir")}
-    ${gauge("ボギーオン率", s.bon, `${s.holes}H中 ${s.bonN}回`, "--c-bon")}
+    ${gauge("パーオン率", s.gir, s.puttHoles?`${s.puttHoles}H中 ${s.girN}回`:"パットの記録が必要", "--c-gir")}
+    ${gauge("ボギーオン率", s.bon, s.puttHoles?`${s.puttHoles}H中 ${s.bonN}回`:"パットの記録が必要", "--c-bon")}
     ${gauge("リカバリー率", s.scramble, `<span class="nw">パーオン逃し${s.scrambleN}Hのうち</span><br><span class="nw">パー以内</span>`, "--accent2")}
-    ${gauge("サンドセーブ率", s.sandSave, `<span class="nw">バンカー${s.bunkerN}Hのうち</span><br><span class="nw">パー以内</span>`, "--c5")}
-    ${gauge("バンカー率", s.bunkerRate, `${s.holes}H中 ${s.bunkerN}回`, "--warn")}
-    ${gauge("OB・ペナ率", pct(s.troubleN,s.holes), `${s.holes}H中 ${s.troubleN}回`, "--under")}
+    ${!(s.bunkerN||fields().bunker)?"":gauge("サンドセーブ率", s.sandSave, `<span class="nw">バンカー${s.bunkerN}Hのうち</span><br><span class="nw">パー以内</span>`, "--c5")}
+    ${s.bunkerN||fields().bunker?gauge("バンカー率", s.bunkerRate, `${s.holes}H中 ${s.bunkerN}回`, "--warn"):""}
+    ${s.troubleN||fields().ob||fields().pen?gauge("OB・ペナ率", pct(s.troubleN,s.holes), `${s.holes}H中 ${s.troubleN}回`, "--under"):""}
   </div></div>
   <div class="panel"><div class="sec"><em>TREND</em><span>パーオン率・ボギーオン率の推移</span></div><div class="chartbox"><canvas id="ch-on" aria-label="パーオン率とボギーオン率の推移"></canvas></div><p class="muted cs-note">各ラウンドまでの直近5ラウンドの平均。</p></div>
   <div class="panel"><div class="sec"><em>TEE SHOT</em><span>ティーショットの行き先</span></div>
@@ -1767,7 +1770,7 @@ function viewStats(){
 function clubTable(rs, kind){
   const m = {};
   rs.forEach(r=>r.holes.forEach(h=>{ if(!h.club) return;
-    if(kind==="p3" ? h.par!==3 : (h.par<4 || !h.tee)) return;
+    if(kind==="p3" ? (h.par!==3 || !puttsOn(r)) : (h.par<4 || !h.tee)) return;
     const x = m[h.club] || (m[h.club]={n:0,ok:0,miss:{},ob:0}); x.n++; if(h.ob||h.pen) x.ob++;
     if(kind==="p3"){ if(h.strokes-h.putts<=h.par-2) x.ok++; if(h.dir && h.dir!=="on") x.miss[h.dir]=(x.miss[h.dir]||0)+1; }
     else { if(h.tee==="fw") x.ok++; else x.miss[h.tee]=(x.miss[h.tee]||0)+1; } }));
@@ -1918,14 +1921,14 @@ after.stats = () => {
   if($("#ch-score")) charts.push(scoreChart = new Chart($("#ch-score"), { type:"bar", data:{ labels, datasets:[
     { label:"スコア", data: pad(vals), backgroundColor: labels.map((_,i)=>fade(SCORE_C,i)), borderColor: rs.map((r,i)=>zoneColor(scoreZone(i))), borderWidth:0, borderSkipped:"start", borderRadius:5, maxBarThickness:16, base: oneCourse ? undefined : 0 }
   ]}, options:o1, plugins:[refLines(scoreLines)] }));
-  const pVals = tot.map(t=>t.putts);
-  const o2 = opts("パット", null); o2.scales.y.min = Math.min(holesN+1, ...pVals); o2.scales.y.max = Math.max(holesN*2+6, ...pVals);
+  const pVals = tot.map((t,i)=>puttsOn(rs[i])?t.putts:null);
+  const o2 = opts("パット", null); { const pv=pVals.filter(v=>v!=null); o2.scales.y.min = Math.min(holesN+1, ...pv); o2.scales.y.max = Math.max(holesN*2+6, ...pv); }
   if($("#ch-putt")) charts.push(puttChart = new Chart($("#ch-putt"), { type:"bar", data:{ labels, datasets:[
     { label:"パット", data: pad(pVals), backgroundColor: labels.map((_,i)=>fade(PUTT_C,i)), borderColor: rs.map((r,i)=>zoneColor(puttZone(i))), borderWidth:0, borderSkipped:"start", borderRadius:5, maxBarThickness:16 }
   ]}, options:o2, plugins:[refLines([{ v:2*holesN, label:`${2*holesN}`, color: cssv("--q-par") }])] }));
   if(scoreChart) scoreChart.options.onClick = onTap(scoreChart); if(puttChart) puttChart.options.onClick = onTap(puttChart);
   // パーオン率・ボギーオン率の推移（1ラウンドごと）
-  const perRound = rs.map(r=>{ const hs=r.holes.filter(h=>h.strokes>0); const n=hs.length||1;
+  const perRound = rs.map(r=>{ const hs=puttsOn(r)?r.holes.filter(h=>h.strokes>0):[]; // パット未記録のラウンドは数えない
     return { g: hs.filter(h=>h.strokes-h.putts<=h.par-2).length, b: hs.filter(h=>h.strokes-h.putts<=h.par-1).length, n: hs.length }; })
     // 1ラウンドごとだと9ホールで上下に大きく跳ねるので、直近5ラウンドの合計でならした線にする
     .map((_,i,a)=>{ const w=a.slice(Math.max(0,i-4),i+1), N=w.reduce((t,x)=>t+x.n,0)||1; return { gir: Math.round(w.reduce((t,x)=>t+x.g,0)/N*100), bon: Math.round(w.reduce((t,x)=>t+x.b,0)/N*100) }; });
@@ -1969,7 +1972,7 @@ function viewHistory(){
       <tr class="hn"><th>H</th>${ch.map(x=>`<td>${x.no}</td>`).join("")}<td>計</td></tr>
       <tr><th>PAR</th>${ch.map(x=>`<td>${x.h.par}</td>`).join("")}<td>${sum(ch,x=>x.h.par)}</td></tr>
       <tr><th>打数</th>${ch.map(x=>`<td>${mark(x.h)}</td>`).join("")}<td><b>${sum(ch,x=>x.h.strokes)}</b></td></tr>
-      <tr><th>パット</th>${ch.map(x=>`<td>${x.h.putts}</td>`).join("")}<td>${sum(ch,x=>x.h.putts)}</td></tr>
+      ${puttsOn(r)?`<tr><th>パット</th>${ch.map(x=>`<td>${x.h.putts}</td>`).join("")}<td>${sum(ch,x=>x.h.putts)}</td></tr>`:""}
       ${hasTr?`<tr class="tr"><th>OB・B</th>${ch.map(x=>`<td>${[evs(x.h,"ob").length?"OB"+(evs(x.h,"ob").length>1?"×"+evs(x.h,"ob").length:""):"",evs(x.h,"pen").length?"1P"+(evs(x.h,"pen").length>1?"×"+evs(x.h,"pen").length:""):"",x.h.bunker?"B":""].filter(Boolean).join("<br>")||""}</td>`).join("")}<td></td></tr>`:""}
     </table></div>`).join("");
     const conf = state.confirm==="del:"+r.id;
@@ -1978,7 +1981,7 @@ function viewHistory(){
       <button data-act="toggle-round" data-id="${r.id}" aria-expanded="${open}">
         <div class="day"><b>${+m}/${+d}</b><small>${wd}</small></div>
         <div class="mid"><div class="cname">${esc(r.courseName)}</div><div class="strip">${r.holes.map(h=>`<i class="q-${TONEH(h)}"></i>`).join("")}</div></div>
-        <div class="sc-tot"><b>${t.score}</b><small style="color:${tcol}">${toPar(t.diff)}</small><span>${t.putts}パット</span></div>
+        <div class="sc-tot"><b>${t.score}</b><small style="color:${tcol}">${toPar(t.diff)}</small>${puttsOn(r)?`<span>${t.putts}パット</span>`:""}</div>
       </button>
       ${open?`<div class="detail">${tables}${legend}
         ${state.demo?"":`<div class="actions">${conf?`<span class="muted" style="font-size:13px;align-self:center">このラウンドを削除しますか？</span><button class="btn small" data-act="cancel-confirm">やめる</button><button class="btn small danger" data-act="del-round" data-id="${r.id}">削除する</button>`:`<button class="btn small" data-act="edit-round" data-id="${r.id}">編集</button><button class="btn small" data-act="ask-del-round" data-id="${r.id}">削除</button>`}</div>`}
@@ -2114,7 +2117,7 @@ document.addEventListener("click", async ev => {
     case "finish": {
       mark_entered();
       const r={ id:d.id, player:d.player, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:d.createdAt||Date.now(),
-        holes:d.holes.map(x=>({par:x.par, strokes:x.strokes, putts:x.putts, dir:x.dir, bunker:!!x.bunker, ob:evs(x,"ob").length>0, pen:evs(x,"pen").length>0, tee:x.tee||null, club:x.club||null})) };
+        holes:d.holes.map(x=>({par:x.par, strokes:x.strokes, putts:fields().putts?x.putts:0, dir:x.dir, bunker:!!x.bunker, ob:evs(x,"ob").length>0, pen:evs(x,"pen").length>0, tee:x.tee||null, club:x.club||null})) };
       b.disabled=true; rememberClubs(r);
       try{ await store.saveRound(r); state.draft=null; saveDraft(); state.tab="history"; LS.set("sc.tab","history"); state.fPlayer=r.player; state.openRound=r.id; state.result=r; render(); }
       catch(e){ b.disabled=false; writeErr(e); }
