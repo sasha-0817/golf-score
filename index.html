@@ -684,7 +684,7 @@ body.recording section.view{padding-top:0}
 .rc2 .trouble{display:grid;gap:8px}
 .rc2 .trouble.t1{grid-template-columns:1fr}.rc2 .trouble.t2{grid-template-columns:1fr 1fr}.rc2 .trouble.t3{grid-template-columns:1fr 1fr 1fr}
 .rc2 .trouble button{height:40px}
-.trouble button[aria-pressed="true"].pn{background:var(--q-double);border:1px solid var(--q-double);color:#fff}
+.trouble button[aria-pressed="true"].pn{background:var(--q-bogey);border:1px solid var(--q-bogey);color:#fff}
 .rec2 .rec-bar button{height:50px}
 .fields-sheet{max-height:80vh;overflow:auto}
 .fs-note{font-size:12px;color:var(--rec-muted);margin:-4px 0 4px}
@@ -925,7 +925,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1515";
+const BUILD = "2026-10-19-1525";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1290,7 +1290,7 @@ function approachSVG(dir, tap, stat){
 }
 /* ティーショット: 上から見たホール。手前がティー、奥にグリーン。光は左上から（影は右下） */
 function fairwaySVG(tee, tap, stat){
-  const Z = { fw:[182,110], rl:[58,62], rr:[284,62], miss:[150,205] };
+  const Z = { fw:[178,104], rl:[54,60], rr:[288,60], miss:[150,200] };
   const id = stat?"S":"";
   const sel = k => !stat && tee===k;
   const maxMiss = stat ? Math.max(1, ...["rl","rr","miss"].map(k=>stat.teeC[k]||0)) : 1;
@@ -1308,7 +1308,7 @@ function fairwaySVG(tee, tap, stat){
   const tracer = b ? `<g class="tr ${tap?"anim":""}"><path class="tr-shadow" d="M${sx+6} ${sy} L${b[0]+5} ${b[1]+3}" pathLength="1" filter="url(#soft${id})"/><path class="tr-glow" d="${tpath}" pathLength="1" filter="url(#trGlow${id})"/><path class="tr-core" d="${tpath}" pathLength="1" stroke="url(#trGrad${id})"/><path class="tr-hi" d="${tpath}" pathLength="1"/></g>` : "";
   const ball = b ? `<g class="ballg ${tap?"drop":""}"><ellipse cx="${b[0]+3.5}" cy="${b[1]+5}" rx="7.5" ry="4.8" fill="rgba(0,0,0,.26)" filter="url(#soft${id})" transform="rotate(15 ${b[0]+3.5} ${b[1]+5})"/><image href="ball.png" x="${b[0]-7.5}" y="${b[1]-7.5}" width="15" height="15"/></g>` : "";
   // ゆるいドッグレッグのフェアウェイ（手前にティー、奥に別のグリーン）
-  const fwPath = `M178.3 169.4 L178.7 166.7 L179.6 164.5 L180.6 162.6 L181.8 160.9 L183.0 159.3 L184.3 157.8 L185.7 156.3 L187.0 154.7 L188.4 153.1 L189.7 151.2 L191.1 149.2 L192.5 147.0 L193.9 144.6 L195.2 142.0 L196.6 139.2 L197.9 136.2 L199.1 132.9 L200.3 129.5 L201.4 125.8 L202.3 122.0 L203.2 117.9 L203.9 113.7 L204.4 109.4 L204.6 104.9 L204.7 100.3 L204.5 95.6 L204.0 90.8 L203.2 86.0 L202.1 81.3 L200.7 76.6 L198.9 72.1 L196.8 67.7 L195.6 63.1 L194.3 58.6 L192.5 54.0 L190.5 49.7 A14 14 0 0 0 165.5 62.3 L166.8 65.0 L167.7 67.4 L168.4 69.9 L168.7 72.3 L167.5 74.9 L166.0 77.3 L164.5 79.6 L162.9 81.8 L161.2 84.0 L159.4 86.2 L157.6 88.4 L155.8 90.7 L154.0 93.1 L152.2 95.6 L150.4 98.2 L148.6 101.0 L146.9 103.9 L145.2 107.0 L143.7 110.3 L142.2 113.8 L140.8 117.4 L139.6 121.2 L138.6 125.2 L137.7 129.4 L137.1 133.8 L136.8 138.2 L136.7 142.9 L137.0 147.6 L137.6 152.4 L138.6 157.2 L140.1 162.0 L142.0 166.7 L144.3 171.2 L147.1 175.4 L150.3 179.3 L153.7 182.6 A14 14 0 0 0 178.3 169.4 Z`;
+  const fwPath = `M184.3 147.6 L184.8 145.5 L185.9 144.0 L187.1 142.9 L188.4 142.1 L189.7 141.6 L191.0 141.1 L192.3 140.7 L193.5 140.2 L194.7 139.5 L195.9 138.7 L197.0 137.7 L198.2 136.5 L199.3 135.0 L200.5 133.2 L201.6 131.2 L202.8 128.9 L203.9 126.4 L205.1 123.6 L206.1 120.6 L207.1 117.4 L208.0 113.8 L208.8 110.1 L209.5 106.1 L209.9 101.9 L210.2 97.6 L210.1 93.0 L209.8 88.3 L209.2 83.5 L208.1 78.6 L206.6 73.8 L204.7 69.1 L202.4 64.5 L200.1 60.1 L198.4 55.5 L196.2 51.0 L193.8 46.9 A21 21 0 0 0 158.2 69.1 L159.1 70.7 L159.7 71.8 L160.0 72.8 L159.2 74.0 L157.8 75.0 L156.4 75.9 L154.9 76.6 L153.5 77.3 L152.0 78.1 L150.5 78.9 L149.0 79.9 L147.6 81.0 L146.1 82.4 L144.5 83.9 L143.0 85.7 L141.5 87.6 L139.9 89.9 L138.4 92.4 L137.0 95.1 L135.6 98.1 L134.2 101.3 L133.0 104.8 L131.9 108.6 L131.0 112.6 L130.3 116.9 L129.9 121.4 L129.7 126.1 L129.9 131.0 L130.6 136.1 L131.6 141.2 L133.2 146.3 L135.2 151.3 L137.7 156.1 L140.7 160.7 L144.1 164.8 L147.7 168.4 A21 21 0 0 0 184.3 147.6 Z`;
   return `<svg class="approach fairway" viewBox="0 0 340 222" preserveAspectRatio="xMidYMid meet" role="${stat?"img":"group"}" aria-label="ティーショットの行き先">
     <defs>
       <linearGradient id="gFw${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#46C77B"/><stop offset="1" stop-color="#1F9E57"/></linearGradient>
@@ -1320,21 +1320,21 @@ function fairwaySVG(tee, tap, stat){
       <filter id="fwShadow${id}" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="3" dy="3" stdDeviation="3" flood-color="#0B3A1E" flood-opacity=".28"/></filter>
     </defs>
     <rect class="az-rough" x="0" y="0" width="340" height="222" rx="18"/>
-    ${zone("rl", `<path class="az-bg" d="M6 22 Q6 8 20 8 H92 Q104 8 104 20 V174 Q104 186 92 186 H20 Q6 186 6 172Z"/>`, 55, stat?104:100, "左")}
-    ${zone("rr", `<path class="az-bg" d="M334 22 Q334 8 320 8 H248 Q236 8 236 20 V174 Q236 186 248 186 H320 Q334 186 334 172Z"/>`, 285, stat?104:100, "右")}
+    ${zone("rl", `<path class="az-bg" d="M6 22 Q6 8 20 8 H84 Q96 8 96 20 V166 Q96 178 84 178 H20 Q6 178 6 164Z"/>`, 51, stat?104:100, "左")}
+    ${zone("rr", `<path class="az-bg" d="M334 22 Q334 8 320 8 H256 Q244 8 244 20 V166 Q244 178 256 178 H320 Q334 178 334 164Z"/>`, 289, stat?104:100, "右")}
     ${zone("fw", `<path d="${fwPath}" fill="#86D9A2" stroke="#86D9A2" stroke-width="10" stroke-linejoin="round"/>
       <path d="${fwPath}" fill="url(#gFw${id})" filter="url(#fwShadow${id})"/><path d="${fwPath}" fill="url(#fwMow${id})"/><path d="${fwPath}" class="g-ring"/>
       <g pointer-events="none">
-        <path d="M213 100 C221 104 223 116 218 124 C215 128 210 125 211 119 C212 113 207 107 209 102 C210 99 211 99 213 100Z" class="sand"/>
+        <path d="M226 100 C234 104 236 116 231 124 C228 128 223 125 224 119 C225 113 220 107 222 102 C223 99 224 99 226 100Z" class="sand"/>
         <ellipse cx="176" cy="31" rx="33" ry="17" transform="rotate(-6 176 31)" fill="#86D9A2"/>
         <ellipse cx="176" cy="31" rx="28" ry="13.5" transform="rotate(-6 176 31)" fill="url(#gGr${id})" filter="url(#fwShadow${id})"/>
         <path d="M140 30 C136 36 140 44 147 44 C152 44 152 38 148 35 C146 33 144 28 140 30Z" class="sand"/>
         <ellipse cx="212" cy="18" rx="8" ry="4" transform="rotate(12 212 18)" class="sand"/>
-        <rect x="155" y="166" width="22" height="9" rx="3" fill="#A6EBC0" stroke="rgba(255,255,255,.8)" stroke-width="1"/>
+        
         <g filter="url(#soft${id})"><path d="M182 30 L196 35" stroke="rgba(0,0,0,.24)" stroke-width="1.8" stroke-linecap="round"/><path d="M196 35 L205 34 L190 31Z" fill="rgba(0,0,0,.2)"/></g>
         <ellipse cx="182" cy="30" rx="2.6" ry="1.2" fill="rgba(0,0,0,.45)"/>
         <line x1="182" y1="30" x2="182" y2="9" stroke="#fff" stroke-width="1.6"/><path d="M183 9.5 L196 13.5 L183 17.5Z" fill="#E11D2E"/></g>`, 170, stat?122:124, "フェアウェイ", "az-green")}
-    ${zone("miss", `<path class="az-bg" d="M6 192 H334 V204 Q334 216 322 216 H18 Q6 216 6 204Z"/>`, 170, 205, "ミスショット")}
+    ${zone("miss", `<path class="az-bg" d="M6 184 H334 V202 Q334 216 320 216 H20 Q6 216 6 202Z"/>`, 170, 200, "ミスショット")}
     ${tracer}${ball}
   </svg>`;
 }
