@@ -970,6 +970,8 @@ input,select,textarea{font-size:max(16px,1em)}
 .club-tbl th:nth-child(4),.club-tbl td:nth-child(4){text-align:left;padding-left:8px}
 .club-tbl .rv{min-width:0}
 .az-hatch{stroke:none}
+.club-grid button small{display:block;font-size:9px;font-weight:700;opacity:.75;margin-top:1px}
+.club-grid button{flex-direction:column}
 </style>
 
 </head>
@@ -1069,7 +1071,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1930";
+const BUILD = "2026-10-19-1940";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1613,14 +1615,21 @@ function viewRecordDraft(d){
       <div class="club-grid ${k}">${myClubs().map(c=>`<button data-act="club" data-v="${esc(c)}" aria-pressed="${ev.includes(c)}">${esc(c)}</button>`).join("")}</div>
       <div class="club-foot"><button data-act="open-clubs">クラブの設定</button><button data-act="close-sheet">閉じる</button></div>`;
       return `<p>クラブ選択<small>ティーショット・${h.yards?h.yards+"y":"PAR "+h.par}</small></p>
-      <div class="club-grid">${myClubs().map(c=>`<button data-act="club" data-v="${esc(c)}" aria-pressed="${h.club===c}">${esc(c)}</button>`).join("")}</div>
+      <div class="club-grid">${myClubs().map(c=>`<button data-act="club" data-v="${esc(c)}" aria-pressed="${h.club===c}">${esc(c)}${h.clubAuto&&h.club===c?"<small>前回</small>":""}</button>`).join("")}</div>
       <div class="club-foot"><button data-act="open-clubs">クラブの設定</button><button data-act="close-sheet">${h.club?"このまま":"選ばない"}</button></div>`; })()}</div></div>`:""}
     ${state.sheet==="clubs"?clubsSheet():""}
   </div>`;
 }
 let clubTimer=null;
+/* 前回このホール（同じ人・同じコース）で使ったティーショットのクラブ */
+function lastClub(d, i){
+  const past = state.rounds.filter(r=>r.player===d.player && r.courseId===d.courseId && r.id!==d.id && r.holes[i] && r.holes[i].club)
+    .sort((a,b)=>(a.date+(a.createdAt||0)).localeCompare(b.date+(b.createdAt||0)));
+  return past.length ? past[past.length-1].holes[i].club : null; }
+// クラブ選択を開くとき、まだ選んでいなければ前回のクラブを最初から選んでおく（同じなら「このまま」で済む）
+function openClubSheet(){ const d=state.draft, h=d&&d.holes[state.hole]; if(h && !h.club){ const c=lastClub(d,state.hole); if(c && myClubs().includes(c)){ h.club=c; h.clubAuto=true; saveDraft(); } } state.sheet="club"; }
 function askClub(v){ clearTimeout(clubTimer); if(!v || !fields().club) return;
-  const hole=state.hole; clubTimer=setTimeout(()=>{ if(state.draft && state.hole===hole && !state.sheet){ state.sheet="club"; render(); } }, matchMedia("(prefers-reduced-motion: reduce)").matches?150:900); }
+  const hole=state.hole; clubTimer=setTimeout(()=>{ if(state.draft && state.hole===hole && !state.sheet){ openClubSheet(); render(); } }, matchMedia("(prefers-reduced-motion: reduce)").matches?150:900); }
 function clubsSheet(){
   const list = sortClubs(state.clubEdit || (state.clubEdit = myClubs()));
   const full = list.length>=CLUB_MAX;
@@ -2107,16 +2116,16 @@ document.addEventListener("click", async ev => {
       try{ await store.saveCourse(c); toast(`${pc.name}を追加しました`); }catch(e){ writeErr(e); } break;
     }
     case "open-fields": state.sheet="fields"; render(); break;
-    case "close-sheet": state.sheet=null; state.clubFor=null; render(); break;
+    case "close-sheet": { const h0=state.draft&&state.draft.holes[state.hole]; if(h0) h0.clubAuto=false; state.sheet=null; state.clubFor=null; saveDraft(); render(); break; }
     case "tee": h.tee = h.tee===b.dataset.v ? null : b.dataset.v; h.entered=true; state.tap="tee"; saveDraft(); render(); askClub(h.tee); break;
     case "club": {
       if(state.clubFor){ // OB・1ペナ: そのクラブを付けたり外したりする（赤い＝OBしたクラブ）
         const k=state.clubFor, v=b.dataset.v, e=evs(h,k).filter(Boolean);
         h[k+"C"] = e.includes(v) ? e.filter(x=>x!==v) : e.concat([v]); h[k]=h[k+"C"].length>0; state.clubFor=null; }
-      else h.club = h.club===b.dataset.v ? null : b.dataset.v;
+      else { h.club = (h.club===b.dataset.v && !h.clubAuto) ? null : b.dataset.v; h.clubAuto=false; }
       h.entered=true; state.sheet=null; saveDraft(); render(); break; }
     case "tb": { const k=b.dataset.k; h[k]=!evs(h,k).length; delete h[k+"C"]; h.entered=true; saveDraft(); render(); break; }
-    case "open-club": state.sheet="club"; render(); break;
+    case "open-club": openClubSheet(); render(); break;
     case "set-g": { const ni=+b.dataset.g; if((h.gi||0)===ni) break; d.holes.forEach(x=>{ if(x.ys && x.ys[ni]){ x.gi=ni; x.yards=x.ys[ni]; } }); saveDraft(); render(); toast(`全ホールを${d.gn[ni]}のヤードにしました`); break; }
     case "swap-g": { const ni=1-(h.gi||0); d.holes.forEach((x,i)=>{ if(i>=state.hole && x.ys && x.ys[ni]){ x.gi=ni; x.yards=x.ys[ni]; } }); saveDraft(); render(); toast(`${d.gn[ni]}にしました（このホールから先）`); break; }
     case "open-clubs": state.clubBack=state.sheet; state.clubEdit=myClubs(); state.sheet="clubs"; render(); break;
