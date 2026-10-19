@@ -116,6 +116,9 @@
 .panel .cp-main small{color:var(--muted)}
 .cp-go{color:var(--muted);font-size:22px;padding:0 6px 0 2px}
 .link-del{display:block;margin:14px auto 0;background:none;border:0;color:var(--q-double);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer}
+
+.add-course{width:100%;margin-top:12px;border-style:dashed}
+.btn.cp-empty{height:52px;border-style:dashed;font-size:15px;margin-top:0}
 </style>
 <title>ショートコース スコアカード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -817,7 +820,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1310";
+const BUILD = "2026-10-19-1320";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1034,16 +1037,16 @@ const after = {};
 /* ----- 記録 ----- */
 function coursePickField(){
   const all = pickableCourses(), F = favs();
-  let cur = all.find(c=>c.id===state.pick) || all.find(c=>c.id===LS.get("sc.lastCourse","")) || all.find(c=>F.includes(c.id)) || all[0];
+  const cur = all.find(c=>c.id===state.pick) || all.find(c=>c.id===LS.get("sc.lastCourse","")) || null;
   state.pick = cur && cur.id;
   const favList = all.filter(c=>F.includes(c.id));
-  const show = favList.some(c=>c.id===cur.id) ? favList : [cur, ...favList];
-  const card = c => `<button class="cp-card ${c.id===cur.id?"on":""}" data-act="pick-course" data-id="${esc(c.id)}" aria-pressed="${c.id===cur.id}">
+  const show = !cur || favList.some(c=>c.id===cur.id) ? favList : [cur, ...favList];
+  const card = c => `<button class="cp-card ${cur&&c.id===cur.id?"on":""}" data-act="pick-course" data-id="${esc(c.id)}" aria-pressed="${!!cur&&c.id===cur.id}">
       <span class="cp-star">${F.includes(c.id)?"★":""}</span><b>${esc(c.name)}</b><small>${esc([c.pref.replace(/[都府県]$/,""),c.area].filter(Boolean).join("・"))}${c.pref||c.area?"・":""}${c.holes.length}H パー${sum(c.holes,h=>h.par)}</small></button>`;
   return `<div class="field"><label>コース${favList.length?`<span class="muted" style="font-weight:400;margin-left:6px">★ お気に入り</span>`:""}</label>
-    <input type="hidden" id="r-course" value="${esc(cur.id)}">
-    <div class="cp-list">${show.map(card).join("")}</div>
-    <button class="btn small cp-more" data-act="open-pick">${favList.length?"ほかのコースを探す（県で絞り込み）":"コースを探す・★お気に入りに登録"}</button></div>`;
+    <input type="hidden" id="r-course" value="${cur?esc(cur.id):""}">
+    ${show.length?`<div class="cp-list">${show.map(card).join("")}</div>`:""}
+    <button class="btn small cp-more ${show.length?"":"cp-empty"}" data-act="open-pick">${show.length?"ほかのコースを探す":"コースを選ぶ"}</button></div>`;
 }
 /* コースの一覧（コース画面とラウンド開始で共通）。mode="pick" はタップで選ぶ、"edit" はタップで編集 */
 function courseRows(list, mode){
@@ -1095,7 +1098,7 @@ function viewRecord(){
       ${coursePickField()}
       <div class="field" id="r-gwrap" hidden><label for="r-green">今日のグリーン</label><select id="r-green"></select></div>
       <div class="err" id="r-err"></div>
-      <button class="btn primary" style="width:100%;margin-top:6px" data-act="start">1番ホールから始める</button>
+      <button class="btn primary" style="width:100%;margin-top:6px" data-act="start">始める</button>
     </div>${state.sheet==="pick"?coursePickSheet():""}`;
   }
   return viewRecordDraft(d);
@@ -1593,18 +1596,17 @@ function viewCourses(){
   const all = pickableCourses(), F = favs(), pf = curPref(all);
   const favList = all.filter(c=>F.includes(c.id));
   return `<div class="panel">
-    <div class="row" style="justify-content:space-between;align-items:center"><h2>コース</h2><button class="btn primary small" data-act="new-course">＋ コースを追加</button></div>
     ${state.mode==="connecting"&&!all.length?`<div class="empty">読み込み中…</div>`:""}
-    <div class="sec" style="margin-top:14px"><em>FAVORITE</em><span>★ お気に入り</span></div>
+    <div class="sec"><em>FAVORITE</em><span>★ お気に入り</span></div>
     ${favList.length?courseRows(favList,"edit"):`<p class="muted" style="font-size:13px;margin:4px 0 0">下の一覧で ☆ をタップすると、ここに入ります。ラウンド開始のときにすぐ選べます。</p>`}
   </div>
   <div class="panel">
-    <div class="sec"><em>SEARCH</em><span>県で探す</span></div>
+    <div class="sec"><em>SEARCH</em><span>コースを探す</span></div>
     ${prefSelect(all,pf,"cl-pref")}
     ${courseRows(byPref(all,pf),"edit")}
-    <p class="muted" style="font-size:12px;margin:10px 0 0">見つからないコースは「＋ コースを追加」から登録できます。登録したコースはみんなが使えます。</p>
-  </div>
-  <p class="muted" style="font-size:12px;margin:0">${hasBackend?"コースとラウンドはスプレッドシートに保存され、URLを開いた全員で見られます。":"いまはこの端末のブラウザにだけ保存されています。"}</p>`;
+    <button class="btn add-course" data-act="new-course">＋ 見つからないときは、コースを追加</button>
+    <p class="muted" style="font-size:12px;margin:8px 0 0;text-align:center">追加したコースはみんなが使えます。</p>
+  </div>`;
 }
 after.courses = () => {
   const clp=$("#cl-pref"); if(clp) clp.onchange=()=>{ state.pickPref=clp.value; if(clp.value && clp.value!=="_none") LS.set("sc.pref",clp.value); render(); };
@@ -1655,6 +1657,7 @@ document.addEventListener("click", async ev => {
     case "start": {
       const p=$("#r-player").value.trim(), cid=$("#r-course").value, dt=$("#r-date").value||today();
       if(!p){ $("#r-err").textContent="プレーヤーの名前を入れてください"; return; }
+      if(!cid){ $("#r-err").textContent="コースを選んでください"; return; }
       let c=state.courses.find(x=>x.id===cid);
       if(!c && cid.startsWith("preset:")){ const pc=PRESET_COURSES.find(x=>"preset:"+x.key===cid); if(!pc) return;
         c = { id:uid(), name:pc.name, presetKey:pc.key, holes:pc.holes.map((x,i)=>i?{...x}:{...x, pref:pc.pref, area:pc.area}), createdAt:Date.now() };
