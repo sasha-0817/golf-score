@@ -1069,7 +1069,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1835";
+const BUILD = "2026-10-19-1930";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1423,7 +1423,7 @@ function approachSVG(dir, tap, stat){
   const zone = (k, shape, lx, ly, label) => {
     if(stat){ const v=pctOf(k), heat=((stat.dirs[k]||0)/maxMiss)*.4, w=k===worst&&(stat.dirs[k]||0)>0;
       return `<g class="az-s">${heatShape(shape, (stat.dirs[k]||0)/maxMiss, w)}
-        ${k==="miss"?`<text x="${lx}" y="${ly}" class="az-t">${label}<tspan dx="8" class="az-p ${w?"worst":""}">${fmtPct(v)}%</tspan></text>`:`<text x="${lx}" y="${ly-12}" class="az-t">${label}</text><text x="${lx}" y="${ly+10}" class="az-p ${w?"worst":""} ">${fmtPct(v)}%</text>`}</g>`; }
+        ${k==="miss"||k==="short"?`<text x="${lx}" y="${ly}" class="az-t">${label}<tspan dx="8" class="az-p ${w?"worst":""}">${fmtPct(v)}%</tspan></text>`:`<text x="${lx}" y="${ly-12}" class="az-t">${label}</text><text x="${lx}" y="${ly+10}" class="az-p ${w?"worst":""} ">${fmtPct(v)}%</text>`}</g>`; }
     return `<g class="az ${sel(k)?"on-sel":""}" role="button" tabindex="0" data-act="dir" data-v="${k}" aria-pressed="${sel(k)}" aria-label="${label}">${shape}<text x="${lx}" y="${ly}" class="az-t">${label}</text></g>`; };
   const b = !stat && dir && Z[dir];
   const sx=170, sy=222;
@@ -1450,7 +1450,7 @@ function approachSVG(dir, tap, stat){
     </defs>
     <rect class="az-rough" x="0" y="0" width="340" height="222" rx="18"/>
     ${zone("long", `<path class="az-bg" d="M70 4 H270 Q286 4 286 20 V36 Q240 46 170 48 Q100 46 54 36 V20 Q54 4 70 4Z"/>`, 170, stat?24:30, "オーバー")}
-    ${zone("short", `<path class="az-bg" d="M54 160 Q100 150 170 148 Q240 150 286 160 V188 H54Z"/>`, 170, stat?173:174, "ショート")}
+    ${zone("short", `<path class="az-bg" d="M54 160 Q100 150 170 148 Q240 150 286 160 V188 H54Z"/>`, 170, stat?172:174, "ショート")}
     ${zone("miss", `<path class="az-bg" d="M54 192 H286 V204 Q286 218 270 218 H70 Q54 218 54 204Z"/>`, 170, 206, "ミスショット")}
     ${zone("left", `<path class="az-bg" d="M4 22 Q4 6 20 6 H40 Q60 40 64 98 Q60 156 40 190 H20 Q4 190 4 174Z"/>`, 30, 100, "左")}
     ${zone("right", `<path class="az-bg" d="M336 22 Q336 6 320 6 H300 Q280 40 276 98 Q280 156 300 190 H320 Q336 190 336 174Z"/>`, 310, 100, "右")}
