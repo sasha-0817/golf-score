@@ -915,7 +915,7 @@ const state = {
 };
 
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-1435";
+const BUILD = "2026-10-19-1445";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1384,7 +1384,7 @@ function viewRecordDraft(d){
       <button class="back" data-act="prev" ${state.hole===0?"disabled":""} aria-label="前のホール">${ICON.back}</button>
       ${state.hole<N-1?`<button class="go" data-act="next">${state.hole+2}番ホールへ<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>`:`<button class="go save" data-act="finish">ラウンドを保存</button>`}
     </div>
-    ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p><button data-act="pause">中断してホームへ（あとで続きから）</button><button class="danger" data-act="discard">${d.editing?"編集をやめる（変更は保存されません）":"記録を破棄する"}</button><button data-act="cancel-confirm">入力に戻る</button></div></div>`:""}
+    ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p><button data-act="pause">中断してホームへ（あとで続きから）</button>${d.editing?"":`<button data-act="rechoose">${done.length?"コースを選び直す（入力した分は消えます）":"コースを選び直す"}</button>`}<button class="danger" data-act="discard">${d.editing?"編集をやめる（変更は保存されません）":"記録を破棄する"}</button><button data-act="cancel-confirm">入力に戻る</button></div></div>`:""}
     ${state.sheet==="fields"?fieldsSheet():""}
     ${state.sheet==="club"?`<div class="sheet-back club-back" data-act="close-sheet"><div class="sheet club-sheet" data-stop="1"><p>クラブ選択<small>${isLong?"ティーショット":"1打目"}・${h.yards?h.yards+"y":"PAR "+h.par}</small></p>
       <div class="club-grid">${myClubs().map(c=>`<button data-act="club" data-v="${esc(c)}" aria-pressed="${h.club===c}">${esc(c)}</button>`).join("")}</div>
@@ -1813,6 +1813,7 @@ document.addEventListener("click", async ev => {
       if(state.clubEdit.length>=CLUB_MAX){ state.clubCustom=[...(state.clubCustom||[]), v]; toast(`${CLUB_MAX}本入っているので候補に追加しました`); render(); break; }
       state.clubEdit=sortClubs([...state.clubEdit, v]); setClubs(state.clubEdit); render(); break; }
     case "club-reset": state.clubEdit=CLUBS.slice(); setClubs(state.clubEdit); render(); break;
+    case "rechoose": state.sp=d.player; state.sd=d.date; state.pick=null; state.draft=null; state.confirm=null; saveDraft(); state.sheet="pick"; render(); window.scrollTo({top:0}); break;
     case "pause": d.paused=true; state.confirm=null; saveDraft(); render(); window.scrollTo({top:0}); break;
     case "resume": d.paused=false; saveDraft(); render(); break;
     case "discard": state.draft=null; state.confirm=null; saveDraft(); render(); break;
