@@ -1053,11 +1053,28 @@ input,select,textarea{font-size:max(16px,1em)}
 .rc-rank span{flex:1;font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rc-rank b{font:700 26px var(--f-num);line-height:1}
 .rc-rank small{font:700 15px var(--f-num);opacity:.85;min-width:30px;text-align:right}
-.rc-rank .win{background:rgba(255,215,106,.18);box-shadow:inset 0 0 0 1px rgba(255,215,106,.55)}
+.rc-rank>div{border:1px solid transparent}
+.rc-rank .win{background:rgba(255,215,106,.18);border-color:rgba(255,215,106,.55)} /* inset の影は画像保存（html2canvas）で崩れるので枠線で */
 .rc-rank .win i{background:#FFD76A;color:#3A2600}
 .rc-sc table.grp col.lab{width:58px}
 .rc-sc table.grp td.nm{font-size:10px;text-align:left;padding-left:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:58px;letter-spacing:-.02em}
 .rc-all{margin-top:10px;background:none;border:0;color:#fff;font:inherit;font-weight:700;font-size:14px;text-decoration:underline;text-underline-offset:3px;opacity:.9;cursor:pointer;padding:6px}
+/* 同伴者の入力を大きく */
+.mate-in{position:relative;display:block;min-width:0}
+.mate-in input{padding-right:30px}
+.mate-in button{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;border:0;background:var(--line);color:var(--fg);font-size:15px;line-height:1;padding:0;cursor:pointer;touch-action:manipulation}
+.mate-in input:placeholder-shown+button{display:none}
+.mates-rec .mr{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:62px;padding:4px;font:inherit;color:var(--rec-fg);cursor:pointer;touch-action:manipulation;width:auto}
+.mates-rec .mr .mk3{width:30px;height:30px;font:700 20px var(--f-num)}
+.mate-sheet .ms-who{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;--paper:var(--rec-surface);--fg:var(--rec-fg);--muted:var(--rec-muted)}
+.mate-sheet .ms-who button{display:flex;flex-direction:column;align-items:center;gap:3px;height:62px;border-radius:12px;border:1px solid var(--rec-line);background:var(--rec-bg);color:var(--rec-fg);font:inherit;font-size:12px;font-weight:700;padding:4px;margin:0}
+.mate-sheet .ms-who button[aria-pressed="true"]{border:2px solid #F2B01E;background:color-mix(in srgb,#F2B01E 16%,var(--rec-bg))}
+.mate-sheet .ms-who span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mate-sheet .ms-who .mk3{width:28px;height:28px;font:700 18px var(--f-num)}
+.mate-sheet .ms-keys{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:10px}
+.mate-sheet .ms-keys button{height:58px;margin:0;border-radius:14px;border:1px solid var(--rec-line);background:var(--rec-bg);color:var(--rec-fg);font:700 26px var(--f-num);padding:0}
+.mate-sheet .ms-keys button.par{border-color:var(--q-par);box-shadow:inset 0 0 0 1px var(--q-par)}
+.mate-sheet .ms-keys button[aria-pressed="true"]{background:var(--rec-fg);color:var(--rec-bg);border-color:var(--rec-fg)}
 </style>
 
 </head>
@@ -1164,7 +1181,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-20-2130";
+const BUILD = "2026-10-20-2215";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1517,7 +1534,7 @@ function viewRecord(){
         <div class="field"><label for="r-player">あなたの名前</label><input id="r-player" list="plist" value="${esc(state.sp!=null?state.sp:last)}" placeholder="名前"><datalist id="plist">${pl.map(p=>`<option value="${esc(p)}">`).join("")}</datalist></div>
         <div class="field" style="flex:0 0 150px"><label for="r-date">日付</label><input id="r-date" type="date" value="${state.sd||today()}"></div>
       </div>
-      ${`<div class="field"><label>一緒に回る人（任意・3人まで${state.im==="card"?"":"・打数だけ"}）</label><div class="mates">${[0,1,2].map(i=>`<input id="r-mate${i}" list="plist" value="${esc((state.mates||LS.get("sc.mates",[]))[i]||"")}" placeholder="${i+2}人目" aria-label="${i+2}人目の名前">`).join("")}</div></div>`}
+      ${`<div class="field"><label>一緒に回る人（任意・3人まで${state.im==="card"?"":"・打数だけ"}）</label><div class="mates">${[0,1,2].map(i=>`<span class="mate-in"><input id="r-mate${i}" list="plist" value="${esc((state.mates||LS.get("sc.mates",[]))[i]||"")}" placeholder="${i+2}人目" aria-label="${i+2}人目の名前"><button data-act="mate-clear" data-i="${i}" aria-label="${i+2}人目を消す">×</button></span>`).join("")}</div></div>`}
       ${coursePickField()}
       <div class="field" id="r-gwrap" hidden><label for="r-green">今日のグリーン</label><select id="r-green"></select></div>
       <div class="err" id="r-err"></div>
@@ -1740,7 +1757,7 @@ function viewRecordDraft(d){
       </div>
       ${(d.mates||[]).length?(()=>{ const nm=[d.player,...d.mates.map(m=>m.name)];
         return `<div class="mates-rec">${d.mates.map((m,k)=>{ const v=m.s[state.hole], dd=v-h.par;
-          return `<div class="mr"><span>${esc(dupLabel(nm,k+1))}</span><div><button data-act="mt" data-i="${k}" data-d="-1" ${v<=1?"disabled":""} aria-label="${esc(m.name)}の打数を1つ減らす">${ICON.down}</button><b class="mk3 m-${v===1?"hio":TONE(dd)}">${v}</b><button data-act="mt" data-i="${k}" data-d="1" ${v>=15?"disabled":""} aria-label="${esc(m.name)}の打数を1つ増やす">${ICON.up}</button></div></div>`; }).join("")}</div>`; })():""}
+          return `<button class="mr" data-act="mt-open" data-i="${k}" aria-label="${esc(m.name)}の打数 ${v}（タップで入力）"><span>${esc(dupLabel(nm,k+1))}</span><b class="mk3 m-${v===1?"hio":TONE(dd)}">${v}</b></button>`; }).join("")}</div>`; })():""}
       ${F.shot?`<div class="ap-wrap"><div class="seg-head"><span class="eyebrow">TEE SHOT<b>ティーショットの行き先</b></span>${F.club?`<button class="club-tag ${h.club?"has":""}" data-act="open-club">${h.club?esc(h.club):"クラブ"}</button>`:""}</div>${isLong?fairwaySVG(h.tee, state.tap&&state.tap.startsWith("tee")):approachSVG(h.dir, state.tap&&state.tap.startsWith("dir"))}</div>`:""}
       ${F.club && !F.shot ? (()=>{ const lc = lastClub(d, state.hole);
         // ショットの方向がOFFでもクラブだけ記録できるよう、クラブを横に並べて1タップで選ぶ（前回のクラブには小さく「前回」）
@@ -1753,6 +1770,11 @@ function viewRecordDraft(d){
     </div>
     ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p><button data-act="pause">中断してホームへ（あとで続きから）</button><button class="danger" data-act="discard">${d.editing?"編集をやめる（変更は保存されません）":"記録を破棄する"}</button><button data-act="cancel-confirm">入力に戻る</button></div></div>`:""}
     ${state.sheet==="fields"?fieldsSheet():""}
+    ${state.sheet==="mate" && (d.mates||[])[state.mateI] ? (()=>{ const nm=[d.player,...d.mates.map(m=>m.name)], k=state.mateI, cur=d.mates[k].s[state.hole];
+      return `<div class="sheet-back" data-act="mt-close"><div class="sheet mate-sheet" data-stop="1"><p>${state.hole+1}H（PAR ${h.par}）同伴者の打数</p>
+        <div class="ms-who">${d.mates.map((m,j)=>`<button data-act="mt-open" data-i="${j}" aria-pressed="${j===k}"><span>${esc(dupLabel(nm,j+1))}</span><b class="mk3 m-${m.s[state.hole]===1?"hio":TONE(m.s[state.hole]-h.par)}">${m.s[state.hole]}</b></button>`).join("")}</div>
+        <div class="ms-keys">${[1,2,3,4,5,6,7,8,9].map(n=>`<button data-act="mt-key" data-v="${n}" aria-pressed="${cur===n}" class="${n===h.par?"par":""}">${n}</button>`).join("")}<button data-act="mt-key" data-v="10" aria-pressed="${cur>=10}">${cur>=10?cur:"10+"}</button></div>
+        <button data-act="mt-close">閉じる</button></div></div>`; })() : ""}
     ${state.sheet==="club"?`<div class="sheet-back club-back" data-act="close-sheet"><div class="sheet club-sheet" data-stop="1">${(()=>{ const k=state.clubFor, ev=k?evs(h,k):null;
       if(k) return `<p>${k==="ob"?"OBしたクラブ":"1ペナのクラブ"}<small>赤をもう一度押すと外れます</small></p>
       <div class="club-grid ${k}">${myClubs().map(c=>`<button data-act="club" data-v="${esc(c)}" aria-pressed="${ev.includes(c)}">${esc(c)}</button>`).join("")}</div>
@@ -2401,6 +2423,14 @@ document.addEventListener("click", async ev => {
         h[k+"C"] = e.includes(v) ? e.filter(x=>x!==v) : e.concat([v]); h[k]=h[k+"C"].length>0; state.clubFor=null; }
       else { h.club = (h.club===b.dataset.v && !h.clubAuto) ? null : b.dataset.v; h.clubAuto=false; }
       h.entered=true; state.sheet=null; saveDraft(); render(); break; }
+    case "mate-clear": { const v=[0,1,2].map(j=>(($("#r-mate"+j)||{}).value||"")); v[+b.dataset.i]=""; state.mates=v; LS.set("sc.mates",v); render(); break; }
+    // 同伴者の打数: 枠をタップすると大きな数字キーが出る。押すと次の人へ（最後の人で閉じる）
+    case "mt-open": state.mateI=+b.dataset.i; state.sheet="mate"; render(); break;
+    case "mt-key": { const k=state.mateI, m=d.mates[k]; if(!m) break; const v=b.dataset.v;
+      m.s[state.hole] = v==="10" ? (m.s[state.hole]>=10 ? Math.min(15,m.s[state.hole]+1) : 10) : +v; saveDraft();
+      if(v!=="10" || m.s[state.hole]===10){ if(k+1<d.mates.length) state.mateI=k+1; else { state.sheet=null; state.mateI=null; } }
+      render(); break; }
+    case "mt-close": state.sheet=null; state.mateI=null; render(); break;
     case "mt": { const m=d.mates[+b.dataset.i]; m.s[state.hole]=Math.max(1,Math.min(15,m.s[state.hole]+ +b.dataset.d)); saveDraft(); render(); break; }
     case "tb": { const k=b.dataset.k; h[k]=!evs(h,k).length; delete h[k+"C"]; h.entered=true; saveDraft(); render(); break; }
     case "open-club": openClubSheet(); render(); break;

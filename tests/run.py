@@ -233,11 +233,15 @@ with sync_playwright() as pw:
     old = [{"id": "o1", "player": "たろう", "courseId": "c1", "courseName": "C1", "date": "2026-09-01", "createdAt": 1, "holes": [{"par": 3, "strokes": 5, "putts": 2}] * 9}]
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": ["たろう", "はなこ", ""], "sc.courses": c1, "sc.rounds": old, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\""}, offline=True)
     check("1ホールずつでも同伴者欄が出る", pg.evaluate("document.querySelectorAll('.mates input').length") == 3)
+    pg.fill("#r-mate2", "まちがい"); pg.dispatch_event("#r-mate2", "input"); C(pg, '[data-act=mate-clear][data-i="2"]')
+    check("同伴者を × で消せる（選ばないにできる）", pg.evaluate("document.querySelector('#r-mate2').value") == "" and pg.evaluate("document.querySelector('#r-mate0').value") == "たろう")
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
     check("同じ名前でも始められる・同伴者2人", pg.evaluate("state.draft&&state.draft.mates.length") == 2)
     check("同伴者の打数ボタンが出る・1画面に収まる", pg.evaluate("document.querySelectorAll('.mates-rec .mr').length") == 2 and pg.evaluate("document.documentElement.scrollHeight") <= 667)
-    C(pg, '[data-act=mt][data-i="1"][data-d="1"]'); C(pg, '[data-act=mt][data-i="1"][data-d="1"]')
-    check("同伴者の打数を増やせる（パーから）", pg.evaluate("state.draft.mates[1].s[0]") == 5)
+    C(pg, '[data-act=mt-open][data-i="0"]'); C(pg, '[data-act=mt-key][data-v="4"]')
+    check("同伴者の数字キー: 押すと次の人へ進む", pg.evaluate("state.mateI") == 1 and pg.query_selector(".mate-sheet") is not None)
+    C(pg, '[data-act=mt-key][data-v="5"]')
+    check("同伴者の数字キー: 最後の人で閉じる・打数が入る", pg.query_selector(".mate-sheet") is None and pg.evaluate("[state.draft.mates[0].s[0],state.draft.mates[1].s[0]].join()") == "4,5")
     for i in range(9):
         C(pg, '[data-act=st][data-d="-1"]')
         if i < 8: C(pg, "[data-act=next]")
