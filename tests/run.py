@@ -262,6 +262,16 @@ with sync_playwright() as pw:
     check("同伴者・同じ名前: エラーなし", not errs)
     pg.context.close()
 
+    # 9. 同伴者がいてもティーショットの図が小さくならない（1人のときと同じ大きさ）
+    hs = {}
+    for nm, m in (("1人", []), ("4人", ["はなこ", "じろう", "さぶろう"])):
+        pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": m, "sc.courses": c1, "sc.rounds": old, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.fields": ALL}, offline=True)
+        C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+        hs[nm] = pg.evaluate("document.querySelector('svg.approach').getBoundingClientRect().height")
+        if m: check("4人: 自分だけの記録を緑の囲みに入れる・1画面に収まる", pg.query_selector(".me-zone svg.approach") is not None and pg.evaluate("document.documentElement.scrollHeight") <= 667)
+        pg.context.close()
+    check("4人でもティーショットの図が1人のときと同じ大きさ", hs["4人"] >= hs["1人"] - 2)
+
     b.close()
 
 try: os.remove(os.path.join(ROOT, "_test.html"))

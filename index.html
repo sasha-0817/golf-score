@@ -1101,8 +1101,9 @@ input,select,textarea{font-size:max(16px,1em)}
 .rec2 .trouble{margin-top:6px}
 /* 開始画面: 一緒に回る人は縦に並べる（横だと名前が切れ、候補の矢印と × が重なる） */
 .mates{grid-template-columns:1fr;gap:6px}
-.mate-in input{padding:8px 40px 8px 10px}
-.mate-in button{right:8px;width:24px;height:24px;font-size:13px}
+.mate-in{display:flex;align-items:center;gap:8px}
+.mate-in input{padding:8px 10px;flex:1 1 auto}
+.mate-in button{position:static;transform:none;flex:0 0 32px;width:32px;height:32px;font-size:15px;border-radius:50%}
 .start-row{flex-wrap:nowrap!important}
 .start-row .field:first-child{flex:1 1 auto}
 .start-row .field:last-child{flex:0 0 148px!important}
@@ -1155,6 +1156,29 @@ input,select,textarea{font-size:max(16px,1em)}
 .pstep button:disabled{opacity:.3}
 .pstep button svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
 .pboard{flex:0 0 auto}
+/* 複数人: 自分だけの記録（ティーショット・クラブ・OB等）を自分の列と同じ緑で囲む。図を小さくしないよう、ほかを詰める */
+.me-zone{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px;padding:6px 8px 8px;border-radius:16px;background:color-mix(in srgb,var(--rec-turf) 10%,var(--rec-surface));border:1px solid color-mix(in srgb,var(--rec-turf) 35%,var(--rec-line))}
+.me-zone .trouble{margin-top:0}
+.me-zone .trouble button{background:var(--rec-surface)}
+.rec2.multi{gap:6px}
+.rec2.multi .hc2{padding:6px 12px;gap:10px}
+.rec2.multi .hc2 .hno{font-size:40px}
+.rec2.multi .hc2 .advice{display:none}
+.rec2.multi .rec-card{padding:8px;gap:8px}
+.rec2.multi .pcol{padding:5px 4px}
+.rec2.multi .ph{margin-bottom:2px}
+.rec2.multi .pv{height:28px}
+.rec2.multi .pv .mk3{width:28px;height:28px;font-size:19px}
+.rec2.multi .pv .pt{font-size:20px}
+.rec2.multi .pstep button{height:27px}
+.rec2.multi .pcell{gap:3px}
+.rec2.multi .trouble button{height:34px}
+.rec2.multi .pstep button{height:25px}
+.rec2.multi .hc2{padding:4px 12px}
+.rec2.multi .hc2 .hno{font-size:36px}
+.rec2.multi .me-zone{padding:4px 8px 7px;gap:6px}
+.rec2.multi .pcell em{font-size:8px}
+.rec2.multi .rec-card{gap:6px}
 </style>
 
 </head>
@@ -1261,7 +1285,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-21-0110";
+const BUILD = "2026-10-21-0730";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1810,7 +1834,8 @@ function viewRecordDraft(d){
     F.pen ? tbBtn("pen","pn","1ペナ") : "",
     F.bunker ? `<button class="bk" data-act="tog" data-k="bunker" aria-pressed="${!!h.bunker}">バンカー</button>` : "",
   ].filter(Boolean);
-  return `<div class="rec rec2">
+  const multi=(d.mates||[]).length>0; // 同伴者がいるとき: 自分だけの記録（ティーショット・OBなど）を緑の囲みに入れる
+  return `<div class="rec rec2 ${multi?"multi":""}">
     <div class="rec-top">
       <button class="icon-btn" data-act="ask-discard" aria-label="記録を閉じる">${ICON.x}</button>
       <div class="rec-who"><b>${esc(d.player)}${(d.mates||[]).length?`<small> ほか${d.mates.length}人</small>`:""}</b><span>${esc(d.courseName)}・${esc(d.date.slice(5).replace("-","/"))}${d.editing?"・編集中":""}</span></div>
@@ -1836,11 +1861,13 @@ function viewRecordDraft(d){
           <div class="stp-v ${state.tap&&state.tap.startsWith("pt")?"pop":""}"><b>${h.putts}</b><span class="tm p-${h.putts<=1?"birdie":h.putts===2?"par":h.putts===3?"bogey":"double"}">${h.putts===0?"CHIP IN":h.putts+" PUTT"+(h.putts>1?"S":"")}</span></div>
           <button data-act="pt" data-d="1" aria-label="パットを1つ増やす" ${h.putts>=9?"disabled":""}>${ICON.up}</button></div></div>`:""}
       </div>`}
-      ${F.shot?`<div class="ap-wrap"><div class="seg-head"><span class="eyebrow">TEE SHOT<b>ティーショットの行き先</b></span>${F.club?`<button class="club-tag ${h.club?"has":""}" data-act="open-club">${h.club?esc(h.club):"クラブ"}</button>`:""}</div>${isLong?fairwaySVG(h.tee, state.tap&&state.tap.startsWith("tee")):approachSVG(h.dir, state.tap&&state.tap.startsWith("dir"))}</div>`:""}
+      ${multi?`<div class="me-zone">`:""}
+      ${F.shot?`<div class="ap-wrap"><div class="seg-head"><span class="eyebrow">TEE SHOT<b>${multi?esc(d.player)+"のティーショット":"ティーショットの行き先"}</b></span>${F.club?`<button class="club-tag ${h.club?"has":""}" data-act="open-club">${h.club?esc(h.club):"クラブ"}</button>`:""}</div>${isLong?fairwaySVG(h.tee, state.tap&&state.tap.startsWith("tee")):approachSVG(h.dir, state.tap&&state.tap.startsWith("dir"))}</div>`:""}
       ${F.club && !F.shot ? (()=>{ const lc = lastClub(d, state.hole);
         // ショットの方向がOFFでもクラブだけ記録できるよう、クラブを横に並べて1タップで選ぶ（前回のクラブには小さく「前回」）
         return `<div class="club-strip"><span class="eyebrow">TEE SHOT<b>クラブ</b></span><div class="cs-chips">${myClubs().map(c=>`<button data-act="club-quick" data-v="${esc(c)}" aria-pressed="${h.club===c}" class="${lc===c?"last":""}">${esc(c)}</button>`).join("")}</div></div>`; })() : ""}
       ${troubles.length?`<div class="trouble t${troubles.length}">${troubles.join("")}</div>`:""}
+      ${multi?`</div>`:""}
     </div>
     <div class="rec-bar">
       <button class="back" data-act="prev" ${state.hole===0?"disabled":""} aria-label="前のホール">${ICON.back}</button>
