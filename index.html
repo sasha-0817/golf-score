@@ -1030,6 +1030,34 @@ input,select,textarea{font-size:max(16px,1em)}
 .rc-who{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:12px 0 0}
 .rc-who button{height:32px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.55);background:transparent;color:#fff;font:inherit;font-weight:700;font-size:13px;cursor:pointer}
 .rc-who button[aria-pressed="true"]{background:#fff;color:#0B1310;border-color:#fff}
+/* 1ホールずつの同伴者（打数だけ） */
+.mates-rec{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;--paper:var(--rec-surface);--fg:var(--rec-fg);--muted:var(--rec-muted)}
+.mates-rec .mr{border:1px solid var(--rec-line);border-radius:12px;background:var(--rec-bg);padding:4px 4px 5px;min-width:0}
+.mates-rec .mr>span{display:block;font-size:11px;font-weight:700;color:var(--rec-muted);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3}
+.mates-rec .mr>div{display:flex;align-items:center;justify-content:space-between;gap:2px}
+.mates-rec button{width:30px;height:30px;flex:0 0 30px;border-radius:9px;border:1px solid var(--rec-line);background:var(--rec-surface);color:var(--rec-fg);display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;touch-action:manipulation}
+.mates-rec button svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.mates-rec button:disabled{opacity:.3}
+.mates-rec .mk3{width:26px;height:26px;font:700 17px var(--f-num)}
+.rec-who b small{font-size:11px;font-weight:600;color:var(--rec-muted)}
+/* みんなのリザルト */
+.result-back{overflow-y:auto;align-items:flex-start}
+.result-back>.result-wrap{margin:auto 0} /* 長いカードでも上が切れないよう、入りきらないときは上からスクロール */
+.rc-who{gap:4px}
+.rc-who button{padding:0 8px;font-size:12px;height:30px}
+.rc-rank>div{padding:3px 10px}
+.result-back.still,.result-back.still .result-card{animation:none}
+.rc-rank{display:flex;flex-direction:column;gap:4px}
+.rc-rank>div{display:flex;align-items:center;gap:10px;padding:5px 10px;border-radius:12px;background:rgba(255,255,255,.08)}
+.rc-rank i{font-style:normal;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 13px var(--f-num);background:rgba(255,255,255,.18)}
+.rc-rank span{flex:1;font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rc-rank b{font:700 26px var(--f-num);line-height:1}
+.rc-rank small{font:700 15px var(--f-num);opacity:.85;min-width:30px;text-align:right}
+.rc-rank .win{background:rgba(255,215,106,.18);box-shadow:inset 0 0 0 1px rgba(255,215,106,.55)}
+.rc-rank .win i{background:#FFD76A;color:#3A2600}
+.rc-sc table.grp col.lab{width:58px}
+.rc-sc table.grp td.nm{font-size:10px;text-align:left;padding-left:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:58px;letter-spacing:-.02em}
+.rc-all{margin-top:10px;background:none;border:0;color:#fff;font:inherit;font-weight:700;font-size:14px;text-decoration:underline;text-underline-offset:3px;opacity:.9;cursor:pointer;padding:6px}
 </style>
 
 </head>
@@ -1136,7 +1164,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-20-2030";
+const BUILD = "2026-10-20-2130";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1341,14 +1369,15 @@ function render(){
   const view = {record:viewRecord, stats:viewStats, history:viewHistory, courses:viewCourses}[state.tab] || viewRecord;
   m.innerHTML = `<section class="view">${view()}</section>`;
   after[state.tab] && after[state.tab]();
-  if(state.result){ m.insertAdjacentHTML("beforeend", resultOverlay(state.result)); fillStars(); }
+  if(state.result){ m.insertAdjacentHTML("beforeend", resultOverlay(state.result)); if(state.resultOpen) m.querySelector(".result-back").classList.add("still"); state.resultOpen=true; fillStars(); }
+  else state.resultOpen=false; // 描き直すたびに出てくるアニメーションをくり返すと点滅して見えるので、2回目からは止める
 }
 // COURSE BEST のキラキラ（金と白の4つ角の星）。文字のない空き（大きなスコアの右〜スコアカードの上）に置き、画面ではゆっくり点滅させる。
 // 画像保存では onclone でアニメーションを止めるので、同じ星がそのまま止まった絵として写る。
-let starCache=null; // 画面を描き直しても星の位置が飛ばないよう、ラウンドごとに覚えておく
+let starCache={}; // 画面を描き直したり、ほかの人に切りかえて戻っても星が消えないよう、ラウンドごとに覚えておく
 function fillStars(){
   const card=$(".result-card"), box=card&&card.querySelector(".rc-stars"); if(!box) return;
-  const key=state.result&&state.result.id; if(starCache&&starCache.key===key){ box.innerHTML=starCache.html; return; }
+  const key=state.result&&state.result.id; if(starCache[key]){ box.innerHTML=starCache[key]; return; }
   const cr=card.getBoundingClientRect(), rel=el=>{ const b=el.getBoundingClientRect(); return {l:(b.left-cr.left)/cr.width*100, r:(b.right-cr.left)/cr.width*100, t:(b.top-cr.top)/cr.height*100, b:(b.bottom-cr.top)/cr.height*100}; };
   const sc=card.querySelector(".rc-score span")||card.querySelector(".rc-score b"), sheet=card.querySelector(".rc-sc"), flag=card.querySelector(".rc-flag");
   const X0=(sc?rel(sc).r:55)+3, Y1=(sheet?rel(sheet).t:40)-2, fl=flag?rel(flag):null;
@@ -1358,7 +1387,7 @@ function fillStars(){
   const star=(sz,col,op)=>`<svg viewBox="0 0 24 24" width="${sz}" height="${sz}"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z" fill="${col}" fill-opacity="${op}"/></svg>`;
   box.innerHTML = spots.map(([x,y],i)=>{ const big=i<3, sz=big?22+Math.round(Math.random()*8):8+Math.round(Math.random()*9), col=i%3===2?"#FFFFFF":"#FFD76A";
     return `<i class="${big?"big":""}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%"><svg style="animation-delay:${(-Math.random()*2.4).toFixed(2)}s;animation-duration:${(1.6+Math.random()*1.4).toFixed(2)}s" ${star(sz,col,big?.95:(.55+Math.random()*.4).toFixed(2)).slice(5)}</i>`; }).join("");
-  starCache={key, html:box.innerHTML};
+  if(spots.length){ starCache[key]=box.innerHTML; fillStars.n=0; } else if((fillStars.n=(fillStars.n||0)+1)<6) setTimeout(fillStars,150); // 描く前で場所が測れなかったら少し待ってやり直す
 }
 function resultOverlay(r){
   const t=roundTotals(r); const s=computeStats([r]);
@@ -1369,7 +1398,7 @@ function resultOverlay(r){
   const best = flag==="COURSE BEST!";
   const conf = best ? `<div class="rc-stars" aria-hidden="true"></div>` : "";
   return `<div class="result-back" role="dialog" aria-label="ラウンド結果"><div class="result-wrap">
-    <div class="result-card"><svg class="rc-rings" viewBox="0 0 320 280" aria-hidden="true">${Array.from({length:10},(_,k)=>`<ellipse cx="160" cy="140" rx="${16+k*16}" ry="${14+k*14}" fill="none" stroke="rgba(255,255,255,.13)" stroke-width="1"/>`).join("")}<circle cx="160" cy="140" r="1.5" fill="rgba(255,255,255,.3)"/></svg>${conf}<div class="rc-in">
+    ${state.resultAll&&(state.resultGroup||[]).length>1?groupCard(state.resultGroup):`<div class="result-card"><svg class="rc-rings" viewBox="0 0 320 280" aria-hidden="true">${Array.from({length:10},(_,k)=>`<ellipse cx="160" cy="140" rx="${16+k*16}" ry="${14+k*14}" fill="none" stroke="rgba(255,255,255,.13)" stroke-width="1"/>`).join("")}<circle cx="160" cy="140" r="1.5" fill="rgba(255,255,255,.3)"/></svg>${conf}<div class="rc-in">
       <div class="rc-top"><div><div class="k">ROUND COMPLETE</div><div class="n">${esc(r.player)}</div><div class="c">${esc(r.courseName)}・${+m}/${+d}</div></div>${flag?`<span class="rc-flag">${flag}</span>`:""}</div>
       <div class="rc-score"><b>${t.score}</b><span>${toPar(t.diff)}</span></div>
       <div class="rc-sc">${(()=>{ const out=[]; for(let i=0;i<r.holes.length;i+=9){ const ch=r.holes.slice(i,i+9);
@@ -1386,10 +1415,31 @@ function resultOverlay(r){
         <div><span>OB</span><b>${s.obN||(fields().ob&&!r.card)?s.obN:"—"}</b></div>
       </div>
       <div class="rc-brand"><span class="rc-logo"><img src="mark.png" alt=""><span><b>GOLF SC.</b><small>SHORT COURSE SCORECARD</small></span></span></div>
-    </div></div>
-    ${(state.resultGroup||[]).length>1?`<div class="rc-who" role="group" aria-label="だれのリザルト">${state.resultGroup.map(x=>`<button data-act="result-pick" data-id="${esc(x.id)}" aria-pressed="${x.id===r.id}">${esc(x.player)}</button>`).join("")}</div>`:""}
+    </div></div>`}
+    ${(state.resultGroup||[]).length>1?(()=>{ const g=state.resultGroup, nm=g.map(x=>x.player);
+      return `<div class="rc-who" role="group" aria-label="だれのリザルト"><button data-act="result-all" aria-pressed="${!!state.resultAll}">みんな</button>${g.map((x,k)=>`<button data-act="result-pick" data-id="${esc(x.id)}" aria-pressed="${!state.resultAll&&x.id===r.id}">${esc(dupLabel(nm,k))}</button>`).join("")}</div>`; })():""}
     <div class="rc-actions"><button class="rc-save" data-act="save-card">画像を保存・送る</button></div>
-    <div class="rc-actions rc-sub"><button class="rc-back" data-act="back-to-input">スコア入力に戻る</button><button class="rc-close" data-act="close-result">閉じる</button></div>
+    ${(state.resultGroup||[]).length>1?`<button class="rc-all" data-act="save-all">全員分をまとめて保存（${state.resultGroup.length+1}枚）</button>`:""}
+    <div class="rc-actions rc-sub">${state.resultAll&&(state.resultGroup||[]).length>1?"":`<button class="rc-back" data-act="back-to-input">スコア入力に戻る</button>`}<button class="rc-close" data-act="close-result">閉じる</button></div>
+  </div></div>`;
+}
+/* 同じ名前が2人以上いるとき（ボール2個で2回分回る人など）は ①② を付けて見分ける。保存する名前はそのまま */
+function dupLabel(names, k){ const n=names[k]; if(names.filter(x=>x===n).length<2) return n; return n+"①②③④"[names.slice(0,k).filter(x=>x===n).length]; }
+/* みんなのリザルト: 順位と、全員分のミニスコアカード */
+function groupCard(g){
+  const r0=g[0], [y,m,d]=r0.date.split("-"), N=r0.holes.length, nm=g.map(x=>x.player);
+  const tots=g.map(r=>roundTotals(r)), order=g.map((r,k)=>k).sort((a,b)=>tots[a].score-tots[b].score || a-b);
+  const rank=k=>1+tots.filter(t=>t.score<tots[k].score).length;
+  const tables=[]; for(let i=0;i<N;i+=9){ const idx=Array.from({length:Math.min(9,N-i)},(_,j)=>i+j), lab=N>9?(i?"IN":"OUT"):"";
+    tables.push(`<table class="half grp"><colgroup><col class="lab">${idx.map(()=>"<col>").join("")}<col class="sum"></colgroup>
+      <tr class="h"><td class="lab">${lab}</td>${idx.map(h=>`<td>${h+1}</td>`).join("")}<td class="sum">計</td></tr>
+      <tr class="p"><td class="lab">PAR</td>${idx.map(h=>`<td>${r0.holes[h].par}</td>`).join("")}<td class="sum">${sum(idx,h=>r0.holes[h].par)}</td></tr>
+      ${order.map(k=>`<tr><td class="lab nm">${esc(dupLabel(nm,k))}</td>${idx.map(h=>`<td>${mark(g[k].holes[h])}</td>`).join("")}<td class="sum"><b>${sum(idx,h=>g[k].holes[h].strokes)}</b></td></tr>`).join("")}</table>`); }
+  return `<div class="result-card grp-card"><svg class="rc-rings" viewBox="0 0 320 280" aria-hidden="true">${Array.from({length:10},(_,k)=>`<ellipse cx="160" cy="140" rx="${16+k*16}" ry="${14+k*14}" fill="none" stroke="rgba(255,255,255,.13)" stroke-width="1"/>`).join("")}</svg><div class="rc-in">
+    <div class="rc-top"><div><div class="k">ROUND COMPLETE</div><div class="n">${g.length}人のスコア</div><div class="c">${esc(r0.courseName)}・${+m}/${+d}</div></div></div>
+    <div class="rc-rank">${order.map(k=>`<div class="${rank(k)===1?"win":""}"><i>${rank(k)}</i><span>${esc(dupLabel(nm,k))}</span><b>${tots[k].score}</b><small>${toPar(tots[k].diff)}</small></div>`).join("")}</div>
+    <div class="rc-sc">${tables.join("")}</div>
+    <div class="rc-brand"><span class="rc-logo"><img src="mark.png" alt=""><span><b>GOLF SC.</b><small>SHORT COURSE SCORECARD</small></span></span></div>
   </div></div>`;
 }
 const after = {};
@@ -1467,7 +1517,7 @@ function viewRecord(){
         <div class="field"><label for="r-player">あなたの名前</label><input id="r-player" list="plist" value="${esc(state.sp!=null?state.sp:last)}" placeholder="名前"><datalist id="plist">${pl.map(p=>`<option value="${esc(p)}">`).join("")}</datalist></div>
         <div class="field" style="flex:0 0 150px"><label for="r-date">日付</label><input id="r-date" type="date" value="${state.sd||today()}"></div>
       </div>
-      ${state.im==="card"?`<div class="field"><label>一緒に回る人（任意・3人まで）</label><div class="mates">${[0,1,2].map(i=>`<input id="r-mate${i}" list="plist" value="${esc((state.mates||LS.get("sc.mates",[]))[i]||"")}" placeholder="${i+2}人目" aria-label="${i+2}人目の名前">`).join("")}</div></div>`:""}
+      ${`<div class="field"><label>一緒に回る人（任意・3人まで${state.im==="card"?"":"・打数だけ"}）</label><div class="mates">${[0,1,2].map(i=>`<input id="r-mate${i}" list="plist" value="${esc((state.mates||LS.get("sc.mates",[]))[i]||"")}" placeholder="${i+2}人目" aria-label="${i+2}人目の名前">`).join("")}</div></div>`}
       ${coursePickField()}
       <div class="field" id="r-gwrap" hidden><label for="r-green">今日のグリーン</label><select id="r-green"></select></div>
       <div class="err" id="r-err"></div>
@@ -1666,7 +1716,7 @@ function viewRecordDraft(d){
   return `<div class="rec rec2">
     <div class="rec-top">
       <button class="icon-btn" data-act="ask-discard" aria-label="記録を閉じる">${ICON.x}</button>
-      <div class="rec-who"><b>${esc(d.player)}</b><span>${esc(d.courseName)}・${esc(d.date.slice(5).replace("-","/"))}${d.editing?"・編集中":""}</span></div>
+      <div class="rec-who"><b>${esc(d.player)}${(d.mates||[]).length?`<small> ほか${d.mates.length}人</small>`:""}</b><span>${esc(d.courseName)}・${esc(d.date.slice(5).replace("-","/"))}${d.editing?"・編集中":""}</span></div>
       <button class="icon-btn gear-btn" data-act="open-fields" aria-label="記録する項目の設定">${ICON.gear}</button>
     </div>
     <div class="dots ${N>9?"two":""}">${d.holes.map((x,i)=>`<button data-act="hole" data-i="${i}" class="${dotCls(x)} ${i===state.hole?"cur":""}" aria-label="${i+1}番ホール${x.entered?" "+x.strokes+"打":""}">${i+1}H</button>`).join("")}</div>
@@ -1688,6 +1738,9 @@ function viewRecordDraft(d){
           <div class="stp-v ${state.tap&&state.tap.startsWith("pt")?"pop":""}"><b>${h.putts}</b><span class="tm p-${h.putts<=1?"birdie":h.putts===2?"par":h.putts===3?"bogey":"double"}">${h.putts===0?"CHIP IN":h.putts+" PUTT"+(h.putts>1?"S":"")}</span></div>
           <button data-act="pt" data-d="1" aria-label="パットを1つ増やす" ${h.putts>=9?"disabled":""}>${ICON.up}</button></div></div>`:""}
       </div>
+      ${(d.mates||[]).length?(()=>{ const nm=[d.player,...d.mates.map(m=>m.name)];
+        return `<div class="mates-rec">${d.mates.map((m,k)=>{ const v=m.s[state.hole], dd=v-h.par;
+          return `<div class="mr"><span>${esc(dupLabel(nm,k+1))}</span><div><button data-act="mt" data-i="${k}" data-d="-1" ${v<=1?"disabled":""} aria-label="${esc(m.name)}の打数を1つ減らす">${ICON.down}</button><b class="mk3 m-${v===1?"hio":TONE(dd)}">${v}</b><button data-act="mt" data-i="${k}" data-d="1" ${v>=15?"disabled":""} aria-label="${esc(m.name)}の打数を1つ増やす">${ICON.up}</button></div></div>`; }).join("")}</div>`; })():""}
       ${F.shot?`<div class="ap-wrap"><div class="seg-head"><span class="eyebrow">TEE SHOT<b>ティーショットの行き先</b></span>${F.club?`<button class="club-tag ${h.club?"has":""}" data-act="open-club">${h.club?esc(h.club):"クラブ"}</button>`:""}</div>${isLong?fairwaySVG(h.tee, state.tap&&state.tap.startsWith("tee")):approachSVG(h.dir, state.tap&&state.tap.startsWith("dir"))}</div>`:""}
       ${F.club && !F.shot ? (()=>{ const lc = lastClub(d, state.hole);
         // ショットの方向がOFFでもクラブだけ記録できるよう、クラブを横に並べて1タップで選ぶ（前回のクラブには小さく「前回」）
@@ -1752,7 +1805,7 @@ async function cardFinish(b){
   try{ for(const r of rs) await store.saveRound(r); }
   catch(e){ if(b) b.disabled=false; writeErr(e); return; }
   state.cdraft=null; saveCDraft(); state.confirm=null; state.tab="history"; LS.set("sc.tab","history");
-  state.fPlayer=rs[0].player; LS.set("sc.fPlayer",rs[0].player); state.openRound=rs[0].id; state.result=rs[0]; state.resultGroup=rs.length>1?rs:null; render();
+  state.fPlayer=rs[0].player; LS.set("sc.fPlayer",rs[0].player); state.openRound=rs[0].id; state.result=rs[0]; state.resultGroup=rs.length>1?rs:null; state.resultAll=rs.length>1; render();
 }
 function viewCard(cd){
   const N=cd.holes.length, two=N>9, half=two?(cd.half||0):0, pOn=fields().putts, sel=cd.sel;
@@ -1779,12 +1832,12 @@ function viewCard(cd){
     </div>
     ${two?`<div class="cd-tabs" role="group" aria-label="前半・後半">${["OUT 1–9","IN 10–"+N].map((l,k)=>`<button data-act="cd-half" data-v="${k}" aria-pressed="${half===k}">${l}</button>`).join("")}</div>`:""}
     <div class="cd-scroll"><table class="cdt ${pOn?"wp":""}"><colgroup><col class="h"><col class="par">${cd.players.map(()=>`<col class="s">${pOn?`<col class="p">`:""}`).join("")}</colgroup>
-      <thead><tr><th>H</th><th>PAR</th>${cd.players.map(p=>`<th class="nm" colspan="${pOn?2:1}">${esc(p.name)}</th>`).join("")}</tr>
+      <thead><tr><th>H</th><th>PAR</th>${cd.players.map((p,i)=>`<th class="nm" colspan="${pOn?2:1}">${esc(dupLabel(cd.players.map(x=>x.name),i))}</th>`).join("")}</tr>
       ${pOn?`<tr class="sub"><th></th><th></th>${cd.players.map(()=>`<th class="c-s">打数</th><th>パット</th>`).join("")}</tr>`:""}</thead>
       <tbody>${rows.map(h=>`<tr><td class="hn">${h+1}</td><td class="pr">${cd.holes[h].par}</td>${cd.players.map((p,i)=>cell(h,i,"s")+(pOn?cell(h,i,"p"):"")).join("")}</tr>`).join("")}</tbody>
       <tfoot>${two?foot(half?"IN":"OUT",rows)+foot("計",all,"all"):foot("計",all)}</tfoot></table></div>
     <div class="cd-pad">
-      <div class="cd-lbl">${sel?`<span><b>${esc(plSel.name)}</b>・${sel.h+1}H（PAR ${cd.holes[sel.h].par}）の<em>${ks==="s"?"打数":"パット"}</em></span>`:`<span>${done?"全部入りました。保存しましょう":"マスをタップして入力"}</span>`}</div>
+      <div class="cd-lbl">${sel?`<span><b>${esc(dupLabel(cd.players.map(x=>x.name),sel.i))}</b>・${sel.h+1}H（PAR ${cd.holes[sel.h].par}）の<em>${ks==="s"?"打数":"パット"}</em></span>`:`<span>${done?"全部入りました。保存しましょう":"マスをタップして入力"}</span>`}</div>
       ${sel||!done?`<div class="cd-keys">${[1,2,3,4,5,6,7,8,9].map(n=>key(n,String(n),!sel || (ks==="p" && n>9))).join("")}${key("10","10+",!sel||ks==="p")}${key("0","0",!sel||ks==="s")}${key("del","消す",!sel)}</div>`:""}
       ${done?`<button class="cd-save" data-act="cd-finish">ラウンドを保存${cd.players.length>1?`（${cd.players.length}人分）`:""}</button>`:""}
     </div>
@@ -2208,6 +2261,21 @@ after.courses = () => {
   [0,1].forEach(i=>{ const el=$("#c-g"+i); if(el) el.oninput=()=>{ e.gn[i]=el.value.trim()||(i?"B":"A"); }; });
 };
 
+/* リザルトカードを画像にする（アニメーションを止め、記号の中の数字のずれを直して写す） */
+async function shotCard(card){
+  const cv = await html2canvas(card,{scale:3, backgroundColor:null, useCORS:true,
+    onclone: doc => { const st=doc.createElement("style"); st.textContent="*,*::before,*::after{animation:none!important;transition:none!important;opacity:1}"
+        // html2canvas は Barlow Condensed の数字を約1.7px下・少し左に描くので、記号の中の数字だけ逆向きに寄せて真ん中に見せる
+        +".rc-sc .mk3{box-sizing:border-box!important;padding:0 0 3px 1.5px!important}"; doc.head.appendChild(st);
+      doc.querySelectorAll(".result-card,.result-card *").forEach(el=>{ el.style.animation="none"; }); // キラキラは同じ位置のまま止めて写す
+    }});
+  return new Promise(r=>cv.toBlob(r,"image/png"));
+}
+async function shareFiles(files){
+  if(navigator.canShare && navigator.canShare({files})){ await navigator.share({files, title:"GOLF SC."}); return; }
+  for(const f of files){ const a=document.createElement("a"); a.href=URL.createObjectURL(f); a.download=f.name; document.body.appendChild(a); a.click(); a.remove(); await new Promise(r=>setTimeout(r,250)); }
+  toast(files.length>1?`${files.length}枚の画像を保存しました`:"画像を保存しました");
+}
 /* ---------- actions ---------- */
 function saveDraft(){ if(state.draft) state.draft.cur=state.hole; LS.set("sc.draft", state.draft); } // 今のホールも覚えておく（自動更新で読み直しても同じホールから）
 document.addEventListener("click", async ev => {
@@ -2223,19 +2291,22 @@ document.addEventListener("click", async ev => {
       const card=$(".result-card"); if(!card || !window.html2canvas){ toast("画像を作れませんでした"); break; }
       b.disabled=true; b.textContent="作成中…";
       try{
-        const cv = await html2canvas(card,{scale:3, backgroundColor:null, useCORS:true,
-          onclone: doc => { const st=doc.createElement("style"); st.textContent="*,*::before,*::after{animation:none!important;transition:none!important;opacity:1}"
-              // html2canvas は Barlow Condensed の数字を約1.7px下・少し左に描くので、記号の中の数字だけ逆向きに寄せて真ん中に見せる
-              +".rc-sc .mk3{box-sizing:border-box!important;padding:0 0 3px 1.5px!important}"; doc.head.appendChild(st);
-            doc.querySelectorAll(".result-card,.result-card *").forEach(el=>{ el.style.animation="none"; });
-            // キラキラは画面と同じ位置のまま、アニメーションを止めて写す
-          }});
-        const blob = await new Promise(r=>cv.toBlob(r,"image/png"));
-        const file = new File([blob], `golfsc-${state.result.date}.png`, {type:"image/png"});
-        if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:"GOLF SC."}); }
-        else { const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=file.name; document.body.appendChild(a); a.click(); a.remove(); toast("画像を保存しました"); }
+        const blob = await shotCard(card);
+        const file = new File([blob], `golfsc-${state.result.date}${state.resultAll?"-all":""}.png`, {type:"image/png"});
+        await shareFiles([file]);
       }catch(e){ if(e && e.name!=="AbortError") toast("画像を作れませんでした"); }
       b.disabled=false; b.textContent="画像を保存・送る"; break;
+    }
+    case "save-all": { // みんな＋1人ずつの画像をまとめて作り、1回で共有（iPhone は写真にまとめて保存できる）
+      const g=state.resultGroup||[]; if(!g.length || !window.html2canvas){ toast("画像を作れませんでした"); break; }
+      const keep={r:state.result, all:state.resultAll}; b.disabled=true; b.textContent="作成中…"; const files=[];
+      try{
+        for(const v of [null, ...g]){ state.resultAll=!v; if(v) state.result=v; render(); await new Promise(r=>setTimeout(r,80));
+          const blob=await shotCard($(".result-card")); files.push(new File([blob], `golfsc-${g[0].date}-${v?files.length:"all"}.png`, {type:"image/png"})); }
+      }catch(e){ toast("画像を作れませんでした"); }
+      state.result=keep.r; state.resultAll=keep.all; render();
+      if(files.length===g.length+1){ try{ await shareFiles(files); }catch(e){ if(e && e.name!=="AbortError") toast("画像を作れませんでした"); } }
+      break;
     }
     case "back-to-input": {
       const r=state.result; if(!r) { render(); break; }
@@ -2244,7 +2315,7 @@ document.addEventListener("click", async ev => {
       state.draft={...JSON.parse(JSON.stringify(r)), editing:true}; state.draft.holes.forEach(x=>x.entered=true);
       state.hole=r.holes.length-1; state.tab="record"; LS.set("sc.tab","record"); saveDraft(); render(); break;
     }
-    case "close-result": state.result=null; state.resultGroup=null; render(); break;
+    case "close-result": state.result=null; state.resultGroup=null; state.resultAll=false; render(); break;
     case "toggle-round": state.openRound = state.openRound===b.dataset.id ? null : b.dataset.id; state.confirm=null; render(); break;
     case "stat-tab": { const tb=$(".stat-tabs"), y0=tb?tb.getBoundingClientRect().top:0; state.statTab=b.dataset.v; LS.set("sc.statTab",b.dataset.v); state.trendSel=null; render();
       const t2=$(".stat-tabs"); if(t2) window.scrollBy(0, t2.getBoundingClientRect().top-y0); break; } // タブの位置を動かさない
@@ -2264,14 +2335,16 @@ document.addEventListener("click", async ev => {
       { const F=favs(); if(!F.includes(c.id)) LS.set("sc.favs",[...F,c.id]); }
       LS.set("sc.lastCourse", c.id); state.pick=null; state.sp=null; state.sd=null;
       LS.set("sc.player",p);
+      // 一緒に回る人（同じ名前もOK: ボール2個で2回分回る人がいる）
+      const mates=[0,1,2].map(i=>(($("#r-mate"+i)||{}).value||"").trim()).filter(Boolean); LS.set("sc.mates",[0,1,2].map(i=>mates[i]||"")); state.mates=null;
       if(state.im==="card"){
-        const mates=[0,1,2].map(i=>(($("#r-mate"+i)||{}).value||"").trim()).filter(Boolean); LS.set("sc.mates",[0,1,2].map(i=>mates[i]||"")); state.mates=null;
-        const names=[p,...mates]; if(new Set(names).size<names.length){ $("#r-err").textContent="同じ名前の人がいます。名前を変えてください"; return; }
+        const names=[p,...mates];
         const N=c.holes.length;
         state.cdraft={ id:uid(), card:true, courseId:c.id, courseName:c.name, date:dt, holes:c.holes.map(x=>({par:x.par})), players:names.map(n=>({name:n, s:Array(N).fill(null), p:Array(N).fill(null)})), sel:{h:0,i:0,k:"s"} };
         saveCDraft(); render(); break; }
       const gs=courseGreens(c), gi=gs ? (+($("#r-green")||{}).value||0) : 0;
-      state.draft={ id:uid(), player:p, courseId:c.id, courseName:c.name, date:dt, gn:gs, holes:c.holes.map(x=>({par:x.par, yards:(gi&&x.yards2)?x.yards2:(x.yards||null), ys:gs?[x.yards||null,x.yards2||null]:null, gi, strokes:x.par, putts:2, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null, entered:false})) };
+      state.draft={ id:uid(), player:p, courseId:c.id, courseName:c.name, date:dt, gn:gs, holes:c.holes.map(x=>({par:x.par, yards:(gi&&x.yards2)?x.yards2:(x.yards||null), ys:gs?[x.yards||null,x.yards2||null]:null, gi, strokes:x.par, putts:2, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null, entered:false})),
+        mates: mates.map(n=>({name:n, s:c.holes.map(x=>x.par)})) }; // 同伴者は打数だけ（パーから増減）
       state.hole=0; saveDraft(); render(); break;
     }
     case "hole": mark_entered(); state.slide = +b.dataset.i>state.hole?"l":"r"; state.hole=+b.dataset.i; saveDraft(); render(); break;
@@ -2289,7 +2362,10 @@ document.addEventListener("click", async ev => {
       const r={ id:d.id, player:d.player, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:d.createdAt||Date.now(),
         holes:d.holes.map(x=>({par:x.par, strokes:x.strokes, putts:(fields().putts||d.editing)?x.putts:0, dir:x.dir, bunker:!!x.bunker, ob:evs(x,"ob").length>0, pen:evs(x,"pen").length>0, tee:x.tee||null, club:x.club||null})) };
       b.disabled=true; rememberClubs(r);
-      try{ await store.saveRound(r); state.draft=null; saveDraft(); state.tab="history"; LS.set("sc.tab","history"); state.fPlayer=r.player; state.openRound=r.id; state.result=r; render(); }
+      const mr=(!d.editing && Array.isArray(d.mates)) ? d.mates.map((m,k)=>({ id:uid(), card:true, player:m.name, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:r.createdAt+k+1,
+        holes:d.holes.map((x,i)=>({par:x.par, strokes:m.s[i], putts:0, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null})) })) : [];
+      try{ await store.saveRound(r); for(const x of mr) await store.saveRound(x);
+        state.draft=null; saveDraft(); state.tab="history"; LS.set("sc.tab","history"); state.fPlayer=r.player; state.openRound=r.id; state.result=r; state.resultGroup=mr.length?[r,...mr]:null; state.resultAll=mr.length>0; render(); }
       catch(e){ b.disabled=false; writeErr(e); }
       break;
     }
@@ -2303,7 +2379,8 @@ document.addEventListener("click", async ev => {
     case "cd-resume": state.cdraft.paused=false; saveCDraft(); render(); break;
     case "cd-discard": state.cdraft=null; state.confirm=null; saveCDraft(); render(); break;
     case "cd-finish": await cardFinish(b); break;
-    case "result-pick": { const g=state.resultGroup||[]; const r=g.find(x=>x.id===b.dataset.id); if(r){ state.result=r; state.fPlayer=r.player; state.openRound=r.id; starCache=null; render(); } break; }
+    case "result-pick": { const g=state.resultGroup||[]; const r=g.find(x=>x.id===b.dataset.id); if(r){ state.result=r; state.resultAll=false; state.fPlayer=r.player; state.openRound=r.id; render(); } break; }
+    case "result-all": state.resultAll=true; render(); break;
     case "pick-course": state.pick=b.dataset.id; state.sheet=null; state.pickAdd=false; render(); break;
     case "add-fav-pick": { const F=favs(); if(!F.includes(b.dataset.id)) LS.set("sc.favs",[...F,b.dataset.id]); state.pick=b.dataset.id; state.sheet=null; state.pickAdd=false; render(); break; }
     case "pick-add": state.pickAdd=true; render(); break;
@@ -2324,6 +2401,7 @@ document.addEventListener("click", async ev => {
         h[k+"C"] = e.includes(v) ? e.filter(x=>x!==v) : e.concat([v]); h[k]=h[k+"C"].length>0; state.clubFor=null; }
       else { h.club = (h.club===b.dataset.v && !h.clubAuto) ? null : b.dataset.v; h.clubAuto=false; }
       h.entered=true; state.sheet=null; saveDraft(); render(); break; }
+    case "mt": { const m=d.mates[+b.dataset.i]; m.s[state.hole]=Math.max(1,Math.min(15,m.s[state.hole]+ +b.dataset.d)); saveDraft(); render(); break; }
     case "tb": { const k=b.dataset.k; h[k]=!evs(h,k).length; delete h[k+"C"]; h.entered=true; saveDraft(); render(); break; }
     case "open-club": openClubSheet(); render(); break;
     case "club-quick": h.club = h.club===b.dataset.v ? null : b.dataset.v; h.entered=true; saveDraft(); render(); break;

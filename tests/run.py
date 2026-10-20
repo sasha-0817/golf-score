@@ -204,7 +204,10 @@ with sync_playwright() as pw:
     rs = pg.evaluate("__db.rounds.map(r=>({p:r.player,s:r.holes.reduce((a,h)=>a+h.strokes,0),pt:r.holes.reduce((a,h)=>a+h.putts,0),n:r.holes.length}))")
     check("スコアカード: 4人分が別々のラウンドで保存", sorted(x["p"] for x in rs) == sorted(["たろう", "はなこ", "じろう", "さぶろう"]) and all(x["n"] == 9 for x in rs))
     check("スコアカード: パットを書かなかった人は putts 0（記録なし）", {x["p"]: x["pt"] > 0 for x in rs} == {"たろう": True, "はなこ": True, "じろう": False, "さぶろう": False})
-    check("スコアカード: リザルトで4人を切りかえられる", pg.evaluate("document.querySelectorAll('.rc-who button').length") == 4 and C(pg, '.rc-who button:nth-child(2)') and pg.evaluate("state.result.player") == "はなこ")
+    check("スコアカード: 保存後はみんなのリザルト（順位と全員のスコア）", pg.query_selector(".grp-card") is not None and pg.evaluate("document.querySelectorAll('.rc-rank>div').length") == 4)
+    check("スコアカード: リザルトで「みんな」＋4人を切りかえられる", pg.evaluate("document.querySelectorAll('.rc-who button').length") == 5 and C(pg, '.rc-who button:nth-child(3)') and pg.evaluate("state.result.player") == "はなこ")
+    check("リザルト: 2回目からは出てくるアニメーションをくり返さない（点滅しない）", "still" in pg.evaluate("document.querySelector('.result-back').className"))
+    check("リザルト: 全員分まとめて保存のボタン（5枚）", "5枚" in (pg.text_content("[data-act=save-all]") or ""))
     check("スコアカード: 保存後は下書きが消える", pg.evaluate("localStorage.getItem('sc.cdraft')") in (None, "null"))
     check("スコアカード: エラーなし", not errs)
     pg.context.close()
@@ -223,6 +226,31 @@ with sync_playwright() as pw:
     C(pg, '[data-act=cd-key][data-v="1"]'); C(pg, "[data-act=cd-finish]"); pg.wait_for_timeout(600)
     check("スコアカード: 電波なしでも端末に保存", pg.evaluate("state.cdraft") is None and pg.evaluate("pending.length") == 1)
     check("スコアカード（18H）: エラーなし", not errs)
+    pg.context.close()
+
+    # 8. 同じ名前OK（ボール2個で2回分）・1ホールずつでも同伴者の打数・COURSE BEST の星が切りかえても消えない
+    c1 = [{"id": "c1", "name": "C1", "holes": [{"par": 3, "yards": 100}] * 9}]
+    old = [{"id": "o1", "player": "たろう", "courseId": "c1", "courseName": "C1", "date": "2026-09-01", "createdAt": 1, "holes": [{"par": 3, "strokes": 5, "putts": 2}] * 9}]
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": ["たろう", "はなこ", ""], "sc.courses": c1, "sc.rounds": old, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\""}, offline=True)
+    check("1ホールずつでも同伴者欄が出る", pg.evaluate("document.querySelectorAll('.mates input').length") == 3)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    check("同じ名前でも始められる・同伴者2人", pg.evaluate("state.draft&&state.draft.mates.length") == 2)
+    check("同伴者の打数ボタンが出る・1画面に収まる", pg.evaluate("document.querySelectorAll('.mates-rec .mr').length") == 2 and pg.evaluate("document.documentElement.scrollHeight") <= 667)
+    C(pg, '[data-act=mt][data-i="1"][data-d="1"]'); C(pg, '[data-act=mt][data-i="1"][data-d="1"]')
+    check("同伴者の打数を増やせる（パーから）", pg.evaluate("state.draft.mates[1].s[0]") == 5)
+    for i in range(9):
+        C(pg, '[data-act=st][data-d="-1"]')
+        if i < 8: C(pg, "[data-act=next]")
+    C(pg, "[data-act=finish]"); pg.wait_for_timeout(900)
+    rs = pg.evaluate("pending.map(r=>({p:r.player,s:r.holes.reduce((a,h)=>a+h.strokes,0),pt:r.holes.reduce((a,h)=>a+h.putts,0)}))")
+    check("1ホールずつ: 自分＋同伴者2人が別々のラウンドで保存", sorted(x["p"] for x in rs) == ["たろう", "たろう", "はなこ"])
+    check("1ホールずつ: 同伴者はパットなし（putts 0）", [x["pt"] for x in rs if x["p"] == "はなこ"] == [0])
+    check("同じ名前は ①② で見分ける", "たろう②" in pg.evaluate("document.querySelector('.rc-who').textContent"))
+    C(pg, '.rc-who button:nth-child(2)'); pg.wait_for_timeout(200)
+    n1 = pg.evaluate("document.querySelectorAll('.rc-stars i').length")
+    C(pg, '.rc-who button:nth-child(4)'); C(pg, '.rc-who button:nth-child(2)'); pg.wait_for_timeout(200)
+    check("COURSE BEST の星がほかの人に切りかえて戻っても残る", n1 > 0 and pg.evaluate("document.querySelectorAll('.rc-stars i').length") == n1)
+    check("同伴者・同じ名前: エラーなし", not errs)
     pg.context.close()
 
     b.close()
