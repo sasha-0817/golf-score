@@ -1290,6 +1290,7 @@ input,select,textarea{font-size:max(16px,1em)}
 .rp-ok{width:100%;height:44px;margin-top:12px;border-radius:12px;border:0;background:var(--rec-fg);color:var(--rec-bg);font:inherit;font-weight:700;font-size:15px;cursor:pointer}
 .rp-back{z-index:500}
 .rp-seg button[aria-pressed="true"]{color:var(--rec-turf)}
+.rp-seg button{white-space:nowrap;padding:0 4px}
 </style>
 
 </head>
@@ -1398,7 +1399,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-21-0845";
+const BUILD = "2026-10-21-0900";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2575,7 +2576,7 @@ function rulesPop(){
       <li><b>同点</b>のときは下の設定で決まります</li>
       <li>最後に<b>コインが一番多い人の勝ち</b></li></ol>
     <div class="rp-opt"><div class="rp-opt-h">同点のとき</div><div class="rp-seg" role="group" aria-label="同点のとき">
-      <button data-act="set-carry" data-v="0" aria-pressed="${!carry}">誰ももらえない</button><button data-act="set-carry" data-v="1" aria-pressed="${carry}">次のホールへ持ち越し</button></div></div>
+      <button data-act="set-carry" data-v="0" aria-pressed="${!carry}">誰ももらえない</button><button data-act="set-carry" data-v="1" aria-pressed="${carry}">次へ持ち越し</button></div></div>
     <div class="sr-ex"><div class="sr-cap">例：2人で3ホール</div>
       ${carry ? row("1H",3,3,"同点 → 持ち越し",0)+row("2H",4,3,"はなこ が2枚",2)+row("3H",2,4,"たろう が1枚",1)+`<div class="sr-sum">はなこ ${coinSVG(14)}2　たろう ${coinSVG(14)}1　→ <b>はなこの勝ち</b></div>`
               : row("1H",3,3,"同点 → なし",0)+row("2H",4,3,"はなこ が1枚",1)+row("3H",2,4,"たろう が1枚",1)+`<div class="sr-sum">はなこ ${coinSVG(14)}1　たろう ${coinSVG(14)}1　→ <b>引き分け</b></div>`}</div>
