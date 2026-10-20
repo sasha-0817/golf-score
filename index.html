@@ -1179,6 +1179,59 @@ input,select,textarea{font-size:max(16px,1em)}
 .rec2.multi .me-zone{padding:4px 8px 7px;gap:6px}
 .rec2.multi .pcell em{font-size:8px}
 .rec2.multi .rec-card{gap:6px}
+/* ゲーム（スキンズ） */
+.lab-row{display:flex;justify-content:space-between;align-items:center}
+.game-btn{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--muted);font:inherit;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation}
+.game-btn.on{border-color:#E9A517;color:#8A5A00;background:color-mix(in srgb,#FFCF3F 18%,var(--paper))}
+.game-btn i{font-style:normal;font-size:14px;line-height:1}
+.coin{display:inline-block;vertical-align:-2px;flex:0 0 auto}
+.game-sheet{max-height:86vh;overflow-y:auto}
+.gm-card{display:flex!important;align-items:center;gap:12px;text-align:left;padding:12px!important;margin-bottom:8px}
+.gm-card.on{border-color:#0E9F62!important;box-shadow:inset 0 0 0 1px #0E9F62}
+.gm-ill{flex:0 0 56px;height:44px;display:flex;align-items:center;justify-content:center;position:relative}
+.gm-ill.none{font-size:22px;color:var(--rec-muted)}
+.gm-ill .coin{position:absolute;filter:drop-shadow(0 2px 2px rgba(0,0,0,.18))}
+.gm-ill .c1{left:4px;top:14px}.gm-ill .c2{left:16px;top:4px}.gm-ill .c3{left:27px;top:15px}
+.gm-t{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
+.gm-t b{font-size:16px;display:flex;align-items:center;gap:6px}
+.gm-t b i{font-style:normal;font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;border:1px solid var(--rec-line);color:var(--rec-muted)}
+.gm-t small{font-size:12px;color:var(--rec-muted);font-weight:500;line-height:1.4}
+.gm-card .cp-radio{flex:0 0 auto}
+.gm-help{background:none!important;border:0!important;color:#0E9F62!important;font-weight:700;text-decoration:underline;text-underline-offset:3px;height:auto!important;padding:4px 0 8px!important}
+.gm-soon{font-size:11px;color:var(--rec-muted);text-align:center;margin:4px 0 10px}
+.skins-rules{background:var(--rec-bg);border:1px solid var(--rec-line);border-radius:14px;padding:12px;margin-bottom:8px;font-size:13px;line-height:1.55}
+.skins-rules ol{margin:0 0 10px;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.sr-ex{background:var(--rec-surface);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:5px}
+.sr-cap{font-size:11px;font-weight:700;color:var(--rec-muted)}
+.sr-row{display:grid;grid-template-columns:26px 1fr 1fr 1.6fr;align-items:center;gap:6px;font-size:12px}
+.sr-h{font:700 13px var(--f-num)}
+.sr-s b{font:700 16px var(--f-num)}
+.sr-s.win b{color:var(--q-birdie)}
+.sr-r{display:flex;flex-direction:column;align-items:flex-start;font-size:11px;color:var(--rec-muted);line-height:1.3}
+.sr-coins{display:flex;align-items:center;gap:1px}
+.sr-coins em{font-style:normal;color:#E9A517;font-weight:700}
+.sr-sum{border-top:1px dashed var(--rec-line);padding-top:6px;font-size:12px}
+.sr-tip{font-size:11px;color:var(--rec-muted);margin-top:8px}
+/* 記録中: 名前の下に対パーとコイン、ホールカードにこのホールのコイン枚数 */
+.ph-l{display:flex;align-items:center;gap:5px}
+.skc{display:inline-flex;align-items:center;gap:2px;font:700 12px var(--f-num);color:#B57B00}
+.skc.z{opacity:.45}
+.pot{display:inline-flex;align-items:center;gap:3px;font:700 12px var(--f-num);padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.18);color:#FFE08A;margin-left:6px}
+.cdt tfoot tr.skr td{font-size:15px;color:#B57B00;height:30px}
+.cdt tfoot tr.skr td.ft{font-size:11px;color:var(--rec-muted)}
+.cdt tfoot tr.skr td.ft small{display:inline;margin-left:2px}
+/* リザルト: スキンズの結果 */
+.rc-skins{background:rgba(255,255,255,.08);border-radius:14px;padding:8px 10px;display:flex;flex-direction:column;gap:4px}
+.rs-h{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+.rs-h span{font:700 11px var(--f-num);letter-spacing:.2em;opacity:.75}
+.rs-h em{font-style:normal;font-size:10px;opacity:.7;margin-left:auto;font-weight:500}
+.rs-row{display:grid;grid-template-columns:72px 1fr 26px;align-items:center;gap:6px}
+.rs-n{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rs-c{display:flex;gap:2px;min-height:16px}
+.rs-row b{font:700 20px var(--f-num);text-align:right}
+.rs-row.top b{color:#FFD76A}
+.game-sheet .gm-card{height:auto!important;min-height:66px;width:100%}
+.game-sheet>p small{margin-left:8px;font-size:11px;font-weight:500;color:var(--rec-muted)}
 </style>
 
 </head>
@@ -1276,6 +1329,7 @@ const state = {
   // スコアカード入力（紙と同じ表に最大4人分）の下書き。1ホールずつの下書きとは別に持つ
   cdraft: (d=>d && Array.isArray(d.holes) && d.holes.length && Array.isArray(d.players) && d.players.length && d.players.every(p=>p && Array.isArray(p.s) && Array.isArray(p.p) && p.s.length===d.holes.length) ? d : null)(LS.get("sc.cdraft", null)),
   im: LS.get("sc.inputMode","hole")==="card" ? "card" : "hole",
+  game: LS.get("sc.game","")==="skins" ? "skins" : "",
   hole: 0, // 下書きがあれば下で復元
   fPlayer: LS.get("sc.fPlayer", LS.get("sc.player","") || "all"), fCourse:"all", fRange:"all",
   courseEdit: null,
@@ -1285,7 +1339,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-21-0730";
+const BUILD = "2026-10-21-0800";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1559,6 +1613,8 @@ function groupCard(g){
   return `<div class="result-card grp-card"><svg class="rc-rings" viewBox="0 0 320 280" aria-hidden="true">${Array.from({length:10},(_,k)=>`<ellipse cx="160" cy="140" rx="${16+k*16}" ry="${14+k*14}" fill="none" stroke="rgba(255,255,255,.13)" stroke-width="1"/>`).join("")}</svg><div class="rc-in">
     <div class="rc-top"><div><div class="k">ROUND COMPLETE</div><div class="n">${g.length}人のスコア</div><div class="c">${esc(r0.courseName)}・${+m}/${+d}</div></div></div>
     <div class="rc-rank">${order.map(k=>`<div class="${rank(k)===1?"win":""}"><i>${rank(k)}</i><span>${esc(dupLabel(nm,k))}</span><b>${tots[k].score}</b><small>${toPar(tots[k].diff)}</small></div>`).join("")}</div>
+    ${state.resultGame==="skins"?(()=>{ const sk=skinsCalc(g.map(r=>r.holes.map(h=>h.strokes)), N), mx=Math.max(...sk.won);
+      return `<div class="rc-skins"><div class="rs-h"><span>SKINS</span>スキンズ${sk.carry?`<em>持ち越し${sk.carry}枚は決着なし</em>`:""}</div>${order.map(k=>`<div class="rs-row ${mx>0&&sk.won[k]===mx?"top":""}"><span class="rs-n">${esc(dupLabel(nm,k))}</span><span class="rs-c">${Array.from({length:Math.min(sk.won[k],9)},()=>coinSVG(16)).join("")}${sk.won[k]>9?"…":""}</span><b>${sk.won[k]}</b></div>`).join("")}</div>`; })():""}
     <div class="rc-sc">${tables.join("")}</div>
     <div class="rc-brand"><span class="rc-logo"><img src="mark.png" alt=""><span><b>GOLF SC.</b><small>SHORT COURSE SCORECARD</small></span></span></div>
   </div></div>`;
@@ -1638,12 +1694,12 @@ function viewRecord(){
         <div class="field"><label for="r-player">あなたの名前</label><input id="r-player" list="plist" value="${esc(state.sp!=null?state.sp:last)}" placeholder="名前"><datalist id="plist">${pl.map(p=>`<option value="${esc(p)}">`).join("")}</datalist></div>
         <div class="field" style="flex:0 0 150px"><label for="r-date">日付</label><input id="r-date" type="date" value="${state.sd||today()}"></div>
       </div>
-      ${`<div class="field"><label>一緒に回る人</label><div class="mates">${[0,1,2].map(i=>`<span class="mate-in"><input id="r-mate${i}" list="plist" value="${esc((state.mates||LS.get("sc.mates",[]))[i]||"")}" placeholder="${i+2}人目" aria-label="${i+2}人目の名前"><button data-act="mate-clear" data-i="${i}" aria-label="${i+2}人目を消す">×</button></span>`).join("")}</div></div>`}
+      ${`<div class="field"><div class="lab-row"><label>一緒に回る人</label><button class="game-btn ${state.game?"on":""}" data-act="open-game">${state.game?coinSVG(14)+GAMES[state.game].name:"ゲーム：なし"}<i>›</i></button></div><div class="mates">${[0,1,2].map(i=>`<span class="mate-in"><input id="r-mate${i}" list="plist" value="${esc((state.mates||LS.get("sc.mates",[]))[i]||"")}" placeholder="${i+2}人目" aria-label="${i+2}人目の名前"><button data-act="mate-clear" data-i="${i}" aria-label="${i+2}人目を消す">×</button></span>`).join("")}</div></div>`}
       ${coursePickField()}
       <div class="field" id="r-gwrap" hidden><label for="r-green">今日のグリーン</label><select id="r-green"></select></div>
       <div class="err" id="r-err"></div>
       <button class="btn primary" style="width:100%;margin-top:6px" data-act="start">始める</button>
-    </div>${state.sheet==="pick"?coursePickSheet():""}`;
+    </div>${state.sheet==="pick"?coursePickSheet():""}${state.sheet==="game"?gameSheet():""}`;
   }
   return viewRecordDraft(d);
 }
@@ -1845,7 +1901,7 @@ function viewRecordDraft(d){
     <div class="hole-card hc2 ${slide} ${celebrate?"flash":""}">${confetti}
       <div class="hc-l"><span class="lbl">HOLE</span><div class="hno">${state.hole+1}<small>/${N}</small></div></div>
       <div class="hc-m"><div class="par"><span>PAR</span>${h.par}</div>${d.gn && h.ys && h.ys[0] && h.ys[1] ? `<div class="gsw" role="group" aria-label="グリーン">${d.gn.map((n,i)=>`<button data-act="set-g" data-g="${i}" aria-pressed="${(h.gi||0)===i}">${esc(n)}</button>`).join("")}</div><div class="yd">${h.yards} YDS</div>` : h.yards?`<div class="yd">${h.yards} YDS</div>`:""}
-        <div class="badges"><span class="badge ${hio?"hio":"b-"+TONE(diff)} ${/^s[vt]/.test(state.tap||"")?"pop":""}"><i></i>${hio?"HOLE IN ONE":TERM(diff)}</span>${bestPace&&fields().pace?`<span class="pace2">BEST PACE</span>`:""}</div></div>
+        <div class="badges"><span class="badge ${hio?"hio":"b-"+TONE(diff)} ${/^s[vt]/.test(state.tap||"")?"pop":""}"><i></i>${hio?"HOLE IN ONE":TERM(diff)}</span>${bestPace&&fields().pace?`<span class="pace2">BEST PACE</span>`:""}${d.game==="skins"?(()=>{ const sk=skinsCalc([d.holes.map(x=>x.strokes), ...(d.mates||[]).map(m=>m.s)], state.hole); return `<span class="pot" title="このホールのコイン">${coinSVG(13)}×${sk.pot}</span>`; })():""}</div></div>
       <div class="live"><div><span>TOTAL</span><b>${totLabel}</b></div>${F.putts?`<div><span>PUTTS</span><b>${done.length?tot.putts:"—"}</b></div>`:""}</div>
       ${advice?`<div class="advice">${advice}</div>`:""}
     </div>
@@ -1862,7 +1918,7 @@ function viewRecordDraft(d){
           <button data-act="pt" data-d="1" aria-label="パットを1つ増やす" ${h.putts>=9?"disabled":""}>${ICON.up}</button></div></div>`:""}
       </div>`}
       ${multi?`<div class="me-zone">`:""}
-      ${F.shot?`<div class="ap-wrap"><div class="seg-head"><span class="eyebrow">TEE SHOT<b>${multi?esc(d.player)+"のティーショット":"ティーショットの行き先"}</b></span>${F.club?`<button class="club-tag ${h.club?"has":""}" data-act="open-club">${h.club?esc(h.club):"クラブ"}</button>`:""}</div>${isLong?fairwaySVG(h.tee, state.tap&&state.tap.startsWith("tee")):approachSVG(h.dir, state.tap&&state.tap.startsWith("dir"))}</div>`:""}
+      ${F.shot?`<div class="ap-wrap"><div class="seg-head"><span class="eyebrow">TEE SHOT${multi?"":"<b>ティーショットの行き先</b>"}</span>${F.club?`<button class="club-tag ${h.club?"has":""}" data-act="open-club">${h.club?esc(h.club):"クラブ"}</button>`:""}</div>${isLong?fairwaySVG(h.tee, state.tap&&state.tap.startsWith("tee")):approachSVG(h.dir, state.tap&&state.tap.startsWith("dir"))}</div>`:""}
       ${F.club && !F.shot ? (()=>{ const lc = lastClub(d, state.hole);
         // ショットの方向がOFFでもクラブだけ記録できるよう、クラブを横に並べて1タップで選ぶ（前回のクラブには小さく「前回」）
         return `<div class="club-strip"><span class="eyebrow">TEE SHOT<b>クラブ</b></span><div class="cs-chips">${myClubs().map(c=>`<button data-act="club-quick" data-v="${esc(c)}" aria-pressed="${h.club===c}" class="${lc===c?"last":""}">${esc(c)}</button>`).join("")}</div></div>`; })() : ""}
@@ -1932,7 +1988,7 @@ async function cardFinish(b){
   try{ for(const r of rs) await store.saveRound(r); }
   catch(e){ if(b) b.disabled=false; writeErr(e); return; }
   state.cdraft=null; saveCDraft(); state.confirm=null; state.tab="history"; LS.set("sc.tab","history");
-  state.fPlayer=rs[0].player; LS.set("sc.fPlayer",rs[0].player); state.openRound=rs[0].id; state.result=rs[0]; state.resultGroup=rs.length>1?rs:null; state.resultAll=rs.length>1; render();
+  state.fPlayer=rs[0].player; LS.set("sc.fPlayer",rs[0].player); state.openRound=rs[0].id; state.result=rs[0]; state.resultGroup=rs.length>1?rs:null; state.resultAll=rs.length>1; state.resultGame=rs.length>1?cd.game:null; render();
 }
 function viewCard(cd){
   const N=cd.holes.length, two=N>9, half=two?(cd.half||0):0, pOn=fields().putts, sel=cd.sel;
@@ -1945,8 +2001,10 @@ function viewCard(cd){
     const sc=hs.reduce((a,h)=>a+pl.s[h],0), par=hs.reduce((a,h)=>a+cd.holes[h].par,0), pt=hs.filter(h=>pl.p[h]!=null).reduce((a,h)=>a+pl.p[h],0);
     return {s:sc, d:toPar(sc-par), p:hs.some(h=>pl.p[h]!=null)?pt:""}; };
   const all=cd.holes.map((x,i)=>i);
+  const skc = cd.game==="skins" ? skinsCalc(cd.players.map(p=>p.s), N) : null;
   const foot=(lab,idx,cls="")=>`<tr class="${cls}"><td colspan="2" class="ft">${lab}<small>${idx.reduce((a,h)=>a+cd.holes[h].par,0)}</small></td>${cd.players.map((p,i)=>{ const t=subt(i,idx);
     return `<td class="c-s">${t.s}<small>${t.d}</small></td>${pOn?`<td class="c-p">${t.p??""}</td>`:""}`; }).join("")}</tr>`;
+  const skinRow = skc ? `<tr class="skr"><td colspan="2" class="ft">${coinSVG(14)}<small>次${skc.pot}枚</small></td>${cd.players.map((p,i)=>`<td class="c-s" ${pOn?'colspan="2"':""}>${skc.won[i]}</td>`).join("")}</tr>` : "";
   const done=cd.players.every(p=>p.s.every(x=>x!=null)); // 打数が全部入ったら保存ボタンを出す（パットの抜けは押したときに案内）
   const plSel = sel && cd.players[sel.i];
   const key=(v,lab,dis)=>`<button data-act="cd-key" data-v="${v}" ${dis?"disabled":""} aria-label="${lab}">${lab}</button>`;
@@ -1962,7 +2020,7 @@ function viewCard(cd){
       <thead><tr><th>H</th><th>PAR</th>${cd.players.map((p,i)=>`<th class="nm" colspan="${pOn?2:1}">${esc(dupLabel(cd.players.map(x=>x.name),i))}</th>`).join("")}</tr>
       ${pOn?`<tr class="sub"><th></th><th></th>${cd.players.map(()=>`<th class="c-s">打数</th><th>パット</th>`).join("")}</tr>`:""}</thead>
       <tbody>${rows.map(h=>`<tr><td class="hn">${h+1}</td><td class="pr">${cd.holes[h].par}</td>${cd.players.map((p,i)=>cell(h,i,"s")+(pOn?cell(h,i,"p"):"")).join("")}</tr>`).join("")}</tbody>
-      <tfoot>${two?foot(half?"IN":"OUT",rows)+foot("計",all,"all"):foot("計",all)}</tfoot></table></div>
+      <tfoot>${two?foot(half?"IN":"OUT",rows)+foot("計",all,"all"):foot("計",all)}${skinRow}</tfoot></table></div>
     <div class="cd-pad">
       <div class="cd-lbl">${sel?`<span><b>${esc(dupLabel(cd.players.map(x=>x.name),sel.i))}</b>・${sel.h+1}H（PAR ${cd.holes[sel.h].par}）の<em>${ks==="s"?"打数":"パット"}</em></span>`:`<span>${done?"全部入りました。保存しましょう":"マスをタップして入力"}</span>`}</div>
       ${sel||!done?`<div class="cd-keys">${[1,2,3,4,5,6,7,8,9].map(n=>key(n,String(n),!sel || (ks==="p" && n>9))).join("")}${key("10","10+",!sel||ks==="p")}${key("0","0",!sel||ks==="s")}${key("del","消す",!sel)}</div>`:""}
@@ -1978,7 +2036,9 @@ function cardAfter(){ const c=$(".cdt td.sel"), box=$(".cd-scroll"); if(!c||!box
 function playerCols(d, h, F){
   const nm=[d.player,...d.mates.map(m=>m.name)], upto=state.hole;
   const mk=v=>`<b class="mk3 m-${v===1?"hio":TONE(v-h.par)}">${v}</b>`;
-  const tp=sc=>{ let s=0,p=0; for(let i=0;i<=upto;i++){ s+=sc(i); p+=d.holes[i].par; } const x=s-p; return `<span class="tp ${x<0?"u":x>0?"o":""}">${toPar(x)}</span>`; };
+  const sk = d.game==="skins" ? skinsCalc([d.holes.map(x=>x.strokes), ...d.mates.map(m=>m.s)], state.hole) : null; // このホールの前までのコイン
+  const tpRaw=sc=>{ let s=0,p=0; for(let i=0;i<=upto;i++){ s+=sc(i); p+=d.holes[i].par; } const x=s-p; return `<span class="tp ${x<0?"u":x>0?"o":""}">${toPar(x)}</span>`; };
+  let col=0; const tp=sc=>{ const k=col++; return `<span class="ph-l">${tpRaw(sc)}${sk?`<span class="skc ${sk.won[k]?"":"z"}">${coinSVG(12)}${sk.won[k]}</span>`:""}</span>`; };
   const step=(up,dn,label)=>`<div class="pstep"><button ${up} aria-label="${label}を1つ増やす">${ICON.up}</button><button ${dn} aria-label="${label}を1つ減らす">${ICON.down}</button></div>`;
   const cell=(lab,val,up,dn,aria)=>`<div class="pcell">${lab?`<em>${lab}</em>`:""}<div class="pv">${val}</div>${step(up,dn,aria)}</div>`;
   const me=`<div class="pcol me ${F.putts?"two":""}"><div class="ph"><b>${esc(d.player)}</b>${tp(i=>d.holes[i].strokes)}</div><div class="pcells">
@@ -2425,6 +2485,44 @@ function askMates(then){ const d=state.draft; if(!d || d.editing || !(d.mates||[
 function mateDone(){ const d=state.draft; if(d){ d.mdone=d.mdone||[]; d.mdone[state.hole]=true; saveDraft(); }
   const then=state.mateThen; state.sheet=null; state.mateI=null; state.mateThen=null; render();
   if(then){ const btn=$(`.rec-bar [data-act=${then}]`); if(btn) btn.click(); } }
+/* ---------- ゲーム（スキンズ） ---------- */
+const GAMES = { skins:{ name:"スキンズ", eng:"SKINS", n:"2〜4人", desc:"一番少ない打数の人がコインを獲得。同点は次のホールへ持ち越し" } };
+const coinSVG = (sz=14, cls="") => `<svg class="coin ${cls}" viewBox="0 0 24 24" width="${sz}" height="${sz}" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#E9A517"/><circle cx="12" cy="12" r="9" fill="#FFCF3F"/><circle cx="12" cy="12" r="7.2" fill="none" stroke="#E9A517" stroke-width="1.2"/><path d="M12 7.2l1.4 2.9 3.2.4-2.3 2.2.6 3.2L12 14.4l-2.9 1.5.6-3.2-2.3-2.2 3.2-.4z" fill="#E9A517"/></svg>`;
+/* スキンズ: 各ホールにコイン1枚。一番少ない打数が1人だけならその人が（持ち越し分も合わせて）獲得、同点なら次のホールへ持ち越し */
+function skinsCalc(rows, n){
+  const won=rows.map(()=>0), log=[]; let carry=0;
+  for(let i=0;i<n;i++){ const v=rows.map(r=>r[i]); if(v.some(x=>x==null)) break;
+    const pot=1+carry, mn=Math.min(...v), w=v.map((x,k)=>x===mn?k:-1).filter(k=>k>=0);
+    if(w.length===1){ won[w[0]]+=pot; carry=0; log.push({w:w[0],pot}); } else { carry=pot; log.push({w:-1,pot}); } }
+  return {won, carry, log, pot:1+carry};
+}
+function gameSheet(){
+  const g=state.game||"", help=state.gameHelp;
+  const card=(k,name,eng,n,desc,ill)=>`<button class="gm-card ${g===k?"on":""}" data-act="pick-game" data-v="${k}" aria-pressed="${g===k}">${ill}<span class="gm-t"><b>${name}${n?`<i>${n}</i>`:""}</b><small>${desc}</small></span><span class="cp-radio" aria-hidden="true"></span></button>`;
+  const skIll=`<span class="gm-ill">${coinSVG(26,"c1")}${coinSVG(26,"c2")}${coinSVG(26,"c3")}</span>`;
+  return `<div class="sheet-back" data-act="close-game"><div class="sheet game-sheet" data-stop="1"><p>ゲーム<small>一緒に回る人がいるときに遊べます</small></p>
+    ${card("","なし","","","スコアだけを記録します",`<span class="gm-ill none">—</span>`)}
+    ${card("skins","スキンズ","SKINS",GAMES.skins.n,GAMES.skins.desc,skIll)}
+    <button class="gm-help" data-act="game-help">${help?"ルールをとじる":"スキンズのルールを見る"}</button>
+    ${help?skinsRules():""}
+    <div class="gm-soon">マッチプレー・ナッソーなども準備中</div>
+    <button data-act="close-game">決定</button></div></div>`;
+}
+/* ルールの解説（イラスト付きの例） */
+function skinsRules(){
+  const row=(h,a,b,res,coins)=>`<div class="sr-row"><span class="sr-h">${h}</span><span class="sr-s ${a<b?"win":""}">たろう <b>${a}</b></span><span class="sr-s ${b<a?"win":""}">はなこ <b>${b}</b></span><span class="sr-r">${res}${coins}</span></div>`;
+  return `<div class="skins-rules">
+    <ol><li>各ホールに <b>コインが1枚</b>${coinSVG(14)} あります</li>
+      <li>そのホールで<b>一番少ない打数の人が1人だけ</b>なら、その人がコインをもらえます</li>
+      <li>一番少ない人が2人以上（<b>同点</b>）なら誰ももらえず、コインは<b>次のホールに持ち越し</b>。次のホールは2枚、3枚…と増えていきます</li>
+      <li>最後に<b>コインが一番多い人の勝ち</b>。最後のホールが同点なら、そのコインは誰のものにもなりません</li></ol>
+    <div class="sr-ex"><div class="sr-cap">例：2人で3ホール</div>
+      ${row("1H",3,3,"同点 → 持ち越し",`<span class="sr-coins carry">${coinSVG(16)}<em>→</em></span>`)}
+      ${row("2H",4,3,"はなこ が2枚",`<span class="sr-coins">${coinSVG(16)}${coinSVG(16)}</span>`)}
+      ${row("3H",2,3,"たろう が1枚",`<span class="sr-coins">${coinSVG(16)}</span>`)}
+      <div class="sr-sum">合計　はなこ ${coinSVG(14)}×2　たろう ${coinSVG(14)}×1　→ <b>はなこの勝ち</b></div></div>
+    <div class="sr-tip">ショートコースは同点が多いので、持ち越しで一気に何枚も取れるのが面白いところです</div></div>`;
+}
 /* ---------- actions ---------- */
 function saveDraft(){ if(state.draft) state.draft.cur=state.hole; LS.set("sc.draft", state.draft); } // 今のホールも覚えておく（自動更新で読み直しても同じホールから）
 document.addEventListener("click", async ev => {
@@ -2464,7 +2562,7 @@ document.addEventListener("click", async ev => {
       state.draft={...JSON.parse(JSON.stringify(r)), editing:true}; state.draft.holes.forEach(x=>x.entered=true);
       state.hole=r.holes.length-1; state.tab="record"; LS.set("sc.tab","record"); saveDraft(); render(); break;
     }
-    case "close-result": state.result=null; state.resultGroup=null; state.resultAll=false; render(); break;
+    case "close-result": state.result=null; state.resultGroup=null; state.resultAll=false; state.resultGame=null; render(); break;
     case "toggle-round": state.openRound = state.openRound===b.dataset.id ? null : b.dataset.id; state.confirm=null; render(); break;
     case "stat-tab": { const tb=$(".stat-tabs"), y0=tb?tb.getBoundingClientRect().top:0; state.statTab=b.dataset.v; LS.set("sc.statTab",b.dataset.v); state.trendSel=null; render();
       const t2=$(".stat-tabs"); if(t2) window.scrollBy(0, t2.getBoundingClientRect().top-y0); break; } // タブの位置を動かさない
@@ -2491,11 +2589,11 @@ document.addEventListener("click", async ev => {
       if(state.im==="card"){
         const names=[p,...mates];
         const N=c.holes.length;
-        state.cdraft={ id:uid(), card:true, courseId:c.id, courseName:c.name, date:dt, holes:c.holes.map(x=>({par:x.par})), players:names.map(n=>({name:n, s:Array(N).fill(null), p:Array(N).fill(null)})), sel:{h:0,i:0,k:"s"} };
+        state.cdraft={ id:uid(), card:true, courseId:c.id, courseName:c.name, date:dt, holes:c.holes.map(x=>({par:x.par})), players:names.map(n=>({name:n, s:Array(N).fill(null), p:Array(N).fill(null)})), sel:{h:0,i:0,k:"s"}, game: mates.length && state.game ? state.game : null };
         saveCDraft(); render(); break; }
       const gs=courseGreens(c), gi=gs ? (+($("#r-green")||{}).value||0) : 0;
       state.draft={ id:uid(), player:p, courseId:c.id, courseName:c.name, date:dt, gn:gs, holes:c.holes.map(x=>({par:x.par, yards:(gi&&x.yards2)?x.yards2:(x.yards||null), ys:gs?[x.yards||null,x.yards2||null]:null, gi, strokes:x.par, putts:2, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null, entered:false})),
-        mates: mates.map(n=>({name:n, s:c.holes.map(x=>x.par)})) }; // 同伴者は打数だけ（パーから増減）
+        mates: mates.map(n=>({name:n, s:c.holes.map(x=>x.par)})), game: mates.length && state.game ? state.game : null }; // 同伴者は打数だけ（パーから増減）
       state.hole=0; saveDraft(); render(); break;
     }
     case "hole": mark_entered(); state.slide = +b.dataset.i>state.hole?"l":"r"; state.hole=+b.dataset.i; saveDraft(); render(); break;
@@ -2516,11 +2614,15 @@ document.addEventListener("click", async ev => {
       const mr=(!d.editing && Array.isArray(d.mates)) ? d.mates.map((m,k)=>({ id:uid(), card:true, player:m.name, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:r.createdAt+k+1,
         holes:d.holes.map((x,i)=>({par:x.par, strokes:m.s[i], putts:0, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null})) })) : [];
       try{ await store.saveRound(r); for(const x of mr) await store.saveRound(x);
-        state.draft=null; saveDraft(); state.tab="history"; LS.set("sc.tab","history"); state.fPlayer=r.player; state.openRound=r.id; state.result=r; state.resultGroup=mr.length?[r,...mr]:null; state.resultAll=mr.length>0; render(); }
+        state.draft=null; saveDraft(); state.tab="history"; LS.set("sc.tab","history"); state.fPlayer=r.player; state.openRound=r.id; state.result=r; state.resultGroup=mr.length?[r,...mr]:null; state.resultAll=mr.length>0; state.resultGame=mr.length?d.game:null; render(); }
       catch(e){ b.disabled=false; writeErr(e); }
       break;
     }
     case "ask-discard": state.confirm="discard"; render(); break;
+    case "open-game": state.mates=[0,1,2].map(j=>(($("#r-mate"+j)||{}).value||"")); state.sheet="game"; render(); break;
+    case "pick-game": state.game=b.dataset.v; LS.set("sc.game",state.game); render(); break;
+    case "game-help": state.gameHelp=!state.gameHelp; render(); break;
+    case "close-game": state.sheet=null; state.gameHelp=false; render(); break;
     case "im": state.im=b.dataset.v; LS.set("sc.inputMode",state.im); render(); break;
     case "cd-cell": { const cd=state.cdraft; cd.sel={h:+b.dataset.h, i:+b.dataset.i, k:b.dataset.k}; saveCDraft(); render(); break; }
     case "cd-key": cardKey(b.dataset.v); break;

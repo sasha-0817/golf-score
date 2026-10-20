@@ -37,6 +37,7 @@ def open_page(b, ls=None, dark=False, offline=False):
     src = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
     src = (src.replace("setTimeout(checkUpdate, 1500);", "").replace("setTimeout(maybeShowA2HS, 2500);", "")
               .replace("const state = {", "const state = window.state = {")
+              .replace("function skinsCalc(", "window.skinsCalc=skinsCalc; function skinsCalc(")
               .replace("async function connect(){", "window.connect=()=>connect(); async function connect(){")
               .replace("let loading = false;", 'let loading = false; Object.defineProperty(window,"pending",{get:()=>pending});'))
     init = "if(!sessionStorage.t){sessionStorage.t=1;localStorage.clear();" + "".join(
@@ -271,6 +272,34 @@ with sync_playwright() as pw:
         if m: check("4人: 自分だけの記録を緑の囲みに入れる・1画面に収まる", pg.query_selector(".me-zone svg.approach") is not None and pg.evaluate("document.documentElement.scrollHeight") <= 667)
         pg.context.close()
     check("4人でもティーショットの図が1人のときと同じ大きさ", hs["4人"] >= hs["1人"] - 2)
+
+    # 10. スキンズ: 計算・ラウンド前に選ぶ・記録中のコイン・みんなのリザルト・スコアカードでも
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.fields": ALL}, offline=True)
+    r = pg.evaluate("(()=>{ const x=skinsCalc([[3,4,2],[3,3,3]],3); return [x.won.join(), x.carry, x.pot]; })()")
+    check("スキンズの計算（同点は持ち越し・取った人が持ち越し分も獲得）", r == ["1,2", 0, 1])
+    r = pg.evaluate("(()=>{ const x=skinsCalc([[3,3],[3,3]],2); return [x.won.join(), x.carry]; })()")
+    check("スキンズの計算（最後まで同点なら持ち越しが残る）", r == ["0,0", 2])
+    C(pg, "[data-act=open-game]"); C(pg, "[data-act=game-help]")
+    check("ゲームの選択画面にルールの解説（例つき）", pg.query_selector(".skins-rules .sr-ex") is not None)
+    C(pg, '[data-act=pick-game][data-v=skins]'); C(pg, ".game-sheet [data-act=close-game]")
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    check("スキンズで始まる・記録中にコインの数とこのホールの枚数", pg.evaluate("state.draft.game") == "skins" and pg.query_selector(".pot") is not None and pg.evaluate("document.querySelectorAll('.skc').length") == 2)
+    check("スキンズでも図が小さくならない・1画面", pg.evaluate("document.querySelector('svg.approach').getBoundingClientRect().height") >= hs["1人"] - 2 and pg.evaluate("document.documentElement.scrollHeight") <= 667)
+    C(pg, "[data-act=next]"); C(pg, '[data-act=mt][data-i="0"][data-d="-1"]'); C(pg, "[data-act=next]")
+    check("持ち越し込みで2枚獲得", pg.evaluate("document.querySelectorAll('.skc')[1].textContent") == "2")
+    for _ in range(12):
+        if pg.evaluate("state.hole") >= 8: break
+        C(pg, "[data-act=next]")
+    C(pg, "[data-act=finish]"); pg.wait_for_timeout(900)
+    check("みんなのリザルトにスキンズの結果", pg.query_selector(".grp-card .rc-skins") is not None and pg.evaluate("document.querySelectorAll('.rs-row').length") == 2)
+    check("スキンズ: エラーなし", not errs)
+    pg.context.close()
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.game": "\"skins\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\""}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    for v in ["3", "2", "4", "2"]: C(pg, f'[data-act=cd-key][data-v="{v}"]')
+    check("スコアカードでもスキンズのコイン行", pg.query_selector(".cdt tr.skr") is not None and pg.evaluate("document.querySelector('.cdt tr.skr').textContent").startswith("次2枚") is False)
+    check("スコアカード＋スキンズ: エラーなし", not errs)
+    pg.context.close()
 
     b.close()
 
