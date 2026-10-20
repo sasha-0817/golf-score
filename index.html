@@ -985,6 +985,51 @@ input,select,textarea{font-size:max(16px,1em)}
 .cs-chips button{min-width:0;padding:0;height:40px}
 .club-strip .eyebrow b{margin-left:6px}
 .az-s .az-p.side{font-size:16px}
+/* スコアカード入力 */
+.im-seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 12px}
+.im-seg button{border:1px solid var(--line);background:var(--paper);color:var(--fg);border-radius:12px;padding:9px 6px;font:inherit;font-weight:700;font-size:14px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;touch-action:manipulation}
+.im-seg small{font-size:11px;color:var(--muted);font-weight:500}
+.im-seg button[aria-pressed="true"]{border-color:#0E9F62;box-shadow:inset 0 0 0 1px #0E9F62;background:color-mix(in srgb,#0E9F62 9%,var(--paper))}
+.mates{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.mates input{min-width:0;width:100%}
+.cd{display:flex;flex-direction:column;gap:8px;height:100dvh;padding-top:10px;color:var(--rec-fg)}
+.cd .rec-top{flex:0 0 auto}
+.cd-pt{height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--rec-line);background:var(--rec-surface);color:var(--rec-muted);font:inherit;font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer;touch-action:manipulation}
+.cd-pt[aria-pressed="true"]{background:var(--rec-fg);color:var(--rec-bg);border-color:var(--rec-fg)}
+.cd-tabs{display:flex;gap:6px;flex:0 0 auto}
+.cd-tabs button{flex:1;height:32px;border-radius:10px;border:1px solid var(--rec-line);background:var(--rec-surface);color:var(--rec-fg);font:700 14px var(--f-num);letter-spacing:.04em;cursor:pointer;touch-action:manipulation}
+.cd-tabs button[aria-pressed="true"]{background:var(--rec-fg);color:var(--rec-bg);border-color:var(--rec-fg)}
+.cd-scroll{flex:1 1 auto;min-height:0;overflow:auto;border-radius:14px;border:1px solid var(--rec-line);background:var(--rec-surface);-webkit-overflow-scrolling:touch}
+.cdt{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;--paper:var(--rec-surface);--fg:var(--rec-fg);--muted:var(--rec-muted)}
+.cdt col.h{width:28px}.cdt col.par{width:34px}.cdt.wp col.p{width:30px}
+.cdt th,.cdt td{border-bottom:1px solid var(--rec-line);text-align:center;padding:0}
+.cdt thead th{position:sticky;top:0;z-index:2;background:var(--rec-raise);font-size:12px;height:30px;font-weight:700;color:var(--rec-muted)}
+.cdt thead th.nm{color:var(--rec-fg);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 4px;border-left:1px solid var(--rec-line)}
+.cdt thead tr.sub th{top:30px;height:18px;font-size:9px;font-weight:600;white-space:nowrap;overflow:hidden;letter-spacing:-.04em}
+.cdt td.hn{font:700 15px var(--f-num)}.cdt td.pr{font:600 15px var(--f-num);color:var(--rec-muted)}
+.cdt td.c-s,.cdt th.c-s{border-left:1px solid var(--rec-line)}
+.cdt td button{width:100%;height:38px;border:0;background:transparent;color:inherit;display:flex;align-items:center;justify-content:center;padding:0;font:700 17px var(--f-num);cursor:pointer;touch-action:manipulation}
+.cdt .mk3{width:27px;height:27px;font-size:17px}
+.cdt td.c-p button{font-size:15px;color:var(--rec-muted)}
+.cdt .cp.bad{color:var(--q-bogey)}
+.cdt td.sel button{background:color-mix(in srgb,#F2B01E 24%,transparent);box-shadow:inset 0 0 0 2px #F2B01E}
+.cdt tfoot td{position:sticky;bottom:0;z-index:2;background:var(--rec-raise);height:40px;font:700 18px var(--f-num);border-bottom:0;line-height:1.05}
+.cdt tfoot tr:not(:last-child) td{bottom:40px}
+.cdt tfoot td.ft{font:700 13px var(--f-body)}
+.cdt tfoot small{display:block;font:600 11px var(--f-num);color:var(--rec-muted)}
+.cdt tfoot td.c-p{font-size:14px;color:var(--rec-muted)}
+.cd-pad{flex:0 0 auto;background:var(--rec-surface);border:1px solid var(--rec-line);border-radius:16px;padding:8px;display:flex;flex-direction:column;gap:7px;margin-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+.cd-lbl{font-size:13px;min-height:20px;display:flex;align-items:center;padding:0 2px;color:var(--rec-muted)}
+.cd-lbl b{color:var(--rec-fg)}.cd-lbl em{font-style:normal;font-weight:700;color:#C98A00}
+.cd-keys{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.cd-keys button{height:46px;border-radius:12px;border:1px solid var(--rec-line);background:var(--rec-bg);color:var(--rec-fg);font:700 22px var(--f-num);padding:0;cursor:pointer;touch-action:manipulation}
+.cd-keys button[data-v="del"]{font:700 14px var(--f-body)}
+.cd-keys button:disabled{opacity:.3;cursor:default}
+.cd-keys button:active:not(:disabled){transform:scale(.95)}
+.cd-save{height:48px;border-radius:14px;border:0;background:linear-gradient(135deg,#0E9F62,#13A9C2);color:#fff;font:inherit;font-weight:700;font-size:16px;cursor:pointer;touch-action:manipulation}
+.rc-who{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:12px 0 0}
+.rc-who button{height:32px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.55);background:transparent;color:#fff;font:inherit;font-weight:700;font-size:13px;cursor:pointer}
+.rc-who button[aria-pressed="true"]{background:#fff;color:#0B1310;border-color:#fff}
 </style>
 
 </head>
@@ -1079,6 +1124,9 @@ const state = {
   mode: "connecting", // connecting | cloud | local
   courses: [], rounds: [],
   draft: (d=>d && Array.isArray(d.holes) && d.holes.length ? d : null)(LS.get("sc.draft", null)), // 壊れた下書きは捨てる
+  // スコアカード入力（紙と同じ表に最大4人分）の下書き。1ホールずつの下書きとは別に持つ
+  cdraft: (d=>d && Array.isArray(d.holes) && d.holes.length && Array.isArray(d.players) && d.players.length && d.players.every(p=>p && Array.isArray(p.s) && Array.isArray(p.p) && p.s.length===d.holes.length) ? d : null)(LS.get("sc.cdraft", null)),
+  im: LS.get("sc.inputMode","hole")==="card" ? "card" : "hole",
   hole: 0, // 下書きがあれば下で復元
   fPlayer: LS.get("sc.fPlayer", LS.get("sc.player","") || "all"), fCourse:"all", fRange:"all",
   courseEdit: null,
@@ -1088,7 +1136,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-19-2140";
+const BUILD = "2026-10-20-2030";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1288,7 +1336,7 @@ function render(){
   else if(state.mode==="local") s.textContent="この端末だけに保存中";
   else s.textContent="接続中…";
   killCharts();
-  document.body.classList.toggle("recording", state.tab==="record" && !!state.draft && !state.draft.paused);
+  document.body.classList.toggle("recording", state.tab==="record" && ((!!state.draft && !state.draft.paused) || (!!state.cdraft && !state.cdraft.paused)));
   const m=$("#main");
   const view = {record:viewRecord, stats:viewStats, history:viewHistory, courses:viewCourses}[state.tab] || viewRecord;
   m.innerHTML = `<section class="view">${view()}</section>`;
@@ -1335,10 +1383,11 @@ function resultOverlay(r){
         <div><span>PUTTS</span><b>${puttsOn(r)?t.putts:"—"}</b></div>
         <div><span>パーオン</span><b>${fmtPct(s.gir)}${s.gir==null?"":`<small style="font-size:12px">%</small>`}</b></div>
         <div><span>3パット</span><b>${puttsOn(r)?s.putt[3]:"—"}</b></div>
-        <div><span>OB</span><b>${s.obN||fields().ob?s.obN:"—"}</b></div>
+        <div><span>OB</span><b>${s.obN||(fields().ob&&!r.card)?s.obN:"—"}</b></div>
       </div>
       <div class="rc-brand"><span class="rc-logo"><img src="mark.png" alt=""><span><b>GOLF SC.</b><small>SHORT COURSE SCORECARD</small></span></span></div>
     </div></div>
+    ${(state.resultGroup||[]).length>1?`<div class="rc-who" role="group" aria-label="だれのリザルト">${state.resultGroup.map(x=>`<button data-act="result-pick" data-id="${esc(x.id)}" aria-pressed="${x.id===r.id}">${esc(x.player)}</button>`).join("")}</div>`:""}
     <div class="rc-actions"><button class="rc-save" data-act="save-card">画像を保存・送る</button></div>
     <div class="rc-actions rc-sub"><button class="rc-back" data-act="back-to-input">スコア入力に戻る</button><button class="rc-close" data-act="close-result">閉じる</button></div>
   </div></div>`;
@@ -1391,6 +1440,13 @@ function coursePickSheet(){
 function viewRecord(){
   const cs = state.courses;
   const d = state.draft;
+  if(state.cdraft){ const cd=state.cdraft; if(!cd.paused) return viewCard(cd);
+    const n=cd.holes.filter((x,i)=>cd.players.some(p=>p.s[i]!=null)).length;
+    return `<div class="panel resume"><div class="sec"><em>PAUSED</em><span>中断中のラウンド（スコアカード）</span></div>
+      <div class="rinfo"><div><b>${cd.players.map(p=>esc(p.name)).join("・")}</b><div class="muted" style="font-size:12px">${esc(cd.courseName)}・${esc(cd.date)}・${n}/${cd.holes.length}ホール入力済み</div></div></div>
+      <div class="rbtns"><button class="btn primary" data-act="cd-resume">続きから再開</button><button class="btn" data-act="ask-discard">破棄</button></div>
+      ${state.confirm==="discard"?`<div class="actions"><span class="muted" style="font-size:13px;align-self:center">本当に破棄しますか？</span><button class="btn small" data-act="cancel-confirm">やめる</button><button class="btn small danger" data-act="cd-discard">破棄する</button></div>`:""}
+    </div>`; }
   if(d && d.paused){
     const n=d.holes.filter(x=>x.entered).length, t=roundTotals({holes:d.holes.filter(x=>x.entered)});
     return `<div class="panel resume"><div class="sec"><em>PAUSED</em><span>中断中のラウンド</span></div>
@@ -1406,11 +1462,12 @@ function viewRecord(){
     const pl = players();
     return `<div class="panel">
       <h2>新しいラウンド</h2>
-      <p class="muted" style="margin:2px 0 12px;font-size:12px">自分のスコアだけ入力すればOK。友達の分は各自のスマホで。</p>
+      <div class="im-seg" role="group" aria-label="入力のしかた"><button data-act="im" data-v="hole" aria-pressed="${state.im==="hole"}">1ホールずつ<small>ショットやクラブも</small></button><button data-act="im" data-v="card" aria-pressed="${state.im==="card"}">スコアカード<small>紙と同じ表・4人まで</small></button></div>
       <div class="row start-row">
         <div class="field"><label for="r-player">あなたの名前</label><input id="r-player" list="plist" value="${esc(state.sp!=null?state.sp:last)}" placeholder="名前"><datalist id="plist">${pl.map(p=>`<option value="${esc(p)}">`).join("")}</datalist></div>
         <div class="field" style="flex:0 0 150px"><label for="r-date">日付</label><input id="r-date" type="date" value="${state.sd||today()}"></div>
       </div>
+      ${state.im==="card"?`<div class="field"><label>一緒に回る人（任意・3人まで）</label><div class="mates">${[0,1,2].map(i=>`<input id="r-mate${i}" list="plist" value="${esc((state.mates||LS.get("sc.mates",[]))[i]||"")}" placeholder="${i+2}人目" aria-label="${i+2}人目の名前">`).join("")}</div></div>`:""}
       ${coursePickField()}
       <div class="field" id="r-gwrap" hidden><label for="r-green">今日のグリーン</label><select id="r-green"></select></div>
       <div class="err" id="r-err"></div>
@@ -1653,6 +1710,90 @@ function viewRecordDraft(d){
     ${state.sheet==="clubs"?clubsSheet():""}
   </div>`;
 }
+/* ---------- スコアカード入力（紙のスコアカードと同じ表。最大4人を1台で） ---------- */
+function saveCDraft(){ LS.set("sc.cdraft", state.cdraft); }
+// 入力順は紙と同じ: 1人目の打数 → パット → 2人目 … → 次のホール
+function cdNext(cd){
+  const P=cd.players.length, pOn=fields().putts; let {h,i,k}=cd.sel;
+  if(k==="s" && pOn) k="p"; else { k="s"; i++; if(i>=P){ i=0; h++; } }
+  if(h>=cd.holes.length){ cd.sel=null; return; }
+  cd.sel={h,i,k}; if(cd.holes.length>9) cd.half = h<9?0:1;
+}
+function cardKey(v){
+  const cd=state.cdraft, sel=cd&&cd.sel; if(!sel) return;
+  const pl=cd.players[sel.i], h=sel.h;
+  if(v==="del"){ if(sel.k==="s"){ pl.s[h]=null; pl.p[h]=null; } else pl.p[h]=null; saveCDraft(); render(); return; }
+  if(sel.k==="s"){
+    if(v==="10"){ if(pl.s[h]>=10){ pl.s[h]=Math.min(15,pl.s[h]+1); saveCDraft(); render(); return; } pl.s[h]=10; } // 10以上はもう一度押すと増える
+    else { const n=+v; if(n<1) return; pl.s[h]=n; }
+    if(pl.p[h]!=null && pl.p[h]>pl.s[h]-1) pl.p[h]=pl.s[h]-1;
+  } else {
+    const n=+v; if(v==="10") return;
+    if(pl.s[h]!=null && n>pl.s[h]-1){ toast("パットは打数より少なくしてください"); return; }
+    pl.p[h]=n;
+  }
+  cdNext(cd); saveCDraft(); render();
+}
+function cardMissing(cd){
+  for(let h=0;h<cd.holes.length;h++) for(let i=0;i<cd.players.length;i++)
+    if(cd.players[i].s[h]==null) return {sel:{h,i,k:"s"}, msg:`${cd.players[i].name}の${h+1}Hの打数がまだです`};
+  if(fields().putts) for(let i=0;i<cd.players.length;i++){ const p=cd.players[i].p;
+    if(p.some(x=>x!=null) && p.some(x=>x==null)){ const h=p.findIndex(x=>x==null); return {sel:{h,i,k:"p"}, msg:`${cd.players[i].name}のパットが${h+1}Hで抜けています（全部入れるか、全部消してください）`}; } }
+  return null;
+}
+async function cardFinish(b){
+  const cd=state.cdraft; if(!cd) return;
+  const miss=cardMissing(cd); if(miss){ cd.sel=miss.sel; if(cd.holes.length>9) cd.half=miss.sel.h<9?0:1; saveCDraft(); render(); toast(miss.msg); return; }
+  const pOn=fields().putts, now=Date.now();
+  const rs=cd.players.map((pl,k)=>{ const withP = pOn && pl.p.every(x=>x!=null); // パットを書かなかった人は putts 0（＝記録なし）で送る
+    return { id:k?uid():cd.id, card:true, player:pl.name, courseId:cd.courseId, courseName:cd.courseName, date:cd.date, createdAt:now+k,
+      holes:cd.holes.map((x,i)=>({par:x.par, strokes:pl.s[i], putts:withP?pl.p[i]:0, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null})) }; });
+  if(b) b.disabled=true;
+  try{ for(const r of rs) await store.saveRound(r); }
+  catch(e){ if(b) b.disabled=false; writeErr(e); return; }
+  state.cdraft=null; saveCDraft(); state.confirm=null; state.tab="history"; LS.set("sc.tab","history");
+  state.fPlayer=rs[0].player; LS.set("sc.fPlayer",rs[0].player); state.openRound=rs[0].id; state.result=rs[0]; state.resultGroup=rs.length>1?rs:null; render();
+}
+function viewCard(cd){
+  const N=cd.holes.length, two=N>9, half=two?(cd.half||0):0, pOn=fields().putts, sel=cd.sel;
+  const rows=cd.holes.map((x,i)=>i).filter(i=>!two || (half?i>=9:i<9));
+  const isSel=(h,i,k)=>sel && sel.h===h && sel.i===i && sel.k===k;
+  const cell=(h,i,k)=>{ const pl=cd.players[i], v=k==="s"?pl.s[h]:pl.p[h];
+    const inner = v==null ? "" : k==="s" ? `<span class="mk3 m-${v===1?"hio":TONE(v-cd.holes[h].par)}">${v}</span>` : `<span class="cp ${v>=3?"bad":""}">${v}</span>`;
+    return `<td class="c-${k} ${isSel(h,i,k)?"sel":""}"><button data-act="cd-cell" data-h="${h}" data-i="${i}" data-k="${k}" aria-label="${esc(pl.name)} ${h+1}番 ${k==="s"?"打数":"パット"}${v!=null?" "+v:""}">${inner}</button></td>`; };
+  const subt=(i,idx)=>{ const pl=cd.players[i], hs=idx.filter(h=>pl.s[h]!=null); if(!hs.length) return {s:"",d:""};
+    const sc=hs.reduce((a,h)=>a+pl.s[h],0), par=hs.reduce((a,h)=>a+cd.holes[h].par,0), pt=hs.filter(h=>pl.p[h]!=null).reduce((a,h)=>a+pl.p[h],0);
+    return {s:sc, d:toPar(sc-par), p:hs.some(h=>pl.p[h]!=null)?pt:""}; };
+  const all=cd.holes.map((x,i)=>i);
+  const foot=(lab,idx,cls="")=>`<tr class="${cls}"><td colspan="2" class="ft">${lab}<small>${idx.reduce((a,h)=>a+cd.holes[h].par,0)}</small></td>${cd.players.map((p,i)=>{ const t=subt(i,idx);
+    return `<td class="c-s">${t.s}<small>${t.d}</small></td>${pOn?`<td class="c-p">${t.p??""}</td>`:""}`; }).join("")}</tr>`;
+  const done=cd.players.every(p=>p.s.every(x=>x!=null)); // 打数が全部入ったら保存ボタンを出す（パットの抜けは押したときに案内）
+  const plSel = sel && cd.players[sel.i];
+  const key=(v,lab,dis)=>`<button data-act="cd-key" data-v="${v}" ${dis?"disabled":""} aria-label="${lab}">${lab}</button>`;
+  const ks = sel ? sel.k : "s";
+  return `<div class="cd">
+    <div class="rec-top">
+      <button class="icon-btn" data-act="ask-discard" aria-label="記録を閉じる">${ICON.x}</button>
+      <div class="rec-who"><b>${esc(cd.courseName)}</b><span>${esc(cd.date.slice(5).replace("-","/"))}・スコアカード・${cd.players.length}人</span></div>
+      <button class="cd-pt" data-act="cd-putts" aria-pressed="${pOn}">パット${pOn?"あり":"なし"}</button>
+    </div>
+    ${two?`<div class="cd-tabs" role="group" aria-label="前半・後半">${["OUT 1–9","IN 10–"+N].map((l,k)=>`<button data-act="cd-half" data-v="${k}" aria-pressed="${half===k}">${l}</button>`).join("")}</div>`:""}
+    <div class="cd-scroll"><table class="cdt ${pOn?"wp":""}"><colgroup><col class="h"><col class="par">${cd.players.map(()=>`<col class="s">${pOn?`<col class="p">`:""}`).join("")}</colgroup>
+      <thead><tr><th>H</th><th>PAR</th>${cd.players.map(p=>`<th class="nm" colspan="${pOn?2:1}">${esc(p.name)}</th>`).join("")}</tr>
+      ${pOn?`<tr class="sub"><th></th><th></th>${cd.players.map(()=>`<th class="c-s">打数</th><th>パット</th>`).join("")}</tr>`:""}</thead>
+      <tbody>${rows.map(h=>`<tr><td class="hn">${h+1}</td><td class="pr">${cd.holes[h].par}</td>${cd.players.map((p,i)=>cell(h,i,"s")+(pOn?cell(h,i,"p"):"")).join("")}</tr>`).join("")}</tbody>
+      <tfoot>${two?foot(half?"IN":"OUT",rows)+foot("計",all,"all"):foot("計",all)}</tfoot></table></div>
+    <div class="cd-pad">
+      <div class="cd-lbl">${sel?`<span><b>${esc(plSel.name)}</b>・${sel.h+1}H（PAR ${cd.holes[sel.h].par}）の<em>${ks==="s"?"打数":"パット"}</em></span>`:`<span>${done?"全部入りました。保存しましょう":"マスをタップして入力"}</span>`}</div>
+      ${sel||!done?`<div class="cd-keys">${[1,2,3,4,5,6,7,8,9].map(n=>key(n,String(n),!sel || (ks==="p" && n>9))).join("")}${key("10","10+",!sel||ks==="p")}${key("0","0",!sel||ks==="s")}${key("del","消す",!sel)}</div>`:""}
+      ${done?`<button class="cd-save" data-act="cd-finish">ラウンドを保存${cd.players.length>1?`（${cd.players.length}人分）`:""}</button>`:""}
+    </div>
+    ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p><button data-act="cd-pause">中断してホームへ（あとで続きから）</button><button class="danger" data-act="cd-discard">記録を破棄する</button><button data-act="cancel-confirm">入力に戻る</button></div></div>`:""}
+  </div>`;
+}
+function cardAfter(){ const c=$(".cdt td.sel"), box=$(".cd-scroll"); if(!c||!box) return;
+  const cb=c.getBoundingClientRect(), bb=box.getBoundingClientRect(), head=(box.querySelector("thead")||{}).offsetHeight||0, foot=(box.querySelector("tfoot")||{}).offsetHeight||0;
+  if(cb.top<bb.top+head) box.scrollTop-= (bb.top+head-cb.top); else if(cb.bottom>bb.bottom-foot) box.scrollTop+= (cb.bottom-(bb.bottom-foot)); }
 let clubTimer=null;
 /* 前回このホール（同じ人・同じコース）で使ったティーショットのクラブ */
 function lastClub(d, i){
@@ -1686,6 +1827,8 @@ function fieldsSheet(){
 after.record = () => {
   const rp=$("#r-player"); if(rp) rp.oninput=()=>{ state.sp=rp.value; };
   const rd=$("#r-date"); if(rd) rd.onchange=()=>{ state.sd=rd.value; };
+  [0,1,2].forEach(i=>{ const el=$("#r-mate"+i); if(el) el.oninput=()=>{ state.mates=[0,1,2].map(j=>($("#r-mate"+j)||{}).value||""); }; });
+  cardAfter();
   const cpp=$("#cp-pref"); if(cpp) cpp.onchange=()=>{ state.pickPref=cpp.value; if(cpp.value && cpp.value!=="_none") LS.set("sc.pref",cpp.value); render(); };
   const rc=$("#r-course"), gw=$("#r-gwrap");
   if(rc && gw){ const upd=()=>{ const g=courseGreens(pickableCourses().find(x=>x.id===rc.value)); gw.hidden=!g; if(g) $("#r-green").innerHTML=g.map((n,i)=>`<option value="${i}">${esc(n)}</option>`).join(""); }; rc.addEventListener("change",upd); upd(); }
@@ -2096,12 +2239,12 @@ document.addEventListener("click", async ev => {
     }
     case "back-to-input": {
       const r=state.result; if(!r) { render(); break; }
-      if(state.draft && !state.draft.editing && state.draft.id!==r.id && state.draft.holes.some(x=>x.entered)){ toast("記録中のラウンドがあります。保存か破棄をしてから編集してください"); break; }
+      if((state.draft && !state.draft.editing && state.draft.id!==r.id && state.draft.holes.some(x=>x.entered)) || state.cdraft){ toast("記録中のラウンドがあります。保存か破棄をしてから編集してください"); break; }
       state.result=null;
       state.draft={...JSON.parse(JSON.stringify(r)), editing:true}; state.draft.holes.forEach(x=>x.entered=true);
       state.hole=r.holes.length-1; state.tab="record"; LS.set("sc.tab","record"); saveDraft(); render(); break;
     }
-    case "close-result": state.result=null; render(); break;
+    case "close-result": state.result=null; state.resultGroup=null; render(); break;
     case "toggle-round": state.openRound = state.openRound===b.dataset.id ? null : b.dataset.id; state.confirm=null; render(); break;
     case "stat-tab": { const tb=$(".stat-tabs"), y0=tb?tb.getBoundingClientRect().top:0; state.statTab=b.dataset.v; LS.set("sc.statTab",b.dataset.v); state.trendSel=null; render();
       const t2=$(".stat-tabs"); if(t2) window.scrollBy(0, t2.getBoundingClientRect().top-y0); break; } // タブの位置を動かさない
@@ -2121,6 +2264,12 @@ document.addEventListener("click", async ev => {
       { const F=favs(); if(!F.includes(c.id)) LS.set("sc.favs",[...F,c.id]); }
       LS.set("sc.lastCourse", c.id); state.pick=null; state.sp=null; state.sd=null;
       LS.set("sc.player",p);
+      if(state.im==="card"){
+        const mates=[0,1,2].map(i=>(($("#r-mate"+i)||{}).value||"").trim()).filter(Boolean); LS.set("sc.mates",[0,1,2].map(i=>mates[i]||"")); state.mates=null;
+        const names=[p,...mates]; if(new Set(names).size<names.length){ $("#r-err").textContent="同じ名前の人がいます。名前を変えてください"; return; }
+        const N=c.holes.length;
+        state.cdraft={ id:uid(), card:true, courseId:c.id, courseName:c.name, date:dt, holes:c.holes.map(x=>({par:x.par})), players:names.map(n=>({name:n, s:Array(N).fill(null), p:Array(N).fill(null)})), sel:{h:0,i:0,k:"s"} };
+        saveCDraft(); render(); break; }
       const gs=courseGreens(c), gi=gs ? (+($("#r-green")||{}).value||0) : 0;
       state.draft={ id:uid(), player:p, courseId:c.id, courseName:c.name, date:dt, gn:gs, holes:c.holes.map(x=>({par:x.par, yards:(gi&&x.yards2)?x.yards2:(x.yards||null), ys:gs?[x.yards||null,x.yards2||null]:null, gi, strokes:x.par, putts:2, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null, entered:false})) };
       state.hole=0; saveDraft(); render(); break;
@@ -2145,6 +2294,16 @@ document.addEventListener("click", async ev => {
       break;
     }
     case "ask-discard": state.confirm="discard"; render(); break;
+    case "im": state.im=b.dataset.v; LS.set("sc.inputMode",state.im); render(); break;
+    case "cd-cell": { const cd=state.cdraft; cd.sel={h:+b.dataset.h, i:+b.dataset.i, k:b.dataset.k}; saveCDraft(); render(); break; }
+    case "cd-key": cardKey(b.dataset.v); break;
+    case "cd-half": { const cd=state.cdraft; cd.half=+b.dataset.v; cd.sel={h:cd.half*9, i:0, k:"s"}; saveCDraft(); render(); break; }
+    case "cd-putts": { const f=fields(); f.putts=!f.putts; LS.set("sc.fields",f); const cd=state.cdraft; if(!f.putts && cd.sel.k==="p") cd.sel.k="s"; render(); break; }
+    case "cd-pause": state.cdraft.paused=true; state.confirm=null; saveCDraft(); render(); window.scrollTo({top:0}); break;
+    case "cd-resume": state.cdraft.paused=false; saveCDraft(); render(); break;
+    case "cd-discard": state.cdraft=null; state.confirm=null; saveCDraft(); render(); break;
+    case "cd-finish": await cardFinish(b); break;
+    case "result-pick": { const g=state.resultGroup||[]; const r=g.find(x=>x.id===b.dataset.id); if(r){ state.result=r; state.fPlayer=r.player; state.openRound=r.id; starCache=null; render(); } break; }
     case "pick-course": state.pick=b.dataset.id; state.sheet=null; state.pickAdd=false; render(); break;
     case "add-fav-pick": { const F=favs(); if(!F.includes(b.dataset.id)) LS.set("sc.favs",[...F,b.dataset.id]); state.pick=b.dataset.id; state.sheet=null; state.pickAdd=false; render(); break; }
     case "pick-add": state.pickAdd=true; render(); break;
@@ -2189,7 +2348,7 @@ document.addEventListener("click", async ev => {
     case "edit-round": {
       const r=state.rounds.find(x=>x.id===b.dataset.id); if(!r) return;
       // 記録中・中断中のラウンドがあるときに上書きしない
-      if(state.draft && !state.draft.editing && state.draft.holes.some(x=>x.entered)){ toast("記録中のラウンドがあります。保存か破棄をしてから編集してください"); break; }
+      if((state.draft && !state.draft.editing && state.draft.holes.some(x=>x.entered)) || state.cdraft){ toast("記録中のラウンドがあります。保存か破棄をしてから編集してください"); break; }
       state.draft={...JSON.parse(JSON.stringify(r)), editing:true}; state.draft.holes.forEach(x=>x.entered=true);
       state.hole=0; state.tab="record"; saveDraft(); render(); break;
     }

@@ -174,6 +174,57 @@ with sync_playwright() as pw:
         check(f"横にはみ出さない（{'ダーク' if dark else 'ライト'}）", pg.evaluate("document.documentElement.scrollWidth") <= 375)
         pg.context.close()
 
+    # 7. スコアカード入力（紙と同じ表・4人まで）
+    def card_fill(pg, putts_for=None):
+        for _ in range(200):
+            sel = pg.evaluate("state.cdraft&&state.cdraft.sel")
+            if not sel: break
+            if sel["k"] == "p" and putts_for is not None and sel["i"] not in putts_for:
+                C(pg, f'[data-act=cd-cell][data-h="{sel["h"]}"][data-i="{sel["i"]+1}"][data-k=s]') if sel["i"] + 1 < pg.evaluate("state.cdraft.players.length") else C(pg, f'[data-act=cd-cell][data-h="{sel["h"]+1}"][data-i="0"][data-k=s]')
+                if pg.evaluate("state.cdraft.sel&&state.cdraft.sel.h") == sel["h"] and pg.evaluate("state.cdraft.sel.i") == sel["i"]: break
+                continue
+            C(pg, '[data-act=cd-key][data-v="4"]' if sel["k"] == "s" else '[data-act=cd-key][data-v="2"]')
+    LSC = {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": ["はなこ", "じろう", "さぶろう"]}
+    pg, errs = open_page(b, LSC)
+    check("スコアカード: 開始画面に3人分の同伴者欄", pg.evaluate("document.querySelectorAll('.mates input').length") == 3)
+    start_preset(pg, "firtree")
+    check("スコアカード: 4人で開始・表が出る", pg.evaluate("state.cdraft&&state.cdraft.players.length") == 4 and pg.query_selector(".cdt") is not None)
+    check("スコアカード: 1画面に収まる（ページがスクロールしない）", pg.evaluate("document.documentElement.scrollHeight") <= 667)
+    C(pg, '[data-act=cd-key][data-v="3"]'); C(pg, '[data-act=cd-key][data-v="5"]')
+    check("スコアカード: パットは打数より少なくしか入らない", pg.evaluate("state.cdraft.players[0].p[0]") is None)
+    C(pg, '[data-act=cd-key][data-v="2"]')
+    check("スコアカード: 打数→パット→次の人の順に進む", pg.evaluate("JSON.stringify(state.cdraft.sel)") == '{"h":0,"i":1,"k":"s"}')
+    pg.reload(); pg.wait_for_timeout(1000)
+    check("スコアカード: 読み直しても入力と位置が残る", pg.evaluate("state.cdraft.players[0].s[0]") == 3 and pg.evaluate("state.cdraft.sel.i") == 1)
+    C(pg, "[data-act=ask-discard]"); C(pg, "[data-act=cd-pause]")
+    check("スコアカード: 中断カードが出る", pg.query_selector("[data-act=cd-resume]") is not None)
+    C(pg, "nav.tabs [data-tab=history]"); C(pg, "nav.tabs [data-tab=record]"); C(pg, "[data-act=cd-resume]")
+    card_fill(pg, putts_for={0, 1})
+    C(pg, "[data-act=cd-finish]"); pg.wait_for_timeout(900)
+    rs = pg.evaluate("__db.rounds.map(r=>({p:r.player,s:r.holes.reduce((a,h)=>a+h.strokes,0),pt:r.holes.reduce((a,h)=>a+h.putts,0),n:r.holes.length}))")
+    check("スコアカード: 4人分が別々のラウンドで保存", sorted(x["p"] for x in rs) == sorted(["たろう", "はなこ", "じろう", "さぶろう"]) and all(x["n"] == 9 for x in rs))
+    check("スコアカード: パットを書かなかった人は putts 0（記録なし）", {x["p"]: x["pt"] > 0 for x in rs} == {"たろう": True, "はなこ": True, "じろう": False, "さぶろう": False})
+    check("スコアカード: リザルトで4人を切りかえられる", pg.evaluate("document.querySelectorAll('.rc-who button').length") == 4 and C(pg, '.rc-who button:nth-child(2)') and pg.evaluate("state.result.player") == "はなこ")
+    check("スコアカード: 保存後は下書きが消える", pg.evaluate("localStorage.getItem('sc.cdraft')") in (None, "null"))
+    check("スコアカード: エラーなし", not errs)
+    pg.context.close()
+
+    # 途中までのパットは保存させない・18H は OUT/IN を切りかえ
+    courses18 = [{"id": "c18", "name": "18H", "holes": [{"par": 4, "yards": 300}] * 18}]
+    pg, errs = open_page(b, {**LSC, "sc.mates": [], "sc.courses": courses18, "sc.favs": ["c18"], "sc.lastCourse": "\"c18\""}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    check("スコアカード: 1人でも始められる・18Hは OUT/IN", pg.evaluate("state.cdraft.players.length") == 1 and pg.evaluate("document.querySelectorAll('[data-act=cd-half]').length") == 2)
+    card_fill(pg)
+    check("スコアカード: 9H目のあと IN に切りかわる", pg.evaluate("state.cdraft.half") == 1)
+    C(pg, '[data-act=cd-half][data-v="0"]'); C(pg, '[data-act=cd-cell][data-h="5"][data-i="0"][data-k=p]'); C(pg, '[data-act=cd-key][data-v="del"]')
+    C(pg, '[data-act=cd-half][data-v="1"]')
+    C(pg, "[data-act=cd-finish]"); pg.wait_for_timeout(500)
+    check("スコアカード: パットが途中までだと保存しない", pg.evaluate("state.cdraft!=null") and pg.evaluate("state.cdraft.sel.h") == 5 and pg.evaluate("state.cdraft.half") == 0)
+    C(pg, '[data-act=cd-key][data-v="1"]'); C(pg, "[data-act=cd-finish]"); pg.wait_for_timeout(600)
+    check("スコアカード: 電波なしでも端末に保存", pg.evaluate("state.cdraft") is None and pg.evaluate("pending.length") == 1)
+    check("スコアカード（18H）: エラーなし", not errs)
+    pg.context.close()
+
     b.close()
 
 try: os.remove(os.path.join(ROOT, "_test.html"))
