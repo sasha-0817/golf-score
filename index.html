@@ -1266,6 +1266,30 @@ input,select,textarea{font-size:max(16px,1em)}
 .game-sheet .skins-rules ol{gap:2px;margin-bottom:8px}
 .game-sheet .gm-ok{background:var(--rec-fg)!important;color:var(--rec-bg)!important;border-color:var(--rec-fg)!important;font-weight:700}
 .sr-r{flex-direction:row!important;align-items:center!important;gap:4px}
+/* ゲームのカード: 名前・人数・ルールボタンを1行に */
+.game-sheet .gm-card{cursor:pointer;border-radius:14px;background:var(--rec-bg)}
+.gm-h{display:flex;align-items:center;gap:6px}
+.gm-h b{font-size:16px}
+.gm-h i{font-style:normal;font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;border:1px solid var(--rec-line);color:var(--rec-muted)}
+.game-sheet .gm-rule{height:24px!important;width:auto!important;margin:0 0 0 2px!important;padding:0 10px!important;border-radius:999px!important;border:1px solid #0E9F62!important;background:var(--rec-surface)!important;color:#0E9F62!important;font-size:11px!important;font-weight:700;line-height:1}
+/* ルールのポップアップ */
+.rp-back{position:fixed;inset:0;z-index:60;background:rgba(5,10,20,.5);display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn .15s ease-out}
+.rp{width:100%;max-width:360px;max-height:88vh;overflow-y:auto;background:var(--rec-surface);color:var(--rec-fg);border-radius:20px;padding:14px 16px 16px;box-shadow:0 20px 50px -10px rgba(0,0,0,.5)}
+.rp-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.rp-head b{flex:1;font-size:16px}
+.rp-ill{display:flex}
+.rp-x{flex:0 0 36px;width:36px;height:36px;border-radius:50%;border:1px solid var(--rec-line);background:var(--rec-bg);color:var(--rec-fg);display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;line-height:0}
+.rp-x svg{display:block;width:18px;height:18px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round}
+.rp-list{margin:0 0 10px;padding-left:20px;font-size:13px;line-height:1.6}
+.rp-opt{background:var(--rec-bg);border-radius:12px;padding:8px;margin-bottom:10px}
+.rp-opt-h{font-size:11px;font-weight:700;color:var(--rec-muted);margin:0 2px 6px}
+.rp-seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.rp-seg button{height:38px;border-radius:10px;border:1px solid var(--rec-line);background:var(--rec-surface);color:var(--rec-fg);font:inherit;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation}
+.rp-seg button[aria-pressed="true"]{border:2px solid #0E9F62;background:color-mix(in srgb,#0E9F62 10%,var(--rec-surface));color:#0B7A4B}
+.rp .sr-ex{background:var(--rec-bg)}
+.rp-ok{width:100%;height:44px;margin-top:12px;border-radius:12px;border:0;background:var(--rec-fg);color:var(--rec-bg);font:inherit;font-weight:700;font-size:15px;cursor:pointer}
+.rp-back{z-index:500}
+.rp-seg button[aria-pressed="true"]{color:var(--rec-turf)}
 </style>
 
 </head>
@@ -1364,7 +1388,7 @@ const state = {
   cdraft: (d=>d && Array.isArray(d.holes) && d.holes.length && Array.isArray(d.players) && d.players.length && d.players.every(p=>p && Array.isArray(p.s) && Array.isArray(p.p) && p.s.length===d.holes.length) ? d : null)(LS.get("sc.cdraft", null)),
   im: LS.get("sc.inputMode","hole")==="card" ? "card" : "hole",
   game: LS.get("sc.game","")==="skins" ? "skins" : "",
-  skinCarry: false, // 持ち越しは画面から外した（2026-10-21「枠や文章が変わって分かりづらい」）。計算の仕組みは残してある
+  skinCarry: LS.get("sc.skinCarry", false)===true, // 同点のコインを次のホールへ持ち越すか（ルールのポップアップで選ぶ。初期はしない）
   hole: 0, // 下書きがあれば下で復元
   fPlayer: LS.get("sc.fPlayer", LS.get("sc.player","") || "all"), fCourse:"all", fRange:"all",
   courseEdit: null,
@@ -1374,7 +1398,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-21-0830";
+const BUILD = "2026-10-21-0845";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2531,27 +2555,31 @@ function skinsCalc(rows, n, carryOn=true){
     if(w.length===1){ won[w[0]]+=pot; carry=0; log.push({w:w[0],pot}); } else { carry=carryOn?pot:0; log.push({w:-1,pot}); } }
   return {won, carry, log, pot:1+carry};
 }
-/* ゲームの選択画面: いつも同じ見た目（カード2枚＋ルール）。タップで変わるのは選んだカードの緑の枠だけ */
+/* ゲームの選択画面: ゲームのカードを並べるだけ（ルールは各カードの「ルール」ボタンからポップアップで。ゲームが増えてもごちゃごちゃしない） */
 function gameSheet(){
   const g=state.game||"";
-  const card=(k,name,n,desc,ill)=>`<button class="gm-card ${g===k?"on":""}" data-act="pick-game" data-v="${k}" aria-pressed="${g===k}">${ill}<span class="gm-t"><b>${name}${n?`<i>${n}</i>`:""}</b><small>${desc}</small></span><span class="cp-radio" aria-hidden="true"></span></button>`;
+  const card=(k,name,n,desc,ill,rules)=>`<div class="gm-card ${g===k?"on":""}" role="button" tabindex="0" data-act="pick-game" data-v="${k}" aria-pressed="${g===k}">${ill}<span class="gm-t"><span class="gm-h"><b>${name}</b>${n?`<i>${n}</i>`:""}${rules?`<button class="gm-rule" data-act="open-rules" data-v="${k}">ルール</button>`:""}</span><small>${desc}</small></span><span class="cp-radio" aria-hidden="true"></span></div>`;
   const skIll=`<span class="gm-ill">${coinSVG(26,"c1")}${coinSVG(26,"c2")}${coinSVG(26,"c3")}</span>`;
   return `<div class="sheet-back" data-act="close-game"><div class="sheet game-sheet" data-stop="1"><p>ゲーム</p>
-    ${card("","なし","","スコアだけを記録します",`<span class="gm-ill none">—</span>`)}
-    ${card("skins","スキンズ",GAMES.skins.n,"ホールごとにコインを取り合います",skIll)}
-    ${skinsRules()}
-    <button class="gm-ok" data-act="close-game">決定</button></div></div>`;
+    ${card("","なし","","スコアだけを記録します",`<span class="gm-ill none">—</span>`,false)}
+    ${card("skins","スキンズ",GAMES.skins.n,"ホールごとにコインを取り合います",skIll,true)}
+    <button class="gm-ok" data-act="close-game">決定</button></div></div>${state.rulesOpen==="skins"?rulesPop():""}`;
 }
-/* スキンズのルール（いつも同じ内容。持ち越しなし） */
-function skinsRules(){
-  const row=(h,a,b,res,n)=>`<div class="sr-row"><span class="sr-h">${h}</span><span class="sr-s ${a<b?"win":""}">たろう <b>${a}</b></span><span class="sr-s ${b<a?"win":""}">はなこ <b>${b}</b></span><span class="sr-r">${res}<span class="sr-coins">${Array.from({length:n},()=>coinSVG(16)).join("")}</span></span></div>`;
-  return `<div class="skins-rules"><div class="sr-title">スキンズのルール</div>
-    <ol><li>各ホールで<b>一番少ない打数の人</b>がコイン${coinSVG(14)}を1枚もらえます</li>
-      <li><b>同点</b>のホールは誰ももらえません</li>
+/* ルールのポップアップ（× で戻る）。同点のときの持ち越しもここで選ぶ */
+function rulesPop(){
+  const carry=state.skinCarry;
+  const row=(h,a,b,res,n,cls="")=>`<div class="sr-row"><span class="sr-h">${h}</span><span class="sr-s ${a<b?"win":""}">たろう <b>${a}</b></span><span class="sr-s ${b<a?"win":""}">はなこ <b>${b}</b></span><span class="sr-r ${cls}">${res}<span class="sr-coins">${Array.from({length:n},()=>coinSVG(16)).join("")}</span></span></div>`;
+  return `<div class="rp-back" data-act="close-rules"><div class="rp" data-stop="1" role="dialog" aria-label="スキンズのルール">
+    <div class="rp-head"><span class="rp-ill">${coinSVG(22)}</span><b>スキンズのルール</b><button class="rp-x" data-act="close-rules" aria-label="閉じる">${ICON.x}</button></div>
+    <ol class="rp-list"><li>各ホールで<b>一番少ない打数の人</b>がコイン${coinSVG(14)}をもらえます</li>
+      <li><b>同点</b>のときは下の設定で決まります</li>
       <li>最後に<b>コインが一番多い人の勝ち</b></li></ol>
+    <div class="rp-opt"><div class="rp-opt-h">同点のとき</div><div class="rp-seg" role="group" aria-label="同点のとき">
+      <button data-act="set-carry" data-v="0" aria-pressed="${!carry}">誰ももらえない</button><button data-act="set-carry" data-v="1" aria-pressed="${carry}">次のホールへ持ち越し</button></div></div>
     <div class="sr-ex"><div class="sr-cap">例：2人で3ホール</div>
-      ${row("1H",3,3,"同点",0)}${row("2H",4,3,"はなこ",1)}${row("3H",2,4,"たろう",1)}
-      <div class="sr-sum">はなこ ${coinSVG(14)}1　たろう ${coinSVG(14)}1　→ 引き分け</div></div></div>`;
+      ${carry ? row("1H",3,3,"同点 → 持ち越し",0)+row("2H",4,3,"はなこ が2枚",2)+row("3H",2,4,"たろう が1枚",1)+`<div class="sr-sum">はなこ ${coinSVG(14)}2　たろう ${coinSVG(14)}1　→ <b>はなこの勝ち</b></div>`
+              : row("1H",3,3,"同点 → なし",0)+row("2H",4,3,"はなこ が1枚",1)+row("3H",2,4,"たろう が1枚",1)+`<div class="sr-sum">はなこ ${coinSVG(14)}1　たろう ${coinSVG(14)}1　→ <b>引き分け</b></div>`}</div>
+    <button class="rp-ok" data-act="close-rules">OK</button></div></div>`;
 }
 /* ---------- actions ---------- */
 function saveDraft(){ if(state.draft) state.draft.cur=state.hole; LS.set("sc.draft", state.draft); } // 今のホールも覚えておく（自動更新で読み直しても同じホールから）
@@ -2651,9 +2679,11 @@ document.addEventListener("click", async ev => {
     case "ask-discard": state.confirm="discard"; render(); break;
     case "open-game": state.mates=[0,1,2].map(j=>(($("#r-mate"+j)||{}).value||"")); state.sheet="game"; render(); break;
     case "pick-game": state.game=b.dataset.v; LS.set("sc.game",state.game); render(); break;
-    case "skin-carry": state.skinCarry=!state.skinCarry; LS.set("sc.skinCarry",state.skinCarry); render(); break;
+    case "open-rules": state.rulesOpen=b.dataset.v; render(); break;
+    case "close-rules": state.rulesOpen=null; render(); break;
+    case "set-carry": state.skinCarry=b.dataset.v==="1"; LS.set("sc.skinCarry",state.skinCarry); render(); break;
     case "game-help": state.gameHelp=!state.gameHelp; render(); break;
-    case "close-game": state.sheet=null; state.gameHelp=false; render(); break;
+    case "close-game": state.sheet=null; state.rulesOpen=null; render(); break;
     case "im": state.im=b.dataset.v; LS.set("sc.inputMode",state.im); render(); break;
     case "cd-cell": { const cd=state.cdraft; cd.sel={h:+b.dataset.h, i:+b.dataset.i, k:b.dataset.k}; saveCDraft(); render(); break; }
     case "cd-key": cardKey(b.dataset.v); break;
