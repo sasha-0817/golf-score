@@ -1107,6 +1107,28 @@ input,select,textarea{font-size:max(16px,1em)}
 .start-row .field:first-child{flex:1 1 auto}
 .start-row .field:last-child{flex:0 0 148px!important}
 .mates .mate-in input{height:40px}
+/* 人ごとの列（同伴者がいるとき） */
+.pcols{display:flex;gap:5px;--paper:var(--rec-bg);--fg:var(--rec-fg);--muted:var(--rec-muted)}
+.pc-me{flex:1 1 0;display:flex;flex-direction:column;border-radius:14px;background:color-mix(in srgb,var(--rec-turf) 14%,var(--rec-bg));border:1px solid color-mix(in srgb,var(--rec-turf) 45%,var(--rec-line));padding:4px 4px 5px;min-width:0}
+.pc-me.two{flex:2 1 0}
+.pc-sub{display:flex;gap:4px}
+.pc-sub .pc{flex:1 1 0;border:0;background:transparent;padding:0}
+.pc{flex:1 1 0;display:flex;flex-direction:column;align-items:stretch;gap:4px;border-radius:14px;border:1px solid var(--rec-line);background:var(--rec-bg);padding:4px 4px 5px;min-width:0}
+.pc-n{font-size:12px;font-weight:700;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;margin-bottom:1px}
+.pc-me>.pc-n{color:color-mix(in srgb,var(--rec-turf) 70%,var(--rec-fg))}
+.pc-l{font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--rec-muted);text-align:center;line-height:1}
+.pc.mate .pc-l{display:none}
+.pc.mate .pc-n{margin-bottom:9px}
+.pc-v{height:34px;display:flex;align-items:center;justify-content:center}
+.pc-v .mk3{width:32px;height:32px;font:700 21px var(--f-num)}
+.pc-v .pt{font:700 23px var(--f-num)}
+.pc-v .pt.p0,.pc-v .pt.p1{color:var(--q-birdie)}.pc-v .pt.p3{color:var(--q-bogey)}.pc-v .pt.p4{color:var(--q-double)}
+.pc-tap{border:0;background:transparent;padding:0;cursor:pointer;display:flex}
+.pc>button{height:38px;border-radius:10px;border:1px solid var(--rec-line);background:var(--rec-surface);color:var(--rec-fg);display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;touch-action:manipulation}
+.pc>button:active{transform:scale(.94)}
+.pc>button:disabled{opacity:.3}
+.pc>button svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.pc{gap:3px}.pc>button{height:34px}.pc-v{height:30px}.rec-card.wm{gap:8px}
 </style>
 
 </head>
@@ -1213,7 +1235,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-21-0010";
+const BUILD = "2026-10-21-0040";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1777,6 +1799,7 @@ function viewRecordDraft(d){
       ${advice?`<div class="advice">${advice}</div>`:""}
     </div>
     <div class="rec-card rc2 ${slide} ${(d.mates||[]).length?"wm":""}" id="rec-card">
+      ${(d.mates||[]).length ? playerCols(d, h, F) : `
       <div class="stp-row ${F.putts?"":"one"}">
         <div class="stp"><div class="stp-h"><span class="eyebrow">SCORE<b>打数</b></span></div>
           <div class="stp-b"><button data-act="st" data-d="-1" aria-label="打数を1つ減らす" ${h.strokes<=1?"disabled":""}>${ICON.down}</button>
@@ -1786,11 +1809,7 @@ function viewRecordDraft(d){
           <div class="stp-b"><button data-act="pt" data-d="-1" aria-label="パットを1つ減らす" ${h.putts<=0?"disabled":""}>${ICON.down}</button>
           <div class="stp-v ${state.tap&&state.tap.startsWith("pt")?"pop":""}"><b>${h.putts}</b><span class="tm p-${h.putts<=1?"birdie":h.putts===2?"par":h.putts===3?"bogey":"double"}">${h.putts===0?"CHIP IN":h.putts+" PUTT"+(h.putts>1?"S":"")}</span></div>
           <button data-act="pt" data-d="1" aria-label="パットを1つ増やす" ${h.putts>=9?"disabled":""}>${ICON.up}</button></div></div>`:""}
-      </div>
-
-      ${(d.mates||[]).length?(()=>{ const nm=[d.player,...d.mates.map(m=>m.name)];
-        return `<div class="mates-rec2">${d.mates.map((m,k)=>{ const v=m.s[state.hole];
-          return `<button class="mr2" data-act="mt-open" data-i="${k}" aria-label="${esc(m.name)}の打数 ${v}（タップで入力）"><span>${esc(dupLabel(nm,k+1))}</span><b class="mk3 m-${v===1?"hio":TONE(v-h.par)}">${v}</b></button>`; }).join("")}</div>`; })():""}
+      </div>`}
       ${F.shot?`<div class="ap-wrap"><div class="seg-head"><span class="eyebrow">TEE SHOT<b>ティーショットの行き先</b></span>${F.club?`<button class="club-tag ${h.club?"has":""}" data-act="open-club">${h.club?esc(h.club):"クラブ"}</button>`:""}</div>${isLong?fairwaySVG(h.tee, state.tap&&state.tap.startsWith("tee")):approachSVG(h.dir, state.tap&&state.tap.startsWith("dir"))}</div>`:""}
       ${F.club && !F.shot ? (()=>{ const lc = lastClub(d, state.hole);
         // ショットの方向がOFFでもクラブだけ記録できるよう、クラブを横に並べて1タップで選ぶ（前回のクラブには小さく「前回」）
@@ -1902,6 +1921,19 @@ function viewCard(cd){
 function cardAfter(){ const c=$(".cdt td.sel"), box=$(".cd-scroll"); if(!c||!box) return;
   const cb=c.getBoundingClientRect(), bb=box.getBoundingClientRect(), head=(box.querySelector("thead")||{}).offsetHeight||0, foot=(box.querySelector("tfoot")||{}).offsetHeight||0;
   if(cb.top<bb.top+head) box.scrollTop-= (bb.top+head-cb.top); else if(cb.bottom>bb.bottom-foot) box.scrollTop+= (cb.bottom-(bb.bottom-foot)); }
+/* 同伴者がいるとき: 人ごとの縦の列（名前・数字・∧・∨）。自分は 打数とパットの2列（楽天GORAのスコア入力のような形） */
+function playerCols(d, h, F){
+  const nm=[d.player,...d.mates.map(m=>m.name)], mk=v=>`<b class="mk3 m-${v===1?"hio":TONE(v-h.par)}">${v}</b>`;
+  const col=(cls,name,val,up,dn,label)=>`<div class="pc ${cls}">${name!=null?`<div class="pc-n">${name}</div>`:""}<div class="pc-l">${label}</div><div class="pc-v">${val}</div>
+    <button ${up} aria-label="${label}を1つ増やす">${ICON.up}</button><button ${dn} aria-label="${label}を1つ減らす">${ICON.down}</button></div>`;
+  const me = `<div class="pc-me ${F.putts?"two":""}"><div class="pc-n">${esc(d.player)}</div><div class="pc-sub">
+    ${col("", null, mk(h.strokes), `data-act="st" data-d="1" ${h.strokes>=15?"disabled":""}`, `data-act="st" data-d="-1" ${h.strokes<=1?"disabled":""}`, "打数")}
+    ${F.putts?col("", null, `<b class="pt p${Math.min(h.putts,4)}">${h.putts}</b>`, `data-act="pt" data-d="1" ${h.putts>=9?"disabled":""}`, `data-act="pt" data-d="-1" ${h.putts<=0?"disabled":""}`, "パット"):""}</div></div>`;
+  const mates = d.mates.map((m,k)=>{ const v=m.s[state.hole];
+    return col("mate", esc(dupLabel(nm,k+1)), `<button class="pc-tap" data-act="mt-open" data-i="${k}" aria-label="${esc(m.name)}の打数を数字で入力">${mk(v)}</button>`,
+      `data-act="mt" data-i="${k}" data-d="1" ${v>=15?"disabled":""}`, `data-act="mt" data-i="${k}" data-d="-1" ${v<=1?"disabled":""}`, "打数"); }).join("");
+  return `<div class="pcols n${d.mates.length+(F.putts?2:1)}">${me}${mates}</div>`;
+}
 let clubTimer=null;
 /* 前回このホール（同じ人・同じコース）で使ったティーショットのクラブ */
 function lastClub(d, i){
