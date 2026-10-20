@@ -1075,6 +1075,11 @@ input,select,textarea{font-size:max(16px,1em)}
 .mate-sheet .ms-keys button{height:58px;margin:0;border-radius:14px;border:1px solid var(--rec-line);background:var(--rec-bg);color:var(--rec-fg);font:700 26px var(--f-num);padding:0}
 .mate-sheet .ms-keys button.par{border-color:var(--q-par);box-shadow:inset 0 0 0 1px var(--q-par)}
 .mate-sheet .ms-keys button[aria-pressed="true"]{background:var(--rec-fg);color:var(--rec-bg);border-color:var(--rec-fg)}
+/* 歯車を大きく・同伴者の名前を3つ横に収める */
+.rec2 .rec-top .gear-btn{width:46px;height:46px;flex:0 0 46px}
+.rec2 .icon-btn svg.gear{width:28px;height:28px;stroke-width:1.7}
+.mate-in input{padding:9px 24px 9px 8px}
+.mate-in button{right:3px;width:20px;height:20px;font-size:12px}
 </style>
 
 </head>
@@ -1181,7 +1186,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-20-2215";
+const BUILD = "2026-10-20-2250";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1529,12 +1534,12 @@ function viewRecord(){
     const pl = players();
     return `<div class="panel">
       <h2>新しいラウンド</h2>
-      <div class="im-seg" role="group" aria-label="入力のしかた"><button data-act="im" data-v="hole" aria-pressed="${state.im==="hole"}">1ホールずつ<small>ショットやクラブも</small></button><button data-act="im" data-v="card" aria-pressed="${state.im==="card"}">スコアカード<small>紙と同じ表・4人まで</small></button></div>
+      <div class="im-seg" role="group" aria-label="入力のしかた"><button data-act="im" data-v="hole" aria-pressed="${state.im==="hole"}">くわしく記録<small>ショットやクラブも</small></button><button data-act="im" data-v="card" aria-pressed="${state.im==="card"}">スコアカード<small>紙と同じ表で手早く</small></button></div>
       <div class="row start-row">
         <div class="field"><label for="r-player">あなたの名前</label><input id="r-player" list="plist" value="${esc(state.sp!=null?state.sp:last)}" placeholder="名前"><datalist id="plist">${pl.map(p=>`<option value="${esc(p)}">`).join("")}</datalist></div>
         <div class="field" style="flex:0 0 150px"><label for="r-date">日付</label><input id="r-date" type="date" value="${state.sd||today()}"></div>
       </div>
-      ${`<div class="field"><label>一緒に回る人（任意・3人まで${state.im==="card"?"":"・打数だけ"}）</label><div class="mates">${[0,1,2].map(i=>`<span class="mate-in"><input id="r-mate${i}" list="plist" value="${esc((state.mates||LS.get("sc.mates",[]))[i]||"")}" placeholder="${i+2}人目" aria-label="${i+2}人目の名前"><button data-act="mate-clear" data-i="${i}" aria-label="${i+2}人目を消す">×</button></span>`).join("")}</div></div>`}
+      ${`<div class="field"><label>一緒に回る人</label><div class="mates">${[0,1,2].map(i=>`<span class="mate-in"><input id="r-mate${i}" list="plist" value="${esc((state.mates||LS.get("sc.mates",[]))[i]||"")}" placeholder="${i+2}人目" aria-label="${i+2}人目の名前"><button data-act="mate-clear" data-i="${i}" aria-label="${i+2}人目を消す">×</button></span>`).join("")}</div></div>`}
       ${coursePickField()}
       <div class="field" id="r-gwrap" hidden><label for="r-green">今日のグリーン</label><select id="r-green"></select></div>
       <div class="err" id="r-err"></div>
