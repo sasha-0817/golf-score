@@ -1101,8 +1101,8 @@ input,select,textarea{font-size:max(16px,1em)}
 .rec2 .trouble{margin-top:6px}
 /* 開始画面: 一緒に回る人は縦に並べる（横だと名前が切れ、候補の矢印と × が重なる） */
 .mates{grid-template-columns:1fr;gap:6px}
-.mate-in input{padding:8px 72px 8px 10px}
-.mate-in button{right:38px;width:24px;height:24px;font-size:13px}
+.mate-in input{padding:8px 40px 8px 10px}
+.mate-in button{right:8px;width:24px;height:24px;font-size:13px}
 .start-row{flex-wrap:nowrap!important}
 .start-row .field:first-child{flex:1 1 auto}
 .start-row .field:last-child{flex:0 0 148px!important}
@@ -1213,7 +1213,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-20-2350";
+const BUILD = "2026-10-21-0010";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2396,6 +2396,8 @@ document.addEventListener("click", async ev => {
       if(!c) return;
       { const F=favs(); if(!F.includes(c.id)) LS.set("sc.favs",[...F,c.id]); }
       LS.set("sc.lastCourse", c.id); state.pick=null; state.sp=null; state.sd=null;
+      // キーボードが開いたまま・画面が下にずれたまま記録画面に入ると、iPhone で高さの計算がずれて図が小さくなることがあるので、閉じて上に戻す
+      if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); window.scrollTo(0,0);
       LS.set("sc.player",p);
       // 一緒に回る人（同じ名前もOK: ボール2個で2回分回る人がいる）
       const mates=[0,1,2].map(i=>(($("#r-mate"+i)||{}).value||"").trim()).filter(Boolean); LS.set("sc.mates",[0,1,2].map(i=>mates[i]||"")); state.mates=null;
