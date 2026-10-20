@@ -1246,6 +1246,26 @@ input,select,textarea{font-size:max(16px,1em)}
 .gm-opt .tg[aria-checked="true"] i{left:21px}
 /* 開始画面: ゲームのボタンが上の日付に近すぎたので間をあける */
 .lab-row{margin-top:10px;margin-bottom:4px}
+/* 開始画面を iPhone のアプリ表示（SE）でも下のタブに隠れず収める */
+.start-panel{padding:12px 14px}
+.start-panel h2{font-size:16px}
+.start-panel .im-seg{margin:6px 0 8px}
+.start-panel .im-seg button{padding:6px 6px;font-size:13px;gap:1px}
+.start-panel .im-seg small{font-size:10px}
+.start-panel .field{gap:3px}
+.start-panel .start-row input{height:40px;padding:6px 10px}
+.start-panel .lab-row{margin-top:8px;margin-bottom:3px}
+.start-panel .mates{gap:5px}
+.start-panel .mates .mate-in input{height:36px;padding:5px 10px}
+.start-panel .mate-in button{flex-basis:30px;width:30px;height:30px}
+.start-panel .cp-field{min-height:50px;padding:5px 14px}
+.start-panel .field+.field,.start-panel .row+.field,.start-panel .field+.err{margin-top:6px}
+.start-panel [data-act=start]{height:46px;margin-top:8px!important}
+.game-sheet .sr-title{font-size:13px;font-weight:700;margin-bottom:6px}
+.game-sheet .skins-rules{margin-top:4px}
+.game-sheet .skins-rules ol{gap:2px;margin-bottom:8px}
+.game-sheet .gm-ok{background:var(--rec-fg)!important;color:var(--rec-bg)!important;border-color:var(--rec-fg)!important;font-weight:700}
+.sr-r{flex-direction:row!important;align-items:center!important;gap:4px}
 </style>
 
 </head>
@@ -1344,7 +1364,7 @@ const state = {
   cdraft: (d=>d && Array.isArray(d.holes) && d.holes.length && Array.isArray(d.players) && d.players.length && d.players.every(p=>p && Array.isArray(p.s) && Array.isArray(p.p) && p.s.length===d.holes.length) ? d : null)(LS.get("sc.cdraft", null)),
   im: LS.get("sc.inputMode","hole")==="card" ? "card" : "hole",
   game: LS.get("sc.game","")==="skins" ? "skins" : "",
-  skinCarry: LS.get("sc.skinCarry", false)===true, // 同点のコインを次のホールへ持ち越すか（初期はしない）
+  skinCarry: false, // 持ち越しは画面から外した（2026-10-21「枠や文章が変わって分かりづらい」）。計算の仕組みは残してある
   hole: 0, // 下書きがあれば下で復元
   fPlayer: LS.get("sc.fPlayer", LS.get("sc.player","") || "all"), fCourse:"all", fRange:"all",
   courseEdit: null,
@@ -1354,7 +1374,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-21-0815";
+const BUILD = "2026-10-21-0830";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1702,7 +1722,7 @@ function viewRecord(){
     if(!pickableCourses().length) return `<div class="panel empty"><strong>まずコースを登録しましょう</strong>ホールごとのパーを登録すると、ラウンドの記録を始められます。<div style="margin-top:14px"><button class="btn primary" data-act="goto-courses">コースを登録する</button></div></div>`;
     const last = LS.get("sc.player","");
     const pl = players();
-    return `<div class="panel">
+    return `<div class="panel start-panel">
       <h2>新しいラウンド</h2>
       <div class="im-seg" role="group" aria-label="入力のしかた"><button data-act="im" data-v="hole" aria-pressed="${state.im==="hole"}">くわしく記録<small>ショットやクラブも</small></button><button data-act="im" data-v="card" aria-pressed="${state.im==="card"}">スコアカード<small>紙と同じ表で手早く</small></button></div>
       <div class="row start-row">
@@ -2511,36 +2531,27 @@ function skinsCalc(rows, n, carryOn=true){
     if(w.length===1){ won[w[0]]+=pot; carry=0; log.push({w:w[0],pot}); } else { carry=carryOn?pot:0; log.push({w:-1,pot}); } }
   return {won, carry, log, pot:1+carry};
 }
+/* ゲームの選択画面: いつも同じ見た目（カード2枚＋ルール）。タップで変わるのは選んだカードの緑の枠だけ */
 function gameSheet(){
-  const g=state.game||"", help=state.gameHelp;
-  const card=(k,name,eng,n,desc,ill)=>`<button class="gm-card ${g===k?"on":""}" data-act="pick-game" data-v="${k}" aria-pressed="${g===k}">${ill}<span class="gm-t"><b>${name}${n?`<i>${n}</i>`:""}</b><small>${desc}</small></span><span class="cp-radio" aria-hidden="true"></span></button>`;
+  const g=state.game||"";
+  const card=(k,name,n,desc,ill)=>`<button class="gm-card ${g===k?"on":""}" data-act="pick-game" data-v="${k}" aria-pressed="${g===k}">${ill}<span class="gm-t"><b>${name}${n?`<i>${n}</i>`:""}</b><small>${desc}</small></span><span class="cp-radio" aria-hidden="true"></span></button>`;
   const skIll=`<span class="gm-ill">${coinSVG(26,"c1")}${coinSVG(26,"c2")}${coinSVG(26,"c3")}</span>`;
-  return `<div class="sheet-back" data-act="close-game"><div class="sheet game-sheet" data-stop="1"><p>ゲーム<small>一緒に回る人がいるときに遊べます</small></p>
-    ${card("","なし","","","スコアだけを記録します",`<span class="gm-ill none">—</span>`)}
-    ${card("skins","スキンズ","SKINS",GAMES.skins.n,state.skinCarry?GAMES.skins.desc:"一番少ない打数の人がコインを獲得。同点のホールは誰ももらえない",skIll)}
-    ${g==="skins"?`<label class="gm-opt"><span>同点のコインを次のホールへ持ち越す<small>${state.skinCarry?"同点が続くと一気に何枚も取れる":"毎ホール1枚ずつ。逆転しやすい"}</small></span><button class="tg" data-act="skin-carry" role="switch" aria-checked="${state.skinCarry}" aria-label="持ち越し"><i></i></button></label>`:""}
-    <button class="gm-help" data-act="game-help">${help?"ルールをとじる":"スキンズのルールを見る"}</button>
-    ${help?skinsRules():""}
-    <div class="gm-soon">マッチプレー・ナッソーなども準備中</div>
-    <button data-act="close-game">決定</button></div></div>`;
+  return `<div class="sheet-back" data-act="close-game"><div class="sheet game-sheet" data-stop="1"><p>ゲーム</p>
+    ${card("","なし","","スコアだけを記録します",`<span class="gm-ill none">—</span>`)}
+    ${card("skins","スキンズ",GAMES.skins.n,"ホールごとにコインを取り合います",skIll)}
+    ${skinsRules()}
+    <button class="gm-ok" data-act="close-game">決定</button></div></div>`;
 }
-/* ルールの解説（イラスト付きの例） */
+/* スキンズのルール（いつも同じ内容。持ち越しなし） */
 function skinsRules(){
-  const carry=state.skinCarry;
-  const row=(h,a,b,res,coins)=>`<div class="sr-row"><span class="sr-h">${h}</span><span class="sr-s ${a<b?"win":""}">たろう <b>${a}</b></span><span class="sr-s ${b<a?"win":""}">はなこ <b>${b}</b></span><span class="sr-r">${res}${coins}</span></div>`;
-  const c=n=>`<span class="sr-coins">${Array.from({length:n},()=>coinSVG(16)).join("")}</span>`;
-  return `<div class="skins-rules">
-    <ol><li>各ホールに <b>コインが1枚</b>${coinSVG(14)} あります</li>
-      <li>そのホールで<b>一番少ない打数の人が1人だけ</b>なら、その人がコインをもらえます</li>
-      ${carry?`<li>一番少ない人が2人以上（<b>同点</b>）なら誰ももらえず、コインは<b>次のホールに持ち越し</b>。次のホールは2枚、3枚…と増えていきます</li>`
-        :`<li>一番少ない人が2人以上（<b>同点</b>）なら、そのホールは<b>誰ももらえません</b></li>`}
-      <li>最後に<b>コインが一番多い人の勝ち</b>${carry?"。最後のホールが同点なら、そのコインは誰のものにもなりません":""}</li></ol>
-    <div class="sr-ex"><div class="sr-cap">例：2人で3ホール${carry?"（持ち越しあり）":""}</div>
-      ${carry?row("1H",3,3,"同点 → 持ち越し",`<span class="sr-coins carry">${coinSVG(16)}<em>→</em></span>`)+row("2H",4,3,"はなこ が2枚",c(2))+row("3H",2,3,"たろう が1枚",c(1))
-        +`<div class="sr-sum">合計　はなこ ${coinSVG(14)}×2　たろう ${coinSVG(14)}×1　→ <b>はなこの勝ち</b></div>`
-        :row("1H",3,3,"同点 → なし","")+row("2H",4,3,"はなこ が1枚",c(1))+row("3H",2,3,"たろう が1枚",c(1))
-        +`<div class="sr-sum">合計　はなこ ${coinSVG(14)}×1　たろう ${coinSVG(14)}×1　→ <b>引き分け</b></div>`}</div>
-    <div class="sr-tip">${carry?"持ち越しありは、同点が続いたあとの1ホールで一気に何枚も取れるのが面白いところです":"持ち越しなしは、取られても次のホールで取り返しやすく、最後まで逆転があります。下のスイッチで持ち越しありにもできます"}</div></div>`;
+  const row=(h,a,b,res,n)=>`<div class="sr-row"><span class="sr-h">${h}</span><span class="sr-s ${a<b?"win":""}">たろう <b>${a}</b></span><span class="sr-s ${b<a?"win":""}">はなこ <b>${b}</b></span><span class="sr-r">${res}<span class="sr-coins">${Array.from({length:n},()=>coinSVG(16)).join("")}</span></span></div>`;
+  return `<div class="skins-rules"><div class="sr-title">スキンズのルール</div>
+    <ol><li>各ホールで<b>一番少ない打数の人</b>がコイン${coinSVG(14)}を1枚もらえます</li>
+      <li><b>同点</b>のホールは誰ももらえません</li>
+      <li>最後に<b>コインが一番多い人の勝ち</b></li></ol>
+    <div class="sr-ex"><div class="sr-cap">例：2人で3ホール</div>
+      ${row("1H",3,3,"同点",0)}${row("2H",4,3,"はなこ",1)}${row("3H",2,4,"たろう",1)}
+      <div class="sr-sum">はなこ ${coinSVG(14)}1　たろう ${coinSVG(14)}1　→ 引き分け</div></div></div>`;
 }
 /* ---------- actions ---------- */
 function saveDraft(){ if(state.draft) state.draft.cur=state.hole; LS.set("sc.draft", state.draft); } // 今のホールも覚えておく（自動更新で読み直しても同じホールから）

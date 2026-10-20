@@ -284,13 +284,13 @@ with sync_playwright() as pw:
     C(pg, "[data-act=open-game]"); C(pg, "[data-act=game-help]")
     check("ゲームの選択画面にルールの解説（例つき）", pg.query_selector(".skins-rules .sr-ex") is not None)
     C(pg, '[data-act=pick-game][data-v=skins]')
-    check("選んだゲームは緑の枠と丸・持ち越しのスイッチ", pg.query_selector(".gm-card.on[data-v=skins]") is not None and pg.query_selector('.gm-opt [aria-checked="true"]') is not None)
+    check("選んだゲームは緑の枠と丸・余計な枠やスイッチは出ない", pg.query_selector(".gm-card.on[data-v=skins]") is not None and pg.query_selector(".gm-opt") is None)
     C(pg, ".game-sheet [data-act=close-game]")
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
-    check("スキンズで始まる・記録中にコインの数とこのホールの枚数", pg.evaluate("state.draft.game") == "skins" and pg.query_selector(".pot") is not None and pg.evaluate("document.querySelectorAll('.skc').length") == 2)
+    check("スキンズで始まる・記録中にコインの数（持ち越しなし）", pg.evaluate("state.draft.game") == "skins" and pg.evaluate("state.draft.carry") is False and pg.evaluate("document.querySelectorAll('.skc').length") == 2)
     check("スキンズでも図が小さくならない・1画面", pg.evaluate("document.querySelector('svg.approach').getBoundingClientRect().height") >= hs["1人"] - 2 and pg.evaluate("document.documentElement.scrollHeight") <= 667)
     C(pg, "[data-act=next]"); C(pg, '[data-act=mt][data-i="0"][data-d="-1"]'); C(pg, "[data-act=next]")
-    check("持ち越し込みで2枚獲得", pg.evaluate("document.querySelectorAll('.skc')[1].textContent") == "2")
+    check("同点のホールは誰も取らず、次のホールの勝ちで1枚", pg.evaluate("document.querySelectorAll('.skc')[1].textContent") == "1")
     for _ in range(12):
         if pg.evaluate("state.hole") >= 8: break
         C(pg, "[data-act=next]")
@@ -303,6 +303,12 @@ with sync_playwright() as pw:
     for v in ["3", "2", "4", "2"]: C(pg, f'[data-act=cd-key][data-v="{v}"]')
     check("スコアカードでもスキンズのコイン行", pg.query_selector(".cdt tr.skr") is not None and pg.evaluate("document.querySelector('.cdt tr.skr').textContent").startswith("次2枚") is False)
     check("スコアカード＋スキンズ: エラーなし", not errs)
+    pg.context.close()
+
+    # 11. 開始画面: アプリ表示の SE（ステータスバーの分だけ低い）でも「始める」が下のタブに隠れない
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "じろう", "さぶろう"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\""}, offline=True)
+    pg.set_viewport_size({"width": 375, "height": 627}); pg.wait_for_timeout(300)
+    check("開始画面: 高さ627pxでも「始める」がタブの上に見える", pg.evaluate("document.querySelector('[data-act=start]').getBoundingClientRect().bottom <= document.querySelector('nav.tabs').getBoundingClientRect().top"))
     pg.context.close()
 
     b.close()
