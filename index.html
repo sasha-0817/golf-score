@@ -1129,6 +1129,32 @@ input,select,textarea{font-size:max(16px,1em)}
 .pc>button:disabled{opacity:.3}
 .pc>button svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
 .pc{gap:3px}.pc>button{height:34px}.pc-v{height:30px}.rec-card.wm{gap:8px}
+/* 人ごとの列: 1枚のスコアボード（列は細い線で区切る・自分の列は上に緑の帯・名前の横に今までの対パー・∧∨は1つのピル） */
+.pboard{display:flex;border-radius:16px;border:1px solid var(--rec-line);background:var(--rec-bg);overflow:hidden;--paper:var(--rec-bg);--fg:var(--rec-fg);--muted:var(--rec-muted)}
+.pcol{flex:1 1 0;min-width:0;display:flex;flex-direction:column;padding:7px 5px 7px;position:relative}
+.pcol+.pcol{border-left:1px solid var(--rec-line)}
+.pcol.me{background:color-mix(in srgb,var(--rec-turf) 10%,var(--rec-surface))}
+.pcol.me.two{flex:2 1 0}
+.pcol.me::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#0E9F62,#13A9C2)}
+.ph{display:flex;flex-direction:column;align-items:center;line-height:1.15;margin-bottom:4px;min-width:0}
+.ph b{font-size:12px;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ph .tp{font:700 12px var(--f-num);color:var(--rec-muted);letter-spacing:.02em}
+.ph .tp.u{color:var(--q-birdie)}.ph .tp.o{color:var(--q-bogey)}
+.pcells{display:flex;gap:6px;flex:1}
+.pcell{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:stretch;gap:4px}
+.pcell em{font-style:normal;font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--rec-muted);text-align:center;line-height:1}
+.pcol.mate .pcell em{visibility:hidden}
+.pv{height:34px;display:flex;align-items:center;justify-content:center}
+.pv .mk3{width:32px;height:32px;font:700 21px var(--f-num)}
+.pv .pt{font:700 23px var(--f-num)}
+.pv .pt.p0,.pv .pt.p1{color:var(--q-birdie)}.pv .pt.p3{color:var(--q-bogey)}.pv .pt.p4{color:var(--q-double)}
+.pstep{display:flex;flex-direction:column;border:1px solid var(--rec-line);border-radius:12px;overflow:hidden;background:var(--rec-surface);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.pstep button{height:32px;border:0;background:transparent;color:var(--rec-fg);display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;touch-action:manipulation}
+.pstep button+button{border-top:1px solid var(--rec-line)}
+.pstep button:active{background:color-mix(in srgb,var(--rec-fg) 8%,transparent)}
+.pstep button:disabled{opacity:.3}
+.pstep button svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.pboard{flex:0 0 auto}
 </style>
 
 </head>
@@ -1235,7 +1261,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-21-0040";
+const BUILD = "2026-10-21-0110";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1923,16 +1949,18 @@ function cardAfter(){ const c=$(".cdt td.sel"), box=$(".cd-scroll"); if(!c||!box
   if(cb.top<bb.top+head) box.scrollTop-= (bb.top+head-cb.top); else if(cb.bottom>bb.bottom-foot) box.scrollTop+= (cb.bottom-(bb.bottom-foot)); }
 /* 同伴者がいるとき: 人ごとの縦の列（名前・数字・∧・∨）。自分は 打数とパットの2列（楽天GORAのスコア入力のような形） */
 function playerCols(d, h, F){
-  const nm=[d.player,...d.mates.map(m=>m.name)], mk=v=>`<b class="mk3 m-${v===1?"hio":TONE(v-h.par)}">${v}</b>`;
-  const col=(cls,name,val,up,dn,label)=>`<div class="pc ${cls}">${name!=null?`<div class="pc-n">${name}</div>`:""}<div class="pc-l">${label}</div><div class="pc-v">${val}</div>
-    <button ${up} aria-label="${label}を1つ増やす">${ICON.up}</button><button ${dn} aria-label="${label}を1つ減らす">${ICON.down}</button></div>`;
-  const me = `<div class="pc-me ${F.putts?"two":""}"><div class="pc-n">${esc(d.player)}</div><div class="pc-sub">
-    ${col("", null, mk(h.strokes), `data-act="st" data-d="1" ${h.strokes>=15?"disabled":""}`, `data-act="st" data-d="-1" ${h.strokes<=1?"disabled":""}`, "打数")}
-    ${F.putts?col("", null, `<b class="pt p${Math.min(h.putts,4)}">${h.putts}</b>`, `data-act="pt" data-d="1" ${h.putts>=9?"disabled":""}`, `data-act="pt" data-d="-1" ${h.putts<=0?"disabled":""}`, "パット"):""}</div></div>`;
-  const mates = d.mates.map((m,k)=>{ const v=m.s[state.hole];
-    return col("mate", esc(dupLabel(nm,k+1)), `<button class="pc-tap" data-act="mt-open" data-i="${k}" aria-label="${esc(m.name)}の打数を数字で入力">${mk(v)}</button>`,
-      `data-act="mt" data-i="${k}" data-d="1" ${v>=15?"disabled":""}`, `data-act="mt" data-i="${k}" data-d="-1" ${v<=1?"disabled":""}`, "打数"); }).join("");
-  return `<div class="pcols n${d.mates.length+(F.putts?2:1)}">${me}${mates}</div>`;
+  const nm=[d.player,...d.mates.map(m=>m.name)], upto=state.hole;
+  const mk=v=>`<b class="mk3 m-${v===1?"hio":TONE(v-h.par)}">${v}</b>`;
+  const tp=sc=>{ let s=0,p=0; for(let i=0;i<=upto;i++){ s+=sc(i); p+=d.holes[i].par; } const x=s-p; return `<span class="tp ${x<0?"u":x>0?"o":""}">${toPar(x)}</span>`; };
+  const step=(up,dn,label)=>`<div class="pstep"><button ${up} aria-label="${label}を1つ増やす">${ICON.up}</button><button ${dn} aria-label="${label}を1つ減らす">${ICON.down}</button></div>`;
+  const cell=(lab,val,up,dn,aria)=>`<div class="pcell">${lab?`<em>${lab}</em>`:""}<div class="pv">${val}</div>${step(up,dn,aria)}</div>`;
+  const me=`<div class="pcol me ${F.putts?"two":""}"><div class="ph"><b>${esc(d.player)}</b>${tp(i=>d.holes[i].strokes)}</div><div class="pcells">
+    ${cell(F.putts?"打数":"", mk(h.strokes), `data-act="st" data-d="1" ${h.strokes>=15?"disabled":""}`, `data-act="st" data-d="-1" ${h.strokes<=1?"disabled":""}`, "打数")}
+    ${F.putts?cell("パット", `<b class="pt p${Math.min(h.putts,4)}">${h.putts}</b>`, `data-act="pt" data-d="1" ${h.putts>=9?"disabled":""}`, `data-act="pt" data-d="-1" ${h.putts<=0?"disabled":""}`, "パット"):""}</div></div>`;
+  const mates=d.mates.map((m,k)=>{ const v=m.s[state.hole];
+    return `<div class="pcol mate"><div class="ph"><b>${esc(dupLabel(nm,k+1))}</b>${tp(i=>m.s[i])}</div><div class="pcells">
+      ${cell(F.putts?"打数":"", `<button class="pc-tap" data-act="mt-open" data-i="${k}" aria-label="${esc(m.name)}の打数を数字で入力">${mk(v)}</button>`, `data-act="mt" data-i="${k}" data-d="1" ${v>=15?"disabled":""}`, `data-act="mt" data-i="${k}" data-d="-1" ${v<=1?"disabled":""}`, esc(m.name)+"の打数")}</div></div>`; }).join("");
+  return `<div class="pboard">${me}${mates}</div>`;
 }
 let clubTimer=null;
 /* 前回このホール（同じ人・同じコース）で使ったティーショットのクラブ */
