@@ -38,6 +38,7 @@ def open_page(b, ls=None, dark=False, offline=False):
     src = (src.replace("setTimeout(checkUpdate, 1500);", "").replace("setTimeout(maybeShowA2HS, 2500);", "")
               .replace("const state = {", "const state = window.state = {")
               .replace("function skinsCalc(", "window.skinsCalc=skinsCalc; function skinsCalc(")
+              .replace("function matchCalc(", "window.matchCalc=matchCalc; window.nassauCalc=nassauCalc; window.vegasCalc=vegasCalc; window.stableCalc=stableCalc; function matchCalc(")
               .replace("async function connect(){", "window.connect=()=>connect(); async function connect(){")
               .replace("let loading = false;", 'let loading = false; Object.defineProperty(window,"pending",{get:()=>pending});'))
     init = "if(!sessionStorage.t){sessionStorage.t=1;localStorage.clear();" + "".join(
@@ -313,6 +314,48 @@ with sync_playwright() as pw:
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "じろう", "さぶろう"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\""}, offline=True)
     pg.set_viewport_size({"width": 375, "height": 627}); pg.wait_for_timeout(300)
     check("開始画面: 高さ627pxでも「始める」がタブの上に見える", pg.evaluate("document.querySelector('[data-act=start]').getBoundingClientRect().bottom <= document.querySelector('nav.tabs').getBoundingClientRect().top"))
+    pg.context.close()
+
+    # 12. ほかのゲーム: 計算・人数が合わないと選べない・記録中の表示・リザルト・スコアカード
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\""}, offline=True)
+    m = pg.evaluate("(()=>{ const x=matchCalc([[3,3,3,3,3,3,3,3,3],[3,2,3,2,4,4,4,4,3]],9,9); return [x.diff, x.won.join(), x.dec&&x.dec.up, x.dec&&x.dec.left, x.st(0), x.st(1)]; })()")
+    check("マッチプレーの計算（2&1・勝ったホール数・UP/DN）", m == [2, "4,2", 2, 1, "2UP", "2DN"])
+    nz = pg.evaluate("(()=>{ const x=nassauCalc([[3,3,3,3,3,3,3,3,3],[4,4,4,4,2,2,2,2,2]],9,9); return [x.half, x.pts.join(), x.res.map(r=>r.w).join()]; })()")
+    check("ナッソーの計算（9Hは1〜4H/5〜9H・区間ごとに1pt）", nz == [4, "1,2", "0,1,1"])
+    vg = pg.evaluate("(()=>{ const x=vegasCalc([[3],[5],[4],[4]],1); return x.pts.join(); })()")
+    check("ラスベガスの計算（35と44で9点）", vg == "9,0")
+    sf = pg.evaluate("(()=>stableCalc([[3,2,4,5],[5,3,3,2]],[3,3,3,3],4).pts.join())()")
+    check("ステーブルフォードの計算（パー2・バーディ3・ボギー1・ダボ0）", sf == "6,7")
+    C(pg, "[data-act=open-game]")
+    check("ゲーム選択に5つのゲーム・4人用は2人のとき薄い", pg.evaluate("document.querySelectorAll('.gm-card').length") == 6 and pg.query_selector(".gm-card.na[data-v=vegas]") is not None)
+    C(pg, "[data-act=pick-game][data-v=vegas]")
+    check("人数が合わないゲームは選べない", pg.evaluate("state.game") != "vegas")
+    C(pg, "[data-act=pick-game][data-v=match]")
+    check("選んだゲームのチェックは1本の線（SVG）", pg.query_selector(".gm-card.on .cp-radio svg") is not None)
+    for k in ["match", "nassau", "vegas", "stable"]:
+        C(pg, f"[data-act=open-rules][data-v={k}]")
+        ok = pg.query_selector(".rp .sr-ex") is not None
+        C(pg, ".rp-x")
+        if not ok: break
+    check("4つのゲームのルールのポップアップ", ok and pg.query_selector(".rp") is None)
+    C(pg, ".game-sheet [data-act=close-game]"); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    C(pg, '[data-act=mt][data-i="0"][data-d="1"]'); C(pg, "[data-act=next]")
+    check("マッチプレー: 記録中に 1UP / 1DN", pg.evaluate("[...document.querySelectorAll('.gtag')].map(e=>e.textContent).join()") == "1UP,1DN")
+    for _ in range(12):
+        if pg.evaluate("state.hole") >= 8: break
+        C(pg, "[data-act=next]")
+    C(pg, "[data-act=finish]"); pg.wait_for_timeout(900)
+    check("マッチプレー: みんなのリザルトに結果", pg.query_selector(".grp-card .rc-game") is not None and "たろう の勝ち" in pg.evaluate("document.querySelector('.rc-game').textContent"))
+    check("ほかのゲーム: エラーなし", not errs)
+    pg.context.close()
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.game": "\"stable\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\""}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    for v in ["2", "1", "3", "2"]: C(pg, f'[data-act=cd-key][data-v="{v}"]')
+    check("スコアカードでもゲームの行（ステーブルフォード 3pt / 2pt）", pg.evaluate("[...document.querySelectorAll('.cdt tr.gr .gtag')].map(e=>e.textContent).join()") == "3pt,2pt")
+    pg.context.close()
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.game": "\"vegas\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\""}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    check("人数が合わないゲームは、始めるときにゲームなしになる", pg.evaluate("state.draft.game") is None)
     pg.context.close()
 
     b.close()

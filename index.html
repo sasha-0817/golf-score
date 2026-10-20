@@ -1291,6 +1291,44 @@ input,select,textarea{font-size:max(16px,1em)}
 .rp-back{z-index:500}
 .rp-seg button[aria-pressed="true"]{color:var(--rec-turf)}
 .rp-seg button{white-space:nowrap;padding:0 4px}
+/* ゲーム: チェックは1本の線（SVG）。人数が合わないカードは薄く */
+.game-sheet .gm-card.on .cp-radio::after{content:none}
+.game-sheet .gm-card .cp-radio svg{display:block}
+.game-sheet .gm-card.na{opacity:.45}
+.game-sheet{max-height:88vh}
+.game-sheet .gm-card{min-height:62px!important;padding:9px 12px!important;margin-bottom:6px}
+.gm-ill svg{display:block}
+.rp-head b small{display:inline-block;margin-left:6px;font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;border:1px solid var(--rec-line);color:var(--rec-muted);vertical-align:2px}
+.rp-ill .gm-ill{flex:0 0 40px;height:30px;transform:scale(.7);transform-origin:left center}
+.rp-ill .gm-ill .coin{position:static}
+.sr-row3{display:grid;grid-template-columns:56px 1fr 1fr 56px;gap:6px;font-size:12px;align-items:center}
+.sr-row3 b.w{color:var(--q-birdie);font:700 15px var(--f-num)}
+.sr-row3 span:last-child{color:var(--rec-muted);font-size:11px}
+.gtag{font:700 12px var(--f-num);color:var(--rec-muted)}
+.gtag.up{color:var(--q-birdie)}.gtag.dn{color:var(--q-bogey)}.gtag.z{opacity:.5}
+.gtag.t0{color:#1F6FD1}.gtag.t1{color:#B57B00}
+.cdt tfoot tr.gr td{font-size:13px}
+.rs-sub{display:block;font-size:10px;opacity:.7;font-weight:500}
+.rs-sum{font-size:12px;font-weight:700;text-align:right;opacity:.95;padding-top:2px}
+.rs-seg{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:2px 0;border-bottom:1px solid rgba(255,255,255,.12)}
+.rs-seg small{margin-left:6px;opacity:.6;font-size:10px}
+.rs-seg b{font-size:13px}
+.game-sheet .gm-card{gap:10px}
+.game-sheet .gm-ill{flex:0 0 44px;width:44px;height:36px}
+.game-sheet .gm-ill svg{width:44px;height:35px}
+.game-sheet .gm-ill .coin{width:22px;height:22px}
+.game-sheet .gm-ill .c1{left:0;top:12px}.game-sheet .gm-ill .c2{left:11px;top:2px}.game-sheet .gm-ill .c3{left:21px;top:13px}
+.gm-h{flex-wrap:nowrap;white-space:nowrap;gap:5px}
+.gm-h b{font-size:15px;letter-spacing:-.01em}
+.gm-h i{padding:2px 4px!important;flex:0 0 auto}
+.game-sheet .gm-rule{flex:0 0 auto;padding:0 8px!important;white-space:nowrap}
+.game-sheet .gm-card .cp-radio{flex:0 0 22px;width:22px!important;height:22px!important}
+.rp-head b small{display:table;margin:3px 0 0}
+.sr-row2{display:grid;grid-template-columns:56px 1fr 40px;gap:6px;font-size:12px;align-items:center}
+.sr-row2 b{font:700 16px var(--f-num);text-align:right}
+.sr-row2 b.w{color:var(--q-birdie)}
+.rc-game .rs-row{grid-template-columns:72px 1fr auto}
+.rc-game .rs-row b{font-size:18px;white-space:nowrap}
 </style>
 
 </head>
@@ -1388,7 +1426,7 @@ const state = {
   // スコアカード入力（紙と同じ表に最大4人分）の下書き。1ホールずつの下書きとは別に持つ
   cdraft: (d=>d && Array.isArray(d.holes) && d.holes.length && Array.isArray(d.players) && d.players.length && d.players.every(p=>p && Array.isArray(p.s) && Array.isArray(p.p) && p.s.length===d.holes.length) ? d : null)(LS.get("sc.cdraft", null)),
   im: LS.get("sc.inputMode","hole")==="card" ? "card" : "hole",
-  game: LS.get("sc.game","")==="skins" ? "skins" : "",
+  game: (g=>["skins","match","nassau","vegas","stable"].includes(g) ? g : "")(LS.get("sc.game","")),
   skinCarry: LS.get("sc.skinCarry", false)===true, // 同点のコインを次のホールへ持ち越すか（ルールのポップアップで選ぶ。初期はしない）
   hole: 0, // 下書きがあれば下で復元
   fPlayer: LS.get("sc.fPlayer", LS.get("sc.player","") || "all"), fCourse:"all", fRange:"all",
@@ -1399,7 +1437,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-21-0900";
+const BUILD = "2026-10-21-0930";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1675,6 +1713,7 @@ function groupCard(g){
     <div class="rc-rank">${order.map(k=>`<div class="${rank(k)===1?"win":""}"><i>${rank(k)}</i><span>${esc(dupLabel(nm,k))}</span><b>${tots[k].score}</b><small>${toPar(tots[k].diff)}</small></div>`).join("")}</div>
     ${state.resultGame==="skins"?(()=>{ const sk=skinsCalc(g.map(r=>r.holes.map(h=>h.strokes)), N, !!state.resultCarry), mx=Math.max(...sk.won);
       return `<div class="rc-skins"><div class="rs-h"><span>SKINS</span>スキンズ${sk.carry?`<em>持ち越し${sk.carry}枚は決着なし</em>`:""}</div>${order.map(k=>`<div class="rs-row ${mx>0&&sk.won[k]===mx?"top":""}"><span class="rs-n">${esc(dupLabel(nm,k))}</span><span class="rs-c">${Array.from({length:Math.min(sk.won[k],9)},()=>coinSVG(16)).join("")}${sk.won[k]>9?"…":""}</span><b>${sk.won[k]}</b></div>`).join("")}</div>`; })():""}
+    ${state.resultGame && state.resultGame!=="skins" ? gameResult(state.resultGame, g.map(r=>r.holes.map(h=>h.strokes)), r0.holes.map(h=>h.par), N, g.map((x,k)=>esc(dupLabel(nm,k))), order) : ""}
     <div class="rc-sc">${tables.join("")}</div>
     <div class="rc-brand"><span class="rc-logo"><img src="mark.png" alt=""><span><b>GOLF SC.</b><small>SHORT COURSE SCORECARD</small></span></span></div>
   </div></div>`;
@@ -2064,6 +2103,9 @@ function viewCard(cd){
   const skc = cd.game==="skins" ? skinsCalc(cd.players.map(p=>p.s), N, !!cd.carry) : null;
   const foot=(lab,idx,cls="")=>`<tr class="${cls}"><td colspan="2" class="ft">${lab}<small>${idx.reduce((a,h)=>a+cd.holes[h].par,0)}</small></td>${cd.players.map((p,i)=>{ const t=subt(i,idx);
     return `<td class="c-s">${t.s}<small>${t.d}</small></td>${pOn?`<td class="c-p">${t.p??""}</td>`:""}`; }).join("")}</tr>`;
+  const nDone = (()=>{ let i=0; while(i<N && cd.players.every(p=>p.s[i]!=null)) i++; return i; })();
+  const gtc = cd.game && cd.game!=="skins" ? gameTags(cd.game, cd.players.map(p=>p.s), cd.holes.map(x=>x.par), nDone, N) : null;
+  const gameRow = gtc ? `<tr class="skr gr"><td colspan="2" class="ft">${esc(GAMES[cd.game].name.slice(0,4))}</td>${gtc.map(t=>`<td class="c-s" ${pOn?'colspan="2"':""}>${t}</td>`).join("")}</tr>` : "";
   const skinRow = skc ? `<tr class="skr"><td colspan="2" class="ft">${coinSVG(14)}${cd.carry?`<small>次${skc.pot}枚</small>`:""}</td>${cd.players.map((p,i)=>`<td class="c-s" ${pOn?'colspan="2"':""}>${skc.won[i]}</td>`).join("")}</tr>` : "";
   const done=cd.players.every(p=>p.s.every(x=>x!=null)); // 打数が全部入ったら保存ボタンを出す（パットの抜けは押したときに案内）
   const plSel = sel && cd.players[sel.i];
@@ -2080,7 +2122,7 @@ function viewCard(cd){
       <thead><tr><th>H</th><th>PAR</th>${cd.players.map((p,i)=>`<th class="nm" colspan="${pOn?2:1}">${esc(dupLabel(cd.players.map(x=>x.name),i))}</th>`).join("")}</tr>
       ${pOn?`<tr class="sub"><th></th><th></th>${cd.players.map(()=>`<th class="c-s">打数</th><th>パット</th>`).join("")}</tr>`:""}</thead>
       <tbody>${rows.map(h=>`<tr><td class="hn">${h+1}</td><td class="pr">${cd.holes[h].par}</td>${cd.players.map((p,i)=>cell(h,i,"s")+(pOn?cell(h,i,"p"):"")).join("")}</tr>`).join("")}</tbody>
-      <tfoot>${two?foot(half?"IN":"OUT",rows)+foot("計",all,"all"):foot("計",all)}${skinRow}</tfoot></table></div>
+      <tfoot>${two?foot(half?"IN":"OUT",rows)+foot("計",all,"all"):foot("計",all)}${skinRow}${gameRow}</tfoot></table></div>
     <div class="cd-pad">
       <div class="cd-lbl">${sel?`<span><b>${esc(dupLabel(cd.players.map(x=>x.name),sel.i))}</b>・${sel.h+1}H（PAR ${cd.holes[sel.h].par}）の<em>${ks==="s"?"打数":"パット"}</em></span>`:`<span>${done?"全部入りました。保存しましょう":"マスをタップして入力"}</span>`}</div>
       ${sel||!done?`<div class="cd-keys">${[1,2,3,4,5,6,7,8,9].map(n=>key(n,String(n),!sel || (ks==="p" && n>9))).join("")}${key("10","10+",!sel||ks==="p")}${key("0","0",!sel||ks==="s")}${key("del","消す",!sel)}</div>`:""}
@@ -2098,7 +2140,8 @@ function playerCols(d, h, F){
   const mk=v=>`<b class="mk3 m-${v===1?"hio":TONE(v-h.par)}">${v}</b>`;
   const sk = d.game==="skins" ? skinsCalc([d.holes.map(x=>x.strokes), ...d.mates.map(m=>m.s)], state.hole, !!d.carry) : null; // このホールの前までのコイン
   const tpRaw=sc=>{ let s=0,p=0; for(let i=0;i<=upto;i++){ s+=sc(i); p+=d.holes[i].par; } const x=s-p; return `<span class="tp ${x<0?"u":x>0?"o":""}">${toPar(x)}</span>`; };
-  let col=0; const tp=sc=>{ const k=col++; return `<span class="ph-l">${tpRaw(sc)}${sk?`<span class="skc ${sk.won[k]?"":"z"}">${coinSVG(12)}${sk.won[k]}</span>`:""}</span>`; };
+  const gt = d.game && d.game!=="skins" ? gameTags(d.game, [d.holes.map(x=>x.strokes), ...d.mates.map(m=>m.s)], d.holes.map(x=>x.par), state.hole, d.holes.length) : null;
+  let col=0; const tp=sc=>{ const k=col++; return `<span class="ph-l">${tpRaw(sc)}${sk?`<span class="skc ${sk.won[k]?"":"z"}">${coinSVG(12)}${sk.won[k]}</span>`:""}${gt?gt[k]:""}</span>`; };
   const step=(up,dn,label)=>`<div class="pstep"><button ${up} aria-label="${label}を1つ増やす">${ICON.up}</button><button ${dn} aria-label="${label}を1つ減らす">${ICON.down}</button></div>`;
   const cell=(lab,val,up,dn,aria)=>`<div class="pcell">${lab?`<em>${lab}</em>`:""}<div class="pv">${val}</div>${step(up,dn,aria)}</div>`;
   const me=`<div class="pcol me ${F.putts?"two":""}"><div class="ph"><b>${esc(d.player)}</b>${tp(i=>d.holes[i].strokes)}</div><div class="pcells">
@@ -2546,8 +2589,25 @@ function mateDone(){ const d=state.draft; if(d){ d.mdone=d.mdone||[]; d.mdone[st
   const then=state.mateThen; state.sheet=null; state.mateI=null; state.mateThen=null; render();
   if(then){ const btn=$(`.rec-bar [data-act=${then}]`); if(btn) btn.click(); } }
 /* ---------- ゲーム（スキンズ） ---------- */
-const GAMES = { skins:{ name:"スキンズ", eng:"SKINS", n:"2〜4人", desc:"一番少ない打数の人がコインを獲得。同点は次のホールへ持ち越し" } };
+/* ---------- ゲーム（スキンズ・マッチプレー・ナッソー・ラスベガス・ステーブルフォード） ---------- */
+const GAMES = {
+  skins:  { name:"スキンズ", eng:"SKINS", n:"2〜4人", min:2, max:4, desc:"ホールごとにコインを取り合います" },
+  match:  { name:"マッチプレー", eng:"MATCH PLAY", n:"2人のみ", min:2, max:2, desc:"ホールごとの勝ち負けで1対1の勝負" },
+  nassau: { name:"ナッソー", eng:"NASSAU", n:"2〜4人", min:2, max:4, desc:"前半・後半・トータルの3つで勝負" },
+  vegas:  { name:"ラスベガス", eng:"LAS VEGAS", n:"4人のみ", min:4, max:4, desc:"2対2のチームで点数を取り合います" },
+  stable: { name:"ステーブルフォード", eng:"STABLEFORD", n:"2〜4人", min:2, max:4, desc:"スコアに応じたポイントを集めます" },
+};
+const GAME_KEYS = ["skins","match","nassau","vegas","stable"];
+const gameFits = (k, n) => !k || (GAMES[k] && n>=GAMES[k].min && n<=GAMES[k].max);
 const coinSVG = (sz=14, cls="") => `<svg class="coin ${cls}" viewBox="0 0 24 24" width="${sz}" height="${sz}" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#E9A517"/><circle cx="12" cy="12" r="9" fill="#FFCF3F"/><circle cx="12" cy="12" r="7.2" fill="none" stroke="#E9A517" stroke-width="1.2"/><path d="M12 7.2l1.4 2.9 3.2.4-2.3 2.2.6 3.2L12 14.4l-2.9 1.5.6-3.2-2.3-2.2 3.2-.4z" fill="#E9A517"/></svg>`;
+/* ゲームのイラスト（小さなSVG。紺と金） */
+const GAME_ILL = {
+  skins: ()=>`<span class="gm-ill">${coinSVG(26,"c1")}${coinSVG(26,"c2")}${coinSVG(26,"c3")}</span>`,
+  match: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><circle cx="17" cy="14" r="7" fill="#1F3A68"/><path d="M5 38c0-8 5.4-13 12-13s12 5 12 13z" fill="#1F3A68"/><circle cx="39" cy="14" r="7" fill="#F2B01E"/><path d="M27 38c0-8 5.4-13 12-13s12 5 12 13z" fill="#F2B01E"/><text x="28" y="22" text-anchor="middle" font-size="9" font-weight="900" fill="#E5484D" font-family="Barlow Condensed,sans-serif">VS</text></svg></span>`,
+  nassau: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${[[4,"前"],[20,"後"],[36,"計"]].map(([x,t],i)=>`<rect x="${x}" y="${i===2?6:12}" width="16" height="${i===2?30:24}" rx="4" fill="${i===2?"#F2B01E":"#1F3A68"}"/><text x="${x+8}" y="${i===2?26:29}" text-anchor="middle" font-size="9" font-weight="900" fill="#fff">${t}</text>`).join("")}</svg></span>`,
+  vegas: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><rect x="8" y="6" width="22" height="32" rx="4" fill="#1F3A68" transform="rotate(-10 19 22)"/><rect x="26" y="6" width="22" height="32" rx="4" fill="#F2B01E" transform="rotate(8 37 22)"/><text x="19" y="27" text-anchor="middle" font-size="11" font-weight="900" fill="#fff" transform="rotate(-10 19 22)">A</text><text x="37" y="27" text-anchor="middle" font-size="11" font-weight="900" fill="#fff" transform="rotate(8 37 22)">B</text></svg></span>`,
+  stable: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><rect x="8" y="28" width="9" height="10" rx="2" fill="#F2B01E"/><rect x="20" y="20" width="9" height="18" rx="2" fill="#F2B01E"/><rect x="32" y="12" width="9" height="26" rx="2" fill="#F2B01E"/><path d="M6 22 L22 12 L30 15 L46 5" fill="none" stroke="#1F3A68" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M40 4 L47 4 L46 11" fill="none" stroke="#1F3A68" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`,
+};
 /* スキンズ: 各ホールにコイン1枚。一番少ない打数が1人だけならその人が（持ち越し分も合わせて）獲得、同点なら次のホールへ持ち越し */
 function skinsCalc(rows, n, carryOn=true){
   const won=rows.map(()=>0), log=[]; let carry=0;
@@ -2556,30 +2616,99 @@ function skinsCalc(rows, n, carryOn=true){
     if(w.length===1){ won[w[0]]+=pot; carry=0; log.push({w:w[0],pot}); } else { carry=carryOn?pot:0; log.push({w:-1,pot}); } }
   return {won, carry, log, pot:1+carry};
 }
-/* ゲームの選択画面: ゲームのカードを並べるだけ（ルールは各カードの「ルール」ボタンからポップアップで。ゲームが増えてもごちゃごちゃしない） */
-function gameSheet(){
-  const g=state.game||"";
-  const card=(k,name,n,desc,ill,rules)=>`<div class="gm-card ${g===k?"on":""}" role="button" tabindex="0" data-act="pick-game" data-v="${k}" aria-pressed="${g===k}">${ill}<span class="gm-t"><span class="gm-h"><b>${name}</b>${n?`<i>${n}</i>`:""}${rules?`<button class="gm-rule" data-act="open-rules" data-v="${k}">ルール</button>`:""}</span><small>${desc}</small></span><span class="cp-radio" aria-hidden="true"></span></div>`;
-  const skIll=`<span class="gm-ill">${coinSVG(26,"c1")}${coinSVG(26,"c2")}${coinSVG(26,"c3")}</span>`;
-  return `<div class="sheet-back" data-act="close-game"><div class="sheet game-sheet" data-stop="1"><p>ゲーム</p>
-    ${card("","なし","","スコアだけを記録します",`<span class="gm-ill none">—</span>`,false)}
-    ${card("skins","スキンズ",GAMES.skins.n,"ホールごとにコインを取り合います",skIll,true)}
-    <button class="gm-ok" data-act="close-game">決定</button></div></div>${state.rulesOpen==="skins"?rulesPop():""}`;
+/* マッチプレー（2人）: ホールごとに少ない方の勝ち、同じなら引き分け。勝ったホール数の差で「2UP」など */
+function matchCalc(rows, n, N){
+  let diff=0, played=0, dec=null; const won=[0,0];
+  for(let i=0;i<n;i++){ const a=rows[0][i], b=rows[1][i]; if(a==null||b==null) break; played++;
+    if(a<b){ diff++; won[0]++; } else if(b<a){ diff--; won[1]++; }
+    if(!dec && Math.abs(diff) > N-played) dec={up:Math.abs(diff), left:N-played}; }
+  const st=k=>{ const d=k?-diff:diff; return d>0?`${d}UP`:d<0?`${-d}DN`:"AS"; };
+  return {diff, won, played, dec, st};
 }
-/* ルールのポップアップ（× で戻る）。同点のときの持ち越しもここで選ぶ */
-function rulesPop(){
-  const carry=state.skinCarry;
-  const row=(h,a,b,res,n,cls="")=>`<div class="sr-row"><span class="sr-h">${h}</span><span class="sr-s ${a<b?"win":""}">たろう <b>${a}</b></span><span class="sr-s ${b<a?"win":""}">はなこ <b>${b}</b></span><span class="sr-r ${cls}">${res}<span class="sr-coins">${Array.from({length:n},()=>coinSVG(16)).join("")}</span></span></div>`;
-  return `<div class="rp-back" data-act="close-rules"><div class="rp" data-stop="1" role="dialog" aria-label="スキンズのルール">
-    <div class="rp-head"><span class="rp-ill">${coinSVG(22)}</span><b>スキンズのルール</b><button class="rp-x" data-act="close-rules" aria-label="閉じる">${ICON.x}</button></div>
-    <ol class="rp-list"><li>各ホールで<b>一番少ない打数の人</b>がコイン${coinSVG(14)}をもらえます</li>
-      <li><b>同点</b>のときは下の設定で決まります</li>
-      <li>最後に<b>コインが一番多い人の勝ち</b></li></ol>
-    <div class="rp-opt"><div class="rp-opt-h">同点のとき</div><div class="rp-seg" role="group" aria-label="同点のとき">
-      <button data-act="set-carry" data-v="0" aria-pressed="${!carry}">誰ももらえない</button><button data-act="set-carry" data-v="1" aria-pressed="${carry}">次へ持ち越し</button></div></div>
-    <div class="sr-ex"><div class="sr-cap">例：2人で3ホール</div>
-      ${carry ? row("1H",3,3,"同点 → 持ち越し",0)+row("2H",4,3,"はなこ が2枚",2)+row("3H",2,4,"たろう が1枚",1)+`<div class="sr-sum">はなこ ${coinSVG(14)}2　たろう ${coinSVG(14)}1　→ <b>はなこの勝ち</b></div>`
-              : row("1H",3,3,"同点 → なし",0)+row("2H",4,3,"はなこ が1枚",1)+row("3H",2,4,"たろう が1枚",1)+`<div class="sr-sum">はなこ ${coinSVG(14)}1　たろう ${coinSVG(14)}1　→ <b>引き分け</b></div>`}</div>
+/* ナッソー: 前半・後半・トータルの3つ、それぞれ打数の合計が一番少ない人が1ポイント（同点は誰にもなし）。9Hは 1〜4H／5〜9H */
+function nassauCalc(rows, n, N){
+  const half = N>=18 ? 9 : Math.floor(N/2);
+  const segs=[["前半",0,half],["後半",half,N],["トータル",0,N]], pts=rows.map(()=>0);
+  const res=segs.map(([lab,a,b])=>{ if(n<b) return {lab,a,b,w:null,done:false};
+    const t=rows.map(r=>{ let x=0; for(let i=a;i<b;i++){ if(r[i]==null) return null; x+=r[i]; } return x; });
+    if(t.some(x=>x==null)) return {lab,a,b,w:null,done:false};
+    const mn=Math.min(...t), w=t.map((x,k)=>x===mn?k:-1).filter(k=>k>=0); if(w.length===1) pts[w[0]]++;
+    return {lab,a,b,w:w.length===1?w[0]:-1,t,done:true}; });
+  return {pts, res, half};
+}
+/* ラスベガス（4人）: 1・2人目がチームA、3・4人目がチームB。少ない打数を十の位、多い打数を一の位にした数を比べ、差がそのまま点数 */
+const vegasNum = (x,y) => { const [p,q]=[x,y].sort((a,b)=>a-b); return +(String(p)+String(q)); };
+function vegasCalc(rows, n){
+  const pts=[0,0], log=[];
+  for(let i=0;i<n;i++){ const v=rows.map(r=>r[i]); if(v.some(x=>x==null)) break;
+    const A=vegasNum(v[0],v[1]), B=vegasNum(v[2],v[3]); if(A<B) pts[0]+=B-A; else if(B<A) pts[1]+=A-B; log.push({A,B}); }
+  return {pts, log};
+}
+/* ステーブルフォード: パー2点・ボギー1点・ダボ以上0点・バーディ3点・イーグル4点・アルバトロス5点 */
+const stablePts = (s,par) => Math.max(0, 2-(s-par));
+function stableCalc(rows, pars, n){ return { pts: rows.map(r=>{ let x=0; for(let i=0;i<n;i++){ if(r[i]==null) break; x+=stablePts(r[i],pars[i]); } return x; }) }; }
+/* 記録中に名前の下へ出す小さな表示（スキンズは別で、コインの数） */
+function gameTags(game, rows, pars, n, N){
+  if(game==="match" && rows.length===2){ const m=matchCalc(rows,n,N); return [0,1].map(k=>{ const t=m.st(k); return `<span class="gtag ${t.endsWith("UP")?"up":t.endsWith("DN")?"dn":""}">${t}</span>`; }); }
+  if(game==="nassau"){ const x=nassauCalc(rows,n,N); return x.pts.map(p=>`<span class="gtag ${p?"":"z"}">${p}pt</span>`); }
+  if(game==="vegas" && rows.length===4){ const x=vegasCalc(rows,n); return [0,0,1,1].map(t=>`<span class="gtag t${t}">${"AB"[t]} ${x.pts[t]}</span>`); }
+  if(game==="stable"){ const x=stableCalc(rows,pars,n); return x.pts.map(p=>`<span class="gtag">${p}pt</span>`); }
+  return null;
+}
+/* みんなのリザルトに出すゲームの結果（スキンズは別） */
+function gameResult(game, rows, pars, N, names, order){
+  const box=(body,note="")=>`<div class="rc-skins rc-game"><div class="rs-h"><span>${GAMES[game].eng}</span>${GAMES[game].name}${note?`<em>${note}</em>`:""}</div>${body}</div>`;
+  const line=(n,v,top,extra="")=>`<div class="rs-row ${top?"top":""}"><span class="rs-n">${n}</span><span class="rs-c">${extra}</span><b>${v}</b></div>`;
+  if(game==="match" && rows.length===2){ const m=matchCalc(rows,N,N);
+    const txt = m.diff===0 ? "引き分け" : `${names[m.diff>0?0:1]} の勝ち（${m.dec?`${m.dec.up}&${m.dec.left}`:`${Math.abs(m.diff)}UP`}）`;
+    return box([0,1].map(k=>line(names[k], `${m.won[k]}H`, m.diff!==0 && (m.diff>0?0:1)===k, `<small class="rs-sub">勝ったホール</small>`)).join("")+`<div class="rs-sum">${txt}</div>`); }
+  if(game==="nassau"){ const x=nassauCalc(rows,N,N), mx=Math.max(...x.pts);
+    return box(x.res.map(r=>`<div class="rs-seg"><span>${r.lab}<small>${r.a+1}〜${r.b}H</small></span><b>${r.w>=0?names[r.w]:"引き分け"}</b></div>`).join("")
+      + order.map(k=>line(names[k], `${x.pts[k]}pt`, mx>0&&x.pts[k]===mx)).join("")); }
+  if(game==="vegas" && rows.length===4){ const x=vegasCalc(rows,N), w=x.pts[0]===x.pts[1]?-1:x.pts[0]>x.pts[1]?0:1;
+    return box([0,1].map(t=>line(`チーム${"AB"[t]}`, `${x.pts[t]}点`, w===t, `<small class="rs-sub">${names[t*2]}・${names[t*2+1]}</small>`)).join("")+`<div class="rs-sum">${w<0?"引き分け":`チーム${"AB"[w]} の勝ち`}</div>`); }
+  if(game==="stable"){ const x=stableCalc(rows,pars,N), mx=Math.max(...x.pts);
+    return box([...order].sort((a,b)=>x.pts[b]-x.pts[a]).map(k=>line(names[k], `${x.pts[k]}pt`, x.pts[k]===mx)).join("")); }
+  return "";
+}
+const CHECK = `<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 7.8" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+/* ゲームの選択画面: カードを並べるだけ（ルールは各カードの「ルール」ボタンからポップアップ）。人数が合わないゲームは薄く表示 */
+function gameSheet(){
+  const g=state.game||"", cnt=1+(state.mates||LS.get("sc.mates",[])).filter(x=>String(x||"").trim()).length;
+  const card=(k,name,n,desc,ill)=>{ const ok=gameFits(k,cnt);
+    return `<div class="gm-card ${g===k?"on":""} ${ok?"":"na"}" role="button" tabindex="0" data-act="pick-game" data-v="${k}" aria-pressed="${g===k}">${ill}<span class="gm-t"><span class="gm-h"><b>${name}</b>${n?`<i>${n}</i>`:""}${k?`<button class="gm-rule" data-act="open-rules" data-v="${k}">ルール</button>`:""}</span><small>${ok?desc:`今は${cnt}人なので選べません`}</small></span><span class="cp-radio" aria-hidden="true">${g===k?CHECK:""}</span></div>`; };
+  return `<div class="sheet-back" data-act="close-game"><div class="sheet game-sheet" data-stop="1"><p>ゲーム</p>
+    ${card("","なし","","スコアだけを記録します",`<span class="gm-ill none">—</span>`)}
+    ${GAME_KEYS.map(k=>card(k,GAMES[k].name,GAMES[k].n,GAMES[k].desc,GAME_ILL[k]())).join("")}
+    <button class="gm-ok" data-act="close-game">決定</button></div></div>${state.rulesOpen?rulesPop(state.rulesOpen):""}`;
+}
+/* ルールのポップアップ（× で戻る）。スキンズだけ、同点のときの持ち越しもここで選ぶ */
+function rulesPop(k){
+  const G=GAMES[k]; if(!G) return "";
+  const row=(h,a,b,res)=>`<div class="sr-row"><span class="sr-h">${h}</span><span class="sr-s ${a<b?"win":""}">たろう <b>${a}</b></span><span class="sr-s ${b<a?"win":""}">はなこ <b>${b}</b></span><span class="sr-r">${res}</span></div>`;
+  const coins=n=>`<span class="sr-coins">${Array.from({length:n},()=>coinSVG(16)).join("")}</span>`;
+  let list="", opt="", ex="";
+  if(k==="skins"){ const carry=state.skinCarry;
+    list=`<li>各ホールで<b>一番少ない打数の人</b>がコイン${coinSVG(14)}をもらえます</li><li><b>同点</b>のときは下の設定で決まります</li><li>最後に<b>コインが一番多い人の勝ち</b></li>`;
+    opt=`<div class="rp-opt"><div class="rp-opt-h">同点のとき</div><div class="rp-seg" role="group" aria-label="同点のとき"><button data-act="set-carry" data-v="0" aria-pressed="${!carry}">誰ももらえない</button><button data-act="set-carry" data-v="1" aria-pressed="${carry}">次へ持ち越し</button></div></div>`;
+    ex = carry ? row("1H",3,3,"同点 → 持ち越し")+row("2H",4,3,`はなこ が2枚${coins(2)}`)+row("3H",2,4,`たろう が1枚${coins(1)}`)+`<div class="sr-sum">はなこ ${coinSVG(14)}2　たろう ${coinSVG(14)}1　→ <b>はなこの勝ち</b></div>`
+               : row("1H",3,3,"同点 → なし")+row("2H",4,3,`はなこ が1枚${coins(1)}`)+row("3H",2,4,`たろう が1枚${coins(1)}`)+`<div class="sr-sum">はなこ ${coinSVG(14)}1　たろう ${coinSVG(14)}1　→ <b>引き分け</b></div>`; }
+  if(k==="match"){
+    list=`<li><b>2人</b>で、ホールごとに打数が少ない方がそのホールの勝ち（同じなら引き分け）</li><li>勝ったホールの差を「<b>2UP</b>（2つ勝ち越し）」「<b>AS</b>（五分）」のように数えます</li><li>残りのホールより差が大きくなったら決着（例「3&2」＝残り2ホールで3UP）</li>`;
+    ex=row("1H",3,4,"たろう 1UP")+row("2H",3,3,"引き分け 1UP")+row("3H",4,3,"はなこ → AS")+`<div class="sr-sum">3ホール終わって <b>AS（五分）</b></div>`; }
+  if(k==="nassau"){
+    list=`<li><b>前半・後半・トータル</b>の3つの勝負を同時にします</li><li>それぞれ打数の合計が<b>一番少ない人に1ポイント</b>（同点は誰にもなし）</li><li>9ホールのコースは 前半 1〜4H・後半 5〜9H。最後に<b>ポイントが多い人の勝ち</b></li>`;
+    ex=`<div class="sr-row3"><span>前半</span><span>たろう 13</span><span>はなこ <b class="w">12</b></span><span>はなこ 1pt</span></div><div class="sr-row3"><span>後半</span><span>たろう <b class="w">16</b></span><span>はなこ 18</span><span>たろう 1pt</span></div><div class="sr-row3"><span>トータル</span><span>たろう <b class="w">29</b></span><span>はなこ 30</span><span>たろう 1pt</span></div><div class="sr-sum">たろう 2pt　はなこ 1pt　→ <b>たろうの勝ち</b></div>`; }
+  if(k==="vegas"){
+    list=`<li><b>4人</b>で、1・2人目がチームA、3・4人目がチームBの2対2</li><li>チームの2人の打数を<b>少ない方を十の位、多い方を一の位</b>にした数にします（3と5なら35）</li><li>数が小さいチームが、<b>差の分だけ点数</b>をもらえます。最後に点数が多いチームの勝ち</li>`;
+    ex=`<div class="sr-row2"><span>チームA</span><span>たろう 3・はなこ 5</span><b class="w">35</b></div><div class="sr-row2"><span>チームB</span><span>じろう 4・さぶろう 4</span><b>44</b></div><div class="sr-sum">44 − 35 = 9 → <b>チームAが9点</b></div>`; }
+  if(k==="stable"){
+    list=`<li>スコアに応じてホールごとに<b>ポイント</b>がもらえます</li><li><b>パー 2点</b>・ボギー 1点・ダボ以上 0点・バーディ 3点・イーグル 4点</li><li>最後に<b>ポイントが一番多い人の勝ち</b>（大たたきしても0点で済むので、最後まであきらめずに楽しめます）</li>`;
+    ex=row("1H",3,5,"たろう 2点・はなこ 0点")+row("2H",2,3,"たろう 3点・はなこ 2点")+row("3H",4,3,"たろう 1点・はなこ 2点")+`<div class="sr-sum">たろう 6点　はなこ 4点　→ <b>たろうの勝ち</b>（パー3）</div>`; }
+  return `<div class="rp-back" data-act="close-rules"><div class="rp" data-stop="1" role="dialog" aria-label="${G.name}のルール">
+    <div class="rp-head"><span class="rp-ill">${GAME_ILL[k]()}</span><b>${G.name}のルール<small>${G.n}</small></b><button class="rp-x" data-act="close-rules" aria-label="閉じる">${ICON.x}</button></div>
+    <ol class="rp-list">${list}</ol>${opt}
+    <div class="sr-ex"><div class="sr-cap">例</div>${ex}</div>
     <button class="rp-ok" data-act="close-rules">OK</button></div></div>`;
 }
 /* ---------- actions ---------- */
@@ -2645,14 +2774,15 @@ document.addEventListener("click", async ev => {
       LS.set("sc.player",p);
       // 一緒に回る人（同じ名前もOK: ボール2個で2回分回る人がいる）
       const mates=[0,1,2].map(i=>(($("#r-mate"+i)||{}).value||"").trim()).filter(Boolean); LS.set("sc.mates",[0,1,2].map(i=>mates[i]||"")); state.mates=null;
+      if(state.game && !gameFits(state.game, 1+mates.length)) toast(`${GAMES[state.game].name}は${GAMES[state.game].n.replace("のみ","")}で遊ぶゲームなので、今回はゲームなしで記録します`);
       if(state.im==="card"){
         const names=[p,...mates];
         const N=c.holes.length;
-        state.cdraft={ id:uid(), card:true, courseId:c.id, courseName:c.name, date:dt, holes:c.holes.map(x=>({par:x.par})), players:names.map(n=>({name:n, s:Array(N).fill(null), p:Array(N).fill(null)})), sel:{h:0,i:0,k:"s"}, game: mates.length && state.game ? state.game : null, carry: !!state.skinCarry };
+        state.cdraft={ id:uid(), card:true, courseId:c.id, courseName:c.name, date:dt, holes:c.holes.map(x=>({par:x.par})), players:names.map(n=>({name:n, s:Array(N).fill(null), p:Array(N).fill(null)})), sel:{h:0,i:0,k:"s"}, game: gameFits(state.game, 1+mates.length) && state.game ? state.game : null, carry: !!state.skinCarry };
         saveCDraft(); render(); break; }
       const gs=courseGreens(c), gi=gs ? (+($("#r-green")||{}).value||0) : 0;
       state.draft={ id:uid(), player:p, courseId:c.id, courseName:c.name, date:dt, gn:gs, holes:c.holes.map(x=>({par:x.par, yards:(gi&&x.yards2)?x.yards2:(x.yards||null), ys:gs?[x.yards||null,x.yards2||null]:null, gi, strokes:x.par, putts:2, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null, entered:false})),
-        mates: mates.map(n=>({name:n, s:c.holes.map(x=>x.par)})), game: mates.length && state.game ? state.game : null, carry: !!state.skinCarry }; // 同伴者は打数だけ（パーから増減）
+        mates: mates.map(n=>({name:n, s:c.holes.map(x=>x.par)})), game: gameFits(state.game, 1+mates.length) && state.game ? state.game : null, carry: !!state.skinCarry }; // 同伴者は打数だけ（パーから増減）
       state.hole=0; saveDraft(); render(); break;
     }
     case "hole": mark_entered(); state.slide = +b.dataset.i>state.hole?"l":"r"; state.hole=+b.dataset.i; saveDraft(); render(); break;
@@ -2679,7 +2809,9 @@ document.addEventListener("click", async ev => {
     }
     case "ask-discard": state.confirm="discard"; render(); break;
     case "open-game": state.mates=[0,1,2].map(j=>(($("#r-mate"+j)||{}).value||"")); state.sheet="game"; render(); break;
-    case "pick-game": state.game=b.dataset.v; LS.set("sc.game",state.game); render(); break;
+    case "pick-game": { const k=b.dataset.v, cnt=1+(state.mates||[]).filter(x=>String(x||"").trim()).length;
+      if(!gameFits(k,cnt)){ toast(`${GAMES[k].name}は${GAMES[k].n.replace("のみ","")}で遊ぶゲームです`); break; }
+      state.game=k; LS.set("sc.game",state.game); render(); break; }
     case "open-rules": state.rulesOpen=b.dataset.v; render(); break;
     case "close-rules": state.rulesOpen=null; render(); break;
     case "set-carry": state.skinCarry=b.dataset.v==="1"; LS.set("sc.skinCarry",state.skinCarry); render(); break;
