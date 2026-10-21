@@ -1357,6 +1357,13 @@ input,select,textarea{font-size:max(16px,1em)}
 .sr-row4.h span{font-size:10px;color:var(--rec-muted);font-weight:700}
 .sr-row4 b{font:700 15px var(--f-num);color:var(--q-birdie)}
 .cd-lbl{flex-wrap:nowrap}
+/* ルールボタンはカードの右（丸の左）に置いて、名前が長くても枠からはみ出さない */
+.game-sheet .gm-t{min-width:0}
+.game-sheet .gm-h{overflow:hidden}
+.game-sheet .gm-rule{align-self:center;margin:0!important}
+.medal{vertical-align:middle}
+.md-c{line-height:1}
+.game-sheet .gm-h{flex-wrap:wrap;row-gap:2px;overflow:visible}
 </style>
 
 </head>
@@ -1454,7 +1461,7 @@ const state = {
   // スコアカード入力（紙と同じ表に最大4人分）の下書き。1ホールずつの下書きとは別に持つ
   cdraft: (d=>d && Array.isArray(d.holes) && d.holes.length && Array.isArray(d.players) && d.players.length && d.players.every(p=>p && Array.isArray(p.s) && Array.isArray(p.p) && p.s.length===d.holes.length) ? d : null)(LS.get("sc.cdraft", null)),
   im: LS.get("sc.inputMode","hole")==="card" ? "card" : "hole",
-  game: (g=>["skins","match","nassau","vegas","stable","peoria","olympic"].includes(g) ? g : "")(LS.get("sc.game","")),
+  game: (g=>["skins","match","nassau","vegas","stable","peoria","olympic","team"].includes(g) ? g : "")(LS.get("sc.game","")),
   skinCarry: LS.get("sc.skinCarry", false)===true, // 同点のコインを次のホールへ持ち越すか（ルールのポップアップで選ぶ。初期はしない）
   hole: 0, // 下書きがあれば下で復元
   fPlayer: LS.get("sc.fPlayer", LS.get("sc.player","") || "all"), fCourse:"all", fRange:"all",
@@ -1465,7 +1472,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-21-1000";
+const BUILD = "2026-10-21-1900";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2627,9 +2634,11 @@ const GAMES = {
   vegas:  { name:"ラスベガス", eng:"LAS VEGAS", n:"4人のみ", min:4, max:4, desc:"2対2のチームで点数を取り合います" },
   stable: { name:"ステーブルフォード", eng:"STABLEFORD", n:"2〜4人", min:2, max:4, desc:"スコアに応じたポイントを集めます" },
   peoria: { name:"新ペリア", eng:"NEW PERIA", n:"2〜4人", min:2, max:4, desc:"隠しホールでハンデを決める。誰でも優勝できる" },
+  team:   { name:"チーム戦", eng:"TEAM", n:"4人のみ", min:4, max:4, desc:"2対2。良い方のスコアでホールごとに勝負" },
   olympic:{ name:"オリンピック", eng:"OLYMPIC", n:"2〜4人", min:2, max:4, desc:"パットで金銀銅鉄ダイヤのメダルを集めます" },
 };
-const GAME_KEYS = ["skins","match","nassau","vegas","stable","peoria","olympic"];
+// 並びは日本の仲間内でよく遊ばれる順（オーナー指定。おおよそ）。ナッソーは日本ではほぼ使われないが、海外（特にアメリカ）では定番なので一番下に残す
+const GAME_KEYS = ["olympic","vegas","skins","peoria","team","match","stable","nassau"];
 const gameFits = (k, n) => !k || (GAMES[k] && n>=GAMES[k].min && n<=GAMES[k].max);
 const coinSVG = (sz=14, cls="") => `<svg class="coin ${cls}" viewBox="0 0 24 24" width="${sz}" height="${sz}" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#E9A517"/><circle cx="12" cy="12" r="9" fill="#FFCF3F"/><circle cx="12" cy="12" r="7.2" fill="none" stroke="#E9A517" stroke-width="1.2"/><path d="M12 7.2l1.4 2.9 3.2.4-2.3 2.2.6 3.2L12 14.4l-2.9 1.5.6-3.2-2.3-2.2 3.2-.4z" fill="#E9A517"/></svg>`;
 /* ゲームのイラスト（小さなSVG。紺と金） */
@@ -2640,7 +2649,8 @@ const GAME_ILL = {
   vegas: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><rect x="8" y="6" width="22" height="32" rx="4" fill="#1F3A68" transform="rotate(-10 19 22)"/><rect x="26" y="6" width="22" height="32" rx="4" fill="#F2B01E" transform="rotate(8 37 22)"/><text x="19" y="27" text-anchor="middle" font-size="11" font-weight="900" fill="#fff" transform="rotate(-10 19 22)">A</text><text x="37" y="27" text-anchor="middle" font-size="11" font-weight="900" fill="#fff" transform="rotate(8 37 22)">B</text></svg></span>`,
   stable: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><rect x="8" y="28" width="9" height="10" rx="2" fill="#F2B01E"/><rect x="20" y="20" width="9" height="18" rx="2" fill="#F2B01E"/><rect x="32" y="12" width="9" height="26" rx="2" fill="#F2B01E"/><path d="M6 22 L22 12 L30 15 L46 5" fill="none" stroke="#1F3A68" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M40 4 L47 4 L46 11" fill="none" stroke="#1F3A68" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`,
   peoria: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${[[10,22,"#1F3A68"],[28,14,"#F2B01E"],[46,22,"#1F3A68"]].map(([x,y,c])=>`<circle cx="${x}" cy="${y}" r="8.5" fill="${c}"/><text x="${x}" y="${y+4}" text-anchor="middle" font-size="11" font-weight="900" fill="#fff">?</text>`).join("")}<path d="M6 38h44" stroke="#1F3A68" stroke-width="3" stroke-linecap="round"/></svg></span>`,
-  olympic: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${medalSVG(5,0,0,true)}<g transform="translate(2 14)">${medalSVG(4,0,0,true)}</g><g transform="translate(19 14)">${medalSVG(3,0,0,true)}</g><g transform="translate(36 14)">${medalSVG(2,0,0,true)}</g></svg></span>`,
+  olympic: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${medalSVG(5,22,{x:17,y:0})}${medalSVG(3,18,{x:1,y:22})}${medalSVG(4,20,{x:18,y:21})}${medalSVG(2,18,{x:37,y:22})}</svg></span>`,
+  team: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${[[9,"#1F3A68"],[19,"#1F3A68"],[37,"#F2B01E"],[47,"#F2B01E"]].map(([x,c],i)=>`<circle cx="${x}" cy="${i%2?17:13}" r="5.5" fill="${c}"/><path d="M${x-8} ${i%2?36:33}c0-6 3.6-10 8-10s8 4 8 10z" fill="${c}"/>`).join("")}<rect x="0" y="38" width="27" height="4" rx="2" fill="#1F3A68"/><rect x="29" y="38" width="27" height="4" rx="2" fill="#F2B01E"/></svg></span>`,
 };
 /* スキンズ: 各ホールにコイン1枚。一番少ない打数が1人だけならその人が（持ち越し分も合わせて）獲得、同点なら次のホールへ持ち越し */
 function skinsCalc(rows, n, carryOn=true){
@@ -2656,7 +2666,7 @@ function matchCalc(rows, n, N){
   for(let i=0;i<n;i++){ const a=rows[0][i], b=rows[1][i]; if(a==null||b==null) break; played++;
     if(a<b){ diff++; won[0]++; } else if(b<a){ diff--; won[1]++; }
     if(!dec && Math.abs(diff) > N-played) dec={up:Math.abs(diff), left:N-played}; }
-  const st=k=>{ const d=k?-diff:diff; return d>0?`${d}UP`:d<0?`${-d}DN`:"AS"; };
+  const st=k=>{ const d=k?-diff:diff; return d>0?`${d}勝`:d<0?`${-d}負`:"五分"; }; // 英語の 2UP / AS / 2DN はなじみがないので日本語で
   return {diff, won, played, dec, st};
 }
 /* ナッソー: 前半・後半・トータルの3つ、それぞれ打数の合計が一番少ない人が1ポイント（同点は誰にもなし）。9Hは 1〜4H／5〜9H */
@@ -2681,12 +2691,17 @@ function vegasCalc(rows, n){
 /* ステーブルフォード: パー2点・ボギー1点・ダボ以上0点・バーディ3点・イーグル4点・アルバトロス5点 */
 const stablePts = (s,par) => Math.max(0, 2-(s-par));
 function stableCalc(rows, pars, n){ return { pts: rows.map(r=>{ let x=0; for(let i=0;i<n;i++){ if(r[i]==null) break; x+=stablePts(r[i],pars[i]); } return x; }) }; }
+/* チーム戦（4人）: 1・2人目がチームA、3・4人目がチームB。ホールごとに2人のうち良い方のスコアで比べ、少ないチームが1勝（同じなら引き分け） */
+function teamCalc(rows, n){ const won=[0,0]; let tot=[0,0];
+  for(let i=0;i<n;i++){ const v=rows.map(r=>r[i]); if(v.some(x=>x==null)) break; const A=Math.min(v[0],v[1]), B=Math.min(v[2],v[3]);
+    tot[0]+=v[0]+v[1]; tot[1]+=v[2]+v[3]; if(A<B) won[0]++; else if(B<A) won[1]++; }
+  return {won, tot}; }
 /* オリンピック: パットのメダル。1鉄 2銅 3銀 4金 5ダイヤ（点数は同じ数） */
 const MEDALS=[null,{n:"鉄",c:"#7A8594",d:"#4B5563"},{n:"銅",c:"#D08A4C",d:"#8A4B1E"},{n:"銀",c:"#C9D1DA",d:"#7B8794"},{n:"金",c:"#F5C23A",d:"#B07A00"},{n:"ダイヤ",c:"#7FDBFF",d:"#1C7FB0"}];
-function medalSVG(v, sz=16, _=0, raw=false){ const m=MEDALS[v]; if(!m) return "";
+function medalSVG(v, sz=16, pos=null){ const m=MEDALS[v]; if(!m) return "";
   const g = v===5 ? `<path d="M9 2h18l7 8-16 20L2 10z" fill="${m.c}" stroke="${m.d}" stroke-width="1.6" stroke-linejoin="round"/><path d="M2 10h32M12 2l6 28 6-28" fill="none" stroke="${m.d}" stroke-width="1" opacity=".7"/>`
     : `<path d="M11 0l-4 12h8zM25 0l4 12h-8z" fill="#E5484D"/><circle cx="18" cy="19" r="11" fill="${m.c}" stroke="${m.d}" stroke-width="1.8"/><circle cx="18" cy="19" r="7" fill="none" stroke="${m.d}" stroke-width="1" opacity=".6"/>`;
-  return raw ? `<svg x="0" y="0" width="22" height="22" viewBox="0 0 36 32">${g}</svg>` : `<svg class="medal" viewBox="0 0 36 32" width="${sz}" height="${sz}" aria-hidden="true">${g}</svg>`; }
+  return pos ? `<svg x="${pos.x}" y="${pos.y}" width="${sz}" height="${(sz*32/36).toFixed(1)}" viewBox="0 0 36 32">${g}</svg>` : `<svg class="medal" viewBox="0 0 36 32" width="${sz}" height="${(sz*32/36).toFixed(1)}" aria-hidden="true">${g}</svg>`; }
 function olympicCalc(medals, P){ const pts=Array(P).fill(0), cnt=Array.from({length:P},()=>[0,0,0,0,0,0]);
   Object.values(medals||{}).forEach(arr=>(arr||[]).forEach((v,i)=>{ if(v>0 && i<P){ pts[i]+=v; cnt[i][v]++; } })); return {pts, cnt}; }
 /* 新ペリア: 隠しホール（9Hは6つ・18Hは12）をラウンド後にくじで選び、ハンデ＝(隠しホールの合計×(全ホール数÷隠しホール数) − パー)×0.8。ネット＝合計−ハンデ */
@@ -2698,7 +2713,8 @@ function peoriaCalc(rows, pars, hidden){ const N=pars.length, par=pars.reduce((a
 /* 記録中に名前の下へ出す小さな表示（スキンズは別で、コインの数） */
 function gameTags(game, rows, pars, n, N, ex={}){
   if(game==="olympic"){ const x=olympicCalc(ex.medals, rows.length), cur=(ex.medals||{})[ex.hole]||[]; return x.pts.map((p,i)=>`<span class="gtag ${p?"":"z"}">${cur[i]?medalSVG(cur[i],12):""}${p}pt</span>`); }
-  if(game==="match" && rows.length===2){ const m=matchCalc(rows,n,N); return [0,1].map(k=>{ const t=m.st(k); return `<span class="gtag ${t.endsWith("UP")?"up":t.endsWith("DN")?"dn":""}">${t}</span>`; }); }
+  if(game==="match" && rows.length===2){ const m=matchCalc(rows,n,N); return [0,1].map(k=>{ const t=m.st(k); return `<span class="gtag ${t.endsWith("勝")?"up":t.endsWith("負")?"dn":""}">${t}</span>`; }); }
+  if(game==="team" && rows.length===4){ const x=teamCalc(rows,n); return [0,0,1,1].map(t=>`<span class="gtag t${t}">${"AB"[t]} ${x.won[t]}勝</span>`); }
   if(game==="nassau"){ const x=nassauCalc(rows,n,N); return x.pts.map(p=>`<span class="gtag ${p?"":"z"}">${p}pt</span>`); }
   if(game==="vegas" && rows.length===4){ const x=vegasCalc(rows,n); return [0,0,1,1].map(t=>`<span class="gtag t${t}">${"AB"[t]} ${x.pts[t]}</span>`); }
   if(game==="stable"){ const x=stableCalc(rows,pars,n); return x.pts.map(p=>`<span class="gtag">${p}pt</span>`); }
@@ -2709,13 +2725,15 @@ function gameResult(game, rows, pars, N, names, order, ex={}){
   const box=(body,note="")=>`<div class="rc-skins rc-game"><div class="rs-h"><span>${GAMES[game].eng}</span>${GAMES[game].name}${note?`<em>${note}</em>`:""}</div>${body}</div>`;
   const line=(n,v,top,extra="")=>`<div class="rs-row ${top?"top":""}"><span class="rs-n">${n}</span><span class="rs-c">${extra}</span><b>${v}</b></div>`;
   if(game==="match" && rows.length===2){ const m=matchCalc(rows,N,N);
-    const txt = m.diff===0 ? "引き分け" : `${names[m.diff>0?0:1]} の勝ち（${m.dec?`${m.dec.up}&${m.dec.left}`:`${Math.abs(m.diff)}UP`}）`;
+    const txt = m.diff===0 ? "引き分け（五分）" : `${names[m.diff>0?0:1]} の勝ち（${m.dec&&m.dec.left?`残り${m.dec.left}ホールで${m.dec.up}勝ち越し`:`${Math.abs(m.diff)}勝ち越し`}）`;
     return box([0,1].map(k=>line(names[k], `${m.won[k]}H`, m.diff!==0 && (m.diff>0?0:1)===k, `<small class="rs-sub">勝ったホール</small>`)).join("")+`<div class="rs-sum">${txt}</div>`); }
   if(game==="nassau"){ const x=nassauCalc(rows,N,N), mx=Math.max(...x.pts);
     return box(x.res.map(r=>`<div class="rs-seg"><span>${r.lab}<small>${r.a+1}〜${r.b}H</small></span><b>${r.w>=0?names[r.w]:"引き分け"}</b></div>`).join("")
       + order.map(k=>line(names[k], `${x.pts[k]}pt`, mx>0&&x.pts[k]===mx)).join("")); }
   if(game==="vegas" && rows.length===4){ const x=vegasCalc(rows,N), w=x.pts[0]===x.pts[1]?-1:x.pts[0]>x.pts[1]?0:1;
     return box([0,1].map(t=>line(`チーム${"AB"[t]}`, `${x.pts[t]}点`, w===t, `<small class="rs-sub">${names[t*2]}・${names[t*2+1]}</small>`)).join("")+`<div class="rs-sum">${w<0?"引き分け":`チーム${"AB"[w]} の勝ち`}</div>`); }
+  if(game==="team" && rows.length===4){ const x=teamCalc(rows,N), w=x.won[0]===x.won[1]?-1:x.won[0]>x.won[1]?0:1;
+    return box([0,1].map(t=>line(`チーム${"AB"[t]}`, `${x.won[t]}勝`, w===t, `<small class="rs-sub">${names[t*2]}・${names[t*2+1]}（2人で${x.tot[t]}打）</small>`)).join("")+`<div class="rs-sum">${w<0?"引き分け":`チーム${"AB"[w]} の勝ち`}</div>`); }
   if(game==="peoria" && ex.hidden){ const x=peoriaCalc(rows,pars,ex.hidden), ord=[...order].sort((a,b)=>x[a].net-x[b].net || x[a].gross-x[b].gross), best=x[ord[0]].net;
     return box(`<div class="pe-hid"><span>隠しホール</span>${ex.hidden.map((h,i)=>`<i style="animation-delay:${(i*0.18).toFixed(2)}s">${h+1}</i>`).join("")}</div>
       <div class="pe-row pe-head"><span></span><span>合計</span><span>ハンデ</span><span>ネット</span></div>`
@@ -2732,7 +2750,7 @@ const CHECK = `<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true
 function gameSheet(){
   const g=state.game||"", cnt=1+(state.mates||LS.get("sc.mates",[])).filter(x=>String(x||"").trim()).length;
   const card=(k,name,n,desc,ill)=>{ const ok=gameFits(k,cnt);
-    return `<div class="gm-card ${g===k?"on":""} ${ok?"":"na"}" role="button" tabindex="0" data-act="pick-game" data-v="${k}" aria-pressed="${g===k}">${ill}<span class="gm-t"><span class="gm-h"><b>${name}</b>${n?`<i>${n}</i>`:""}${k?`<button class="gm-rule" data-act="open-rules" data-v="${k}">ルール</button>`:""}</span><small>${ok?desc:`今は${cnt}人なので選べません`}</small></span><span class="cp-radio" aria-hidden="true">${g===k?CHECK:""}</span></div>`; };
+    return `<div class="gm-card ${g===k?"on":""} ${ok?"":"na"}" role="button" tabindex="0" data-act="pick-game" data-v="${k}" aria-pressed="${g===k}">${ill}<span class="gm-t"><span class="gm-h"><b>${name}</b>${n?`<i>${n}</i>`:""}</span><small>${ok?desc:`今は${cnt}人なので選べません`}</small></span>${k?`<button class="gm-rule" data-act="open-rules" data-v="${k}">ルール</button>`:""}<span class="cp-radio" aria-hidden="true">${g===k?CHECK:""}</span></div>`; };
   return `<div class="sheet-back" data-act="close-game"><div class="sheet game-sheet" data-stop="1"><p>ゲーム</p>
     ${card("","なし","","スコアだけを記録します",`<span class="gm-ill none">—</span>`)}
     ${GAME_KEYS.map(k=>card(k,GAMES[k].name,GAMES[k].n,GAMES[k].desc,GAME_ILL[k]())).join("")}
@@ -2757,8 +2775,8 @@ function rulesPop(k){
     ex = carry ? row("1H",3,3,"同点 → 持ち越し")+row("2H",4,3,`はなこ が2枚${coins(2)}`)+row("3H",2,4,`たろう が1枚${coins(1)}`)+`<div class="sr-sum">はなこ ${coinSVG(14)}2　たろう ${coinSVG(14)}1　→ <b>はなこの勝ち</b></div>`
                : row("1H",3,3,"同点 → なし")+row("2H",4,3,`はなこ が1枚${coins(1)}`)+row("3H",2,4,`たろう が1枚${coins(1)}`)+`<div class="sr-sum">はなこ ${coinSVG(14)}1　たろう ${coinSVG(14)}1　→ <b>引き分け</b></div>`; }
   if(k==="match"){
-    list=`<li><b>2人</b>で、ホールごとに打数が少ない方がそのホールの勝ち（同じなら引き分け）</li><li>勝ったホールの差を「<b>2UP</b>（2つ勝ち越し）」「<b>AS</b>（五分）」のように数えます</li><li>残りのホールより差が大きくなったら決着（例「3&2」＝残り2ホールで3UP）</li>`;
-    ex=row("1H",3,4,"たろう 1UP")+row("2H",3,3,"引き分け 1UP")+row("3H",4,3,"はなこ → AS")+`<div class="sr-sum">3ホール終わって <b>AS（五分）</b></div>`; }
+    list=`<li><b>2人</b>で、ホールごとに打数が少ない方がそのホールの勝ち（同じなら引き分け）</li><li>勝ったホールの数の差で「<b>2勝</b>（2つ勝ち越し）」「<b>五分</b>」「<b>2負</b>」と数えます</li><li>残りのホールで追いつけない差になったら、その時点で勝ちが決まります。合計の打数は関係ありません</li>`;
+    ex=row("1H",3,4,"たろう 1勝")+row("2H",3,3,"引き分け")+row("3H",4,3,"はなこ → 五分")+`<div class="sr-sum">3ホール終わって <b>五分</b></div>`; }
   if(k==="nassau"){
     list=`<li><b>前半・後半・トータル</b>の3つの勝負を同時にします</li><li>それぞれ打数の合計が<b>一番少ない人に1ポイント</b>（同点は誰にもなし）</li><li>9ホールのコースは 前半 1〜4H・後半 5〜9H。最後に<b>ポイントが多い人の勝ち</b></li>`;
     ex=`<div class="sr-row3"><span>前半</span><span>たろう 13</span><span>はなこ <b class="w">12</b></span><span>はなこ 1pt</span></div><div class="sr-row3"><span>後半</span><span>たろう <b class="w">16</b></span><span>はなこ 18</span><span>たろう 1pt</span></div><div class="sr-row3"><span>トータル</span><span>たろう <b class="w">29</b></span><span>はなこ 30</span><span>たろう 1pt</span></div><div class="sr-sum">たろう 2pt　はなこ 1pt　→ <b>たろうの勝ち</b></div>`; }
@@ -2768,6 +2786,9 @@ function rulesPop(k){
   if(k==="stable"){
     list=`<li>スコアに応じてホールごとに<b>ポイント</b>がもらえます</li><li><b>パー 2点</b>・ボギー 1点・ダボ以上 0点・バーディ 3点・イーグル 4点</li><li>最後に<b>ポイントが一番多い人の勝ち</b>（大たたきしても0点で済むので、最後まであきらめずに楽しめます）</li>`;
     ex=row("1H",3,5,"たろう 2点・はなこ 0点")+row("2H",2,3,"たろう 3点・はなこ 2点")+row("3H",4,3,"たろう 1点・はなこ 2点")+`<div class="sr-sum">たろう 6点　はなこ 4点　→ <b>たろうの勝ち</b>（パー3）</div>`; }
+  if(k==="team"){
+    list=`<li><b>4人</b>で、名前の順に 1・2人目がチームA、3・4人目がチームB の2対2（組み分けを変えたいときは、名前を入れる順番を変えます）</li><li>ホールごとに、チームの2人のうち<b>良い方のスコア</b>どうしを比べて、少ないチームが<b>1勝</b>（同じなら引き分け）</li><li>最後に<b>勝ったホールが多いチームの勝ち</b>。1人が大たたきしても、相方がよければ大丈夫</li>`;
+    ex=`<div class="sr-row2"><span>チームA</span><span>たろう 3・はなこ 5</span><b class="w">3</b></div><div class="sr-row2"><span>チームB</span><span>じろう 4・さぶろう 4</span><b>4</b></div><div class="sr-sum">このホールは <b>チームAの1勝</b></div>`; }
   if(k==="peoria"){
     list=`<li>ふつうに回って記録します（入力は今までと同じ）</li><li>保存したあとで、9ホールのうち<b>6ホールをくじで「隠しホール」</b>に選びます（18ホールは12）</li><li><b>ハンデ＝（隠しホールの合計×1.5 − パー）×0.8</b>。合計からハンデを引いた<b>ネットが一番少ない人が優勝</b>。大たたきしたホールが隠しホールに入るとハンデが増えるので、誰にでも優勝のチャンスがあります</li>`;
     ex=`<div class="sr-row4 h"><span></span><span>合計</span><span>隠し6H</span><span>ハンデ</span><span>ネット</span></div><div class="sr-row4"><span>たろう</span><span>28</span><span>19</span><span>1.2</span><b>26.8</b></div><div class="sr-row4"><span>はなこ</span><span>36</span><span>25</span><span>8.4</span><b>27.6</b></div><div class="sr-sum">パー27のコース → <b>たろうの優勝</b>（隠しホールしだいで逆転も）</div>`; }
