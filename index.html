@@ -1396,6 +1396,34 @@ input,select,textarea{font-size:max(16px,1em)}
 /* 決定ボタン: 高さを出して横幅は控えめに、真ん中に */
 .game-sheet .gm-ok,.medal-sheet .gm-ok{display:block;width:min(72%,260px)!important;height:56px!important;min-height:56px;flex:0 0 auto;margin:12px auto 4px!important}
 .rp .rp-ok{display:block;width:min(72%,240px);height:52px;min-height:52px;flex:0 0 auto;margin:12px auto 0}
+/* ルールのポップアップ（2026-10-21 作り直し）: 上に紺〜青の帯（絵・英語名・名前・札）、番号は丸、例はカード */
+.rp{padding:0!important;border-radius:22px!important;overflow-x:hidden;border:0}
+.rp-hero{position:relative;display:flex;align-items:center;gap:12px;padding:18px 16px 16px;color:#fff;background:linear-gradient(135deg,#0F2347 0%,#1D4F9E 100%);overflow:hidden}
+.rp-hero.team{background:linear-gradient(135deg,#3A2A07 0%,#9A6A06 100%)}
+.rp-hero::after{content:"";position:absolute;right:-40px;top:-50px;width:150px;height:150px;border-radius:50%;border:18px solid rgba(255,255,255,.06)}
+.rp-hero .rp-ill{flex:0 0 56px;width:56px;height:56px;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.rp-hero .rp-ill .gm-ill{flex:none;width:44px;height:36px;transform:none;position:relative}
+.rp-hero .rp-ill .gm-ill svg{width:44px;height:35px}
+.rp-hero .rp-ill .gm-ill .coin{position:absolute;width:21px;height:21px}
+.rp-hero .rp-ill .gm-ill .c1{left:1px;top:13px}.rp-hero .rp-ill .gm-ill .c2{left:11px;top:3px}.rp-hero .rp-ill .gm-ill .c3{left:21px;top:13px}
+.rp-tt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;position:relative;z-index:1}
+.rp-tt small{font:700 11px var(--f-num);letter-spacing:.18em;opacity:.7}
+.rp-tt b{font-size:20px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rp-chips{display:flex;gap:5px;margin-top:4px}
+.rp-chips i{font-style:normal;font-size:10px;font-weight:700;line-height:1;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.16);color:#fff}
+.rp-hero .rp-x{position:relative;z-index:1;align-self:flex-start;flex:0 0 34px;width:34px;height:34px;border:0;background:rgba(255,255,255,.16);color:#fff}
+.rp-body{padding:4px 16px 18px}
+.rp-sec{display:flex;align-items:baseline;gap:8px;margin:14px 0 8px;font-size:13px;font-weight:700}
+.rp-sec span{font:700 11px var(--f-num);letter-spacing:.16em;color:#0E9F62}
+.rp-list{list-style:none;counter-reset:rp;padding:0!important;margin:0 0 4px!important;display:flex;flex-direction:column;gap:8px;font-size:13px;line-height:1.6}
+.rp-list li{counter-increment:rp;position:relative;padding-left:30px}
+.rp-list li::before{content:counter(rp);position:absolute;left:0;top:1px;width:21px;height:21px;border-radius:50%;background:color-mix(in srgb,#0E9F62 14%,transparent);color:#0B7A4B;font:700 12px/21px var(--f-num);text-align:center}
+.rp-list li b{color:var(--rec-fg)}
+.rp .sr-ex{background:var(--rec-bg)!important;border:1px solid var(--rec-line);border-radius:14px;padding:10px 12px;gap:7px}
+.rp .rp-opt{margin:10px 0 0}
+.rp .rp-words{margin:10px 0 0}
+.rp .rp-ok{margin-top:16px}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .rp-list li::before{color:#4ADE9B} }
 .sr-row2 b.sr-none{font:700 12px/1 inherit;font-family:inherit;color:var(--rec-muted)}
 .rp .rp-ok{height:48px;border:0;border-radius:999px;background:linear-gradient(135deg,#0E9F62 0%,#13A9C2 100%);color:#fff;font-weight:700;letter-spacing:.12em;box-shadow:0 6px 16px rgba(14,159,98,.3)}
 .rp-words{margin-top:2px}
@@ -1507,7 +1535,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-21-2130";
+const BUILD = "2026-10-21-2200";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2669,8 +2697,8 @@ const GAMES = {
   match:  { name:"マッチプレー", eng:"MATCH PLAY", n:"2人のみ", min:2, max:2, desc:"1対1・勝ったホール数で勝負", type:"solo" },
   nassau: { name:"ナッソー", eng:"NASSAU", n:"2〜4人", min:2, max:4, desc:"前半・後半・合計の3つで勝負", type:"solo" },
   vegas:  { name:"ラスベガス", eng:"LAS VEGAS", n:"4人のみ", min:4, max:4, desc:"2人の打数を数字にして勝負", type:"team" },
-  stable: { name:"ステーブルフォード", eng:"STABLEFORD", n:"2〜4人", min:2, max:4, desc:"スコアをポイントにして競う", type:"solo" },
-  peoria: { name:"新ペリア", eng:"NEW PERIA", n:"2〜4人", min:2, max:4, desc:"くじでハンデ。誰でも優勝", type:"solo" },
+  stable: { name:"ステーブルフォード", eng:"STABLEFORD", n:"2〜4人", min:2, max:4, desc:"パー2点・バーディ3点で競う", type:"solo" },
+  peoria: { name:"新ペリア", eng:"NEW PERIA", n:"2〜4人", min:2, max:4, desc:"ハンデで誰でも優勝チャンス", type:"solo" },
   team:   { name:"ベストボール", eng:"BEST BALL", n:"4人のみ", min:4, max:4, desc:"2人の良い方のスコアで勝負", type:"team" },
   teamsum:{ name:"合計スコア", eng:"TEAM TOTAL", n:"4人のみ", min:4, max:4, desc:"2人の合計スコアで勝負", type:"team" },
   olympic:{ name:"オリンピック", eng:"OLYMPIC", n:"2〜4人", min:2, max:4, desc:"1パットでメダルを集める", type:"solo" },
@@ -2689,7 +2717,7 @@ const GAME_ILL = {
   stable: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><rect x="8" y="28" width="9" height="10" rx="2" fill="#F2B01E"/><rect x="20" y="20" width="9" height="18" rx="2" fill="#F2B01E"/><rect x="32" y="12" width="9" height="26" rx="2" fill="#F2B01E"/><path d="M6 22 L22 12 L30 15 L46 5" fill="none" stroke="#1F3A68" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M40 4 L47 4 L46 11" fill="none" stroke="#1F3A68" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`,
   peoria: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${[[10,22,"#1F3A68"],[28,14,"#F2B01E"],[46,22,"#1F3A68"]].map(([x,y,c])=>`<circle cx="${x}" cy="${y}" r="8.5" fill="${c}"/><text x="${x}" y="${y+4}" text-anchor="middle" font-size="11" font-weight="900" fill="#fff">?</text>`).join("")}<path d="M6 38h44" stroke="#1F3A68" stroke-width="3" stroke-linecap="round"/></svg></span>`,
   olympic: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${medalSVG(5,22,{x:17,y:0})}${medalSVG(3,18,{x:1,y:22})}${medalSVG(4,20,{x:18,y:21})}${medalSVG(2,18,{x:37,y:22})}</svg></span>`,
-  teamsum: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><rect x="2" y="8" width="24" height="30" rx="5" fill="#1F3A68"/><rect x="30" y="14" width="24" height="24" rx="5" fill="#F2B01E"/><text x="14" y="28" text-anchor="middle" font-family="Barlow Condensed,sans-serif" font-weight="700" font-size="14" fill="#fff">62</text><text x="42" y="31" text-anchor="middle" font-family="Barlow Condensed,sans-serif" font-weight="700" font-size="14" fill="#1F3A68">64</text><text x="14" y="17" text-anchor="middle" font-size="7" font-weight="700" fill="#9FB4D8">A</text><text x="42" y="22" text-anchor="middle" font-size="7" font-weight="700" fill="#8A5A00">B</text></svg></span>`,
+  teamsum: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${[[0,"#1F3A68","#fff"],[30,"#F2B01E","#1F3A68"]].map(([x,c,f])=>`<rect x="${x+1}" y="9" width="25" height="26" rx="6" fill="${c}"/>${[x+6.5,x+20.5].map(cx=>`<circle cx="${cx}" cy="17.5" r="2.6" fill="${f}"/><path d="M${cx-3.6} 27.5c0-3.4 1.6-5.6 3.6-5.6s3.6 2.2 3.6 5.6z" fill="${f}"/>`).join("")}<path d="M${x+11.2} 22h4.6M${x+13.5} 19.7v4.6" stroke="${f}" stroke-width="1.8" stroke-linecap="round"/>`).join("")}</svg></span>`,
   team: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${[[9,"#1F3A68"],[19,"#1F3A68"],[37,"#F2B01E"],[47,"#F2B01E"]].map(([x,c],i)=>`<circle cx="${x}" cy="${i%2?17:13}" r="5.5" fill="${c}"/><path d="M${x-8} ${i%2?36:33}c0-6 3.6-10 8-10s8 4 8 10z" fill="${c}"/>`).join("")}<rect x="0" y="38" width="27" height="4" rx="2" fill="#1F3A68"/><rect x="29" y="38" width="27" height="4" rx="2" fill="#F2B01E"/></svg></span>`,
 };
 /* スキンズ: 各ホールにコイン1枚。一番少ない打数が1人だけならその人が（持ち越し分も合わせて）獲得、同点なら次のホールへ持ち越し */
@@ -2744,7 +2772,7 @@ function teamCalc(rows, n){ const won=[0,0]; let tot=[0,0];
 const MEDALS=[null,{n:"鉄",c:"#7A8594",d:"#4B5563"},{n:"銅",c:"#D08A4C",d:"#8A4B1E"},{n:"銀",c:"#C9D1DA",d:"#7B8794"},{n:"金",c:"#F5C23A",d:"#B07A00"},{n:"ダイヤ",c:"#7FDBFF",d:"#1C7FB0"}];
 function medalSVG(v, sz=16, pos=null){ const m=MEDALS[v]; if(!m) return "";
   const g = v===5 ? `<path d="M9 2h18l7 8-16 20L2 10z" fill="${m.c}" stroke="${m.d}" stroke-width="1.6" stroke-linejoin="round"/><path d="M2 10h32M12 2l6 28 6-28" fill="none" stroke="${m.d}" stroke-width="1" opacity=".7"/>`
-    : `<path d="M11 0l-4 12h8zM25 0l4 12h-8z" fill="#E5484D"/><circle cx="18" cy="19" r="11" fill="${m.c}" stroke="${m.d}" stroke-width="1.8"/><circle cx="18" cy="19" r="7" fill="none" stroke="${m.d}" stroke-width="1" opacity=".6"/>`;
+    : `<circle cx="18" cy="16" r="13.5" fill="${m.c}" stroke="${m.d}" stroke-width="1.8"/><circle cx="18" cy="16" r="9" fill="none" stroke="${m.d}" stroke-width="1.1" opacity=".55"/><path d="M10.5 10.5a10 10 0 0 1 6-4" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".55"/>`;
   return pos ? `<svg x="${pos.x}" y="${pos.y}" width="${sz}" height="${(sz*32/36).toFixed(1)}" viewBox="0 0 36 32">${g}</svg>` : `<svg class="medal" viewBox="0 0 36 32" width="${sz}" height="${(sz*32/36).toFixed(1)}" aria-hidden="true">${g}</svg>`; }
 function olympicCalc(medals, P){ const pts=Array(P).fill(0), cnt=Array.from({length:P},()=>[0,0,0,0,0,0]);
   Object.values(medals||{}).forEach(arr=>(arr||[]).forEach((v,i)=>{ if(v>0 && i<P){ pts[i]+=v; cnt[i][v]++; } })); return {pts, cnt}; }
@@ -2847,10 +2875,12 @@ function rulesPop(k){
     list=`<li>グリーンに乗ってから<b>1パットで入れた人だけ</b>がメダルをもらえます（2パット以上はなし）</li><li>1パットで入れた人のうち、<b>ピンから遠かった人から</b>${medalSVG(4,14)}金 4点・${medalSVG(3,14)}銀 3点・${medalSVG(2,14)}銅 2点・${medalSVG(1,14)}鉄 1点。<b>グリーンの外から直接入れたら</b>${medalSVG(5,14)}<b>ダイヤ 5点</b></li><li>毎ホール、ホールカードの「メダル」から誰が取ったかを入れます。最後に<b>点数が一番多い人の勝ち</b></li>`;
     ex=`<div class="sr-row2"><span>はなこ</span><span>8mを1パットで入れた</span><b>${medalSVG(4,18)}</b></div><div class="sr-row2"><span>たろう</span><span>3mを1パットで入れた</span><b>${medalSVG(3,18)}</b></div><div class="sr-row2"><span>じろう</span><span>2パットで入れた</span><b class="sr-none">なし</b></div><div class="sr-sum">このホール　はなこ 4点・たろう 3点・じろう 0点</div>`; }
   return `<div class="rp-back" data-act="close-rules"><div class="rp" data-stop="1" role="dialog" aria-label="${G.name}のルール">
-    <div class="rp-head"><span class="rp-ill">${GAME_ILL[k]()}</span><b>${G.name}のルール<small>${G.type==="team"?"チーム戦":"個人戦"}・${G.n}</small></b><button class="rp-x" data-act="close-rules" aria-label="閉じる">${ICON.x}</button></div>
+    <div class="rp-hero ${G.type}"><span class="rp-ill">${GAME_ILL[k]()}</span><div class="rp-tt"><small>${G.eng}</small><b>${G.name}</b><span class="rp-chips"><i>${G.type==="team"?"チーム戦":"個人戦"}</i><i>${G.n}</i></span></div><button class="rp-x" data-act="close-rules" aria-label="閉じる">${ICON.x}</button></div>
+    <div class="rp-body"><div class="rp-sec"><span>HOW TO PLAY</span>ルール</div>
     <ol class="rp-list">${list}</ol>${opt}
-    <div class="sr-ex"><div class="sr-cap">例</div>${ex}</div>
-    <button class="rp-ok" data-act="close-rules">OK</button></div></div>`;
+    <div class="rp-sec"><span>EXAMPLE</span>例</div>
+    <div class="sr-ex">${ex}</div>
+    <button class="rp-ok" data-act="close-rules">OK</button></div></div></div>`;
 }
 /* ---------- actions ---------- */
 function saveDraft(){ if(state.draft) state.draft.cur=state.hole; LS.set("sc.draft", state.draft); } // 今のホールも覚えておく（自動更新で読み直しても同じホールから）

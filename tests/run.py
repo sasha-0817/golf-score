@@ -292,6 +292,8 @@ with sync_playwright() as pw:
     C(pg, "[data-act=open-rules][data-v=olympic]")
     t = pg.inner_text(".rp")
     check("オリンピックのルールは1パットで入れた人だけが対象", "1パットで入れた人だけ" in t and "カップインした順" not in t)
+    check("ルールのポップアップは上に帯（英語名・名前・札）と番号の丸", pg.query_selector(".rp .rp-hero .rp-chips") is not None and pg.evaluate("getComputedStyle(document.querySelector('.rp-list li'),'::before').content") == "counter(rp)" or pg.evaluate("getComputedStyle(document.querySelector('.rp-list li'),'::before').content") not in ("none", ""))
+    check("メダルの絵に赤いリボン（ツノ）がない", "#E5484D" not in pg.inner_html(".rp-list"))
     C(pg, ".rp-x"); C(pg, "[data-act=open-rules][data-v=nassau]")
     t = pg.inner_text(".rp")
     check("ナッソーのルールに言葉の解説（前半・後半・トータル・pt）", pg.query_selector(".rp .rp-words") is not None and all(w in t for w in ["前半", "後半", "トータル", "ポイント（点）"]))
