@@ -1329,6 +1329,34 @@ input,select,textarea{font-size:max(16px,1em)}
 .sr-row2 b.w{color:var(--q-birdie)}
 .rc-game .rs-row{grid-template-columns:72px 1fr auto}
 .rc-game .rs-row b{font-size:18px;white-space:nowrap}
+/* 新ペリア・オリンピック */
+.pe-hid{display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:11px;margin:2px 0 4px}
+.pe-hid span{opacity:.75;margin-right:2px}
+.pe-hid i{font-style:normal;width:22px;height:22px;border-radius:50%;background:#FFD76A;color:#3A2600;font:700 13px var(--f-num);display:flex;align-items:center;justify-content:center;animation:peIn .45s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes peIn{from{transform:scale(0) rotate(-90deg);opacity:0}to{transform:none;opacity:1}}
+.result-back.still .pe-hid i{animation:none}
+.pe-row{display:grid;grid-template-columns:1fr 42px 52px 52px;align-items:center;gap:4px;font:600 14px var(--f-num);padding:2px 0}
+.pe-row span:not(.rs-n){text-align:right;opacity:.85}
+.pe-row b{font:700 19px var(--f-num);text-align:right}
+.pe-row.top b{color:#FFD76A}
+.pe-head span{font:700 9px var(--f-body)!important;letter-spacing:.06em;opacity:.6!important}
+.rc-sc table td.hh{color:#3A2600;background:#FFD76A;border-radius:6px;font-weight:700}
+.medal{display:inline-block;vertical-align:-3px;flex:0 0 auto}
+.md-c{display:inline-flex;align-items:center;gap:1px;font:700 11px var(--f-num);margin-right:4px}
+.medal-btn{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px;border-radius:999px;border:0;background:rgba(255,255,255,.9);color:#0B1310;font:inherit;font-size:11px;font-weight:700;margin-left:6px;cursor:pointer;touch-action:manipulation}
+.medal-btn.sm{background:var(--rec-bg);border:1px solid var(--rec-line);color:var(--rec-fg);margin:0 8px 0 0;height:26px}
+.medal-sheet .md-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--rec-line)}
+.medal-sheet .md-n{flex:0 0 64px;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.medal-sheet .md-chips{flex:1;display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.medal-sheet .md-chips button{height:52px!important;margin:0!important;padding:2px 0!important;border-radius:12px;border:1px solid var(--rec-line);background:var(--rec-bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;opacity:.55}
+.medal-sheet .md-chips button small{font-size:9px;font-weight:700;color:var(--rec-muted)}
+.medal-sheet .md-chips button[aria-pressed="true"]{opacity:1;border:2px solid #0E9F62;background:color-mix(in srgb,#0E9F62 10%,var(--rec-bg))}
+.medal-sheet>p small{margin-left:8px;font-size:11px;font-weight:500;color:var(--rec-muted)}
+.sr-row4{display:grid;grid-template-columns:1fr 36px 44px 40px 40px;gap:4px;font-size:12px;align-items:center;text-align:right}
+.sr-row4 span:first-child{text-align:left}
+.sr-row4.h span{font-size:10px;color:var(--rec-muted);font-weight:700}
+.sr-row4 b{font:700 15px var(--f-num);color:var(--q-birdie)}
+.cd-lbl{flex-wrap:nowrap}
 </style>
 
 </head>
@@ -1426,7 +1454,7 @@ const state = {
   // スコアカード入力（紙と同じ表に最大4人分）の下書き。1ホールずつの下書きとは別に持つ
   cdraft: (d=>d && Array.isArray(d.holes) && d.holes.length && Array.isArray(d.players) && d.players.length && d.players.every(p=>p && Array.isArray(p.s) && Array.isArray(p.p) && p.s.length===d.holes.length) ? d : null)(LS.get("sc.cdraft", null)),
   im: LS.get("sc.inputMode","hole")==="card" ? "card" : "hole",
-  game: (g=>["skins","match","nassau","vegas","stable"].includes(g) ? g : "")(LS.get("sc.game","")),
+  game: (g=>["skins","match","nassau","vegas","stable","peoria","olympic"].includes(g) ? g : "")(LS.get("sc.game","")),
   skinCarry: LS.get("sc.skinCarry", false)===true, // 同点のコインを次のホールへ持ち越すか（ルールのポップアップで選ぶ。初期はしない）
   hole: 0, // 下書きがあれば下で復元
   fPlayer: LS.get("sc.fPlayer", LS.get("sc.player","") || "all"), fCourse:"all", fRange:"all",
@@ -1437,7 +1465,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-21-0930";
+const BUILD = "2026-10-21-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1705,7 +1733,7 @@ function groupCard(g){
   const rank=k=>1+tots.filter(t=>t.score<tots[k].score).length;
   const tables=[]; for(let i=0;i<N;i+=9){ const idx=Array.from({length:Math.min(9,N-i)},(_,j)=>i+j), lab=N>9?(i?"IN":"OUT"):"";
     tables.push(`<table class="half grp"><colgroup><col class="lab">${idx.map(()=>"<col>").join("")}<col class="sum"></colgroup>
-      <tr class="h"><td class="lab">${lab}</td>${idx.map(h=>`<td>${h+1}</td>`).join("")}<td class="sum">計</td></tr>
+      <tr class="h"><td class="lab">${lab}</td>${idx.map(h=>`<td class="${state.resultGame==="peoria"&&state.resultEx&&(state.resultEx.hidden||[]).includes(h)?"hh":""}">${h+1}</td>`).join("")}<td class="sum">計</td></tr>
       <tr class="p"><td class="lab">PAR</td>${idx.map(h=>`<td>${r0.holes[h].par}</td>`).join("")}<td class="sum">${sum(idx,h=>r0.holes[h].par)}</td></tr>
       ${order.map(k=>`<tr><td class="lab nm">${esc(dupLabel(nm,k))}</td>${idx.map(h=>`<td>${mark(g[k].holes[h])}</td>`).join("")}<td class="sum"><b>${sum(idx,h=>g[k].holes[h].strokes)}</b></td></tr>`).join("")}</table>`); }
   return `<div class="result-card grp-card"><svg class="rc-rings" viewBox="0 0 320 280" aria-hidden="true">${Array.from({length:10},(_,k)=>`<ellipse cx="160" cy="140" rx="${16+k*16}" ry="${14+k*14}" fill="none" stroke="rgba(255,255,255,.13)" stroke-width="1"/>`).join("")}</svg><div class="rc-in">
@@ -1713,7 +1741,7 @@ function groupCard(g){
     <div class="rc-rank">${order.map(k=>`<div class="${rank(k)===1?"win":""}"><i>${rank(k)}</i><span>${esc(dupLabel(nm,k))}</span><b>${tots[k].score}</b><small>${toPar(tots[k].diff)}</small></div>`).join("")}</div>
     ${state.resultGame==="skins"?(()=>{ const sk=skinsCalc(g.map(r=>r.holes.map(h=>h.strokes)), N, !!state.resultCarry), mx=Math.max(...sk.won);
       return `<div class="rc-skins"><div class="rs-h"><span>SKINS</span>スキンズ${sk.carry?`<em>持ち越し${sk.carry}枚は決着なし</em>`:""}</div>${order.map(k=>`<div class="rs-row ${mx>0&&sk.won[k]===mx?"top":""}"><span class="rs-n">${esc(dupLabel(nm,k))}</span><span class="rs-c">${Array.from({length:Math.min(sk.won[k],9)},()=>coinSVG(16)).join("")}${sk.won[k]>9?"…":""}</span><b>${sk.won[k]}</b></div>`).join("")}</div>`; })():""}
-    ${state.resultGame && state.resultGame!=="skins" ? gameResult(state.resultGame, g.map(r=>r.holes.map(h=>h.strokes)), r0.holes.map(h=>h.par), N, g.map((x,k)=>esc(dupLabel(nm,k))), order) : ""}
+    ${state.resultGame && state.resultGame!=="skins" ? gameResult(state.resultGame, g.map(r=>r.holes.map(h=>h.strokes)), r0.holes.map(h=>h.par), N, g.map((x,k)=>esc(dupLabel(nm,k))), order, state.resultEx||{}) : ""}
     <div class="rc-sc">${tables.join("")}</div>
     <div class="rc-brand"><span class="rc-logo"><img src="mark.png" alt=""><span><b>GOLF SC.</b><small>SHORT COURSE SCORECARD</small></span></span></div>
   </div></div>`;
@@ -2000,7 +2028,7 @@ function viewRecordDraft(d){
     <div class="hole-card hc2 ${slide} ${celebrate?"flash":""}">${confetti}
       <div class="hc-l"><span class="lbl">HOLE</span><div class="hno">${state.hole+1}<small>/${N}</small></div></div>
       <div class="hc-m"><div class="par"><span>PAR</span>${h.par}</div>${d.gn && h.ys && h.ys[0] && h.ys[1] ? `<div class="gsw" role="group" aria-label="グリーン">${d.gn.map((n,i)=>`<button data-act="set-g" data-g="${i}" aria-pressed="${(h.gi||0)===i}">${esc(n)}</button>`).join("")}</div><div class="yd">${h.yards} YDS</div>` : h.yards?`<div class="yd">${h.yards} YDS</div>`:""}
-        <div class="badges"><span class="badge ${hio?"hio":"b-"+TONE(diff)} ${/^s[vt]/.test(state.tap||"")?"pop":""}"><i></i>${hio?"HOLE IN ONE":TERM(diff)}</span>${bestPace&&fields().pace?`<span class="pace2">BEST PACE</span>`:""}${d.game==="skins"&&d.carry?(()=>{ const sk=skinsCalc([d.holes.map(x=>x.strokes), ...(d.mates||[]).map(m=>m.s)], state.hole, true); return `<span class="pot" title="このホールのコイン">${coinSVG(13)}×${sk.pot}</span>`; })():""}</div></div>
+        <div class="badges"><span class="badge ${hio?"hio":"b-"+TONE(diff)} ${/^s[vt]/.test(state.tap||"")?"pop":""}"><i></i>${hio?"HOLE IN ONE":TERM(diff)}</span>${bestPace&&fields().pace?`<span class="pace2">BEST PACE</span>`:""}${d.game==="olympic"?`<button class="medal-btn" data-act="medal-open">${medalSVG(4,14)}メダル</button>`:""}${d.game==="skins"&&d.carry?(()=>{ const sk=skinsCalc([d.holes.map(x=>x.strokes), ...(d.mates||[]).map(m=>m.s)], state.hole, true); return `<span class="pot" title="このホールのコイン">${coinSVG(13)}×${sk.pot}</span>`; })():""}</div></div>
       <div class="live"><div><span>TOTAL</span><b>${totLabel}</b></div>${F.putts?`<div><span>PUTTS</span><b>${done.length?tot.putts:"—"}</b></div>`:""}</div>
       ${advice?`<div class="advice">${advice}</div>`:""}
     </div>
@@ -2030,6 +2058,7 @@ function viewRecordDraft(d){
     </div>
     ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p><button data-act="pause">中断してホームへ（あとで続きから）</button><button class="danger" data-act="discard">${d.editing?"編集をやめる（変更は保存されません）":"記録を破棄する"}</button><button data-act="cancel-confirm">入力に戻る</button></div></div>`:""}
     ${state.sheet==="fields"?fieldsSheet():""}
+    ${state.sheet==="medal"?medalSheet([d.player,...(d.mates||[]).map(m=>m.name)].map((n,i,a)=>dupLabel(a,i)), d.medals, state.medalHole):""}
     ${state.sheet==="mate" && (d.mates||[])[state.mateI] ? (()=>{ const nm=[d.player,...d.mates.map(m=>m.name)], k=state.mateI, cur=d.mates[k].s[state.hole];
       return `<div class="sheet-back" data-act="mt-close"><div class="sheet mate-sheet" data-stop="1"><p>${state.hole+1}H（PAR ${h.par}）同伴者の打数<small>数字を押すと次の人へ</small></p>
         <div class="ms-who">${d.mates.map((m,j)=>`<button data-act="mt-open" data-i="${j}" aria-pressed="${j===k}"><span>${esc(dupLabel(nm,j+1))}</span><b class="mk3 m-${m.s[state.hole]===1?"hio":TONE(m.s[state.hole]-h.par)}">${m.s[state.hole]}</b></button>`).join("")}</div>
@@ -2087,7 +2116,7 @@ async function cardFinish(b){
   try{ for(const r of rs) await store.saveRound(r); }
   catch(e){ if(b) b.disabled=false; writeErr(e); return; }
   state.cdraft=null; saveCDraft(); state.confirm=null; state.tab="history"; LS.set("sc.tab","history");
-  state.fPlayer=rs[0].player; LS.set("sc.fPlayer",rs[0].player); state.openRound=rs[0].id; state.result=rs[0]; state.resultGroup=rs.length>1?rs:null; state.resultAll=rs.length>1; state.resultGame=rs.length>1?cd.game:null; state.resultCarry=!!cd.carry; render();
+  state.fPlayer=rs[0].player; LS.set("sc.fPlayer",rs[0].player); state.openRound=rs[0].id; state.result=rs[0]; state.resultGroup=rs.length>1?rs:null; state.resultAll=rs.length>1; state.resultGame=rs.length>1?cd.game:null; state.resultCarry=!!cd.carry; state.resultEx={medals:cd.medals||{}, hidden:cd.game==="peoria"?peoriaHidden(cd.holes.length):null}; render();
 }
 function viewCard(cd){
   const N=cd.holes.length, two=N>9, half=two?(cd.half||0):0, pOn=fields().putts, sel=cd.sel;
@@ -2104,7 +2133,7 @@ function viewCard(cd){
   const foot=(lab,idx,cls="")=>`<tr class="${cls}"><td colspan="2" class="ft">${lab}<small>${idx.reduce((a,h)=>a+cd.holes[h].par,0)}</small></td>${cd.players.map((p,i)=>{ const t=subt(i,idx);
     return `<td class="c-s">${t.s}<small>${t.d}</small></td>${pOn?`<td class="c-p">${t.p??""}</td>`:""}`; }).join("")}</tr>`;
   const nDone = (()=>{ let i=0; while(i<N && cd.players.every(p=>p.s[i]!=null)) i++; return i; })();
-  const gtc = cd.game && cd.game!=="skins" ? gameTags(cd.game, cd.players.map(p=>p.s), cd.holes.map(x=>x.par), nDone, N) : null;
+  const gtc = cd.game && cd.game!=="skins" && cd.game!=="peoria" ? gameTags(cd.game, cd.players.map(p=>p.s), cd.holes.map(x=>x.par), nDone, N, {medals:cd.medals, hole:-1}) : null;
   const gameRow = gtc ? `<tr class="skr gr"><td colspan="2" class="ft">${esc(GAMES[cd.game].name.slice(0,4))}</td>${gtc.map(t=>`<td class="c-s" ${pOn?'colspan="2"':""}>${t}</td>`).join("")}</tr>` : "";
   const skinRow = skc ? `<tr class="skr"><td colspan="2" class="ft">${coinSVG(14)}${cd.carry?`<small>次${skc.pot}枚</small>`:""}</td>${cd.players.map((p,i)=>`<td class="c-s" ${pOn?'colspan="2"':""}>${skc.won[i]}</td>`).join("")}</tr>` : "";
   const done=cd.players.every(p=>p.s.every(x=>x!=null)); // 打数が全部入ったら保存ボタンを出す（パットの抜けは押したときに案内）
@@ -2124,10 +2153,11 @@ function viewCard(cd){
       <tbody>${rows.map(h=>`<tr><td class="hn">${h+1}</td><td class="pr">${cd.holes[h].par}</td>${cd.players.map((p,i)=>cell(h,i,"s")+(pOn?cell(h,i,"p"):"")).join("")}</tr>`).join("")}</tbody>
       <tfoot>${two?foot(half?"IN":"OUT",rows)+foot("計",all,"all"):foot("計",all)}${skinRow}${gameRow}</tfoot></table></div>
     <div class="cd-pad">
-      <div class="cd-lbl">${sel?`<span><b>${esc(dupLabel(cd.players.map(x=>x.name),sel.i))}</b>・${sel.h+1}H（PAR ${cd.holes[sel.h].par}）の<em>${ks==="s"?"打数":"パット"}</em></span>`:`<span>${done?"全部入りました。保存しましょう":"マスをタップして入力"}</span>`}</div>
+      <div class="cd-lbl">${cd.game==="olympic"?`<button class="medal-btn sm" data-act="medal-open" data-h="${sel?sel.h:Math.min(nDone,N-1)}">${medalSVG(4,13)}${(sel?sel.h:Math.min(nDone,N-1))+1}Hのメダル</button>`:""}${sel?`<span><b>${esc(dupLabel(cd.players.map(x=>x.name),sel.i))}</b>・${sel.h+1}H（PAR ${cd.holes[sel.h].par}）の<em>${ks==="s"?"打数":"パット"}</em></span>`:`<span>${done?"全部入りました。保存しましょう":"マスをタップして入力"}</span>`}</div>
       ${sel||!done?`<div class="cd-keys">${[1,2,3,4,5,6,7,8,9].map(n=>key(n,String(n),!sel || (ks==="p" && n>9))).join("")}${key("10","10+",!sel||ks==="p")}${key("0","0",!sel||ks==="s")}${key("del","消す",!sel)}</div>`:""}
       ${done?`<button class="cd-save" data-act="cd-finish">ラウンドを保存${cd.players.length>1?`（${cd.players.length}人分）`:""}</button>`:""}
     </div>
+    ${state.sheet==="medal"?medalSheet(cd.players.map((p,i,a)=>dupLabel(a.map(x=>x.name),i)), cd.medals, state.medalHole):""}
     ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p><button data-act="cd-pause">中断してホームへ（あとで続きから）</button><button class="danger" data-act="cd-discard">記録を破棄する</button><button data-act="cancel-confirm">入力に戻る</button></div></div>`:""}
   </div>`;
 }
@@ -2140,7 +2170,7 @@ function playerCols(d, h, F){
   const mk=v=>`<b class="mk3 m-${v===1?"hio":TONE(v-h.par)}">${v}</b>`;
   const sk = d.game==="skins" ? skinsCalc([d.holes.map(x=>x.strokes), ...d.mates.map(m=>m.s)], state.hole, !!d.carry) : null; // このホールの前までのコイン
   const tpRaw=sc=>{ let s=0,p=0; for(let i=0;i<=upto;i++){ s+=sc(i); p+=d.holes[i].par; } const x=s-p; return `<span class="tp ${x<0?"u":x>0?"o":""}">${toPar(x)}</span>`; };
-  const gt = d.game && d.game!=="skins" ? gameTags(d.game, [d.holes.map(x=>x.strokes), ...d.mates.map(m=>m.s)], d.holes.map(x=>x.par), state.hole, d.holes.length) : null;
+  const gt = d.game && d.game!=="skins" ? gameTags(d.game, [d.holes.map(x=>x.strokes), ...d.mates.map(m=>m.s)], d.holes.map(x=>x.par), state.hole, d.holes.length, {medals:d.medals, hole:state.hole}) : null;
   let col=0; const tp=sc=>{ const k=col++; return `<span class="ph-l">${tpRaw(sc)}${sk?`<span class="skc ${sk.won[k]?"":"z"}">${coinSVG(12)}${sk.won[k]}</span>`:""}${gt?gt[k]:""}</span>`; };
   const step=(up,dn,label)=>`<div class="pstep"><button ${up} aria-label="${label}を1つ増やす">${ICON.up}</button><button ${dn} aria-label="${label}を1つ減らす">${ICON.down}</button></div>`;
   const cell=(lab,val,up,dn,aria)=>`<div class="pcell">${lab?`<em>${lab}</em>`:""}<div class="pv">${val}</div>${step(up,dn,aria)}</div>`;
@@ -2596,8 +2626,10 @@ const GAMES = {
   nassau: { name:"ナッソー", eng:"NASSAU", n:"2〜4人", min:2, max:4, desc:"前半・後半・トータルの3つで勝負" },
   vegas:  { name:"ラスベガス", eng:"LAS VEGAS", n:"4人のみ", min:4, max:4, desc:"2対2のチームで点数を取り合います" },
   stable: { name:"ステーブルフォード", eng:"STABLEFORD", n:"2〜4人", min:2, max:4, desc:"スコアに応じたポイントを集めます" },
+  peoria: { name:"新ペリア", eng:"NEW PERIA", n:"2〜4人", min:2, max:4, desc:"隠しホールでハンデを決める。誰でも優勝できる" },
+  olympic:{ name:"オリンピック", eng:"OLYMPIC", n:"2〜4人", min:2, max:4, desc:"パットで金銀銅鉄ダイヤのメダルを集めます" },
 };
-const GAME_KEYS = ["skins","match","nassau","vegas","stable"];
+const GAME_KEYS = ["skins","match","nassau","vegas","stable","peoria","olympic"];
 const gameFits = (k, n) => !k || (GAMES[k] && n>=GAMES[k].min && n<=GAMES[k].max);
 const coinSVG = (sz=14, cls="") => `<svg class="coin ${cls}" viewBox="0 0 24 24" width="${sz}" height="${sz}" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#E9A517"/><circle cx="12" cy="12" r="9" fill="#FFCF3F"/><circle cx="12" cy="12" r="7.2" fill="none" stroke="#E9A517" stroke-width="1.2"/><path d="M12 7.2l1.4 2.9 3.2.4-2.3 2.2.6 3.2L12 14.4l-2.9 1.5.6-3.2-2.3-2.2 3.2-.4z" fill="#E9A517"/></svg>`;
 /* ゲームのイラスト（小さなSVG。紺と金） */
@@ -2607,6 +2639,8 @@ const GAME_ILL = {
   nassau: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${[[4,"前"],[20,"後"],[36,"計"]].map(([x,t],i)=>`<rect x="${x}" y="${i===2?6:12}" width="16" height="${i===2?30:24}" rx="4" fill="${i===2?"#F2B01E":"#1F3A68"}"/><text x="${x+8}" y="${i===2?26:29}" text-anchor="middle" font-size="9" font-weight="900" fill="#fff">${t}</text>`).join("")}</svg></span>`,
   vegas: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><rect x="8" y="6" width="22" height="32" rx="4" fill="#1F3A68" transform="rotate(-10 19 22)"/><rect x="26" y="6" width="22" height="32" rx="4" fill="#F2B01E" transform="rotate(8 37 22)"/><text x="19" y="27" text-anchor="middle" font-size="11" font-weight="900" fill="#fff" transform="rotate(-10 19 22)">A</text><text x="37" y="27" text-anchor="middle" font-size="11" font-weight="900" fill="#fff" transform="rotate(8 37 22)">B</text></svg></span>`,
   stable: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><rect x="8" y="28" width="9" height="10" rx="2" fill="#F2B01E"/><rect x="20" y="20" width="9" height="18" rx="2" fill="#F2B01E"/><rect x="32" y="12" width="9" height="26" rx="2" fill="#F2B01E"/><path d="M6 22 L22 12 L30 15 L46 5" fill="none" stroke="#1F3A68" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M40 4 L47 4 L46 11" fill="none" stroke="#1F3A68" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`,
+  peoria: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${[[10,22,"#1F3A68"],[28,14,"#F2B01E"],[46,22,"#1F3A68"]].map(([x,y,c])=>`<circle cx="${x}" cy="${y}" r="8.5" fill="${c}"/><text x="${x}" y="${y+4}" text-anchor="middle" font-size="11" font-weight="900" fill="#fff">?</text>`).join("")}<path d="M6 38h44" stroke="#1F3A68" stroke-width="3" stroke-linecap="round"/></svg></span>`,
+  olympic: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${medalSVG(5,0,0,true)}<g transform="translate(2 14)">${medalSVG(4,0,0,true)}</g><g transform="translate(19 14)">${medalSVG(3,0,0,true)}</g><g transform="translate(36 14)">${medalSVG(2,0,0,true)}</g></svg></span>`,
 };
 /* スキンズ: 各ホールにコイン1枚。一番少ない打数が1人だけならその人が（持ち越し分も合わせて）獲得、同点なら次のホールへ持ち越し */
 function skinsCalc(rows, n, carryOn=true){
@@ -2647,8 +2681,23 @@ function vegasCalc(rows, n){
 /* ステーブルフォード: パー2点・ボギー1点・ダボ以上0点・バーディ3点・イーグル4点・アルバトロス5点 */
 const stablePts = (s,par) => Math.max(0, 2-(s-par));
 function stableCalc(rows, pars, n){ return { pts: rows.map(r=>{ let x=0; for(let i=0;i<n;i++){ if(r[i]==null) break; x+=stablePts(r[i],pars[i]); } return x; }) }; }
+/* オリンピック: パットのメダル。1鉄 2銅 3銀 4金 5ダイヤ（点数は同じ数） */
+const MEDALS=[null,{n:"鉄",c:"#7A8594",d:"#4B5563"},{n:"銅",c:"#D08A4C",d:"#8A4B1E"},{n:"銀",c:"#C9D1DA",d:"#7B8794"},{n:"金",c:"#F5C23A",d:"#B07A00"},{n:"ダイヤ",c:"#7FDBFF",d:"#1C7FB0"}];
+function medalSVG(v, sz=16, _=0, raw=false){ const m=MEDALS[v]; if(!m) return "";
+  const g = v===5 ? `<path d="M9 2h18l7 8-16 20L2 10z" fill="${m.c}" stroke="${m.d}" stroke-width="1.6" stroke-linejoin="round"/><path d="M2 10h32M12 2l6 28 6-28" fill="none" stroke="${m.d}" stroke-width="1" opacity=".7"/>`
+    : `<path d="M11 0l-4 12h8zM25 0l4 12h-8z" fill="#E5484D"/><circle cx="18" cy="19" r="11" fill="${m.c}" stroke="${m.d}" stroke-width="1.8"/><circle cx="18" cy="19" r="7" fill="none" stroke="${m.d}" stroke-width="1" opacity=".6"/>`;
+  return raw ? `<svg x="0" y="0" width="22" height="22" viewBox="0 0 36 32">${g}</svg>` : `<svg class="medal" viewBox="0 0 36 32" width="${sz}" height="${sz}" aria-hidden="true">${g}</svg>`; }
+function olympicCalc(medals, P){ const pts=Array(P).fill(0), cnt=Array.from({length:P},()=>[0,0,0,0,0,0]);
+  Object.values(medals||{}).forEach(arr=>(arr||[]).forEach((v,i)=>{ if(v>0 && i<P){ pts[i]+=v; cnt[i][v]++; } })); return {pts, cnt}; }
+/* 新ペリア: 隠しホール（9Hは6つ・18Hは12）をラウンド後にくじで選び、ハンデ＝(隠しホールの合計×(全ホール数÷隠しホール数) − パー)×0.8。ネット＝合計−ハンデ */
+function peoriaHidden(N){ const k = N>=18 ? 12 : Math.max(1, Math.round(N*2/3)); const a=[...Array(N).keys()];
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a.slice(0,k).sort((x,y)=>x-y); }
+function peoriaCalc(rows, pars, hidden){ const N=pars.length, par=pars.reduce((a,b)=>a+b,0), mul=N/hidden.length;
+  return rows.map(r=>{ const gross=r.reduce((a,b)=>a+(b||0),0), hs=hidden.reduce((a,i)=>a+(r[i]||0),0), hc=Math.round(Math.max(0,(hs*mul-par)*0.8)*10)/10;
+    return {gross, hs, hc, net:Math.round((gross-hc)*10)/10}; }); }
 /* 記録中に名前の下へ出す小さな表示（スキンズは別で、コインの数） */
-function gameTags(game, rows, pars, n, N){
+function gameTags(game, rows, pars, n, N, ex={}){
+  if(game==="olympic"){ const x=olympicCalc(ex.medals, rows.length), cur=(ex.medals||{})[ex.hole]||[]; return x.pts.map((p,i)=>`<span class="gtag ${p?"":"z"}">${cur[i]?medalSVG(cur[i],12):""}${p}pt</span>`); }
   if(game==="match" && rows.length===2){ const m=matchCalc(rows,n,N); return [0,1].map(k=>{ const t=m.st(k); return `<span class="gtag ${t.endsWith("UP")?"up":t.endsWith("DN")?"dn":""}">${t}</span>`; }); }
   if(game==="nassau"){ const x=nassauCalc(rows,n,N); return x.pts.map(p=>`<span class="gtag ${p?"":"z"}">${p}pt</span>`); }
   if(game==="vegas" && rows.length===4){ const x=vegasCalc(rows,n); return [0,0,1,1].map(t=>`<span class="gtag t${t}">${"AB"[t]} ${x.pts[t]}</span>`); }
@@ -2656,7 +2705,7 @@ function gameTags(game, rows, pars, n, N){
   return null;
 }
 /* みんなのリザルトに出すゲームの結果（スキンズは別） */
-function gameResult(game, rows, pars, N, names, order){
+function gameResult(game, rows, pars, N, names, order, ex={}){
   const box=(body,note="")=>`<div class="rc-skins rc-game"><div class="rs-h"><span>${GAMES[game].eng}</span>${GAMES[game].name}${note?`<em>${note}</em>`:""}</div>${body}</div>`;
   const line=(n,v,top,extra="")=>`<div class="rs-row ${top?"top":""}"><span class="rs-n">${n}</span><span class="rs-c">${extra}</span><b>${v}</b></div>`;
   if(game==="match" && rows.length===2){ const m=matchCalc(rows,N,N);
@@ -2667,6 +2716,13 @@ function gameResult(game, rows, pars, N, names, order){
       + order.map(k=>line(names[k], `${x.pts[k]}pt`, mx>0&&x.pts[k]===mx)).join("")); }
   if(game==="vegas" && rows.length===4){ const x=vegasCalc(rows,N), w=x.pts[0]===x.pts[1]?-1:x.pts[0]>x.pts[1]?0:1;
     return box([0,1].map(t=>line(`チーム${"AB"[t]}`, `${x.pts[t]}点`, w===t, `<small class="rs-sub">${names[t*2]}・${names[t*2+1]}</small>`)).join("")+`<div class="rs-sum">${w<0?"引き分け":`チーム${"AB"[w]} の勝ち`}</div>`); }
+  if(game==="peoria" && ex.hidden){ const x=peoriaCalc(rows,pars,ex.hidden), ord=[...order].sort((a,b)=>x[a].net-x[b].net || x[a].gross-x[b].gross), best=x[ord[0]].net;
+    return box(`<div class="pe-hid"><span>隠しホール</span>${ex.hidden.map((h,i)=>`<i style="animation-delay:${(i*0.18).toFixed(2)}s">${h+1}</i>`).join("")}</div>
+      <div class="pe-row pe-head"><span></span><span>合計</span><span>ハンデ</span><span>ネット</span></div>`
+      + ord.map(k=>`<div class="pe-row ${x[k].net===best?"top":""}"><span class="rs-n">${names[k]}</span><span>${x[k].gross}</span><span>−${x[k].hc.toFixed(1)}</span><b>${x[k].net.toFixed(1)}</b></div>`).join("")
+      + `<div class="rs-sum">ネット ${best.toFixed(1)} の ${ord.filter(k=>x[k].net===best).map(k=>names[k]).join("・")} が優勝</div>`); }
+  if(game==="olympic"){ const x=olympicCalc(ex.medals, rows.length), mx=Math.max(...x.pts);
+    return box([...order].sort((a,b)=>x.pts[b]-x.pts[a]).map(k=>line(names[k], `${x.pts[k]}pt`, mx>0&&x.pts[k]===mx, [5,4,3,2,1].filter(v=>x.cnt[k][v]).map(v=>`<span class="md-c">${medalSVG(v,15)}${x.cnt[k][v]>1?`×${x.cnt[k][v]}`:""}</span>`).join(""))).join("")); }
   if(game==="stable"){ const x=stableCalc(rows,pars,N), mx=Math.max(...x.pts);
     return box([...order].sort((a,b)=>x.pts[b]-x.pts[a]).map(k=>line(names[k], `${x.pts[k]}pt`, x.pts[k]===mx)).join("")); }
   return "";
@@ -2681,6 +2737,13 @@ function gameSheet(){
     ${card("","なし","","スコアだけを記録します",`<span class="gm-ill none">—</span>`)}
     ${GAME_KEYS.map(k=>card(k,GAMES[k].name,GAMES[k].n,GAMES[k].desc,GAME_ILL[k]())).join("")}
     <button class="gm-ok" data-act="close-game">決定</button></div></div>${state.rulesOpen?rulesPop(state.rulesOpen):""}`;
+}
+/* オリンピックのメダル入力（ホールごと。1つのメダルは1人だけ。もう一度押すと外れる） */
+function medalSheet(names, medals, h){
+  const cur=(medals||{})[h]||[];
+  return `<div class="sheet-back" data-act="medal-close"><div class="sheet medal-sheet" data-stop="1"><p>${h+1}H のメダル<small>カップインした人に付けます</small></p>
+    ${names.map((n,i)=>`<div class="md-row"><span class="md-n">${esc(n)}</span><div class="md-chips">${[5,4,3,2,1].map(v=>`<button data-act="medal-set" data-i="${i}" data-v="${v}" aria-pressed="${cur[i]===v}" aria-label="${MEDALS[v].n}">${medalSVG(v,22)}<small>${MEDALS[v].n}</small></button>`).join("")}</div></div>`).join("")}
+    <button class="gm-ok" data-act="medal-close">OK</button></div></div>`;
 }
 /* ルールのポップアップ（× で戻る）。スキンズだけ、同点のときの持ち越しもここで選ぶ */
 function rulesPop(k){
@@ -2705,6 +2768,12 @@ function rulesPop(k){
   if(k==="stable"){
     list=`<li>スコアに応じてホールごとに<b>ポイント</b>がもらえます</li><li><b>パー 2点</b>・ボギー 1点・ダボ以上 0点・バーディ 3点・イーグル 4点</li><li>最後に<b>ポイントが一番多い人の勝ち</b>（大たたきしても0点で済むので、最後まであきらめずに楽しめます）</li>`;
     ex=row("1H",3,5,"たろう 2点・はなこ 0点")+row("2H",2,3,"たろう 3点・はなこ 2点")+row("3H",4,3,"たろう 1点・はなこ 2点")+`<div class="sr-sum">たろう 6点　はなこ 4点　→ <b>たろうの勝ち</b>（パー3）</div>`; }
+  if(k==="peoria"){
+    list=`<li>ふつうに回って記録します（入力は今までと同じ）</li><li>保存したあとで、9ホールのうち<b>6ホールをくじで「隠しホール」</b>に選びます（18ホールは12）</li><li><b>ハンデ＝（隠しホールの合計×1.5 − パー）×0.8</b>。合計からハンデを引いた<b>ネットが一番少ない人が優勝</b>。大たたきしたホールが隠しホールに入るとハンデが増えるので、誰にでも優勝のチャンスがあります</li>`;
+    ex=`<div class="sr-row4 h"><span></span><span>合計</span><span>隠し6H</span><span>ハンデ</span><span>ネット</span></div><div class="sr-row4"><span>たろう</span><span>28</span><span>19</span><span>1.2</span><b>26.8</b></div><div class="sr-row4"><span>はなこ</span><span>36</span><span>25</span><span>8.4</span><b>27.6</b></div><div class="sr-sum">パー27のコース → <b>たろうの優勝</b>（隠しホールしだいで逆転も）</div>`; }
+  if(k==="olympic"){
+    list=`<li>グリーンの上で、<b>ピンから遠い人から順にカップイン</b>した順にメダルがもらえます</li><li>${medalSVG(4,14)}金 4点・${medalSVG(3,14)}銀 3点・${medalSVG(2,14)}銅 2点・${medalSVG(1,14)}鉄 1点。<b>グリーンの外から直接入れたら</b>${medalSVG(5,14)}<b>ダイヤ 5点</b></li><li>毎ホール、ホールカードの「メダル」から誰が取ったかを入れます。最後に<b>点数が一番多い人の勝ち</b></li>`;
+    ex=`<div class="sr-row2"><span>はなこ</span><span>一番遠くから先に入れた</span><b>${medalSVG(4,18)}</b></div><div class="sr-row2"><span>たろう</span><span>2番目に入れた</span><b>${medalSVG(3,18)}</b></div><div class="sr-sum">このホール　はなこ 4点・たろう 3点</div>`; }
   return `<div class="rp-back" data-act="close-rules"><div class="rp" data-stop="1" role="dialog" aria-label="${G.name}のルール">
     <div class="rp-head"><span class="rp-ill">${GAME_ILL[k]()}</span><b>${G.name}のルール<small>${G.n}</small></b><button class="rp-x" data-act="close-rules" aria-label="閉じる">${ICON.x}</button></div>
     <ol class="rp-list">${list}</ol>${opt}
@@ -2803,7 +2872,7 @@ document.addEventListener("click", async ev => {
       const mr=(!d.editing && Array.isArray(d.mates)) ? d.mates.map((m,k)=>({ id:uid(), card:true, player:m.name, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:r.createdAt+k+1,
         holes:d.holes.map((x,i)=>({par:x.par, strokes:m.s[i], putts:0, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null})) })) : [];
       try{ await store.saveRound(r); for(const x of mr) await store.saveRound(x);
-        state.draft=null; saveDraft(); state.tab="history"; LS.set("sc.tab","history"); state.fPlayer=r.player; state.openRound=r.id; state.result=r; state.resultGroup=mr.length?[r,...mr]:null; state.resultAll=mr.length>0; state.resultGame=mr.length?d.game:null; state.resultCarry=!!d.carry; render(); }
+        state.draft=null; saveDraft(); state.tab="history"; LS.set("sc.tab","history"); state.fPlayer=r.player; state.openRound=r.id; state.result=r; state.resultGroup=mr.length?[r,...mr]:null; state.resultAll=mr.length>0; state.resultGame=mr.length?d.game:null; state.resultCarry=!!d.carry; state.resultEx={medals:d.medals||{}, hidden:d.game==="peoria"?peoriaHidden(d.holes.length):null}; render(); }
       catch(e){ b.disabled=false; writeErr(e); }
       break;
     }
@@ -2812,6 +2881,12 @@ document.addEventListener("click", async ev => {
     case "pick-game": { const k=b.dataset.v, cnt=1+(state.mates||[]).filter(x=>String(x||"").trim()).length;
       if(!gameFits(k,cnt)){ toast(`${GAMES[k].name}は${GAMES[k].n.replace("のみ","")}で遊ぶゲームです`); break; }
       state.game=k; LS.set("sc.game",state.game); render(); break; }
+    case "medal-open": state.medalHole = b.dataset.h!=null ? +b.dataset.h : state.hole; state.sheet="medal"; render(); break;
+    case "medal-close": state.sheet=null; render(); break;
+    case "medal-set": { const ctx = (state.cdraft && !state.cdraft.paused) ? state.cdraft : state.draft; if(!ctx) break;
+      const hh=state.medalHole, i=+b.dataset.i, v=+b.dataset.v; ctx.medals=ctx.medals||{}; const P=ctx.players?ctx.players.length:1+(ctx.mates||[]).length;
+      const arr=(ctx.medals[hh]||Array(P).fill(0)).slice(); const on=arr[i]===v; arr.forEach((x,k)=>{ if(x===v) arr[k]=0; }); arr[i]=on?0:v; ctx.medals[hh]=arr;
+      if(ctx===state.cdraft) saveCDraft(); else saveDraft(); render(); break; }
     case "open-rules": state.rulesOpen=b.dataset.v; render(); break;
     case "close-rules": state.rulesOpen=null; render(); break;
     case "set-carry": state.skinCarry=b.dataset.v==="1"; LS.set("sc.skinCarry",state.skinCarry); render(); break;

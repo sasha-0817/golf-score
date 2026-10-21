@@ -38,7 +38,7 @@ def open_page(b, ls=None, dark=False, offline=False):
     src = (src.replace("setTimeout(checkUpdate, 1500);", "").replace("setTimeout(maybeShowA2HS, 2500);", "")
               .replace("const state = {", "const state = window.state = {")
               .replace("function skinsCalc(", "window.skinsCalc=skinsCalc; function skinsCalc(")
-              .replace("function matchCalc(", "window.matchCalc=matchCalc; window.nassauCalc=nassauCalc; window.vegasCalc=vegasCalc; window.stableCalc=stableCalc; function matchCalc(")
+              .replace("function matchCalc(", "window.matchCalc=matchCalc; window.nassauCalc=nassauCalc; window.vegasCalc=vegasCalc; window.stableCalc=stableCalc; window.peoriaCalc=peoriaCalc; window.olympicCalc=olympicCalc; window.peoriaHidden=peoriaHidden; function matchCalc(")
               .replace("async function connect(){", "window.connect=()=>connect(); async function connect(){")
               .replace("let loading = false;", 'let loading = false; Object.defineProperty(window,"pending",{get:()=>pending});'))
     init = "if(!sessionStorage.t){sessionStorage.t=1;localStorage.clear();" + "".join(
@@ -327,7 +327,7 @@ with sync_playwright() as pw:
     sf = pg.evaluate("(()=>stableCalc([[3,2,4,5],[5,3,3,2]],[3,3,3,3],4).pts.join())()")
     check("ステーブルフォードの計算（パー2・バーディ3・ボギー1・ダボ0）", sf == "6,7")
     C(pg, "[data-act=open-game]")
-    check("ゲーム選択に5つのゲーム・4人用は2人のとき薄い", pg.evaluate("document.querySelectorAll('.gm-card').length") == 6 and pg.query_selector(".gm-card.na[data-v=vegas]") is not None)
+    check("ゲーム選択に7つのゲーム・4人用は2人のとき薄い", pg.evaluate("document.querySelectorAll('.gm-card').length") == 8 and pg.query_selector(".gm-card.na[data-v=vegas]") is not None)
     C(pg, "[data-act=pick-game][data-v=vegas]")
     check("人数が合わないゲームは選べない", pg.evaluate("state.game") != "vegas")
     C(pg, "[data-act=pick-game][data-v=match]")
@@ -356,6 +356,38 @@ with sync_playwright() as pw:
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.game": "\"vegas\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\""}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
     check("人数が合わないゲームは、始めるときにゲームなしになる", pg.evaluate("state.draft.game") is None)
+    pg.context.close()
+
+    # 13. 新ペリア・オリンピック
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"olympic\""}, offline=True)
+    r = pg.evaluate("(()=>{ const x=peoriaCalc([[3,3,3,3,3,3,4,3,3],[4,4,5,4,4,3,4,4,4]],[3,3,3,3,3,3,3,3,3],[0,1,2,3,4,5]); return x.map(o=>[o.gross,o.hc,o.net]); })()")
+    check("新ペリアの計算（(隠し合計×1.5−パー)×0.8、マイナスは0）", r == [[28, 0, 28], [36, 7.2, 28.8]])
+    h = pg.evaluate("(()=>{ const a=peoriaHidden(9), b=peoriaHidden(18); return [a.length, b.length, new Set(a).size, Math.max(...a)<9]; })()")
+    check("新ペリアの隠しホール（9Hは6つ・18Hは12・重複なし）", h == [6, 12, 6, True])
+    o = pg.evaluate("(()=>{ const x=olympicCalc({0:[4,3],1:[5,0],2:[0,4]},2); return [x.pts.join(), x.cnt[0][5], x.cnt[1][4]]; })()")
+    check("オリンピックの計算（ダイヤ5・金4・銀3…）", o == ["9,7", 1, 1])
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    C(pg, "[data-act=medal-open]")
+    check("オリンピック: ホールカードの「メダル」で入力画面", pg.query_selector(".medal-sheet") is not None)
+    C(pg, '[data-act=medal-set][data-i="0"][data-v="4"]'); C(pg, '[data-act=medal-set][data-i="1"][data-v="4"]')
+    check("同じメダルは1人だけ（あとから付けた人に移る）", pg.evaluate("JSON.stringify(state.draft.medals[0])") == "[0,4]")
+    C(pg, "[data-act=medal-close]")
+    check("オリンピック: 名前の下に点数", "4pt" in pg.evaluate("document.querySelectorAll('.gtag')[1].textContent"))
+    for _ in range(12):
+        if pg.evaluate("state.hole") >= 8: break
+        C(pg, "[data-act=next]")
+    C(pg, "[data-act=finish]"); pg.wait_for_timeout(900)
+    check("オリンピック: リザルトに点数とメダル", pg.query_selector(".rc-game .md-c") is not None)
+    pg.context.close()
+    pg, errs2 = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"peoria\""}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    for _ in range(40):
+        if not pg.evaluate("state.cdraft&&state.cdraft.sel"): break
+        C(pg, '[data-act=cd-key][data-v="3"]')
+        if pg.evaluate("state.cdraft.sel&&state.cdraft.sel.k==='p'"): C(pg, '[data-act=cd-key][data-v="2"]')
+    C(pg, "[data-act=cd-finish]"); pg.wait_for_timeout(900)
+    check("新ペリア: リザルトで隠しホール6つを発表・ネットの順位", pg.evaluate("document.querySelectorAll('.pe-hid i').length") == 6 and pg.evaluate("document.querySelectorAll('.rc-sc td.hh').length") == 6)
+    check("新ペリア・オリンピック: エラーなし", not errs and not errs2)
     pg.context.close()
 
     b.close()
