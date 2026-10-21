@@ -1606,7 +1606,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-22-0835";
+const BUILD = "2026-10-22-0850";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2783,7 +2783,7 @@ const GAMES = {
 };
 // 並びは日本の仲間内でよく遊ばれる順（オーナー指定。おおよそ）。ナッソーは日本ではほぼ使われないが、海外（特にアメリカ）では定番なので一番下に残す
 /* 上に個人戦、下にチーム戦。それぞれの中はよく遊ばれる順 */
-const GAME_KEYS = ["peoria","olympic","skins","nearpin","match","stable","nassau","vegas","teamsum","team"];
+const GAME_KEYS = ["peoria","olympic","nearpin","skins","match","stable","nassau","vegas","teamsum","team"];
 /* オリンピックの「メダル」ボタンの案内（初めての1回だけ。一度押したら二度と出ない） */
 const medalTip = () => !LS.get("sc.medalTip", false);
 /* 吹き出しはホールカード（はみ出しを隠している）の外に出すため、画面に固定してボタンの真下に置く */
