@@ -296,7 +296,15 @@ with sync_playwright() as pw:
     check("メダルの絵に赤いリボン（ツノ）がない", "#E5484D" not in pg.inner_html(".rp-list"))
     C(pg, ".rp-x"); C(pg, "[data-act=open-rules][data-v=nassau]")
     t = pg.inner_text(".rp")
-    check("ナッソーのルールに言葉の解説（前半・後半・トータル・pt）", pg.query_selector(".rp .rp-words") is not None and all(w in t for w in ["前半", "後半", "トータル", "ポイント（点）"]))
+    check("ナッソーのルールに言葉の解説（前半・後半のみ。トータル・pt は書かない）", pg.query_selector(".rp .rp-words") is not None and "前半" in pg.inner_text(".rp-words") and "トータル" not in pg.inner_text(".rp-words") and "pt" not in pg.inner_text(".rp-words"))
+    check("ルールに OK ボタンはない（× だけで閉じる）", pg.query_selector(".rp .rp-ok") is None)
+    C(pg, ".rp-x"); pg.set_viewport_size({"width": 375, "height": 627}); over = []
+    for k in ["olympic", "skins", "peoria", "match", "stable", "nassau", "vegas", "teamsum", "team"]:
+        C(pg, f"[data-act=open-rules][data-v={k}]"); pg.wait_for_timeout(60)
+        if pg.evaluate("(()=>{const r=document.querySelector('.rp');return r.scrollHeight-r.clientHeight})()") > 1: over.append(k)
+        C(pg, ".rp-x")
+    check("どのゲームのルールもスクロールなしで1画面に収まる（高さ627px）", not over)
+    pg.set_viewport_size({"width": 375, "height": 667}); C(pg, "[data-act=open-rules][data-v=nassau]")
     C(pg, ".rp-x")
     C(pg, "[data-act=open-rules][data-v=skins]")
     check("「ルール」でポップアップ（例つき・持ち越しの選択）", pg.query_selector(".rp .sr-ex") is not None and pg.evaluate("document.querySelectorAll('.rp [data-act=set-carry]').length") == 2)

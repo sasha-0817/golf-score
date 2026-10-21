@@ -1448,7 +1448,21 @@ input,select,textarea{font-size:max(16px,1em)}
 .rp .rp-ok{font-size:16px;letter-spacing:.2em;font-family:var(--f-num)}
 @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .rp .sr-sum b{color:#4ADE9B} }
 :root[data-theme="dark"] .rp .sr-sum b{color:#4ADE9B}
-.rp .sr-row2 b.sr-none{font-size:12px}
+.rp /* ルールは1画面に収める（スクロールなし、2026-10-21）: 帯・見出し・行間を詰める。OK ボタンはなし（× で閉じる） */
+.rp{max-height:calc(100dvh - 24px)!important}
+.rp-hero{padding:14px 14px 13px!important;gap:11px!important}
+.rp-hero .rp-ill{flex-basis:50px!important;width:50px!important;height:50px!important;border-radius:14px!important}
+.rp-tt b{font-size:21px!important}
+.rp-body{padding:2px 16px 16px!important}
+.rp-sec{margin:12px 0 7px!important}
+.rp-list{gap:6px!important;line-height:1.6!important;font-size:13.5px!important}
+.rp-list li::before{top:1px!important}
+.rp .rp-opt{margin-top:8px!important;padding:7px!important}
+.rp .rp-words{margin-top:8px!important;padding:8px 12px!important}
+.rp .sr-ex{padding:8px 12px!important;gap:5px!important}
+.rp .sr-sum{padding-top:6px!important}
+.rp-back{padding:12px!important}
+.sr-row2 b.sr-none{font-size:12px}
 .sr-row2 b.sr-none{font:700 12px/1 inherit;font-family:inherit;color:var(--rec-muted)}
 .rp .rp-ok{height:48px;border:0;border-radius:999px;background:linear-gradient(135deg,#0E9F62 0%,#13A9C2 100%);color:#fff;font-weight:700;letter-spacing:.12em;box-shadow:0 6px 16px rgba(14,159,98,.3)}
 .rp-words{margin-top:2px}
@@ -1560,7 +1574,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-21-2220";
+const BUILD = "2026-10-21-2240";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2875,26 +2889,26 @@ function rulesPop(k){
     ex = carry ? row("1H",3,3,"同点 → 持ち越し")+row("2H",4,3,`はなこ が2枚${coins(2)}`)+row("3H",2,4,`たろう が1枚${coins(1)}`)+`<div class="sr-sum">はなこ ${coinSVG(14)}2　たろう ${coinSVG(14)}1　→ <b>はなこの勝ち</b></div>`
                : row("1H",3,3,"同点 → なし")+row("2H",4,3,`はなこ が1枚${coins(1)}`)+row("3H",2,4,`たろう が1枚${coins(1)}`)+`<div class="sr-sum">はなこ ${coinSVG(14)}1　たろう ${coinSVG(14)}1　→ <b>引き分け</b></div>`; }
   if(k==="match"){
-    list=`<li><b>2人</b>で、ホールごとに打数が少ない方がそのホールの勝ち（同じなら引き分け）</li><li>勝ったホールの数の差で「<b>2勝</b>（2つ勝ち越し）」「<b>五分</b>」「<b>2負</b>」と数えます</li><li>残りのホールで追いつけない差になったら、その時点で勝ちが決まります。合計の打数は関係ありません</li>`;
+    list=`<li><b>2人</b>で、ホールごとに打数が少ない方が勝ち（同じなら引き分け）</li><li>勝ったホールの差を「<b>2勝</b>」「<b>五分</b>」「<b>2負</b>」と数えます</li><li>残りで追いつけない差になったら決着。合計の打数は関係ありません</li>`;
     ex=row("1H",3,4,"たろう 1勝")+row("2H",3,3,"引き分け")+row("3H",4,3,"はなこ → 五分")+`<div class="sr-sum">3ホール終わって <b>五分</b></div>`; }
   if(k==="nassau"){
-    list=`<li><b>前半・後半・トータル</b>の3つの勝負を同時にします</li><li>それぞれ打数の合計が<b>一番少ない人に1ポイント</b>（同点は誰にもなし）。最後に<b>ポイントが多い人の勝ち</b></li><li>前半で負けても後半とトータルで取り返せるので、最後まで勝負が続きます</li>`;
-    opt=`<dl class="rp-words"><dt>前半</dt><dd>前の半分。18Hは1〜9H、12Hは1〜6H、9Hは1〜4H</dd><dt>後半</dt><dd>残り（奇数のときは後半が1ホール多い）</dd><dt>トータル</dt><dd>全ホールの合計</dd><dt>pt</dt><dd>ポイント（点）</dd><dt>ナッソー</dt><dd>生まれたゴルフ場（米国）の名前</dd></dl>`;
+    list=`<li><b>前半・後半・トータル</b>の3つの勝負を同時にします</li><li>それぞれ打数の合計が<b>一番少ない人に1ポイント</b>（同点はなし）</li><li>最後に<b>ポイントが多い人の勝ち</b></li>`;
+    opt=`<dl class="rp-words"><dt>前半</dt><dd>前の半分（9Hは1〜4H、18Hは1〜9H）</dd><dt>後半</dt><dd>残りのホール</dd><dt>ナッソー</dt><dd>生まれたゴルフ場（米国）の名前</dd></dl>`;
     ex=`<div class="sr-row3"><span>前半</span><span>たろう 13</span><span>はなこ <b class="w">12</b></span><span>はなこ 1pt</span></div><div class="sr-row3"><span>後半</span><span>たろう <b class="w">16</b></span><span>はなこ 18</span><span>たろう 1pt</span></div><div class="sr-row3"><span>トータル</span><span>たろう <b class="w">29</b></span><span>はなこ 30</span><span>たろう 1pt</span></div><div class="sr-sum">たろう 2pt　はなこ 1pt　→ <b>たろうの勝ち</b></div>`; }
   if(k==="vegas"){
-    list=`<li><b>4人</b>で、1・2人目がチームA、3・4人目がチームBの2対2</li><li>チームの2人の打数を<b>少ない方を十の位、多い方を一の位</b>にした数にします（3と5なら35）</li><li>数が小さいチームが、<b>差の分だけ点数</b>をもらえます。最後に点数が多いチームの勝ち</li>`;
+    list=`<li>1・2人目がチームA、3・4人目がチームB</li><li>2人の打数で<b>少ない方を十の位、多い方を一の位</b>にした数を作ります（3と5なら35）</li><li>数が小さいチームが<b>差の分だけ点数</b>をもらい、最後に点数が多いチームの勝ち</li>`;
     ex=`<div class="sr-row2"><span>チームA</span><span>たろう 3・はなこ 5</span><b class="w">35</b></div><div class="sr-row2"><span>チームB</span><span>じろう 4・さぶろう 4</span><b>44</b></div><div class="sr-sum">44 − 35 = 9 → <b>チームAが9点</b></div>`; }
   if(k==="stable"){
-    list=`<li>スコアに応じてホールごとに<b>ポイント</b>がもらえます</li><li><b>パー 2点</b>・ボギー 1点・ダボ以上 0点・バーディ 3点・イーグル 4点</li><li>最後に<b>ポイントが一番多い人の勝ち</b>（大たたきしても0点で済むので、最後まであきらめずに楽しめます）</li>`;
+    list=`<li>スコアに応じてホールごとに<b>ポイント</b>がもらえます</li><li><b>パー2点</b>・ボギー1点・ダボ以上0点・バーディ3点・イーグル4点</li><li><b>ポイントが一番多い人の勝ち</b>。大たたきしても0点で済みます</li>`;
     ex=row("1H",3,5,"たろう 2点・はなこ 0点")+row("2H",2,3,"たろう 3点・はなこ 2点")+row("3H",4,3,"たろう 1点・はなこ 2点")+`<div class="sr-sum">たろう 6点　はなこ 4点　→ <b>たろうの勝ち</b>（パー3）</div>`; }
   if(k==="teamsum"){
-    list=`<li><b>4人</b>で、名前の順に 1・2人目がチームA、3・4人目がチームB の2対2（組み分けを変えたいときは、名前を入れる順番を変えます）</li><li>チームの<b>2人の打数を全部たした合計</b>どうしを比べます</li><li>最後に<b>合計が少ないチームの勝ち</b>。いちばん分かりやすいチーム戦です</li>`;
+    list=`<li>1・2人目がチームA、3・4人目がチームB（名前を入れる順で組み分け）</li><li>チームの<b>2人の打数の合計</b>どうしを比べます</li><li><b>合計が少ないチームの勝ち</b></li>`;
     ex=`<div class="sr-row2"><span>チームA</span><span>たろう 28・はなこ 34</span><b class="w">62</b></div><div class="sr-row2"><span>チームB</span><span>じろう 31・さぶろう 33</span><b>64</b></div><div class="sr-sum"><b>チームAの勝ち</b>（2打差）</div>`; }
   if(k==="team"){
-    list=`<li><b>4人</b>で、名前の順に 1・2人目がチームA、3・4人目がチームB の2対2（組み分けを変えたいときは、名前を入れる順番を変えます）</li><li>ホールごとに、チームの2人のうち<b>良い方のスコア</b>どうしを比べて、少ないチームが<b>1勝</b>（同じなら引き分け）</li><li>最後に<b>勝ったホールが多いチームの勝ち</b>。1人が大たたきしても、相方がよければ大丈夫（2人のうち良い方の1球＝ベストボール）</li>`;
+    list=`<li>1・2人目がチームA、3・4人目がチームB（名前を入れる順で組み分け）</li><li>ホールごとに2人の<b>良い方のスコア</b>で比べ、少ないチームが<b>1勝</b></li><li><b>勝ったホールが多いチームの勝ち</b>。1人が大たたきしても相方でカバー</li>`;
     ex=`<div class="sr-row2"><span>チームA</span><span>たろう 3・はなこ 5</span><b class="w">3</b></div><div class="sr-row2"><span>チームB</span><span>じろう 4・さぶろう 4</span><b>4</b></div><div class="sr-sum">このホールは <b>チームAの1勝</b></div>`; }
   if(k==="peoria"){
-    list=`<li>ふつうに回って記録します（入力は今までと同じ）</li><li>保存したあとで、<b>ホール数の3分の2をくじで「隠しホール」</b>に選びます（9H→6、12H→8、18H→12）</li><li><b>ハンデ＝（隠しホールの合計×1.5 − パー）×0.8</b>（×1.5は全ホール分に直すため）。合計からハンデを引いた<b>ネットが一番少ない人が優勝</b>。大たたきしたホールが隠しホールに入るとハンデが増えるので、誰にでも優勝のチャンスがあります</li>`;
+    list=`<li>保存したあと、<b>くじで「隠しホール」</b>を選びます（ホール数の3分の2）</li><li><b>ハンデ＝（隠しホールの合計×1.5 − パー）×0.8</b></li><li>合計−ハンデの<b>ネットが一番少ない人が優勝</b>。大たたきが隠しホールに入るほどハンデが増えます</li>`;
     ex=`<div class="sr-row4 h"><span></span><span>合計</span><span>隠し6H</span><span>ハンデ</span><span>ネット</span></div><div class="sr-row4"><span>たろう</span><span>28</span><span>19</span><span>1.2</span><b>26.8</b></div><div class="sr-row4"><span>はなこ</span><span>36</span><span>25</span><span>8.4</span><b>27.6</b></div><div class="sr-sum">パー27のコース → <b>たろうの優勝</b>（隠しホールしだいで逆転も）</div>`; }
   if(k==="olympic"){
     list=`<li>グリーンに乗ってから<b>1パットで入れた人だけ</b>がメダルをもらえます</li><li>ピンから遠かった人から ${medalSVG(4,14)}金4点・${medalSVG(3,14)}銀3点・${medalSVG(2,14)}銅2点・${medalSVG(1,14)}鉄1点。グリーンの外から入れたら ${medalSVG(5,14)}<b>ダイヤ5点</b></li><li>毎ホール「メダル」ボタンで入力。<b>点数が一番多い人の勝ち</b></li>`;
@@ -2904,8 +2918,7 @@ function rulesPop(k){
     <div class="rp-body"><div class="rp-sec"><span>HOW TO PLAY</span>ルール</div>
     <ol class="rp-list">${list}</ol>${opt}
     <div class="rp-sec"><span>EXAMPLE</span>例</div>
-    <div class="sr-ex">${ex}</div>
-    <button class="rp-ok" data-act="close-rules">OK</button></div></div></div>`;
+    <div class="sr-ex">${ex}</div></div></div></div>`;
 }
 /* ---------- actions ---------- */
 function saveDraft(){ if(state.draft) state.draft.cur=state.hole; LS.set("sc.draft", state.draft); } // 今のホールも覚えておく（自動更新で読み直しても同じホールから）
