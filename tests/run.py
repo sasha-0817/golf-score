@@ -458,6 +458,14 @@ with sync_playwright() as pw:
     check("ニアピン（くわしく記録）: ボタンに選んだ人の名前、もう一度押すと取り消し", on and "ニアピン" in (pg.text_content(".pin-btn") or ""))
     check("ニアピン: エラーなし", not errs and not errs2)
     pg.context.close()
+    c4 = [{"id": "c4", "name": "C4", "holes": [{"par": 3, "yards": 100}, {"par": 4, "yards": 300}] + [{"par": 3, "yards": 100}] * 7}]
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c4, "sc.favs": ["c4"], "sc.lastCourse": "\"c4\"", "sc.game": "\"nearpin\""}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    p3 = pg.query_selector(".pin-btn") is not None
+    C(pg, "[data-act=next]")
+    check("ニアピンはパー3だけ（パー4のホールにはボタンが出ない）", p3 and pg.query_selector(".pin-btn") is None)
+    check("ニアピン（パー3のみ）: エラーなし", not errs)
+    pg.context.close()
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"olympic\""}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
     check("メダルの案内: 初めてのオリンピックの1番ホールで、メダルボタンが光って吹き出しが出る", pg.query_selector(".medal-btn.tip") is not None and pg.query_selector(".medal-tip") is not None)

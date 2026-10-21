@@ -1606,7 +1606,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-22-0830";
+const BUILD = "2026-10-22-0830b";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2173,7 +2173,7 @@ function viewRecordDraft(d){
     <div class="hole-card hc2 ${slide} ${celebrate?"flash":""}">${confetti}
       <div class="hc-l"><span class="lbl">HOLE</span><div class="hno">${state.hole+1}<small>/${N}</small></div></div>
       <div class="hc-m"><div class="par"><span>PAR</span>${h.par}</div>${d.gn && h.ys && h.ys[0] && h.ys[1] ? `<div class="gsw" role="group" aria-label="グリーン">${d.gn.map((n,i)=>`<button data-act="set-g" data-g="${i}" aria-pressed="${(h.gi||0)===i}">${esc(n)}</button>`).join("")}</div><div class="yd">${h.yards} YDS</div>` : h.yards?`<div class="yd">${h.yards} YDS</div>`:""}
-        <div class="badges"><span class="badge ${hio?"hio":"b-"+TONE(diff)} ${/^s[vt]/.test(state.tap||"")?"pop":""}"><i></i>${hio?"HOLE IN ONE":TERM(diff)}</span>${bestPace&&fields().pace?`<span class="pace2">BEST PACE</span>`:""}${isOlympic(d.game)?`<span class="medal-wrap"><button class="medal-btn ${medalTip()&&state.hole===0?"tip":""}" data-act="medal-open">${medalSVG(4,14)}メダル</button>${medalTip()&&state.hole===0?`<span class="medal-tip">1パットで入ったらここ</span>`:""}</span>`:""}${d.game==="nearpin"?(()=>{ const w=(d.pins||{})[state.hole]; const nm=w!=null?[d.player,...(d.mates||[]).map(m=>m.name)][w]:null; return `<button class="medal-btn pin-btn ${nm?"on":""}" data-act="pin-open">${PIN_ICON(13)}${nm?esc(nm):"ニアピン"}</button>`; })():""}${d.game==="skins"&&d.carry?(()=>{ const sk=skinsCalc([d.holes.map(x=>x.strokes), ...(d.mates||[]).map(m=>m.s)], state.hole, true); return `<span class="pot" title="このホールのコイン">${coinSVG(13)}×${sk.pot}</span>`; })():""}</div></div>
+        <div class="badges"><span class="badge ${hio?"hio":"b-"+TONE(diff)} ${/^s[vt]/.test(state.tap||"")?"pop":""}"><i></i>${hio?"HOLE IN ONE":TERM(diff)}</span>${bestPace&&fields().pace?`<span class="pace2">BEST PACE</span>`:""}${isOlympic(d.game)?`<span class="medal-wrap"><button class="medal-btn ${medalTip()&&state.hole===0?"tip":""}" data-act="medal-open">${medalSVG(4,14)}メダル</button>${medalTip()&&state.hole===0?`<span class="medal-tip">1パットで入ったらここ</span>`:""}</span>`:""}${d.game==="nearpin"&&d.holes[state.hole].par===3?(()=>{ const w=(d.pins||{})[state.hole]; const nm=w!=null?[d.player,...(d.mates||[]).map(m=>m.name)][w]:null; return `<button class="medal-btn pin-btn ${nm?"on":""}" data-act="pin-open">${PIN_ICON(13)}${nm?esc(nm):"ニアピン"}</button>`; })():""}${d.game==="skins"&&d.carry?(()=>{ const sk=skinsCalc([d.holes.map(x=>x.strokes), ...(d.mates||[]).map(m=>m.s)], state.hole, true); return `<span class="pot" title="このホールのコイン">${coinSVG(13)}×${sk.pot}</span>`; })():""}</div></div>
       <div class="live"><div><span>TOTAL</span><b>${totLabel}</b></div>${F.putts?`<div><span>PUTTS</span><b>${done.length?tot.putts:"—"}</b></div>`:""}</div>
       ${advice?`<div class="advice">${advice}</div>`:""}
     </div>
@@ -2299,7 +2299,7 @@ function viewCard(cd){
       <tbody>${rows.map(h=>`<tr><td class="hn">${h+1}</td><td class="pr">${cd.holes[h].par}</td>${cd.players.map((p,i)=>cell(h,i,"s")+(pOn?cell(h,i,"p"):"")).join("")}</tr>`).join("")}</tbody>
       <tfoot>${two?foot(half?"IN":"OUT",rows)+foot("計",all,"all"):foot("計",all)}${skinRow}${gameRow}</tfoot></table></div>
     <div class="cd-pad">
-      <div class="cd-lbl">${isOlympic(cd.game)?`<button class="medal-btn sm ${medalTip()&&!(cd.sel&&cd.sel.h>0)?"tip":""}" data-act="medal-open" data-h="${sel?sel.h:Math.min(nDone,N-1)}">${medalSVG(4,13)}${(sel?sel.h:Math.min(nDone,N-1))+1}Hのメダル</button>`:""}${cd.game==="nearpin"?`<button class="medal-btn sm pin-btn" data-act="pin-open" data-h="${sel?sel.h:Math.min(nDone,N-1)}">${PIN_ICON(13)}${(sel?sel.h:Math.min(nDone,N-1))+1}Hのニアピン</button>`:""}${sel?`<span><b>${esc(dupLabel(cd.players.map(x=>x.name),sel.i))}</b>・${sel.h+1}H（PAR ${cd.holes[sel.h].par}）の<em>${ks==="s"?"打数":"パット"}</em></span>`:`<span>${done?"全部入りました。保存しましょう":"マスをタップして入力"}</span>`}</div>
+      <div class="cd-lbl">${isOlympic(cd.game)?`<button class="medal-btn sm ${medalTip()&&!(cd.sel&&cd.sel.h>0)?"tip":""}" data-act="medal-open" data-h="${sel?sel.h:Math.min(nDone,N-1)}">${medalSVG(4,13)}${(sel?sel.h:Math.min(nDone,N-1))+1}Hのメダル</button>`:""}${cd.game==="nearpin"&&cd.holes[sel?sel.h:Math.min(nDone,N-1)].par===3?`<button class="medal-btn sm pin-btn" data-act="pin-open" data-h="${sel?sel.h:Math.min(nDone,N-1)}">${PIN_ICON(13)}${(sel?sel.h:Math.min(nDone,N-1))+1}Hのニアピン</button>`:""}${sel?`<span><b>${esc(dupLabel(cd.players.map(x=>x.name),sel.i))}</b>・${sel.h+1}H（PAR ${cd.holes[sel.h].par}）の<em>${ks==="s"?"打数":"パット"}</em></span>`:`<span>${done?"全部入りました。保存しましょう":"マスをタップして入力"}</span>`}</div>
       ${sel||!done?`<div class="cd-keys">${[1,2,3,4,5,6,7,8,9].map(n=>key(n,String(n),!sel || (ks==="p" && n>9))).join("")}${key("10","10+",!sel||ks==="p")}${key("0","0",!sel||ks==="s")}${key("del","消す",!sel)}</div>`:""}
       ${done?`<button class="cd-save ${state.saving?"busy":""}" data-act="cd-finish" ${state.saving?"disabled":""}>${state.saving?`<i class="spin"></i>保存中…`:`ラウンドを保存${cd.players.length>1?`（${cd.players.length}人分）`:""}`}</button>`:""}
     </div>
@@ -2775,7 +2775,7 @@ const GAMES = {
   stable: { name:"ステーブルフォード", eng:"STABLEFORD", n:"2〜4人", min:2, max:4, desc:"パー2点・バーディ3点で競う", type:"solo" },
   peoria: { name:"新ペリア", eng:"NEW PERIA", n:"2〜4人", min:2, max:4, desc:"ハンデで誰でも優勝チャンス", type:"solo" },
   team:   { name:"ベストボール", eng:"BEST BALL", n:"4人のみ", min:4, max:4, desc:"2人の良い方のスコアで勝負", type:"team" },
-  nearpin:{ name:"ニアピン", eng:"NEAREST THE PIN", n:"2〜4人", min:2, max:4, desc:"一番ピンに近い人がコイン", type:"solo" },
+  nearpin:{ name:"ニアピン", eng:"NEAREST THE PIN", n:"2〜4人", min:2, max:4, desc:"パー3で一番近い人がコイン", type:"solo" },
   peoriateam:{ name:"新ペリア（チーム）", eng:"NEW PERIA TEAM", n:"4人のみ", min:4, max:4, desc:"2人のネットの合計で勝負", type:"team" },
   olympicteam:{ name:"オリンピック（チーム）", eng:"OLYMPIC TEAM", n:"4人のみ", min:4, max:4, desc:"2人のメダルの点数で勝負", type:"team" },
   teamsum:{ name:"合計スコア", eng:"TEAM TOTAL", n:"4人のみ", min:4, max:4, desc:"2人の合計スコアで勝負", type:"team" },
@@ -2876,7 +2876,7 @@ function peoriaCalc(rows, pars, hidden){ const N=pars.length, par=pars.reduce((a
     return {gross, hs, hc, net:Math.round((gross-hc)*10)/10}; }); }
 /* 記録中に名前の下へ出す小さな表示（スキンズは別で、コインの数） */
 function gameTags(game, rows, pars, n, N, ex={}){
-  if(game==="nearpin"){ const x=pinCalc(ex.pins, rows.length); return x.won.map(n=>`<span class="gtag ${n?"":"z"}">${coinSVG(11)}${n}</span>`); }
+  if(game==="nearpin"){ const x=pinCalc(ex.pins, rows.length, pars); return x.won.map(n=>`<span class="gtag ${n?"":"z"}">${coinSVG(11)}${n}</span>`); }
   if(game==="olympicteam" && rows.length===4){ const x=olympicCalc(ex.medals, 4), t=[x.pts[0]+x.pts[1], x.pts[2]+x.pts[3]], cur=(ex.medals||{})[ex.hole]||[]; return [0,1,2,3].map(i=>`<span class="gtag t${i>>1}">${cur[i]?medalSVG(cur[i],12):""}${"AB"[i>>1]} ${t[i>>1]}pt</span>`); }
   if(game==="olympic"){ const x=olympicCalc(ex.medals, rows.length), cur=(ex.medals||{})[ex.hole]||[]; return x.pts.map((p,i)=>`<span class="gtag ${p?"":"z"}">${cur[i]?medalSVG(cur[i],12):""}${p}pt</span>`); }
   if(game==="match" && rows.length===2){ const m=matchCalc(rows,n,N); return [0,1].map(k=>{ const t=m.st(k); return `<span class="gtag ${t.endsWith("勝")?"up":t.endsWith("負")?"dn":""}">${t}</span>`; }); }
@@ -2892,7 +2892,7 @@ function teamLine(game, rows, pars, N, names, ex={}){
   if(!GAMES[game] || GAMES[game].type!=="solo" || rows.length!==4) return "";
   let v=null, unit="", low=false, dec=0;
   if(game==="skins"){ v=skinsCalc(rows,N,!!state.resultCarry).won; unit="枚"; }
-  if(game==="nearpin"){ v=pinCalc(ex.pins,4).won; unit="枚"; }
+  if(game==="nearpin"){ v=pinCalc(ex.pins,4,pars).won; unit="枚"; }
   if(game==="olympic"){ v=olympicCalc(ex.medals,4).pts; unit="pt"; }
   if(game==="stable"){ v=stableCalc(rows,pars,N).pts; unit="pt"; }
   if(game==="nassau"){ v=nassauCalc(rows,N,N).pts; unit="pt"; }
@@ -2922,7 +2922,7 @@ function gameResult(game, rows, pars, N, names, order, ex={}){
     return box(`<div class="pe-hid"><span>隠しホール</span>${ex.hidden.map((h,i)=>`<i style="animation-delay:${(i*0.18).toFixed(2)}s">${h+1}</i>`).join("")}</div>`
       + [0,1].map(k=>line(`チーム${"AB"[k]}`, t[k].toFixed(1), w===k, `<small class="rs-sub">${names[k*2]} ${x[k*2].net.toFixed(1)}・${names[k*2+1]} ${x[k*2+1].net.toFixed(1)}</small>`)).join("")
       + `<div class="rs-sum">${w<0?"引き分け":`ネットの合計で チーム${"AB"[w]} の勝ち`}</div>`); }
-  if(game==="nearpin"){ const x=pinCalc(ex.pins, rows.length), mx=Math.max(...x.won);
+  if(game==="nearpin"){ const x=pinCalc(ex.pins, rows.length, pars), mx=Math.max(...x.won);
     return box([...order].sort((a,b)=>x.won[b]-x.won[a]).map(k=>line(names[k], `${x.won[k]}枚`, mx>0&&x.won[k]===mx, Array.from({length:Math.min(x.won[k],9)},()=>coinSVG(15)).join(""))).join("")); }
   if(game==="olympicteam" && rows.length===4){ const x=olympicCalc(ex.medals, 4), t=[x.pts[0]+x.pts[1], x.pts[2]+x.pts[3]], w=t[0]===t[1]?-1:t[0]>t[1]?0:1;
     return box([0,1].map(k=>line(`チーム${"AB"[k]}`, `${t[k]}pt`, w===k, `<small class="rs-sub">${names[k*2]} ${x.pts[k*2]}・${names[k*2+1]} ${x.pts[k*2+1]}</small>`)).join("")
@@ -2952,7 +2952,8 @@ function gameSheet(){
 /* オリンピックのメダル入力（ホールごと。1つのメダルは1人だけ。もう一度押すと外れる） */
 /* ニアピン: ホールごとに、グリーンに乗った人で一番ピンに近い1人がコイン1枚（誰も乗らなければなし）。pins={ホール番号:人の番号} */
 const PIN_ICON = (sz=13) => `<svg class="pin-ic" viewBox="0 0 16 16" width="${sz}" height="${sz}" aria-hidden="true"><path d="M5 15V2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M5 2l8 3-8 3z" fill="#E5484D"/></svg>`;
-function pinCalc(pins, P){ const won=Array(P).fill(0); Object.values(pins||{}).forEach(i=>{ if(i!=null && i>=0 && i<P) won[i]++; }); return {won}; }
+/* パー3のホールだけ数える（パー4・5はニアピンなし） */
+function pinCalc(pins, P, pars){ const won=Array(P).fill(0); Object.entries(pins||{}).forEach(([h,i])=>{ if(pars && pars[+h]!==3) return; if(i!=null && i>=0 && i<P) won[i]++; }); return {won}; }
 function pinSheet(names, pins, h){
   const cur=(pins||{})[h];
   return `<div class="sheet-back" data-act="pin-close"><div class="sheet medal-sheet pin-sheet" data-stop="1"><p>${h+1}H のニアピン<small>グリーンに乗った人で一番ピンに近い人</small></p>
@@ -2996,7 +2997,7 @@ function rulesPop(k){
     list=`<li>1・2人目がチームA、3・4人目がチームB（名前を入れる順で組み分け）</li><li>ホールごとに2人の<b>良い方のスコア</b>で比べ、少ないチームが<b>1勝</b></li><li><b>勝ったホールが多いチームの勝ち</b>。1人が大たたきしても相方でカバー</li>`;
     ex=`<div class="sr-row2"><span>チームA</span><span>たろう 3・はなこ 5</span><b class="w">3</b></div><div class="sr-row2"><span>チームB</span><span>じろう 4・さぶろう 4</span><b>4</b></div><div class="sr-sum">このホールは <b>チームAの1勝</b></div>`; }
   if(k==="nearpin"){
-    list=`<li>各ホールで、<b>グリーンに乗った人のうち一番ピンに近い人</b>がコイン${coinSVG(14)}1枚</li><li>誰も乗らなかったホールはなし。毎ホール「ニアピン」ボタンで1人選びます</li><li><b>コインが一番多い人の勝ち</b></li>`;
+    list=`<li><b>パー3のホール</b>で、グリーンに乗った人のうち<b>一番ピンに近い人</b>がコイン${coinSVG(14)}1枚</li><li><b>パー4・5のホールはなし</b>。誰も乗らなかったホールもなし。「ニアピン」ボタン（パー3だけ出ます）で1人選びます</li><li><b>コインが一番多い人の勝ち</b></li>`;
     ex=`<div class="sr-row2"><span>1H</span><span>はなこ が一番近い</span><b>${coinSVG(18)}</b></div><div class="sr-row2"><span>2H</span><span>誰も乗らなかった</span><b class="sr-none">なし</b></div><div class="sr-row2"><span>3H</span><span>たろう が一番近い</span><b>${coinSVG(18)}</b></div><div class="sr-sum">はなこ 1枚・たろう 1枚 → 引き分け</div>`; }
   if(k==="peoriateam"){
     list=`<li>1・2人目がチームA、3・4人目がチームB（名前を入れる順で組み分け）</li><li>新ペリアと同じく、保存したあと<b>くじで隠しホール</b>を選び、1人ずつネットを出します</li><li><b>2人のネットの合計が少ないチームの勝ち</b></li>`;
