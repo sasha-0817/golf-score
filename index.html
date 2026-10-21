@@ -1576,7 +1576,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-22-0010";
+const BUILD = "2026-10-22-0640";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2748,7 +2748,7 @@ const GAMES = {
 };
 // 並びは日本の仲間内でよく遊ばれる順（オーナー指定。おおよそ）。ナッソーは日本ではほぼ使われないが、海外（特にアメリカ）では定番なので一番下に残す
 /* 上に個人戦、下にチーム戦。それぞれの中はよく遊ばれる順 */
-const GAME_KEYS = ["olympic","skins","peoria","match","stable","nassau","vegas","teamsum","peoriateam","olympicteam","team"];
+const GAME_KEYS = ["peoria","olympic","skins","match","stable","nassau","vegas","teamsum","team","peoriateam","olympicteam"];
 const isPeoria = g => g==="peoria" || g==="peoriateam", isOlympic = g => g==="olympic" || g==="olympicteam";
 const gameFits = (k, n) => !k || (GAMES[k] && n>=GAMES[k].min && n<=GAMES[k].max);
 const coinSVG = (sz=14, cls="") => `<svg class="coin ${cls}" viewBox="0 0 24 24" width="${sz}" height="${sz}" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#E9A517"/><circle cx="12" cy="12" r="9" fill="#FFCF3F"/><circle cx="12" cy="12" r="7.2" fill="none" stroke="#E9A517" stroke-width="1.2"/><path d="M12 7.2l1.4 2.9 3.2.4-2.3 2.2.6 3.2L12 14.4l-2.9 1.5.6-3.2-2.3-2.2 3.2-.4z" fill="#E9A517"/></svg>`;
