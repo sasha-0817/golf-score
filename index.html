@@ -1424,6 +1424,31 @@ input,select,textarea{font-size:max(16px,1em)}
 .rp .rp-words{margin:10px 0 0}
 .rp .rp-ok{margin-top:16px}
 @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .rp-list li::before{color:#4ADE9B} }
+/* ルールの文字（2026-10-21「文字がダサい」）: 和文はプロポーショナル（palt）で詰め、本文は少し薄い色・太字は蛍光ペン風の下線、数字と英字は Barlow */
+.rp{font-feature-settings:"palt";letter-spacing:.02em}
+.rp-tt small{font:600 12px var(--f-num)!important;letter-spacing:.24em!important;opacity:.75}
+.rp-tt b{font-size:23px!important;font-weight:900;letter-spacing:.06em}
+.rp-chips i{font-size:10.5px!important;letter-spacing:.06em;padding:4px 9px!important}
+.rp-sec{font-size:11px!important;font-weight:500!important;color:var(--rec-muted);gap:7px!important;margin:16px 0 10px!important}
+.rp-sec span{font:600 13px var(--f-num)!important;letter-spacing:.2em!important}
+.rp-list{font-size:14px!important;line-height:1.75!important;font-weight:500;color:color-mix(in srgb,var(--rec-fg) 78%,var(--rec-surface));gap:10px!important}
+.rp-list li{padding-left:32px!important}
+.rp-list li::before{top:2px!important;width:22px!important;height:22px!important;background:#0E9F62!important;color:#fff!important;font:600 13px/22px var(--f-num)!important;letter-spacing:0}
+.rp-list li b{font-weight:700;color:var(--rec-fg);background:linear-gradient(transparent 62%,color-mix(in srgb,#0E9F62 22%,transparent) 0);padding:0 1px}
+.rp .sr-ex{font-size:12.5px}
+.rp .sr-ex span{color:color-mix(in srgb,var(--rec-fg) 72%,var(--rec-bg))}
+.rp .sr-h{font:600 14px var(--f-num);letter-spacing:.04em}
+.rp .sr-ex b{font-family:var(--f-num);font-weight:700}
+.rp .sr-row2 b,.rp .sr-row3 b,.rp .sr-row b{font-size:18px}
+.rp .sr-sum{font-size:13px;font-weight:700;color:var(--rec-fg);padding-top:8px}
+.rp .sr-sum b{color:#0B7A4B}
+.rp-words{font-size:12.5px!important}
+.rp-words dt{color:var(--rec-fg)}
+.rp-seg button{font-size:13px!important;letter-spacing:.04em}
+.rp .rp-ok{font-size:16px;letter-spacing:.2em;font-family:var(--f-num)}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .rp .sr-sum b{color:#4ADE9B} }
+:root[data-theme="dark"] .rp .sr-sum b{color:#4ADE9B}
+.rp .sr-row2 b.sr-none{font-size:12px}
 .sr-row2 b.sr-none{font:700 12px/1 inherit;font-family:inherit;color:var(--rec-muted)}
 .rp .rp-ok{height:48px;border:0;border-radius:999px;background:linear-gradient(135deg,#0E9F62 0%,#13A9C2 100%);color:#fff;font-weight:700;letter-spacing:.12em;box-shadow:0 6px 16px rgba(14,159,98,.3)}
 .rp-words{margin-top:2px}
@@ -1535,7 +1560,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-21-2200";
+const BUILD = "2026-10-21-2220";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2872,8 +2897,8 @@ function rulesPop(k){
     list=`<li>ふつうに回って記録します（入力は今までと同じ）</li><li>保存したあとで、<b>ホール数の3分の2をくじで「隠しホール」</b>に選びます（9H→6、12H→8、18H→12）</li><li><b>ハンデ＝（隠しホールの合計×1.5 − パー）×0.8</b>（×1.5は全ホール分に直すため）。合計からハンデを引いた<b>ネットが一番少ない人が優勝</b>。大たたきしたホールが隠しホールに入るとハンデが増えるので、誰にでも優勝のチャンスがあります</li>`;
     ex=`<div class="sr-row4 h"><span></span><span>合計</span><span>隠し6H</span><span>ハンデ</span><span>ネット</span></div><div class="sr-row4"><span>たろう</span><span>28</span><span>19</span><span>1.2</span><b>26.8</b></div><div class="sr-row4"><span>はなこ</span><span>36</span><span>25</span><span>8.4</span><b>27.6</b></div><div class="sr-sum">パー27のコース → <b>たろうの優勝</b>（隠しホールしだいで逆転も）</div>`; }
   if(k==="olympic"){
-    list=`<li>グリーンに乗ってから<b>1パットで入れた人だけ</b>がメダルをもらえます（2パット以上はなし）</li><li>1パットで入れた人のうち、<b>ピンから遠かった人から</b>${medalSVG(4,14)}金 4点・${medalSVG(3,14)}銀 3点・${medalSVG(2,14)}銅 2点・${medalSVG(1,14)}鉄 1点。<b>グリーンの外から直接入れたら</b>${medalSVG(5,14)}<b>ダイヤ 5点</b></li><li>毎ホール、ホールカードの「メダル」から誰が取ったかを入れます。最後に<b>点数が一番多い人の勝ち</b></li>`;
-    ex=`<div class="sr-row2"><span>はなこ</span><span>8mを1パットで入れた</span><b>${medalSVG(4,18)}</b></div><div class="sr-row2"><span>たろう</span><span>3mを1パットで入れた</span><b>${medalSVG(3,18)}</b></div><div class="sr-row2"><span>じろう</span><span>2パットで入れた</span><b class="sr-none">なし</b></div><div class="sr-sum">このホール　はなこ 4点・たろう 3点・じろう 0点</div>`; }
+    list=`<li>グリーンに乗ってから<b>1パットで入れた人だけ</b>がメダルをもらえます</li><li>ピンから遠かった人から ${medalSVG(4,14)}金4点・${medalSVG(3,14)}銀3点・${medalSVG(2,14)}銅2点・${medalSVG(1,14)}鉄1点。グリーンの外から入れたら ${medalSVG(5,14)}<b>ダイヤ5点</b></li><li>毎ホール「メダル」ボタンで入力。<b>点数が一番多い人の勝ち</b></li>`;
+    ex=`<div class="sr-row2"><span>はなこ</span><span>8mを1パット</span><b>${medalSVG(4,18)}</b></div><div class="sr-row2"><span>たろう</span><span>3mを1パット</span><b>${medalSVG(3,18)}</b></div><div class="sr-row2"><span>じろう</span><span>2パット</span><b class="sr-none">なし</b></div><div class="sr-sum">このホール　はなこ 4点・たろう 3点</div>`; }
   return `<div class="rp-back" data-act="close-rules"><div class="rp" data-stop="1" role="dialog" aria-label="${G.name}のルール">
     <div class="rp-hero ${G.type}"><span class="rp-ill">${GAME_ILL[k]()}</span><div class="rp-tt"><small>${G.eng}</small><b>${G.name}</b><span class="rp-chips"><i>${G.type==="team"?"チーム戦":"個人戦"}</i><i>${G.n}</i></span></div><button class="rp-x" data-act="close-rules" aria-label="閉じる">${ICON.x}</button></div>
     <div class="rp-body"><div class="rp-sec"><span>HOW TO PLAY</span>ルール</div>
