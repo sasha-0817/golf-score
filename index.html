@@ -1465,6 +1465,13 @@ input,select,textarea{font-size:max(16px,1em)}
 .sr-row2 b.sr-none{font-size:12px}
 .game-sheet .gm-h b.long{font-size:14px!important;letter-spacing:-.02em}
 .rp-tt b.long{font-size:18px!important;letter-spacing:.02em}
+/* メダルボタンの初回案内: ふわっと光る＋吹き出し */
+.medal-wrap{position:relative;display:inline-flex}
+.medal-btn.tip{animation:mdGlow 1.4s ease-in-out infinite}
+@keyframes mdGlow{0%,100%{box-shadow:0 0 0 0 rgba(255,214,90,.0)}50%{box-shadow:0 0 0 5px rgba(255,214,90,.55)}}
+.medal-tip{position:fixed;left:0;top:0;transform:translateX(-50%);z-index:40;white-space:nowrap;background:#FFD65A;color:#3A2A00;font-size:11px;font-weight:700;line-height:1;padding:6px 9px;border-radius:9px;box-shadow:0 4px 10px rgba(0,0,0,.2);pointer-events:none;animation:mdTip .4s ease-out both}
+.medal-tip::before{content:"";position:absolute;left:50%;top:-5px;margin-left:-5px;border:5px solid transparent;border-top:0;border-bottom-color:#FFD65A}
+@keyframes mdTip{from{opacity:0;transform:translate(-50%,-4px)}to{opacity:1;transform:translate(-50%,0)}}
 .sr-row2 b.sr-none{font:700 12px/1 inherit;font-family:inherit;color:var(--rec-muted)}
 .rp .rp-ok{height:48px;border:0;border-radius:999px;background:linear-gradient(135deg,#0E9F62 0%,#13A9C2 100%);color:#fff;font-weight:700;letter-spacing:.12em;box-shadow:0 6px 16px rgba(14,159,98,.3)}
 .rp-words{margin-top:2px}
@@ -1576,7 +1583,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-22-0640";
+const BUILD = "2026-10-22-0730";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1782,6 +1789,7 @@ function render(){
   const keepScroll=[".game-sheet",".rp"].map(q=>{ const e=document.querySelector(q); return e?e.scrollTop:0; });
   m.innerHTML = `<section class="view">${view()}</section>`;
   [".game-sheet",".rp"].forEach((q,i)=>{ const e=document.querySelector(q); if(e&&keepScroll[i]) e.scrollTop=keepScroll[i]; });
+  placeMedalTip();
   after[state.tab] && after[state.tab]();
   if(state.result){ m.insertAdjacentHTML("beforeend", resultOverlay(state.result)); if(state.resultOpen) m.querySelector(".result-back").classList.add("still"); state.resultOpen=true; fillStars(); }
   else state.resultOpen=false; // 描き直すたびに出てくるアニメーションをくり返すと点滅して見えるので、2回目からは止める
@@ -2141,7 +2149,7 @@ function viewRecordDraft(d){
     <div class="hole-card hc2 ${slide} ${celebrate?"flash":""}">${confetti}
       <div class="hc-l"><span class="lbl">HOLE</span><div class="hno">${state.hole+1}<small>/${N}</small></div></div>
       <div class="hc-m"><div class="par"><span>PAR</span>${h.par}</div>${d.gn && h.ys && h.ys[0] && h.ys[1] ? `<div class="gsw" role="group" aria-label="グリーン">${d.gn.map((n,i)=>`<button data-act="set-g" data-g="${i}" aria-pressed="${(h.gi||0)===i}">${esc(n)}</button>`).join("")}</div><div class="yd">${h.yards} YDS</div>` : h.yards?`<div class="yd">${h.yards} YDS</div>`:""}
-        <div class="badges"><span class="badge ${hio?"hio":"b-"+TONE(diff)} ${/^s[vt]/.test(state.tap||"")?"pop":""}"><i></i>${hio?"HOLE IN ONE":TERM(diff)}</span>${bestPace&&fields().pace?`<span class="pace2">BEST PACE</span>`:""}${isOlympic(d.game)?`<button class="medal-btn" data-act="medal-open">${medalSVG(4,14)}メダル</button>`:""}${d.game==="skins"&&d.carry?(()=>{ const sk=skinsCalc([d.holes.map(x=>x.strokes), ...(d.mates||[]).map(m=>m.s)], state.hole, true); return `<span class="pot" title="このホールのコイン">${coinSVG(13)}×${sk.pot}</span>`; })():""}</div></div>
+        <div class="badges"><span class="badge ${hio?"hio":"b-"+TONE(diff)} ${/^s[vt]/.test(state.tap||"")?"pop":""}"><i></i>${hio?"HOLE IN ONE":TERM(diff)}</span>${bestPace&&fields().pace?`<span class="pace2">BEST PACE</span>`:""}${isOlympic(d.game)?`<span class="medal-wrap"><button class="medal-btn ${medalTip()&&state.hole===0?"tip":""}" data-act="medal-open">${medalSVG(4,14)}メダル</button>${medalTip()&&state.hole===0?`<span class="medal-tip">1パットで入ったらここ</span>`:""}</span>`:""}${d.game==="skins"&&d.carry?(()=>{ const sk=skinsCalc([d.holes.map(x=>x.strokes), ...(d.mates||[]).map(m=>m.s)], state.hole, true); return `<span class="pot" title="このホールのコイン">${coinSVG(13)}×${sk.pot}</span>`; })():""}</div></div>
       <div class="live"><div><span>TOTAL</span><b>${totLabel}</b></div>${F.putts?`<div><span>PUTTS</span><b>${done.length?tot.putts:"—"}</b></div>`:""}</div>
       ${advice?`<div class="advice">${advice}</div>`:""}
     </div>
@@ -2266,7 +2274,7 @@ function viewCard(cd){
       <tbody>${rows.map(h=>`<tr><td class="hn">${h+1}</td><td class="pr">${cd.holes[h].par}</td>${cd.players.map((p,i)=>cell(h,i,"s")+(pOn?cell(h,i,"p"):"")).join("")}</tr>`).join("")}</tbody>
       <tfoot>${two?foot(half?"IN":"OUT",rows)+foot("計",all,"all"):foot("計",all)}${skinRow}${gameRow}</tfoot></table></div>
     <div class="cd-pad">
-      <div class="cd-lbl">${isOlympic(cd.game)?`<button class="medal-btn sm" data-act="medal-open" data-h="${sel?sel.h:Math.min(nDone,N-1)}">${medalSVG(4,13)}${(sel?sel.h:Math.min(nDone,N-1))+1}Hのメダル</button>`:""}${sel?`<span><b>${esc(dupLabel(cd.players.map(x=>x.name),sel.i))}</b>・${sel.h+1}H（PAR ${cd.holes[sel.h].par}）の<em>${ks==="s"?"打数":"パット"}</em></span>`:`<span>${done?"全部入りました。保存しましょう":"マスをタップして入力"}</span>`}</div>
+      <div class="cd-lbl">${isOlympic(cd.game)?`<button class="medal-btn sm ${medalTip()&&!(cd.sel&&cd.sel.h>0)?"tip":""}" data-act="medal-open" data-h="${sel?sel.h:Math.min(nDone,N-1)}">${medalSVG(4,13)}${(sel?sel.h:Math.min(nDone,N-1))+1}Hのメダル</button>`:""}${sel?`<span><b>${esc(dupLabel(cd.players.map(x=>x.name),sel.i))}</b>・${sel.h+1}H（PAR ${cd.holes[sel.h].par}）の<em>${ks==="s"?"打数":"パット"}</em></span>`:`<span>${done?"全部入りました。保存しましょう":"マスをタップして入力"}</span>`}</div>
       ${sel||!done?`<div class="cd-keys">${[1,2,3,4,5,6,7,8,9].map(n=>key(n,String(n),!sel || (ks==="p" && n>9))).join("")}${key("10","10+",!sel||ks==="p")}${key("0","0",!sel||ks==="s")}${key("del","消す",!sel)}</div>`:""}
       ${done?`<button class="cd-save" data-act="cd-finish">ラウンドを保存${cd.players.length>1?`（${cd.players.length}人分）`:""}</button>`:""}
     </div>
@@ -2749,6 +2757,16 @@ const GAMES = {
 // 並びは日本の仲間内でよく遊ばれる順（オーナー指定。おおよそ）。ナッソーは日本ではほぼ使われないが、海外（特にアメリカ）では定番なので一番下に残す
 /* 上に個人戦、下にチーム戦。それぞれの中はよく遊ばれる順 */
 const GAME_KEYS = ["peoria","olympic","skins","match","stable","nassau","vegas","teamsum","team","peoriateam","olympicteam"];
+/* オリンピックの「メダル」ボタンの案内（初めての1回だけ。一度押したら二度と出ない） */
+const medalTip = () => !LS.get("sc.medalTip", false);
+/* 吹き出しはホールカード（はみ出しを隠している）の外に出すため、画面に固定してボタンの真下に置く */
+function placeMedalTip(){
+  /* 1番ホールを過ぎたら（押さなくても）見たことにして、もう出さない */
+  if(medalTip()){ const d=state.draft, cd=state.cdraft;
+    if((d && !d.paused && isOlympic(d.game) && state.hole>0) || (cd && !cd.paused && isOlympic(cd.game) && cd.sel && cd.sel.h>0)) LS.set("sc.medalTip", true); }
+  const t=document.querySelector(".medal-tip"), b=t&&t.parentNode.querySelector(".medal-btn"); if(!t||!b) return;
+  const r=b.getBoundingClientRect(); t.style.left=(r.left+r.width/2)+"px"; t.style.top=(r.bottom+8)+"px"; }
+addEventListener("resize", ()=>placeMedalTip());
 const isPeoria = g => g==="peoria" || g==="peoriateam", isOlympic = g => g==="olympic" || g==="olympicteam";
 const gameFits = (k, n) => !k || (GAMES[k] && n>=GAMES[k].min && n<=GAMES[k].max);
 const coinSVG = (sz=14, cls="") => `<svg class="coin ${cls}" viewBox="0 0 24 24" width="${sz}" height="${sz}" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#E9A517"/><circle cx="12" cy="12" r="9" fill="#FFCF3F"/><circle cx="12" cy="12" r="7.2" fill="none" stroke="#E9A517" stroke-width="1.2"/><path d="M12 7.2l1.4 2.9 3.2.4-2.3 2.2.6 3.2L12 14.4l-2.9 1.5.6-3.2-2.3-2.2 3.2-.4z" fill="#E9A517"/></svg>`;
@@ -3042,7 +3060,7 @@ document.addEventListener("click", async ev => {
     case "pick-game": { const k=b.dataset.v, cnt=1+(state.mates||[]).filter(x=>String(x||"").trim()).length;
       if(!gameFits(k,cnt)){ toast(`${GAMES[k].name}は${GAMES[k].n.replace("のみ","")}で遊ぶゲームです`); break; }
       state.game=k; LS.set("sc.game",state.game); render(); break; }
-    case "medal-open": state.medalHole = b.dataset.h!=null ? +b.dataset.h : state.hole; state.sheet="medal"; render(); break;
+    case "medal-open": LS.set("sc.medalTip", true); state.medalHole = b.dataset.h!=null ? +b.dataset.h : state.hole; state.sheet="medal"; render(); break;
     case "medal-close": state.sheet=null; render(); break;
     case "medal-set": { const ctx = (state.cdraft && !state.cdraft.paused) ? state.cdraft : state.draft; if(!ctx) break;
       const hh=state.medalHole, i=+b.dataset.i, v=+b.dataset.v; ctx.medals=ctx.medals||{}; const P=ctx.players?ctx.players.length:1+(ctx.mates||[]).length;

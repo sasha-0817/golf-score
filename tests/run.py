@@ -453,6 +453,18 @@ with sync_playwright() as pw:
     check("オリンピック（チーム）: メダルを入れられて、記録中はチームの合計点（A 6pt / B 3pt）", tg == "A 6pt,A 6pt,B 3pt,B 3pt")
     check("新ペリア・オリンピック（チーム）: エラーなし", not errs and not errs2)
     pg.context.close()
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"olympic\""}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    check("メダルの案内: 初めてのオリンピックの1番ホールで、メダルボタンが光って吹き出しが出る", pg.query_selector(".medal-btn.tip") is not None and pg.query_selector(".medal-tip") is not None)
+    C(pg, "[data-act=medal-open]"); C(pg, "[data-act=medal-close]")
+    check("メダルの案内: 一度押したら消える", pg.query_selector(".medal-tip") is None and pg.query_selector(".medal-btn.tip") is None)
+    pg.context.close()
+    pg, errs2 = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"olympic\""}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    C(pg, "[data-act=next]"); C(pg, "[data-act=prev]")
+    check("メダルの案内: 押さなくても2番ホールへ進んだらもう出ない", pg.query_selector(".medal-tip") is None and pg.evaluate("localStorage.getItem('sc.medalTip')") == "true")
+    check("メダルの案内: エラーなし", not errs and not errs2)
+    pg.context.close()
 
     b.close()
 
