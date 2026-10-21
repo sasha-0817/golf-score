@@ -1472,6 +1472,10 @@ input,select,textarea{font-size:max(16px,1em)}
 .medal-tip{position:fixed;left:0;top:0;transform:translateX(-50%);z-index:40;white-space:nowrap;background:#FFD65A;color:#3A2A00;font-size:11px;font-weight:700;line-height:1;padding:6px 9px;border-radius:9px;box-shadow:0 4px 10px rgba(0,0,0,.2);pointer-events:none;animation:mdTip .4s ease-out both}
 .medal-tip::before{content:"";position:absolute;left:50%;top:-5px;margin-left:-5px;border:5px solid transparent;border-top:0;border-bottom-color:#FFD65A}
 @keyframes mdTip{from{opacity:0;transform:translate(-50%,-4px)}to{opacity:1;transform:translate(-50%,0)}}
+/* 保存中: すぐ「保存中…」に変えて、もう一度押しても二重に保存しない（スプレッドシートへの保存は数秒かかる） */
+.go.save.busy,.cd-save.busy{opacity:.85;pointer-events:none}
+.spin{display:inline-block;width:16px;height:16px;margin-right:8px;vertical-align:-3px;border-radius:50%;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 .sr-row2 b.sr-none{font:700 12px/1 inherit;font-family:inherit;color:var(--rec-muted)}
 .rp .rp-ok{height:48px;border:0;border-radius:999px;background:linear-gradient(135deg,#0E9F62 0%,#13A9C2 100%);color:#fff;font-weight:700;letter-spacing:.12em;box-shadow:0 6px 16px rgba(14,159,98,.3)}
 .rp-words{margin-top:2px}
@@ -1583,7 +1587,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-22-0730";
+const BUILD = "2026-10-22-0800";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2175,7 +2179,7 @@ function viewRecordDraft(d){
     </div>
     <div class="rec-bar">
       <button class="back" data-act="prev" ${state.hole===0?"disabled":""} aria-label="前のホール">${ICON.back}</button>
-      ${state.hole<N-1?`<button class="go" data-act="next">${state.hole+2}番ホールへ<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>`:`<button class="go save" data-act="finish">ラウンドを保存</button>`}
+      ${state.hole<N-1?`<button class="go" data-act="next">${state.hole+2}番ホールへ<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>`:`<button class="go save ${state.saving?"busy":""}" data-act="finish" ${state.saving?"disabled":""}>${state.saving?`<i class="spin"></i>保存中…`:"ラウンドを保存"}</button>`}
     </div>
     ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p><button data-act="pause">中断してホームへ（あとで続きから）</button><button class="danger" data-act="discard">${d.editing?"編集をやめる（変更は保存されません）":"記録を破棄する"}</button><button data-act="cancel-confirm">入力に戻る</button></div></div>`:""}
     ${state.sheet==="fields"?fieldsSheet():""}
@@ -2233,9 +2237,9 @@ async function cardFinish(b){
   const rs=cd.players.map((pl,k)=>{ const withP = pOn && pl.p.every(x=>x!=null); // パットを書かなかった人は putts 0（＝記録なし）で送る
     return { id:k?uid():cd.id, card:true, player:pl.name, courseId:cd.courseId, courseName:cd.courseName, date:cd.date, createdAt:now+k,
       holes:cd.holes.map((x,i)=>({par:x.par, strokes:pl.s[i], putts:withP?pl.p[i]:0, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null})) }; });
-  if(b) b.disabled=true;
-  try{ for(const r of rs) await store.saveRound(r); }
-  catch(e){ if(b) b.disabled=false; writeErr(e); return; }
+  if(state.saving) return; state.saving=true; render();
+  try{ await Promise.all(rs.map(r=>store.saveRound(r))); state.saving=false; }
+  catch(e){ state.saving=false; render(); writeErr(e); return; }
   state.cdraft=null; saveCDraft(); state.confirm=null; state.tab="history"; LS.set("sc.tab","history");
   state.fPlayer=rs[0].player; LS.set("sc.fPlayer",rs[0].player); state.openRound=rs[0].id; state.result=rs[0]; state.resultGroup=rs.length>1?rs:null; state.resultAll=rs.length>1; state.resultGame=rs.length>1?cd.game:null; state.resultCarry=!!cd.carry; state.resultEx={medals:cd.medals||{}, hidden:isPeoria(cd.game)?peoriaHidden(cd.holes.length):null}; render();
 }
@@ -2276,7 +2280,7 @@ function viewCard(cd){
     <div class="cd-pad">
       <div class="cd-lbl">${isOlympic(cd.game)?`<button class="medal-btn sm ${medalTip()&&!(cd.sel&&cd.sel.h>0)?"tip":""}" data-act="medal-open" data-h="${sel?sel.h:Math.min(nDone,N-1)}">${medalSVG(4,13)}${(sel?sel.h:Math.min(nDone,N-1))+1}Hのメダル</button>`:""}${sel?`<span><b>${esc(dupLabel(cd.players.map(x=>x.name),sel.i))}</b>・${sel.h+1}H（PAR ${cd.holes[sel.h].par}）の<em>${ks==="s"?"打数":"パット"}</em></span>`:`<span>${done?"全部入りました。保存しましょう":"マスをタップして入力"}</span>`}</div>
       ${sel||!done?`<div class="cd-keys">${[1,2,3,4,5,6,7,8,9].map(n=>key(n,String(n),!sel || (ks==="p" && n>9))).join("")}${key("10","10+",!sel||ks==="p")}${key("0","0",!sel||ks==="s")}${key("del","消す",!sel)}</div>`:""}
-      ${done?`<button class="cd-save" data-act="cd-finish">ラウンドを保存${cd.players.length>1?`（${cd.players.length}人分）`:""}</button>`:""}
+      ${done?`<button class="cd-save ${state.saving?"busy":""}" data-act="cd-finish" ${state.saving?"disabled":""}>${state.saving?`<i class="spin"></i>保存中…`:`ラウンドを保存${cd.players.length>1?`（${cd.players.length}人分）`:""}`}</button>`:""}
     </div>
     ${state.sheet==="medal"?medalSheet(cd.players.map((p,i,a)=>dupLabel(a.map(x=>x.name),i)), cd.medals, state.medalHole):""}
     ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p><button data-act="cd-pause">中断してホームへ（あとで続きから）</button><button class="danger" data-act="cd-discard">記録を破棄する</button><button data-act="cancel-confirm">入力に戻る</button></div></div>`:""}
@@ -3044,15 +3048,16 @@ document.addEventListener("click", async ev => {
     case "prev": mark_entered(); state.slide="r"; state.hole--; saveDraft(); render(); break;
     case "next": mark_entered(); state.slide="l"; state.hole++; saveDraft(); render(); window.scrollTo({top:0}); break;
     case "finish": {
+      if(state.saving) break;
       mark_entered();
       const r={ id:d.id, player:d.player, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:d.createdAt||Date.now(),
         holes:d.holes.map(x=>({par:x.par, strokes:x.strokes, putts:(fields().putts||d.editing)?x.putts:0, dir:x.dir, bunker:!!x.bunker, ob:evs(x,"ob").length>0, pen:evs(x,"pen").length>0, tee:x.tee||null, club:x.club||null})) };
-      b.disabled=true; rememberClubs(r);
+      state.saving=true; render(); rememberClubs(r);
       const mr=(!d.editing && Array.isArray(d.mates)) ? d.mates.map((m,k)=>({ id:uid(), card:true, player:m.name, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:r.createdAt+k+1,
         holes:d.holes.map((x,i)=>({par:x.par, strokes:m.s[i], putts:0, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null})) })) : [];
-      try{ await store.saveRound(r); for(const x of mr) await store.saveRound(x);
+      try{ await Promise.all([r,...mr].map(x=>store.saveRound(x))); state.saving=false;
         state.draft=null; saveDraft(); state.tab="history"; LS.set("sc.tab","history"); state.fPlayer=r.player; state.openRound=r.id; state.result=r; state.resultGroup=mr.length?[r,...mr]:null; state.resultAll=mr.length>0; state.resultGame=mr.length?d.game:null; state.resultCarry=!!d.carry; state.resultEx={medals:d.medals||{}, hidden:isPeoria(d.game)?peoriaHidden(d.holes.length):null}; render(); }
-      catch(e){ b.disabled=false; writeErr(e); }
+      catch(e){ state.saving=false; render(); writeErr(e); }
       break;
     }
     case "ask-discard": state.confirm="discard"; render(); break;

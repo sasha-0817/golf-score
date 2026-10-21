@@ -19,7 +19,7 @@ const _f=window.fetch;
 window.fetch=async (u,o)=>{ u=String(u);
   if(u.includes("script.google.com")){
     if(window.__offline) throw new TypeError("offline");
-    if(o&&o.method==="POST"){ const b=JSON.parse(o.body), db=__db;
+    if(o&&o.method==="POST"){ if(window.__delay) await new Promise(r=>setTimeout(r,window.__delay)); const b=JSON.parse(o.body), db=__db;
       if(b.action==="saveCourse") db.courses=db.courses.filter(c=>c.id!==b.course.id).concat([JSON.parse(JSON.stringify(b.course))]);
       if(b.action==="deleteCourse") db.courses=db.courses.filter(c=>c.id!==b.id);
       if(b.action==="saveRound"){ const r=JSON.parse(JSON.stringify(b.round)); r.holes=r.holes.map(h=>({par:h.par,strokes:h.strokes,putts:h.putts||0,dir:h.dir||null,bunker:!!h.bunker,ob:!!h.ob,pen:false,tee:null,club:null})); db.rounds=db.rounds.filter(x=>x.id!==r.id).concat([r]); }
@@ -464,6 +464,18 @@ with sync_playwright() as pw:
     C(pg, "[data-act=next]"); C(pg, "[data-act=prev]")
     check("メダルの案内: 押さなくても2番ホールへ進んだらもう出ない", pg.query_selector(".medal-tip") is None and pg.evaluate("localStorage.getItem('sc.medalTip')") == "true")
     check("メダルの案内: エラーなし", not errs and not errs2)
+    pg.context.close()
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": ["はなこ", "じろう", "さぶろう"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.fields": dict(NONE)}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    for _ in range(80):
+        if not pg.evaluate("state.cdraft&&state.cdraft.sel"): break
+        C(pg, '[data-act=cd-key][data-v="3"]')
+    pg.evaluate("window.__offline=false; window.__delay=700"); n0 = pg.evaluate("__db.rounds.length")
+    C(pg, "[data-act=cd-finish]"); pg.wait_for_timeout(150)
+    busy = "保存中" in (pg.text_content(".cd-save") or "")
+    C(pg, "[data-act=cd-finish]"); pg.wait_for_timeout(1600)
+    check("保存: 押したらすぐ「保存中…」になり、もう一度押しても二重に保存しない（4人で4件）", busy and pg.evaluate("__db.rounds.length") - n0 == 4 and pg.query_selector(".result-card") is not None)
+    check("保存中の確認: エラーなし", not errs)
     pg.context.close()
 
     b.close()
