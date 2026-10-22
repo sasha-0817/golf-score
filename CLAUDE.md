@@ -158,6 +158,8 @@
 
 ## 今後の候補
 
+- 2026-10-22 方針（オーナー）: **Web版（Cloudflare）に移してから Google Play に出す**方向。Google Play の個人デベロッパーは公開前にクローズドテスト（Android のテスター12人・14日間続けて参加）が必要で、身近なAndroidの人が4人いるので残り8人ほどを集める。PWAのまま TWA（PWABuilder / Bubblewrap）で包むのが一番手軽。iPhone版（App Store）はその後。
+- 2026-10-22: 航空写真（GPS）でグリーンのどこを狙うか、も話したが「イラストでいい」とのことで今は作らない（航空写真は国土地理院なら無料・出典表記、Googleの写真は規約上切り出し不可、コースごとの位置登録も必要）。
 - App Store 版（本命）: アプリ名は「GOLF SC.」のまま（SC = Short Course / ScoreCard）。サブタイトルで検索語を拾う（例: Short Course & Par 3 Scorecard / ショートコースのスコア記録・分析）。「My Score」系は既存アプリが多く不採用。
   - 形: 無料ダウンロード → 数ラウンドまで無料 → 300〜500円の買い切りで全機能開放。まず日本語と英語。
   - 技術: データは端末内保存に変更（サーバー代0）、Capacitor でiPhoneアプリ化、Mac + Xcode + Apple Developer Program（年99ドル、手数料は Small Business Program で15%）。
