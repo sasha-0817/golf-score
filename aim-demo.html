@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>狙いと結果（試作）</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+:root{--bg:#EEF2EF;--paper:#fff;--fg:#0B1310;--muted:#66736D;--line:#DCE3DF;--turf:#0E9F62;--aim:#2F7DE1;--gold:#F2B01E;--miss:#E5484D;--f-body:"Zen Kaku Gothic New",system-ui,sans-serif;--f-num:"Barlow Condensed",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0A0F0D;--paper:#141B18;--fg:#EEF3F0;--muted:#93A19A;--line:#26302C}}
+:root[data-theme="dark"]{--bg:#0A0F0D;--paper:#141B18;--fg:#EEF3F0;--muted:#93A19A;--line:#26302C}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-feature-settings:"palt";-webkit-tap-highlight-color:transparent}
+button{font:inherit;touch-action:manipulation;cursor:pointer}
+.wrap{max-width:480px;margin:0 auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom))}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.top b{font-size:17px;font-weight:900}
+.top small{display:block;font:600 11px var(--f-num);letter-spacing:.2em;color:var(--turf)}
+.tag{margin-left:auto;font-size:10px;font-weight:700;padding:4px 8px;border-radius:999px;background:#FFD65A;color:#3A2A00}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:4px;margin-bottom:10px}
+.seg button{height:38px;border:0;border-radius:10px;background:none;color:var(--muted);font-weight:700;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--turf);color:#fff}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:12px}
+.step{display:flex;gap:8px;margin-bottom:10px}
+.step span{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:36px;border-radius:12px;font-size:13px;font-weight:700;color:var(--muted);background:var(--bg);border:1px solid var(--line)}
+.step span i{font:700 13px/20px var(--f-num);font-style:normal;width:20px;height:20px;border-radius:50%;background:var(--line);color:var(--muted);text-align:center}
+.step span.now{border:2px solid var(--aim);color:var(--fg);background:color-mix(in srgb,var(--aim) 8%,var(--paper))}
+.step span.now i{background:var(--aim);color:#fff}
+.step span.res.now{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 10%,var(--paper))}
+.step span.res.now i{background:var(--gold);color:#3A2A00}
+.step span.done i{background:var(--turf);color:#fff}
+svg.map{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:none}
+.z{cursor:pointer}
+.z rect,.z path{transition:fill .15s}
+.z .cell{fill:rgba(255,255,255,.0);stroke:rgba(255,255,255,.55);stroke-width:1.2;stroke-dasharray:4 4}
+.z.out .cell{fill:rgba(255,255,255,.55);stroke:#C9D3CE;stroke-dasharray:none}
+.z:active .cell{fill:rgba(255,255,255,.25)}
+.z text{font-size:12px;font-weight:700;fill:#fff;pointer-events:none;text-anchor:middle;paint-order:stroke;stroke:rgba(0,0,0,.25);stroke-width:2px}
+.z.out text{fill:#45524C;stroke:none}
+.z.isaim .cell{fill:color-mix(in srgb,var(--aim) 28%,transparent);stroke:var(--aim);stroke-width:2.4;stroke-dasharray:none}
+.z.isres .cell{fill:color-mix(in srgb,var(--gold) 34%,transparent);stroke:var(--gold);stroke-width:2.4;stroke-dasharray:none}
+.verdict{display:flex;align-items:center;gap:10px;margin-top:10px;min-height:56px;padding:10px 12px;border-radius:14px;background:var(--bg)}
+.verdict .big{font:700 22px/1.1 var(--f-body);min-width:70px;text-align:center;letter-spacing:-.02em}
+.verdict .big.ok{color:var(--turf)}.verdict .big.ng{color:#E07A1F}.verdict .big.bad{color:var(--miss)}
+.verdict p{margin:0;font-size:13px;line-height:1.5}
+.verdict p b{font-size:14px}
+.verdict.hint p{color:var(--muted)}
+.btns{display:flex;gap:8px;margin-top:10px}
+.btns button{flex:1;height:48px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--fg);font-weight:700}
+.btns button.go{border:0;background:linear-gradient(135deg,#0E9F62,#13A9C2);color:#fff;letter-spacing:.08em}
+.btns button:disabled{opacity:.4}
+.sec{display:flex;align-items:baseline;gap:8px;margin:18px 2px 8px;font-size:12px;font-weight:500;color:var(--muted)}
+.sec span{font:600 13px var(--f-num);letter-spacing:.2em;color:var(--turf)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stats div{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:10px 6px;text-align:center}
+.stats b{display:block;font:700 26px/1.1 var(--f-num)}
+.stats small{font-size:11px;color:var(--muted);font-weight:700}
+.hist{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+.hist div{display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-size:13px}
+.hist i{font-style:normal;font:700 13px var(--f-num);color:var(--muted);width:22px}
+.hist em{font-style:normal;margin-left:auto;font-weight:700}
+.note{font-size:12px;color:var(--muted);line-height:1.6;margin-top:14px}
+.legend{display:flex;gap:14px;justify-content:center;margin-top:8px;font-size:11px;color:var(--muted);font-weight:700}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+/* 狙い → 結果 の2回タップの試作（本体とは別ページ。記録はこのページの中だけ） */
+const S = { mode:"p4", aim:null, res:null, log:{p4:[],p3:[]} };
+// パー4・5: フェアウェイを縦に3分割＋外側（さらに左・さらに右）。列番号 -2..2
+const FW = [{c:-2,l:"さらに左"},{c:-1,l:"左"},{c:0,l:"真ん中"},{c:1,l:"右"},{c:2,l:"さらに右"}];
+// パー3: グリーン3×3（行0=奥,1=中,2=手前 × 列0=左,1=中,2=右）＋外（左外・右外・オーバー・ショート）
+const GR = []; ["奥","中","手前"].forEach((r,ri)=>["左","中","右"].forEach((c,ci)=>GR.push({x:ci,y:ri,l:(r==="中"&&c==="中")?"真ん中":r+c})));
+const GOUT = [{x:-1,y:1,l:"左外",out:1},{x:3,y:1,l:"右外",out:1},{x:1,y:-1,l:"オーバー",out:1},{x:1,y:3,l:"ショート",out:1}];
+
+function fwSVG(){
+  const W=340, H=300, x0=20, lw=60, cells=FW.map((z,i)=>{ const x=x0+i*lw, inFw=Math.abs(z.c)<=1;
+    const cls=`z ${inFw?"":"out"} ${S.aim===z.c?"isaim":""} ${S.res===z.c?"isres":""}`;
+    return `<g class="${cls}" data-v="${z.c}"><rect class="cell" x="${x+2}" y="44" width="${lw-4}" height="${H-70}" rx="10"/><text x="${x+lw/2}" y="${H-36}">${z.l}</text></g>`; }).join("");
+  return `<svg class="map" viewBox="0 0 ${W} ${H}" role="group" aria-label="フェアウェイ">
+    <defs><linearGradient id="fw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#46C77B"/><stop offset="1" stop-color="#1F9E57"/></linearGradient>
+    <pattern id="mow" width="22" height="22" patternUnits="userSpaceOnUse" patternTransform="rotate(-38)"><rect width="22" height="11" fill="rgba(255,255,255,.1)"/></pattern></defs>
+    <rect x="0" y="0" width="${W}" height="${H}" rx="16" fill="#A9DDB7"/>
+    <rect x="${x0+lw}" y="20" width="${lw*3}" height="${H-40}" rx="40" fill="url(#fw)"/><rect x="${x0+lw}" y="20" width="${lw*3}" height="${H-40}" rx="40" fill="url(#mow)"/>
+    <ellipse cx="${W/2}" cy="26" rx="34" ry="14" fill="#6BEDB4" stroke="#86D9A2" stroke-width="4"/><line x1="${W/2+6}" y1="24" x2="${W/2+6}" y2="4" stroke="#fff" stroke-width="1.6"/><path d="M${W/2+7} 4 L${W/2+19} 8 L${W/2+7} 12Z" fill="#E11D2E"/>
+    ${cells}${marks(z=>{ const i=FW.findIndex(f=>f.c===z); return [x0+i*lw+lw/2, 150]; })}
+  </svg>`;
+}
+function grSVG(){
+  const W=340, H=300, gx=80, gy=60, cw=60, ch=58;
+  const pos=(x,y)=>[gx+x*cw, gy+y*ch];
+  const cell=(z)=>{ let [x,y]=pos(z.x,z.y), w=cw, h=ch;
+    if(z.out){ if(z.x<0){x=12; y=gy; w=gx-18; h=ch*3;} if(z.x>2){x=gx+cw*3+6; y=gy; w=W-x-12; h=ch*3;} if(z.y<0){x=gx; y=10; w=cw*3; h=gy-16;} if(z.y>2){x=gx; y=gy+ch*3+6; w=cw*3; h=H-y-12;} }
+    const key=z.x+","+z.y, cls=`z ${z.out?"out":""} ${S.aim===key?"isaim":""} ${S.res===key?"isres":""}`;
+    return `<g class="${cls}" data-v="${key}"><rect class="cell" x="${x+2}" y="${y+2}" width="${w-4}" height="${h-4}" rx="9"/><text x="${x+w/2}" y="${y+h/2+4}">${z.l}</text></g>`; };
+  const center=(key)=>{ const [x,y]=key.split(",").map(Number); if(x<0) return [gx/2+3, gy+ch*1.5]; if(x>2) return [gx+cw*3+(W-gx-cw*3)/2-3, gy+ch*1.5]; if(y<0) return [gx+cw*1.5, gy/2+3]; if(y>2) return [gx+cw*1.5, gy+ch*3+(H-gy-ch*3)/2]; return [gx+x*cw+cw/2, gy+y*ch+ch/2-10]; };
+  return `<svg class="map" viewBox="0 0 ${W} ${H}" role="group" aria-label="グリーン">
+    <defs><radialGradient id="gr" cx="40%" cy="35%" r="75%"><stop offset="0" stop-color="#6BEDB4"/><stop offset="1" stop-color="#22B672"/></radialGradient></defs>
+    <rect x="0" y="0" width="${W}" height="${H}" rx="16" fill="#A9DDB7"/>
+    <rect x="${gx-6}" y="${gy-6}" width="${cw*3+12}" height="${ch*3+12}" rx="60" fill="#86D9A2"/><rect x="${gx}" y="${gy}" width="${cw*3}" height="${ch*3}" rx="54" fill="url(#gr)"/>
+    <line x1="${gx+cw*1.5+8}" y1="${gy+ch*1.5}" x2="${gx+cw*1.5+8}" y2="${gy+ch*1.5-30}" stroke="#fff" stroke-width="1.8"/><path d="M${gx+cw*1.5+9} ${gy+ch*1.5-30} L${gx+cw*1.5+23} ${gy+ch*1.5-25} L${gx+cw*1.5+9} ${gy+ch*1.5-20}Z" fill="#E11D2E"/>
+    ${[...GR,...GOUT].map(cell).join("")}${marks(center)}
+  </svg>`;
+}
+// 狙い（青い照準）と結果（ボール）、その間の矢印
+function marks(at){
+  let s="";
+  if(S.aim!=null){ const [x,y]=at(S.aim); s+=`<g pointer-events="none"><circle cx="${x}" cy="${y}" r="13" fill="none" stroke="#fff" stroke-width="4"/><circle cx="${x}" cy="${y}" r="13" fill="none" stroke="#2F7DE1" stroke-width="2.4"/><path d="M${x-19} ${y}H${x-9}M${x+9} ${y}H${x+19}M${x} ${y-19}V${y-9}M${x} ${y+9}V${y+19}" stroke="#2F7DE1" stroke-width="2.4" stroke-linecap="round"/></g>`; }
+  if(S.res!=null){ const [x,y]=at(S.res); const [ax,ay]=at(S.aim);
+    if(S.res!==S.aim) s+=`<path d="M${ax} ${ay} L${x} ${y}" stroke="#F2B01E" stroke-width="3" stroke-dasharray="5 5" stroke-linecap="round" pointer-events="none"/>`;
+    s+=`<g pointer-events="none"><ellipse cx="${x+3}" cy="${y+5}" rx="8" ry="4.5" fill="rgba(0,0,0,.25)"/><circle cx="${x}" cy="${y}" r="7.5" fill="#fff" stroke="#9AA7B4" stroke-width="1"/></g>`; }
+  return s;
+}
+function diffText(){
+  if(S.aim==null || S.res==null) return null;
+  if(S.mode==="p4"){ const d=S.res-S.aim; if(d===0) return {big:"◎",cls:"ok",t:"<b>狙い通り</b>"};
+    const n=Math.abs(d), dir=d>0?"右":"左"; return {big:(d>0?"右":"左")+n, cls:n>=2?"bad":"ng", t:`狙いより<b>${n===1?"1つ":"2つ以上"}${dir}</b>${n>=2?"（大きく外れ）":""}`}; }
+  const [ax,ay]=S.aim.split(",").map(Number), [rx,ry]=S.res.split(",").map(Number), dx=rx-ax, dy=ry-ay;
+  if(!dx && !dy) return {big:"◎",cls:"ok",t:"<b>狙い通り</b>"};
+  const parts=[]; if(dx) parts.push(`${Math.abs(dx)}つ${dx>0?"右":"左"}`); if(dy) parts.push(`${Math.abs(dy)}つ${dy>0?"手前":"奥"}`);
+  const out=[...GOUT].some(z=>z.x+","+z.y===S.res);
+  return {big:[dx?(dx>0?"右":"左")+Math.abs(dx):"", dy?(dy>0?"手前":"奥")+Math.abs(dy):""].filter(Boolean).join(" "), cls:out||Math.abs(dx)+Math.abs(dy)>=2?"bad":"ng", t:`狙いより<b>${parts.join("・")}</b>${out?"（グリーンを外した）":""}`};
+}
+function stats(){
+  const L=S.log[S.mode]; if(!L.length) return "";
+  const ok=L.filter(x=>x.d.cls==="ok").length;
+  let right=0,left=0,longs=0,shorts=0;
+  L.forEach(x=>{ if(S.mode==="p4"){ if(x.res>x.aim) right++; if(x.res<x.aim) left++; } else { const [ax,ay]=x.aim.split(",").map(Number),[rx,ry]=x.res.split(",").map(Number); if(rx>ax) right++; if(rx<ax) left++; if(ry<ay) longs++; if(ry>ay) shorts++; } });
+  const pc=n=>Math.round(n*100/L.length)+"%";
+  const third = S.mode==="p4" ? `<div><b>${pc(left)}</b><small>左へズレ</small></div>` : `<div><b>${shorts>=longs?pc(shorts):pc(longs)}</b><small>${shorts>=longs?"手前へズレ":"奥へズレ"}</small></div>`;
+  return `<div class="sec"><span>STATS</span>この試作で打った${L.length}球</div>
+    <div class="stats"><div><b>${pc(ok)}</b><small>狙い通り</small></div><div><b>${pc(right)}</b><small>右へズレ</small></div>${third}</div>
+    <div class="hist">${L.slice(-5).reverse().map((x,i)=>`<div><i>${L.length-i}</i>${x.aimL} → ${x.resL}<em style="color:${x.d.cls==="ok"?"var(--turf)":x.d.cls==="bad"?"var(--miss)":"#E07A1F"}">${x.d.cls==="ok"?"狙い通り":x.d.big}</em></div>`).join("")}</div>`;
+}
+const label=v=>S.mode==="p4" ? FW.find(z=>z.c===v).l : [...GR,...GOUT].find(z=>z.x+","+z.y===v).l;
+function render(){
+  const step = S.aim==null?1:S.res==null?2:3, d=diffText();
+  document.getElementById("app").innerHTML=`
+    <div class="top"><div><small>AIM &amp; RESULT</small><b>狙いと結果</b></div><span class="tag">試作</span></div>
+    <div class="seg"><button data-mode="p4" aria-pressed="${S.mode==="p4"}">パー4・5</button><button data-mode="p3" aria-pressed="${S.mode==="p3"}">パー3</button></div>
+    <div class="card">
+      <div class="step"><span class="${step===1?"now":"done"}"><i>1</i>狙いをタップ</span><span class="res ${step===2?"now":step===3?"done":""}"><i>2</i>結果をタップ</span></div>
+      ${S.mode==="p4"?fwSVG():grSVG()}
+      <div class="legend"><span><i style="border:2px solid var(--aim)"></i>狙い</span><span><i style="background:var(--gold)"></i>結果</span></div>
+      ${d?`<div class="verdict"><div class="big ${d.cls}">${d.big}</div><p>${label(S.aim)} を狙って ${label(S.res)}<br>${d.t}</p></div>`
+         :`<div class="verdict hint"><p>${step===1?"まず、どこを狙ったかをタップします（打つ前でもあとでもOK）":"次に、実際にボールが行ったところをタップします"}</p></div>`}
+      <div class="btns"><button data-act="undo" ${step===1?"disabled":""}>やり直す</button><button class="go" data-act="next" ${step<3?"disabled":""}>次の球</button></div>
+    </div>
+    ${stats()}
+    <p class="note">本体とは別の試し用ページです。ここで押した記録は保存されません。<br>本番では「記録する項目」に「狙いも記録する（上級者向け）」を足して、ONの人だけに出す想定です。分析では「狙い通り率」や「狙いよりどちらにズレやすいか」を出せます。</p>`;
+}
+document.addEventListener("click", e=>{
+  const m=e.target.closest("[data-mode]"); if(m){ S.mode=m.dataset.mode; S.aim=S.res=null; render(); return; }
+  const z=e.target.closest(".z");
+  if(z){ const v = S.mode==="p4" ? +z.dataset.v : z.dataset.v;
+    if(S.aim==null) S.aim=v; else if(S.res==null) S.res=v; else { S.aim=v; S.res=null; }
+    render(); return; }
+  const b=e.target.closest("[data-act]"); if(!b) return;
+  if(b.dataset.act==="undo"){ if(S.res!=null) S.res=null; else S.aim=null; render(); }
+  if(b.dataset.act==="next"){ S.log[S.mode].push({aim:S.aim,res:S.res,aimL:label(S.aim),resL:label(S.res),d:diffText()}); S.aim=S.res=null; render(); }
+});
+render();
+</script>
+</body>
+</html>
