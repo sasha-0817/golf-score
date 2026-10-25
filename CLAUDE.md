@@ -26,7 +26,9 @@
 
 ## データの保存
 
-**Web版（Cloudflare Pages + D1、2026-10-25 に作成。設定が済むまでは下のスプレッドシートが本番）**
+**Web版（Cloudflare Pages + D1、2026-10-25 に作成・公開）**
+- 新しいアドレス: https://golf-score-bd6.pages.dev （Pages プロジェクト名 golf-score、GitHub の main から自動公開。D1 データベース名 golf-sc を `DB` でつないだ。オーナーが Cloudflare の画面で設定）
+- 2026-10-25 に `CF_URL` を入れた → 古いアプリ（github.io）に引っ越しの案内が出る。オーナーと友達が各自の iPhone で「記録を送って新しいアプリへ」を押し、ホーム画面に新しいアドレスで追加し直す。テストの `open_page` はふだん `CF_URL` を空にして開く（案内が出ないように）
 - `functions/api.js`（Pages Functions）が `/api` で今までの Apps Script と同じ形を返す（GET `{ok, version:3, courses, rounds}`、POST `saveCourse` / `deleteCourse` / `saveRound` / `deleteRound`、引っ越し用の `import`）。D1 は Pages プロジェクトに **`DB`** という名前でつなぐ。表（courses / rounds、どちらも id と丸ごとの JSON）は最初のアクセスで自動で作る。CORS は全部許可（古いアプリ github.io から引っ越しで送るため）。
 - アプリは `ON_CF`（github.io 以外の http(s) で開いたとき）なら同じサイトの `/api`、それ以外は今まで通り `SCRIPT_URL`。sw.js は `/api` を素通し。
 - 引っ越し: `CF_URL` に新しいアドレスを入れると、古いアプリ（github.io）の画面の上に「GOLF SC. は新しいアドレスに引っ越しました」の案内が出て、「記録を送って新しいアプリへ」で今見えている全ラウンド・コース（端末に残っていたクラブ・方向などで補った分も）を `import` で送り、新しいアドレスへ移る。同じIDのラウンドが2台から届いたら、空いている項目だけ埋める（`mergeRound`）。何回押しても大丈夫。

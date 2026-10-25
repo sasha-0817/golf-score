@@ -1616,7 +1616,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-25-1730";
+const BUILD = "2026-10-25-1800";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1669,7 +1669,7 @@ setTimeout(maybeShowA2HS, 2500);
 // ↓ Apps Script を「ウェブアプリ」として公開したときの URL を貼り付けてください
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw0sl0SbAukE3UDirc5iYePK-XaY9pD5gZvwg5g-IJMdAuiRRqwilifThZvbinzDTuO/exec";
 /* Web版（Cloudflare Pages + D1）。github.io 以外の http(s) で開いたときは同じサイトの /api に読み書きする */
-const CF_URL = "";   // 新しいアプリのアドレス（Cloudflare の設定が終わったら入れる。例 "https://golf-sc.pages.dev"）
+const CF_URL = "https://golf-score-bd6.pages.dev";   // 新しいアプリ（Cloudflare Pages + D1）のアドレス。ここが入っていると古いアプリ（github.io）に引っ越しの案内が出る
 const ON_CF = !!window.__onCF || (/^https?:$/.test(location.protocol) && !/github\.io$/.test(location.hostname));
 const API_URL = ON_CF ? "/api" : SCRIPT_URL;
 const hasBackend = ON_CF || /^https:\/\/script\.google\.com\//.test(SCRIPT_URL);

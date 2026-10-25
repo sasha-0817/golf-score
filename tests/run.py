@@ -5,7 +5,7 @@
 ネットにつながらなくても動く（スプレッドシートは偽物のサーバーに置きかえる）。
 全部 OK なら最後に「ALL OK」、1つでもダメなら NG を表示して終了コード1。
 """
-import json, os, sys, tempfile, random
+import json, os, re, sys, tempfile, random
 from playwright.sync_api import sync_playwright
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -35,6 +35,7 @@ def check(name, cond):
 
 def open_page(b, ls=None, dark=False, offline=False, repl=None):
     src = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
+    src = re.sub(r'const CF_URL = "[^"]*";', 'const CF_URL = "";', src, count=1)  # ふだんのテストは引っ越しの案内なし
     for a, z in (repl or {}).items(): src = src.replace(a, z)
     src = (src.replace("setTimeout(checkUpdate, 1500);", "").replace("setTimeout(maybeShowA2HS, 2500);", "")
               .replace("const state = {", "const state = window.state = {")
