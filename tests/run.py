@@ -33,8 +33,9 @@ results = []
 def check(name, cond):
     results.append((bool(cond), name)); print(("OK  " if cond else "NG  ") + name)
 
-def open_page(b, ls=None, dark=False, offline=False):
+def open_page(b, ls=None, dark=False, offline=False, repl=None):
     src = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
+    for a, z in (repl or {}).items(): src = src.replace(a, z)
     src = (src.replace("setTimeout(checkUpdate, 1500);", "").replace("setTimeout(maybeShowA2HS, 2500);", "")
               .replace("const state = {", "const state = window.state = {")
               .replace("function skinsCalc(", "window.skinsCalc=skinsCalc; function skinsCalc(")
@@ -496,6 +497,51 @@ with sync_playwright() as pw:
     check("保存: 押したらすぐ「保存中…」になり、もう一度押しても二重に保存しない（4人で4件）", busy and pg.evaluate("__db.rounds.length") - n0 == 4 and pg.query_selector(".result-card") is not None)
     check("保存中の確認: エラーなし", not errs)
     pg.context.close()
+
+    # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
+    import subprocess, time
+    PORT = 8791
+    srv = subprocess.Popen(["node", os.path.join(ROOT, "tests", "cf-server.mjs"), str(PORT)], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    srv.stdout.readline()
+    try:
+        src = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
+        src = (src.replace("setTimeout(checkUpdate, 1500);", "").replace("setTimeout(maybeShowA2HS, 2500);", "").replace("const state = {", "const state = window.state = {")
+                  .replace("async function connect(){", "window.connect=()=>connect(); async function connect(){"))
+        src = src.replace("<body>", "<body><script>if(!sessionStorage.t){sessionStorage.t=1;localStorage.clear();localStorage.setItem('sc.player',JSON.stringify('たろう'));localStorage.setItem('sc.fields',JSON.stringify(%s));}</script>" % json.dumps(ALL), 1)
+        open(os.path.join(ROOT, "_test_cf.html"), "w", encoding="utf-8").write(src)
+        ctx = b.new_context(viewport={"width": 375, "height": 667}, service_workers="block"); pg = ctx.new_page(); errs = []
+        pg.on("pageerror", lambda e: errs.append(str(e)))
+        pg.goto(f"http://127.0.0.1:{PORT}/_test_cf.html"); pg.wait_for_timeout(1200)
+        check("Web版: 同じサイトの /api につながる（version 3・シート更新のお願いは出ない）", pg.evaluate("state.mode") == "cloud" and pg.evaluate("state.serverVer") == 3)
+        start_preset(pg, "firtree"); play_round(pg, ALL)
+        srvr = pg.evaluate("fetch('/api').then(r=>r.json())")
+        hs = srvr["rounds"][0]["holes"] if srvr["rounds"] else []
+        check("Web版: ラウンドがデータベースに保存され、クラブ・ティーショット・方向も残る", len(srvr["rounds"]) == 1 and any(h.get("club") for h in hs) and any(h.get("tee") for h in hs) and any(h.get("dir") for h in hs))
+        check("Web版: コースも保存される", any(c.get("name") for c in srvr["courses"]))
+        pg.evaluate("localStorage.removeItem('sc.rounds')"); pg.reload(); pg.wait_for_timeout(1200)
+        check("Web版: 端末の控えを消して読み直してもデータベースから戻る", pg.evaluate("state.rounds.length") == 1 and pg.evaluate("state.rounds[0].holes.some(h=>h.club)"))
+        rid = pg.evaluate("state.rounds[0].id")
+        pg.evaluate(f"fetch('/api',{{method:'POST',body:JSON.stringify({{action:'deleteRound',id:'{rid}'}})}})"); pg.wait_for_timeout(200)
+        check("Web版: 削除できる", len(pg.evaluate("fetch('/api').then(r=>r.json())")["rounds"]) == 0)
+        check("Web版: エラーなし", not errs)
+        ctx.close()
+        # 古いアプリ（github.io）から引っ越し: 端末に残っていたクラブなども一緒に送る
+        pg, errs = open_page(b, {"sc.player": "\"たろう\""}, repl={'const CF_URL = "";': f'const CF_URL = "http://127.0.0.1:{PORT}";'})
+        pg.evaluate("window.__noNav=true; __db.courses.push({id:'cX',name:'旧コース',holes:[{par:3}]}); __db.rounds.push({id:'old1',player:'たろう',courseId:'cX',courseName:'旧コース',date:'2026-10-01',createdAt:1,holes:[{par:3,strokes:4,putts:2}]})")
+        pg.evaluate("localStorage.setItem('sc.rounds', JSON.stringify([{id:'old1',player:'たろう',holes:[{par:3,strokes:4,putts:2,club:'7I',tee:null,dir:'right'}]}]))")
+        pg.evaluate("connect()"); pg.wait_for_timeout(600)
+        check("古いアプリ: 引っ越しの案内が出る", pg.query_selector(".move-bar [data-act=migrate]") is not None)
+        C(pg, ".move-bar [data-act=migrate]"); pg.wait_for_timeout(1200)
+        srvr = pg.evaluate(f"fetch('http://127.0.0.1:{PORT}/api').then(r=>r.json())")
+        old = [r for r in srvr["rounds"] if r["id"] == "old1"]
+        check("古いアプリ: 引っ越しボタンで新しいデータベースへ送られる（端末に残っていたクラブ・方向も）", len(old) == 1 and old[0]["holes"][0].get("club") == "7I" and old[0]["holes"][0].get("dir") == "right" and any(c["id"] == "cX" for c in srvr["courses"]))
+        check("古いアプリ: 送ったあと「新しいアプリを開く」も出る", pg.query_selector(".move-bar a") is not None)
+        check("引っ越し: エラーなし", not errs)
+        pg.context.close()
+    finally:
+        srv.terminate()
+        try: os.remove(os.path.join(ROOT, "_test_cf.html"))
+        except OSError: pass
 
     b.close()
 
