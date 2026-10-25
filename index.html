@@ -1616,7 +1616,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-25-1800";
+const BUILD = "2026-10-25-1830";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2735,12 +2735,13 @@ function viewCourses(){
   return `<div class="panel">
     ${state.mode==="connecting"&&!all.length?`<div class="empty">読み込み中…</div>`:""}
     <div class="sec"><em>FAVORITE</em><span>★ よく行くコース</span></div>
-    ${favList.length?courseRows(favList,"edit"):`<p class="muted" style="font-size:13px;margin:4px 0 0">下の一覧で ☆ をタップすると、ここに入ります。ラウンド開始のときは、ここのコースから選びます。</p>`}
+    ${favList.length?courseRows(favList,"edit"):`<p class="muted" style="font-size:13px;margin:4px 0 0">下の一覧で ☆ をタップすると、ここに移ります。ラウンド開始のときは、ここのコースから選びます。</p>`}
   </div>
   <div class="panel">
     <div class="sec"><em>SEARCH</em><span>コースを探す</span></div>
     ${prefSelect(all,pf,"cl-pref")}
-    ${courseRows(byPref(all,pf),"edit")}
+    ${(()=>{ const inPf=byPref(all,pf), rest=inPf.filter(c=>!F.includes(c.id));
+      return rest.length?courseRows(rest,"edit"):inPf.length?`<div class="muted" style="font-size:13px;padding:12px 2px">この県のコースは、すべて ★ よく行くコースに入っています。</div>`:courseRows([],"edit"); })()}
     <button class="btn add-course" data-act="new-course">＋ 見つからないときは、コースを追加</button>
     <p class="muted" style="font-size:12px;margin:8px 0 0;text-align:center">追加したコースはみんなが使えます。</p>
   </div>`;

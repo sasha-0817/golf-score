@@ -499,6 +499,17 @@ with sync_playwright() as pw:
     check("保存中の確認: エラーなし", not errs)
     pg.context.close()
 
+    # 19b. コース画面: ★のコースは「コースを探す」の一覧に重ねて出さない
+    cs = [{"id": "k1", "name": "コースK1", "holes": [{"par": 3, "yards": 100, "pref": "東京都"}] + [{"par": 3, "yards": 100}] * 8},
+          {"id": "k2", "name": "コースK2", "holes": [{"par": 3, "yards": 100, "pref": "東京都"}] + [{"par": 3, "yards": 100}] * 8}]
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.courses": cs, "sc.favs": ["k1"], "sc.pref": "\"東京都\""}, offline=True)
+    C(pg, "nav.tabs [data-tab=courses]")
+    n = pg.evaluate("[...document.querySelectorAll('.cp-main b')].map(e=>e.textContent)")
+    check("コース画面: ★のコースは探す一覧に重ならない", n.count("コースK1") == 1 and n.count("コースK2") == 1)
+    C(pg, '.cp-fav[data-id="k2"]')
+    check("コース画面: 全部★なら探す一覧に案内だけ", "すべて ★ よく行くコースに入っています" in pg.inner_text("body") and pg.evaluate("document.querySelectorAll('.cp-main').length") == 2)
+    check("コース画面: エラーなし", not errs); pg.context.close()
+
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
     import subprocess, time
     PORT = 8791
