@@ -3,7 +3,7 @@
 友達とショートコースを回るときに、1ホールずつスコアを記録して分析するWebアプリ。
 オーナーは sasha-0817。いまは2人（本人と友達）で使っている。将来は有料化も検討中。
 
-- 公開URL: https://sasha-0817.github.io/golf-score/
+- 公開URL: https://golf-score-bd6.pages.dev （2026-10-25 に Cloudflare へ移行、オーナーの端末で動作確認済み。古い https://sasha-0817.github.io/golf-score/ は引っ越しの案内を出すだけ）
 - 主な利用環境: iPhone（SE 2 = 375×667 が最小）、ホーム画面に追加して使う
 - 言語: UIはすべて日本語。見出しの飾りとして英語の小見出し（SCORE / PUTTS / TREND など）を使う
 
