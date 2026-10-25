@@ -984,7 +984,6 @@ input,select,textarea{font-size:max(16px,1em)}
 .cs-chips{display:grid;grid-template-columns:repeat(6,1fr);overflow:visible;padding:4px 2px 2px}
 .cs-chips button{min-width:0;padding:0;height:40px}
 .club-strip .eyebrow b{margin-left:6px}
-.az-s .az-p.side{font-size:16px}
 /* スコアカード入力 */
 .im-seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 12px}
 .im-seg button{border:1px solid var(--line);background:var(--paper);color:var(--fg);border-radius:12px;padding:9px 6px;font:inherit;font-weight:700;font-size:14px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;touch-action:manipulation}
@@ -1507,6 +1506,7 @@ input,select,textarea{font-size:max(16px,1em)}
 .sr-row2 b.sr-none{font:700 12px/1 inherit;font-family:inherit;color:var(--rec-muted)}
 .rp .rp-ok{height:48px;border:0;border-radius:999px;background:linear-gradient(135deg,#0E9F62 0%,#13A9C2 100%);color:#fff;font-weight:700;letter-spacing:.12em;box-shadow:0 6px 16px rgba(14,159,98,.3)}
 .rp-words{margin-top:2px}
+.az-s .pu{font-size:.6em}
 </style>
 
 </head>
@@ -1616,7 +1616,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-25-1830";
+const BUILD = "2026-10-26-0830";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1758,6 +1758,8 @@ const puttsOn = r => r.holes.some(h=>h.putts>0);
 const fmtPct = v => v==null ? "—" : (v%1===0? v.toFixed(0): v.toFixed(1));
 const toPar = n => n===0 ? "±0" : (n>0? "+"+n : String(n));
 function roundTotals(r){ const s=sum(r.holes,h=>h.strokes), p=sum(r.holes,h=>h.par), pt=sum(r.holes,h=>h.putts); return {score:s, par:p, putts:pt, diff:s-p}; }
+/* 分析・履歴は自分（開始画面の名前）だけを出す。サンプルデータは たろう */
+function me(){ const pl=players(), n=state.demo?"たろう":LS.get("sc.player",""); return n || pl[0] || ""; }
 function players(){ return [...new Set(rounds().map(r=>r.player))].filter(Boolean).sort((a,b)=>a.localeCompare(b,"ja")); }
 function rounds(){ return state.demo ? DEMO.rounds : state.rounds; }
 function courses(){ return state.demo ? DEMO.courses : state.courses; }
@@ -2016,17 +2018,19 @@ function heatShape(shape, heat, worst){
   return worst ? base + shape.replace('class="az-bg"', 'class="az-hatch" fill="url(#hatchS)" pointer-events="none"') : base;
 }
 const HATCH = `<pattern id="hatchS" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2.4" height="8" fill="#E5484D" fill-opacity=".2"/></pattern>`;
+/* 分析の絵の%は整数（左右の細い枠にも同じ大きさで収まるように）。%記号は小さく */
+const mapPct = v => `${v==null?"—":Math.round(v)}<tspan class="pu">%</tspan>`;
 function approachSVG(dir, tap, stat){
   // stat が渡されたら分析用（読み取り専用・割合表示）
   const Z = { on:[218,106], long:[236,26], short:[238,172], left:[46,62], right:[294,62], miss:[214,208] };
   const sel = k => !stat && dir===k;
   const pctOf = k => stat ? pct(stat.dirs[k], stat.dirN) : null;
   const maxMiss = stat ? Math.max(1, ...["long","short","left","right","miss"].map(k=>stat.dirs[k]||0)) : 1;
-  const worst = stat ? ["long","short","left","right","miss"].reduce((a,k)=>(stat.dirs[k]||0)>(stat.dirs[a]||0)?k:a,"long") : null;
+  const topMiss = stat ? Math.max(0, ...["long","short","left","right","miss"].map(k=>stat.dirs[k]||0)) : 0; // 同じ数のミスは同じ濃さ（同率1位は両方とも一番多い扱い）
   const zone = (k, shape, lx, ly, label) => {
-    if(stat){ const v=pctOf(k), heat=((stat.dirs[k]||0)/maxMiss)*.4, w=k===worst&&(stat.dirs[k]||0)>0;
+    if(stat){ const v=pctOf(k), heat=((stat.dirs[k]||0)/maxMiss)*.4, w=topMiss>0&&(stat.dirs[k]||0)===topMiss;
       return `<g class="az-s">${heatShape(shape, (stat.dirs[k]||0)/maxMiss, w)}
-        ${k==="miss"||k==="short"?`<text x="${lx}" y="${ly}" class="az-t">${label}<tspan dx="8" class="az-p ${w?"worst":""}">${fmtPct(v)}%</tspan></text>`:`<text x="${lx}" y="${ly-12}" class="az-t">${label}</text><text x="${lx}" y="${ly+10}" class="az-p ${w?"worst":""} ${k==="left"||k==="right"?"side":""}">${fmtPct(v)}%</text>`}</g>`; }
+        ${k==="miss"||k==="short"?`<text x="${lx}" y="${ly}" class="az-t">${label}<tspan dx="8" class="az-p ${w?"worst":""}">${mapPct(v)}</tspan></text>`:`<text x="${lx}" y="${ly-12}" class="az-t">${label}</text><text x="${lx}" y="${ly+10}" class="az-p ${w?"worst":""} ${k==="left"||k==="right"?"side":""}">${mapPct(v)}</text>`}</g>`; }
     return `<g class="az ${sel(k)?"on-sel":""}" role="button" tabindex="0" data-act="dir" data-v="${k}" aria-pressed="${sel(k)}" aria-label="${label}">${shape}<text x="${lx}" y="${ly}" class="az-t">${label}</text></g>`; };
   const b = !stat && dir && Z[dir];
   const sx=170, sy=222;
@@ -2041,7 +2045,7 @@ function approachSVG(dir, tap, stat){
   const SH = "rgba(0,0,0,.22)";
   const ball = b ? `<g class="ballg ${tap?"drop":""}"><ellipse cx="${b[0]+3.5}" cy="${b[1]+5}" rx="7.5" ry="4.8" fill="rgba(0,0,0,.26)" filter="url(#soft)" transform="rotate(15 ${b[0]+3.5} ${b[1]+5})"/><image href="ball.png" x="${b[0]-7.5}" y="${b[1]-7.5}" width="15" height="15"/></g>` : "";
   const greenAttrs = stat ? `class="az-s"` : `class="az az-green ${sel("on")?"on-sel":""}" role="button" tabindex="0" data-act="dir" data-v="on" aria-pressed="${sel("on")}" aria-label="オン"`;
-  const onLabel = stat ? `<text x="150" y="104" class="az-t on-t">オン</text><text x="150" y="128" class="on-p">${fmtPct(pctOf("on"))}%</text>` : `<text x="148" y="122" class="az-t on-t">オン</text>`;
+  const onLabel = stat ? `<text x="150" y="104" class="az-t on-t">オン</text><text x="150" y="128" class="on-p">${mapPct(pctOf("on"))}</text>` : `<text x="148" y="122" class="az-t on-t">オン</text>`;
   return `<svg class="approach" viewBox="0 0 340 222" preserveAspectRatio="xMidYMid meet" role="${stat?"img":"group"}" aria-label="グリーンを狙った1球目">
     <defs>
       <radialGradient id="gGreen${stat?"S":""}" cx="45%" cy="40%" r="70%"><stop offset="0" stop-color="#5BE6A8"/><stop offset=".7" stop-color="#14A866"/><stop offset="1" stop-color="#0B8A52"/></radialGradient>
@@ -2079,12 +2083,12 @@ function fairwaySVG(tee, tap, stat){
   const id = stat?"S":"";
   const sel = k => !stat && tee===k;
   const maxMiss = stat ? Math.max(1, ...["rl","rr","miss"].map(k=>stat.teeC[k]||0)) : 1;
-  const worst = stat ? ["rl","rr","miss"].reduce((a,k)=>(stat.teeC[k]||0)>(stat.teeC[a]||0)?k:a,"rl") : null;
+  const topMiss = stat ? Math.max(0, ...["rl","rr","miss"].map(k=>stat.teeC[k]||0)) : 0;
   const zone = (k, shape, lx, ly, label, extra="") => {
-    if(stat){ const v=pct(stat.teeC[k]||0, stat.teeN), heat=k==="fw"?0:((stat.teeC[k]||0)/maxMiss)*.4, w=k===worst&&(stat.teeC[k]||0)>0;
+    if(stat){ const v=pct(stat.teeC[k]||0, stat.teeN), heat=k==="fw"?0:((stat.teeC[k]||0)/maxMiss)*.4, w=k!=="fw"&&topMiss>0&&(stat.teeC[k]||0)===topMiss;
       const sh = k==="fw" ? shape : heatShape(shape, (stat.teeC[k]||0)/maxMiss, w);
-      if(k==="miss") return `<g class="az-s ${extra}">${sh}<text x="${lx}" y="${ly}" class="az-t">${label}<tspan dx="8" class="az-p ${w?"worst":""}">${fmtPct(v)}%</tspan></text></g>`;
-      return `<g class="az-s ${extra}">${sh}<text x="${lx}" y="${ly-13}" class="az-t ${k==="fw"?"on-t":""}">${label}</text><text x="${lx}" y="${ly+10}" class="${k==="fw"?"on-p":"az-p"} ${w?"worst":""}">${fmtPct(v)}%</text></g>`; }
+      if(k==="miss") return `<g class="az-s ${extra}">${sh}<text x="${lx}" y="${ly}" class="az-t">${label}<tspan dx="8" class="az-p ${w?"worst":""}">${mapPct(v)}</tspan></text></g>`;
+      return `<g class="az-s ${extra}">${sh}<text x="${lx}" y="${ly-13}" class="az-t ${k==="fw"?"on-t":""}">${label}</text><text x="${lx}" y="${ly+10}" class="${k==="fw"?"on-p":"az-p"} ${w?"worst":""}">${mapPct(v)}</text></g>`; }
     return `<g class="az ${extra} ${sel(k)?"on-sel":""}" role="button" tabindex="0" data-act="tee" data-v="${k}" aria-pressed="${sel(k)}" aria-label="${label}">${shape}<text x="${lx}" y="${ly}" class="az-t ${k==="fw"?"on-t":""}">${label}</text></g>`; };
   const b = !stat && tee && Z[tee];
   const sx=170, sy=224;
@@ -2406,12 +2410,12 @@ function filteredRounds(){
 }
 function viewStats(){
   const all = rounds();
-  const demoBand = state.demo ? `<div class="demo-band">デモデータを表示中です（保存はされていません）<button class="btn small" data-act="demo-off">自分たちのデータに戻る</button></div>` : "";
+  const demoBand = state.demo ? `<div class="demo-band">デモデータを表示中です（保存はされていません）<button class="btn small" data-act="demo-off">自分のデータに戻る</button></div>` : "";
   if(!all.length){
     return `<div class="panel empty"><strong>まだラウンドがありません</strong>ラウンドを保存すると、パーオン率やパットの割合、ミスの傾向がここに出ます。<div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn primary" data-act="goto-record">ラウンドを記録する</button><button class="btn" data-act="demo-on">デモデータで見てみる</button></div></div>`;
   }
-  const pl = players();
-  if(!pl.includes(state.fPlayer)) state.fPlayer = pl.includes(LS.get("sc.player","")) ? LS.get("sc.player","") : pl[0];
+  state.fPlayer = me();
+  if(!all.some(r=>r.player===state.fPlayer)) return `${demoBand}<button class="demo-link" data-act="demo-on">サンプルデータ（20ラウンド）で見てみる ›</button><div class="panel empty"><strong>まだ${esc(state.fPlayer)}さんのラウンドがありません</strong>ラウンドを保存すると、ここに分析が出ます。</div>`;
   const cs = courses().filter(c=>all.some(r=>r.courseId===c.id));
   if(state.fCourse!=="all" && !cs.some(c=>c.id===state.fCourse)) state.fCourse="all"; // 消したコースで絞り込んだままにしない
   const rs = filteredRounds();
@@ -2427,7 +2431,6 @@ function viewStats(){
   const fx = v => v==null? "—" : v.toFixed(1);
   return `${demoBand}
   ${state.demo?"":`<button class="demo-link" data-act="demo-on">サンプルデータ（20ラウンド）で見てみる ›</button>`}
-  <div class="who-pick" role="tablist" aria-label="プレーヤー">${pl.map(p=>`<button role="tab" data-act="pick-player" data-v="${esc(p)}" aria-selected="${p===state.fPlayer}">${esc(p)}</button>`).join("")}</div>
   <div class="panel"><div class="filters">
     <div class="field"><label for="f-course">コース</label><select id="f-course"><option value="all">すべて</option>${cs.map(c=>`<option value="${c.id}" ${c.id===state.fCourse?"selected":""}>${esc(c.name)}</option>`).join("")}</select></div>
     <div class="field"><label for="f-range">期間</label><select id="f-range">${[["1","直近1ラウンド"],["3","直近3ラウンド"],["5","直近5ラウンド"],["10","直近10ラウンド"],["all","全ラウンド"]].map(([v,t])=>`<option value="${v}" ${v===state.fRange?"selected":""}>${t}</option>`).join("")}</select></div>
@@ -2548,7 +2551,9 @@ function donutSVG(segs, total, centerVal, centerLbl, title){
   if(!t) return `<p class="muted" style="font-size:13px">まだ記録がありません。</p>`;
   const P=(ang,rad)=>[cx+rad*Math.cos(ang), cy+rad*Math.sin(ang)];
   const gap = segs.length>1 ? .025 : 0;
-  let a0=-Math.PI/2; const arcs=[], labels=[];
+  // 一番大きい部分を左（9時）に置く → 小さい部分が右側に縦に並び、引き出し線が交差しにくい
+  const bi = segs.reduce((b,x,i)=>x.n>segs[b].n?i:b,0), before = segs.slice(0,bi).reduce((a,x)=>a+x.n,0);
+  let a0 = Math.PI - (before + segs[bi].n/2)/t*Math.PI*2; const arcs=[], labels=[];
   segs.forEach(x=>{ const sw=x.n/t*Math.PI*2, a1=a0+sw, s0=a0+gap/2, s1=a1-gap/2, big=(s1-s0)>Math.PI?1:0, col=`var(${x.tone})`;
     if(segs.length===1) arcs.push(`<circle cx="${cx}" cy="${cy}" r="${(R+r)/2}" fill="none" stroke="${col}" stroke-width="${R-r}"/>`);
     else { const [x1,y1]=P(s0,R),[x2,y2]=P(s1,R),[x3,y3]=P(s1,r),[x4,y4]=P(s0,r);
@@ -2570,8 +2575,9 @@ function donutSVG(segs, total, centerVal, centerLbl, title){
 function greenMap(s){
   if(!s.dirN) return `<p class="muted" style="font-size:13px">まだ記録がありません。記録画面でグリーンのどこに行ったかを選ぶとここに出ます。</p>`;
   const miss = s.dirN - s.dirs.on;
-  const worst = miss ? ["left","right","long","short"].reduce((a,b)=>s.dirs[b]>s.dirs[a]?b:a) : null;
-  return approachSVG(null,false,s) + `<p class="muted" style="font-size:12px;text-align:center;margin:8px 0 0">${s.dirN}球の記録${worst?`・一番多いミスは<b style="color:var(--q-triple)">${DIRS[worst]}</b>`:""}</p>`;
+  const top = Math.max(0, ...["left","right","long","short","miss"].map(k=>s.dirs[k]||0));
+  const worst = miss && top ? ["left","right","long","short","miss"].filter(k=>(s.dirs[k]||0)===top).map(k=>DIRS[k]).join("・") : null;
+  return approachSVG(null,false,s) + `<p class="muted" style="font-size:12px;text-align:center;margin:8px 0 0">${s.dirN}球の記録${worst?`・一番多いミスは<b style="color:var(--q-triple)">${worst}</b>`:""}</p>`;
 }
 function cssv(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 after.stats = () => {
@@ -2664,11 +2670,10 @@ after.stats = () => {
 /* ----- 履歴 ----- */
 function mark(h){ return `<span class="mk3 m-${TONEH(h)}">${h.strokes}</span>`; }
 function viewHistory(){
-  const demoBand = state.demo ? `<div class="demo-band">デモデータを表示中です（保存はされていません）<button class="btn small" data-act="demo-off">自分たちのデータに戻る</button></div>` : "";
+  const demoBand = state.demo ? `<div class="demo-band">デモデータを表示中です（保存はされていません）<button class="btn small" data-act="demo-off">自分のデータに戻る</button></div>` : "";
   const all = rounds();
   if(!all.length) return state.mode==="connecting"?`<div class="panel empty">読み込み中…</div>`:`<div class="panel empty"><strong>まだラウンドがありません</strong>「記録」タブからラウンドを始めましょう。</div>`;
-  const pl = players();
-  if(!pl.includes(state.fPlayer)) state.fPlayer = pl.includes(LS.get("sc.player","")) ? LS.get("sc.player","") : pl[0];
+  state.fPlayer = me();
   const rs = all.filter(r=>r.player===state.fPlayer).sort(byDate).reverse();
   const W = ["日","月","火","水","木","金","土"];
   let lastMonth = "";
@@ -2700,7 +2705,7 @@ function viewHistory(){
       </div>`:""}
     </div>`;
   }).join("");
-  return demoBand + `<div class="who-pick" role="tablist" aria-label="プレーヤー">${pl.map(p=>`<button role="tab" data-act="pick-player" data-v="${esc(p)}" aria-selected="${p===state.fPlayer}">${esc(p)}</button>`).join("")}</div>` + (cards || `<div class="panel empty">${esc(state.fPlayer)}さんのラウンドはまだありません。</div>`);
+  return demoBand + (cards || `<div class="panel empty">${esc(state.fPlayer)}さんのラウンドはまだありません。</div>`);
 }
 
 /* ----- コース ----- */
@@ -3278,7 +3283,6 @@ const DEMO = (() => {
   });
   const d0=new Date("2026-04-05"); const dates=(k,step)=>Array.from({length:k},(_,i)=>{ const d=new Date(d0); d.setDate(d.getDate()+i*step); return d.toISOString().slice(0,10); });
   mk("たろう",0,{right:.42,short:.24,left:.14,long:.1,miss:.1},dates(20,9));
-  mk("はなこ",.06,{short:.4,left:.3,right:.15,long:.1,miss:.05},dates(10,18));
   return {courses:[c], rounds:rs};
 })();
 

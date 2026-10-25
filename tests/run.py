@@ -510,6 +510,34 @@ with sync_playwright() as pw:
     check("コース画面: 全部★なら探す一覧に案内だけ", "すべて ★ よく行くコースに入っています" in pg.inner_text("body") and pg.evaluate("document.querySelectorAll('.cp-main').length") == 2)
     check("コース画面: エラーなし", not errs); pg.context.close()
 
+    # 19c. 分析・履歴は自分だけ（プレーヤーの切りかえなし）、同率のミスは同じ濃さ、文字の大きさがそろう、ドーナツの線が交差しない
+    c1x = [{"id": "c1", "name": "テスト", "holes": [{"par": 3, "yards": 100}] * 9}]
+    def rnd(i, pl, dirs):
+        return {"id": f"m{pl}{i}", "player": pl, "courseId": "c1", "courseName": "テスト", "date": f"2026-10-{10+i:02d}", "createdAt": i,
+                "holes": [{"par": 3, "strokes": 3 if k else 4, "putts": 2, "dir": dirs[k] if k < len(dirs) else ""} for k in range(9)]}
+    mine = [rnd(0, "たろう", ["on", "on", "left", "long"]), rnd(1, "たろう", []), rnd(2, "はなこ", [])]
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.rounds": mine, "sc.courses": c1x, "sc.tab": "\"history\""}, offline=True)
+    check("履歴: 自分のラウンドだけ・プレーヤーの切りかえなし", pg.evaluate("document.querySelectorAll('.who-pick').length===0 && document.querySelectorAll('[data-act=toggle-round]').length===2"))
+    C(pg, "nav.tabs [data-tab=stats]"); C(pg, "[data-act=stat-tab][data-v=shot]"); pg.wait_for_timeout(300)
+    check("分析: プレーヤーの切りかえなし", pg.evaluate("document.querySelectorAll('.who-pick').length===0"))
+    st = pg.evaluate("""(()=>{ const g=[...document.querySelectorAll('svg.approach .az-s')]; const f=k=>g.find(x=>x.textContent.includes(k));
+      const L=f('左'), O=f('オーバー'); const bg=e=>e.querySelector('.az-bg').getAttribute('style');
+      const px=e=>getComputedStyle(e.querySelector('.az-p')).fontSize;
+      return {same: bg(L)===bg(O), hatch: !!L.querySelector('.az-hatch') && !!O.querySelector('.az-hatch'), size: px(L)===px(O)}; })()""")
+    check("分析の絵: 同じ割合のミスは同じ赤（斜線も両方）", st["same"] and st["hatch"])
+    check("分析の絵: 左右の%もほかと同じ大きさ", st["size"])
+    check("分析: 一番多いミスが同率なら両方書く", "左・オーバー" in pg.inner_text("body"))
+    C(pg, "[data-act=demo-on]"); C(pg, "nav.tabs [data-tab=history]")
+    check("サンプルデータは たろう だけ", pg.evaluate("state.demo") and "はなこ" not in pg.inner_text("body"))
+    C(pg, "nav.tabs [data-tab=stats]"); C(pg, "[data-act=stat-tab][data-v=score]"); pg.wait_for_timeout(300)
+    cross = pg.evaluate("""(()=>{ const P=[...document.querySelectorAll('.dsvg path[fill=none]')].map(p=>p.getAttribute('d').match(/-?[0-9.]+/g).map(Number));
+      const segs=[]; P.forEach(a=>{ for(let i=0;i+3<a.length;i+=2) segs.push([a[i],a[i+1],a[i+2],a[i+3]]); });
+      const X=(s,t)=>{ const d=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]); const p1=[s[0],s[1]],p2=[s[2],s[3]],p3=[t[0],t[1]],p4=[t[2],t[3]];
+        return d(p1,p2,p3)*d(p1,p2,p4)<0 && d(p3,p4,p1)*d(p3,p4,p2)<0; };
+      let n=0; for(let i=0;i<segs.length;i++) for(let j=i+1;j<segs.length;j++) if(X(segs[i],segs[j])) n++; return n; })()""")
+    check("ドーナツの引き出し線が交差しない", cross == 0)
+    check("自分だけの分析: エラーなし", not errs); pg.context.close()
+
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
     import subprocess, time
     PORT = 8791
