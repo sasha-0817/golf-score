@@ -1498,6 +1498,12 @@ input,select,textarea{font-size:max(16px,1em)}
 /* 弾道のアニメーション OFF（記録する項目の「表示」）: 線を出さず、ボールはすぐその場所に */
 .no-tracer .tr{display:none}
 .no-tracer .ballg.drop{animation:none}
+/* 新しいアプリへの引っ越し（古いアプリだけ、CF_URL を入れたら出る） */
+.move-bar{margin:0 16px 12px;padding:14px;border-radius:16px;border:2px solid #0E9F62;background:color-mix(in srgb,#0E9F62 8%,var(--paper));display:flex;flex-direction:column;gap:6px}
+.move-bar b{font-size:15px}
+.move-bar small{font-size:12px;color:var(--muted);line-height:1.5}
+.move-bar button{height:48px;border:0;border-radius:999px;background:linear-gradient(135deg,#0E9F62,#13A9C2);color:#fff;font:inherit;font-weight:700;font-size:15px;cursor:pointer}
+.move-bar a{text-align:center;font-weight:700;font-size:13px;color:#0E9F62;padding:4px}
 .sr-row2 b.sr-none{font:700 12px/1 inherit;font-family:inherit;color:var(--rec-muted)}
 .rp .rp-ok{height:48px;border:0;border-radius:999px;background:linear-gradient(135deg,#0E9F62 0%,#13A9C2 100%);color:#fff;font-weight:700;letter-spacing:.12em;box-shadow:0 6px 16px rgba(14,159,98,.3)}
 .rp-words{margin-top:2px}
@@ -1610,7 +1616,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-22-2140";
+const BUILD = "2026-10-22-2300";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1662,12 +1668,16 @@ setTimeout(maybeShowA2HS, 2500);
 /* ---------- storage: Google スプレッドシート (Apps Script) ---------- */
 // ↓ Apps Script を「ウェブアプリ」として公開したときの URL を貼り付けてください
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw0sl0SbAukE3UDirc5iYePK-XaY9pD5gZvwg5g-IJMdAuiRRqwilifThZvbinzDTuO/exec";
-const hasBackend = /^https:\/\/script\.google\.com\//.test(SCRIPT_URL);
+/* Web版（Cloudflare Pages + D1）。github.io 以外の http(s) で開いたときは同じサイトの /api に読み書きする */
+const CF_URL = "";   // 新しいアプリのアドレス（Cloudflare の設定が終わったら入れる。例 "https://golf-sc.pages.dev"）
+const ON_CF = !!window.__onCF || (/^https?:$/.test(location.protocol) && !/github\.io$/.test(location.hostname));
+const API_URL = ON_CF ? "/api" : SCRIPT_URL;
+const hasBackend = ON_CF || /^https:\/\/script\.google\.com\//.test(SCRIPT_URL);
 let pending = LS.get("sc.pending", []); // 電波が悪くて送れなかった保存
 let pendingCourses = LS.get("sc.pendingCourses", []); // 電波がないときに始めた用意済みコース（あとで送る）
 
 async function api(action, payload){
-  const res = await fetch(SCRIPT_URL, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify({ action, ...payload }) });
+  const res = await fetch(API_URL, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify({ action, ...payload }) });
   const j = await res.json();
   if(!j.ok) throw new Error(j.error || "failed");
   return j;
@@ -1719,7 +1729,7 @@ async function connect(){
   if(loading) return; loading = true;
   try{
     await flushPending();
-    const res = await fetch(SCRIPT_URL + "?t=" + Date.now());
+    const res = await fetch(API_URL + "?t=" + Date.now());
     const j = await res.json();
     if(!j.ok) throw new Error(j.error);
     state.courses = j.courses; state.serverVer = j.version || 1;
@@ -1814,7 +1824,8 @@ function render(){
   const m=$("#main");
   const view = {record:viewRecord, stats:viewStats, history:viewHistory, courses:viewCourses}[state.tab] || viewRecord;
   const keepScroll=[".game-sheet",".rp"].map(q=>{ const e=document.querySelector(q); return e?e.scrollTop:0; });
-  m.innerHTML = `<section class="view">${view()}</section>`;
+  const moveBar = (!ON_CF && CF_URL && !document.body.classList.contains("recording")) ? `<div class="move-bar"><b>GOLF SC. は新しいアドレスに引っ越しました</b><small>この端末の記録（クラブ・方向なども）を送ってから、新しいアプリを開きます。何回押しても大丈夫です。</small><button data-act="migrate" ${state.migrating?"disabled":""}>${state.migrating?"送っています…":"記録を送って新しいアプリへ"}</button>${LS.get("sc.migrated","")?`<a href="${CF_URL}">送らずに新しいアプリを開く ›</a>`:""}</div>` : "";
+  m.innerHTML = `${moveBar}<section class="view">${view()}</section>`;
   [".game-sheet",".rp"].forEach((q,i)=>{ const e=document.querySelector(q); if(e&&keepScroll[i]) e.scrollTop=keepScroll[i]; });
   placeMedalTip();
   after[state.tab] && after[state.tab]();
@@ -2359,7 +2370,7 @@ function fieldsSheet(){
   const F=fields();
   return `<div class="sheet-back" data-act="close-sheet"><div class="sheet fields-sheet" data-stop="1"><p>記録する項目</p>
     <div class="fs-note">打数はいつも記録します。ほかはONにした項目だけ入力画面に出ます。</div>
-    ${state.mode==="cloud" && (state.serverVer||1)<2 ? `<div class="fs-warn">1ペナ・ティーショット・クラブ・ミスショットを保存するには、スプレッドシート側のプログラムの更新が必要です。</div>`:""}
+    ${state.mode==="cloud" && !ON_CF && (state.serverVer||1)<2 ? `<div class="fs-warn">1ペナ・ティーショット・クラブ・ミスショットを保存するには、スプレッドシート側のプログラムの更新が必要です。</div>`:""}
     ${FIELD_DEFS.map(d=>`${d.k==="advice"?`<div class="fs-sec">表示</div>`:""}<label class="fs-row ${d.k==="club"?"has-sub":""}"><span>${d.label}</span><input type="checkbox" id="fld-${d.k}" data-fld="${d.k}" ${F[d.k]?"checked":""}><i class="sw"></i></label>${d.k==="club"?`<button class="fs-sub" data-act="open-clubs"><span>マイクラブを編集</span><small>${myClubs().length}本 ›</small></button>`:""}`).join("")}
     <button data-act="close-sheet">閉じる</button></div></div>`;
 }
@@ -3126,6 +3137,12 @@ document.addEventListener("click", async ev => {
       state.game=k; LS.set("sc.game",state.game); render(); break; }
     case "medal-open": LS.set("sc.medalTip", true); state.medalHole = b.dataset.h!=null ? +b.dataset.h : state.hole; state.sheet="medal"; render(); break;
     case "medal-close": state.sheet=null; render(); break;
+    case "migrate": { if(state.migrating || !CF_URL) break; state.migrating=true; render();
+      try{ const res=await fetch(CF_URL.replace(/\/$/,"")+"/api", { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"import", courses:state.courses, rounds:state.rounds}) });
+        const j=await res.json(); if(!j.ok) throw new Error(j.error); LS.set("sc.migrated", Date.now()); toast(`ラウンド${j.rounds}件・コース${j.courses}件を送りました`);
+        if(!window.__noNav) setTimeout(()=>{ location.href=CF_URL; }, 900); }
+      catch(e){ toast("送れませんでした。電波の良い場所でもう一度お試しください"); }
+      state.migrating=false; render(); break; }
     case "pin-open": state.pinHole = b.dataset.h!=null ? +b.dataset.h : state.hole; state.sheet="pin"; render(); break;
     case "pin-close": state.sheet=null; render(); break;
     case "pin-set": { const ctx = (state.cdraft && !state.cdraft.paused) ? state.cdraft : state.draft; if(!ctx) break;

@@ -1,5 +1,5 @@
 /* GOLF SC. service worker — 電波がなくても開けるようにする */
-const CACHE = "golfsc-v2";
+const CACHE = "golfsc-v3";
 const CORE = [
   "./", "./index.html", "./manifest.webmanifest",
   "./icon.png", "./icon-192.png", "./icon-512.png", "./mark.png", "./ball.png",
@@ -28,6 +28,7 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.hostname.endsWith("script.google.com") || url.hostname.endsWith("googleusercontent.com")) return; // データの読み書きは素通し
+  if (url.origin === location.origin && url.pathname.endsWith("/api")) return; // Web版のデータの読み書きも素通し
   if (url.searchParams.has("check")) return; // 新しい版の確認は必ずネットへ
 
   // ページ本体: ネット優先、つながらなければ保存しておいた版
