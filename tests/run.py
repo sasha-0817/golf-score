@@ -530,12 +530,12 @@ with sync_playwright() as pw:
     C(pg, "[data-act=demo-on]"); C(pg, "nav.tabs [data-tab=history]")
     check("サンプルデータは たろう だけ", pg.evaluate("state.demo") and "はなこ" not in pg.inner_text("body"))
     C(pg, "nav.tabs [data-tab=stats]"); C(pg, "[data-act=stat-tab][data-v=score]"); pg.wait_for_timeout(300)
-    cross = pg.evaluate("""(()=>{ const P=[...document.querySelectorAll('.dsvg path[fill=none]')].map(p=>p.getAttribute('d').match(/-?[0-9.]+/g).map(Number));
-      const segs=[]; P.forEach(a=>{ for(let i=0;i+3<a.length;i+=2) segs.push([a[i],a[i+1],a[i+2],a[i+3]]); });
-      const X=(s,t)=>{ const d=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]); const p1=[s[0],s[1]],p2=[s[2],s[3]],p3=[t[0],t[1]],p4=[t[2],t[3]];
-        return d(p1,p2,p3)*d(p1,p2,p4)<0 && d(p3,p4,p1)*d(p3,p4,p2)<0; };
-      let n=0; for(let i=0;i<segs.length;i++) for(let j=i+1;j<segs.length;j++) if(X(segs[i],segs[j])) n++; return n; })()""")
-    check("ドーナツの引き出し線が交差しない", cross == 0)
+    check("スコアの内訳は横棒の一覧（引き出し線なし）", pg.evaluate("document.querySelectorAll('.bk .bk-row').length>=3 && !document.querySelector('.dsvg')"))
+    for m in ["mix", "putt", "total"]:
+        C(pg, f"[data-act=trend-mode][data-v={m}]")
+    check("スコア推移の見方（合計・内訳・パット）を切りかえられる", pg.evaluate("document.querySelector('[data-act=trend-mode][aria-selected=true]').dataset.v==='total' && localStorage.getItem('sc.trendMode')==='\"total\"'"))
+    C(pg, "[data-act=trend-mode][data-v=mix]")
+    check("内訳のときは色の見方が出る", "トリプル以上" in pg.inner_text(".panel:has(#ch-score)"))
     check("自分だけの分析: エラーなし", not errs); pg.context.close()
 
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
