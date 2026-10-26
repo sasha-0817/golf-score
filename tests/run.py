@@ -40,6 +40,7 @@ def open_page(b, ls=None, dark=False, offline=False, repl=None):
     src = (src.replace("setTimeout(checkUpdate, 1500);", "").replace("setTimeout(maybeShowA2HS, 2500);", "")
               .replace("const state = {", "const state = window.state = {")
               .replace("function skinsCalc(", "window.skinsCalc=skinsCalc; function skinsCalc(")
+              .replace("function greenMap(", "window.approachSVG=approachSVG; window.greenMap=greenMap; function greenMap(")
               .replace("function matchCalc(", "window.matchCalc=matchCalc; window.teamCalc=teamCalc; window.teamSumCalc=teamSumCalc; window.GAME_KEYS_ORDER=()=>GAME_KEYS.join(); window.nassauCalc=nassauCalc; window.vegasCalc=vegasCalc; window.stableCalc=stableCalc; window.peoriaCalc=peoriaCalc; window.olympicCalc=olympicCalc; window.peoriaHidden=peoriaHidden; function matchCalc(")
               .replace("async function connect(){", "window.connect=()=>connect(); async function connect(){")
               .replace("let loading = false;", 'let loading = false; Object.defineProperty(window,"pending",{get:()=>pending});'))
@@ -557,6 +558,24 @@ with sync_playwright() as pw:
             pg.context.close()
     check("狙いONでも図の大きさは同じ（入力後・クラブONでも）・見出しの行からはみ出さない", hs["ON"] >= hs["OFF"] - 1 and hs["ON2"] >= hs["OFF"] - 1 and hd)
 
+    # 19d1. 花道はミスにしない（一番多くても赤くしない）・狙いの札は着弾の文字の長さで動かない
+    FX = dict(ALL); FX["aim"] = True; FX["club"] = False
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": [], "sc.fields": FX}, offline=True)
+    start_preset(pg, "firtree")
+    svg = pg.evaluate("approachSVG(null,false,{dirs:{on:3,left:2,right:0,long:0,short:5,miss:0},dirN:10})")
+    import re as _re
+    hl = _re.findall(r'class="az-hatch"', svg)
+    check("分析: 花道が一番多くても赤くせず、ミスの一番は左", len(hl) == 1 and "az-safe" in svg and "左" in pg.evaluate("greenMap({dirs:{on:3,left:2,right:0,long:0,short:5,miss:0},dirN:10})").split("一番多いミスは")[1][:60])
+    C(pg, '[data-act=dir][data-p="c"]')
+    x0 = pg.evaluate("[document.querySelector('.as-aim').getBoundingClientRect().left, document.querySelector('.as-aim').getBoundingClientRect().width]")
+    C(pg, '[data-act=dir][data-p="r"]'); pg.wait_for_timeout(200)
+    x1 = pg.evaluate("[document.querySelector('.as-aim').getBoundingClientRect().left, document.querySelector('.as-aim').getBoundingClientRect().width]")
+    C(pg, "[data-act=dir][data-v=long]"); pg.wait_for_timeout(200)
+    x2 = pg.evaluate("[document.querySelector('.as-aim').getBoundingClientRect().left, document.querySelector('.as-aim').getBoundingClientRect().width]")
+    check("狙いの札は着弾の文字の長さで動かない", x0 == x1 == x2)
+    check("ショート（旧 当たりそこね）の表記・エラーなし", "ショート" in pg.inner_text(".ap-wrap") and not errs)
+    pg.context.close()
+
     # 19d. 狙いと着弾（記録する項目「狙いも記録する」）
     FA = dict(ALL); FA["aim"] = True; FA["club"] = False
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": [], "sc.fields": FA}, offline=True)
@@ -593,7 +612,7 @@ with sync_playwright() as pw:
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": ["はなこ", "", ""], "sc.fields": FA2}, offline=True)
     start_preset(pg, "firtree")
     C(pg, "[data-act=dir][data-v=short]")
-    check("狙い: 花道（グリーンの手前の帯）も狙いにできる・表記は「花道」", pg.evaluate("state.draft.holes[0].aim==='short'") and "花道" in pg.inner_text(".as-aim") and "ショート" not in pg.inner_text(".ap-wrap"))
+    check("狙い: 花道（グリーンの手前の帯）も狙いにできる・表記は「花道」", pg.evaluate("state.draft.holes[0].aim==='short'") and "花道" in pg.inner_text(".as-aim") and "ショート" in pg.inner_text(".ap-wrap") and "当たりそこね" not in pg.inner_text(".ap-wrap"))
     C(pg, "[data-act=dir][data-v=short]")
     check("狙い: 花道を狙って花道に落ちたら照準の真ん中にボール", pg.evaluate("(()=>{ const m=document.querySelector('.aim-mark').getAttribute('transform'), im=document.querySelector('.ballg image'); return m==='translate('+(+im.getAttribute('x')+7.5)+' '+(+im.getAttribute('y')+7.5)+')'; })()"))
     check("同伴者の列にも合計打数と対パー（3(±0)）", pg.evaluate("[...document.querySelectorAll('.pboard .ph .tp')].every(e=>/^\\d+\\(/.test(e.textContent))"))
