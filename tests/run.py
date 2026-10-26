@@ -541,11 +541,27 @@ with sync_playwright() as pw:
     check("ほかのタブへ移ると1ラウンドの分析は解除", pg.evaluate("!document.querySelector('.one-band')"))
     check("自分だけの分析: エラーなし", not errs); pg.context.close()
 
+    # 19d0. 狙いをONにしても図が小さくならない（ボタンは見出しの行に。クラブONでも）
+    hs = {}
+    for nm, aim in (("OFF", False), ("ON", True)):
+        FX = dict(ALL); FX["aim"] = aim
+        for kind in ("firtree",):
+            pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": [], "sc.fields": FX}, offline=True)
+            start_preset(pg, kind)
+            hs[nm] = pg.evaluate("document.querySelector('svg.approach').getBoundingClientRect().height")
+            if aim:
+                C(pg, '[data-act=dir][data-p="c"]'); C(pg, '[data-act=dir][data-p="r"]'); pg.wait_for_timeout(1300)
+                if pg.query_selector(".club-sheet"): C(pg, ".club-sheet [data-act=club][data-v=\"7I\"]")
+                hs["ON2"] = pg.evaluate("document.querySelector('svg.approach').getBoundingClientRect().height")
+                hd = pg.evaluate("(()=>{const h=document.querySelector('.aim-seg').parentElement;return h.scrollWidth<=h.clientWidth+1})()")
+            pg.context.close()
+    check("狙いONでも図の大きさは同じ（入力後・クラブONでも）・見出しの行からはみ出さない", hs["ON"] >= hs["OFF"] - 1 and hs["ON2"] >= hs["OFF"] - 1 and hd)
+
     # 19d. 狙いと着弾（記録する項目「狙いも記録する」）
     FA = dict(ALL); FA["aim"] = True; FA["club"] = False
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": [], "sc.fields": FA}, offline=True)
     start_preset(pg, "firtree")
-    check("狙い: 「狙い」「着弾」の2つのボタン、最初は狙いが選ばれている", pg.evaluate("document.querySelector('.as-aim.on') && document.querySelector('.as-land')") is not None and "狙いをタップ" in pg.inner_text(".ap-wrap"))
+    check("狙い: 「狙い」「着弾」の2つのボタン、最初は狙いが選ばれている", pg.evaluate("document.querySelector('.as-aim.on') && document.querySelector('.as-land')") is not None)
     C(pg, "[data-act=dir][data-v=right]")
     check("狙い: グリーンの外を先に押しても狙いにならない", pg.evaluate("!state.draft.holes[0].aim && !state.draft.holes[0].dir"))
     C(pg, '[data-act=dir][data-p="c"]')

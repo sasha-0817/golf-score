@@ -1593,6 +1593,10 @@ input,select,textarea{font-size:max(16px,1em)}
 .cp-favpanel .cp-ico svg{width:15px;height:15px;fill:#fff;stroke:none}
 .rec2 .rec-top .card-btn{width:46px;height:46px;flex:0 0 46px}
 .rec2 .rec-top .card-btn svg{width:28px;height:28px;stroke-width:1.7}
+/* 狙い・着弾の札は見出しの行に（図を小さくしない、2026-10-26） */
+.aim-seg{display:flex;gap:5px;margin:0 6px 0 auto;flex:0 1 auto;min-width:0}
+.aim-seg button{height:26px;border-radius:999px;padding:0 10px;font-size:12px;gap:5px;flex:0 1 auto;min-width:0;text-overflow:ellipsis}
+.aim-seg .as-dot{width:9px;height:9px;flex:0 0 9px}
 </style>
 
 </head>
@@ -1703,7 +1707,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-26-1730";
+const BUILD = "2026-10-26-1810";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2238,10 +2242,11 @@ function fairwaySVG(tee, tap, stat, o={}){
 function aimModeOf(h){ if(!fields().aim) return "land"; const p=state.aimPick; return p && p.hole===state.hole ? p.v : (h.aim ? "land" : "aim"); }
 function aimRow(h, isLong){
   const landed = isLong ? h.tee : h.dir, L = isLong ? FCOL_L : GSUB_L, mode = aimModeOf(h);
-  const landL = !landed ? "" : isLong ? (landed==="fw" ? "フェアウェイ"+(h.teeOn?"・"+FCOL_L[h.teeOn]:"") : TEES[landed]) : (landed==="on" ? "オン"+(h.dirOn?"・"+GSUB_L[h.dirOn]:"") : DIRS[landed]);
+  // 図を小さくしないよう、見出しの行に収まる短い札にする（着弾は区画の名前だけ）
+  const landL = !landed ? "" : isLong ? (landed==="fw" ? (FCOL_L[h.teeOn]||"FW") : landed==="miss" ? "当たりそこね" : TEES[landed]+"ラフ") : (landed==="on" ? (GSUB_L[h.dirOn]||"オン") : DIRS[landed]);
   return `<div class="aim-seg" role="group" aria-label="狙いか着弾か">
-    <button class="as-aim ${mode==="aim"?"on":""}" data-act="aim-mode" data-v="aim" aria-pressed="${mode==="aim"}"><i class="as-dot"></i>${h.aim?`狙い <b>${L[h.aim]||""}</b>`:"狙いをタップ"}</button>
-    <button class="as-land ${mode==="land"?"on":""}" data-act="aim-mode" data-v="land" aria-pressed="${mode==="land"}"><i class="as-dot"></i>${landed?`着弾 <b>${landL}</b>`:"着弾をタップ"}</button></div>`;
+    <button class="as-aim ${mode==="aim"?"on":""}" data-act="aim-mode" data-v="aim" aria-pressed="${mode==="aim"}"><i class="as-dot"></i>狙い${h.aim?` <b>${L[h.aim]||""}</b>`:""}</button>
+    <button class="as-land ${mode==="land"?"on":""}" data-act="aim-mode" data-v="land" aria-pressed="${mode==="land"}"><i class="as-dot"></i>着弾${landed?` <b>${landL}</b>`:""}</button></div>`;
 }
 /* 同じコース・同じホールの過去の記録から、ひとことアドバイス */
 const TERMJ = d => d<=-2?"イーグル以上":d===-1?"バーディ":d===0?"パー":d===1?"ボギー":d===2?"ダボ":"トリプル以上";
@@ -2323,7 +2328,7 @@ function viewRecordDraft(d){
           <button data-act="pt" data-d="1" aria-label="パットを1つ増やす" ${h.putts>=9?"disabled":""}>${ICON.up}</button></div></div>`:""}
       </div>`}
       ${multi?`<div class="me-zone">`:""}
-      ${F.shot?`<div class="ap-wrap"><div class="seg-head"><span class="eyebrow">TEE SHOT${multi?"":"<b>ティーショットの行き先</b>"}</span>${F.club?`<button class="club-tag ${h.club?"has":""}" data-act="open-club">${h.club?esc(h.club):"クラブ"}</button>`:""}</div>${F.aim?aimRow(h,isLong):""}${isLong?fairwaySVG(h.tee, state.tap&&state.tap.startsWith("tee"), null, {on:h.teeOn, aim:F.aim?h.aim:null}):approachSVG(h.dir, state.tap&&state.tap.startsWith("dir"), null, {on:h.dirOn, aim:F.aim?h.aim:null})}</div>`:""}
+      ${F.shot?`<div class="ap-wrap"><div class="seg-head"><span class="eyebrow">TEE SHOT${multi||F.aim?"":"<b>ティーショットの行き先</b>"}</span>${F.aim?aimRow(h,isLong):""}${F.club?`<button class="club-tag ${h.club?"has":""}" data-act="open-club">${h.club?esc(h.club):"クラブ"}</button>`:""}</div>${isLong?fairwaySVG(h.tee, state.tap&&state.tap.startsWith("tee"), null, {on:h.teeOn, aim:F.aim?h.aim:null}):approachSVG(h.dir, state.tap&&state.tap.startsWith("dir"), null, {on:h.dirOn, aim:F.aim?h.aim:null})}</div>`:""}
       ${F.club && !F.shot ? (()=>{ const lc = lastClub(d, state.hole);
         // ショットの方向がOFFでもクラブだけ記録できるよう、クラブを横に並べて1タップで選ぶ（前回のクラブには小さく「前回」）
         return `<div class="club-strip"><span class="eyebrow">TEE SHOT<b>クラブ</b></span><div class="cs-chips">${myClubs().map(c=>`<button data-act="club-quick" data-v="${esc(c)}" aria-pressed="${h.club===c}" class="${lc===c?"last":""}">${esc(c)}</button>`).join("")}</div></div>`; })() : ""}
