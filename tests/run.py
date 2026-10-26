@@ -531,11 +531,14 @@ with sync_playwright() as pw:
     check("サンプルデータは たろう だけ", pg.evaluate("state.demo") and "はなこ" not in pg.inner_text("body"))
     C(pg, "nav.tabs [data-tab=stats]"); C(pg, "[data-act=stat-tab][data-v=score]"); pg.wait_for_timeout(300)
     check("スコアの内訳は横棒の一覧（引き出し線なし）", pg.evaluate("document.querySelectorAll('.bk .bk-row').length>=3 && !document.querySelector('.dsvg')"))
-    for m in ["mix", "putt", "total"]:
-        C(pg, f"[data-act=trend-mode][data-v={m}]")
-    check("スコア推移の見方（合計・内訳・パット）を切りかえられる", pg.evaluate("document.querySelector('[data-act=trend-mode][aria-selected=true]').dataset.v==='total' && localStorage.getItem('sc.trendMode')==='\"total\"'"))
-    C(pg, "[data-act=trend-mode][data-v=mix]")
-    check("内訳のときは色の見方が出る", "トリプル以上" in pg.inner_text(".panel:has(#ch-score)"))
+    check("スコア推移は切りかえなし・ショットとパットの見方・タップの案内", pg.evaluate("!document.querySelector('[data-act=trend-mode]') && !!document.querySelector('#tr-info')") and "ショット" in pg.inner_text(".panel:has(#ch-score)"))
+    C(pg, "[data-act=demo-off]"); C(pg, "nav.tabs [data-tab=history]"); C(pg, "[data-act=toggle-round]")
+    C(pg, "[data-act=one-round]"); pg.wait_for_timeout(200)
+    check("履歴から1ラウンドだけの分析を開ける", pg.evaluate("state.tab==='stats' && !!document.querySelector('.one-band') && !document.querySelector('#f-course')") and "このラウンドだけの分析" in pg.inner_text("body"))
+    C(pg, "[data-act=one-off]")
+    check("「全体に戻る」で絞り込みの画面に戻る", pg.evaluate("!document.querySelector('.one-band') && !!document.querySelector('#f-course')"))
+    C(pg, "nav.tabs [data-tab=history]"); C(pg, "[data-act=one-round]"); C(pg, "nav.tabs [data-tab=history]"); C(pg, "nav.tabs [data-tab=stats]")
+    check("ほかのタブへ移ると1ラウンドの分析は解除", pg.evaluate("!document.querySelector('.one-band')"))
     check("自分だけの分析: エラーなし", not errs); pg.context.close()
 
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす

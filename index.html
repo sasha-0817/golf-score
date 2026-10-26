@@ -1508,9 +1508,6 @@ input,select,textarea{font-size:max(16px,1em)}
 .rp-words{margin-top:2px}
 .az-s .pu{font-size:.6em}
 /* スコア推移の見方（合計・内訳・パット）と、割合の横棒一覧 */
-.tr-modes{display:flex;gap:6px;margin:-2px 0 8px}
-.tr-modes button{flex:1;height:34px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--muted);font:700 13px var(--f-body);cursor:pointer;touch-action:manipulation}
-.tr-modes button[aria-selected="true"]{background:var(--fg);color:var(--paper);border-color:var(--fg)}
 .tr-lg{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 14px;margin-top:8px;font-size:12px;color:var(--muted)}
 .tr-lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 .bk-head{display:flex;align-items:baseline;gap:8px;margin:2px 0 10px}
@@ -1523,6 +1520,15 @@ input,select,textarea{font-size:max(16px,1em)}
 .bk-trk i{display:block;height:100%;border-radius:5px}
 .bk-row>b{font:700 18px var(--f-num);text-align:right}
 .bk-row>b small{font-size:11px;color:var(--muted);margin-left:1px}
+.tr-info{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--soft);font-size:12px;color:var(--muted);text-align:center;min-height:20px}
+.tr-info.on{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;color:var(--fg);font-size:13px}
+.tr-info.on span{color:var(--muted);font-size:12px}
+.tr-info .btn{flex:0 0 auto}
+.one-band{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,#0F2A5C,#2563EB);color:#fff}
+.one-band small{display:block;font-size:11px;opacity:.8;font-weight:700}
+.one-band b{font-size:16px}
+.one-band .btn{background:rgba(255,255,255,.16);color:#fff;border-color:rgba(255,255,255,.35)}
+.one-go{display:block;width:100%;margin:10px 0 0}
 </style>
 
 </head>
@@ -1632,7 +1638,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-26-0930";
+const BUILD = "2026-10-26-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2419,6 +2425,7 @@ const DIST_SEGS = s => [["ホールインワン","hio","--q-hio"],["イーグル
   .map(([label,k,tone])=>({label, n:s.dist[k], tone})).filter(x=>x.n>0);
 function filteredRounds(){
   let rs = rounds().slice().sort(byDate);
+  if(state.oneRound){ const r=rs.find(x=>x.id===state.oneRound); if(r) return [r]; state.oneRound=null; }
   if(state.fPlayer!=="all") rs = rs.filter(r=>r.player===state.fPlayer);
   if(state.fCourse!=="all") rs = rs.filter(r=>r.courseId===state.fCourse);
   if(state.fRange!=="all") rs = rs.slice(-Number(state.fRange));
@@ -2436,7 +2443,6 @@ function viewStats(){
   if(state.fCourse!=="all" && !cs.some(c=>c.id===state.fCourse)) state.fCourse="all"; // 消したコースで絞り込んだままにしない
   const rs = filteredRounds();
   const s = computeStats(rs);
-  const TM = state.trendMode || (state.trendMode = LS.get("sc.trendMode","total")); if(!["total","mix","putt"].includes(TM)) state.trendMode="total";
   let ST = state.statTab || (state.statTab = LS.get("sc.statTab","score")); if(!["score","shot","putt"].includes(ST)) ST = state.statTab = "score";
   const gauge = (label,v,sub,tone) => { const C=2*Math.PI*30, p=v==null?0:Math.min(v,100)/100;
     return `<div class="gauge"><svg viewBox="0 0 74 74" aria-hidden="true"><circle class="trk" cx="37" cy="37" r="30"/><circle class="val" cx="37" cy="37" r="30" stroke="var(${tone})" stroke-dasharray="${(C*p).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 37 37)"/></svg><div class="gv">${v==null?"—":fmtPct(v)}${v==null?"":"<small>%</small>"}</div><div class="gl">${label}</div><div class="gs">${sub}</div></div>`; };
@@ -2447,11 +2453,12 @@ function viewStats(){
   const kpi = (k,v,unit,d) => `<div class="kpi"><div class="k">${k}</div><div class="v">${v}${unit?`<small>${unit}</small>`:""}</div>${d?`<div class="d">${d}</div>`:""}</div>`;
   const fx = v => v==null? "—" : v.toFixed(1);
   return `${demoBand}
+  ${state.oneRound&&rs[0]?(()=>{ const r=rs[0], [y,m,d]=r.date.split("-"); return `<div class="one-band"><div><small>このラウンドだけの分析</small><b>${+m}/${+d} ${esc(r.courseName)}</b></div><button class="btn small" data-act="one-off">全体に戻る</button></div>`; })():`
   ${state.demo?"":`<button class="demo-link" data-act="demo-on">サンプルデータ（20ラウンド）で見てみる ›</button>`}
   <div class="panel"><div class="filters">
     <div class="field"><label for="f-course">コース</label><select id="f-course"><option value="all">すべて</option>${cs.map(c=>`<option value="${c.id}" ${c.id===state.fCourse?"selected":""}>${esc(c.name)}</option>`).join("")}</select></div>
     <div class="field"><label for="f-range">期間</label><select id="f-range">${[["1","直近1ラウンド"],["3","直近3ラウンド"],["5","直近5ラウンド"],["10","直近10ラウンド"],["all","全ラウンド"]].map(([v,t])=>`<option value="${v}" ${v===state.fRange?"selected":""}>${t}</option>`).join("")}</select></div>
-  </div></div>
+  </div></div>`}
   ${!rs.length?`<div class="panel empty"><strong>条件に合うラウンドがありません</strong>フィルターを変えてみてください。</div>`:`
   <div class="stat-tabs" role="tablist">${[["score","SCORE","スコア"],["shot","SHOT","ショット"],["putt","PUTT","パット"]].map(([k,e,j])=>`<button role="tab" data-act="stat-tab" data-v="${k}" aria-selected="${ST===k}"><em>${e}</em>${j}</button>`).join("")}</div>
   ${ST==="score"?`
@@ -2464,11 +2471,11 @@ function viewStats(){
   <div class="panel"><div class="sec"><em>RECENT</em><span>直近3ラウンド</span></div><div class="recent">${rs.slice(-3).reverse().map(r=>{ const t=roundTotals(r); const [y,m,d]=r.date.split("-");
       return `<div class="rr"><div class="rd"><small>${+m}/${+d}</small><b>${t.score}<i>(${toPar(t.diff)})</i></b></div><div class="rh">${r.holes.map(h=>`<span class="mk4 m-${TONEH(h)}" title="${h.strokes}"></span>`).join("")}</div></div>`; }).join("")}</div>
     <div class="mk-legend"><span><i class="mk4 m-eagle"></i>−2</span><span><i class="mk4 m-birdie"></i>−1</span><span><i class="mk4 m-par"></i>±0</span><span><i class="mk4 m-bogey"></i>+1</span><span><i class="mk4 m-double"></i>+2</span><span><i class="mk4 m-triple"></i>+3以上</span></div></div>
-  <div class="panel"><div class="sec"><em>TREND</em><span>${TM==="total"&&state.fCourse!=="all"?"スコアの推移":TM==="putt"?"スコアの推移（ショットとパット）":"スコアの推移（対パー）"}</span></div>
-    <div class="tr-modes" role="tablist" aria-label="推移の見方">${[["total","合計"],["mix","内訳"],["putt","パット"]].map(([k,l])=>`<button role="tab" data-act="trend-mode" data-v="${k}" aria-selected="${TM===k}">${l}</button>`).join("")}</div>
+  ${state.oneRound?"":`  <div class="panel"><div class="sec"><em>TREND</em><span>スコアの推移</span></div>
     <div class="chartbox"><canvas id="ch-score" aria-label="スコア推移"></canvas></div>
-    ${TM==="mix"?`<div class="tr-lg">${[["birdie","バーディ"],["bogey","ボギー"],["double","ダボ"],["triple","トリプル以上"]].map(([k,l])=>`<span><i style="background:var(--q-${k})"></i>${l}</span>`).join("")}</div>`:TM==="putt"?`<div class="tr-lg"><span><i style="background:#22A06B"></i>ショット</span><span><i style="background:#9BD8B8"></i>パット</span></div>`:""}
-  </div>
+    <div class="tr-lg"><span><i style="background:#A8DCC1"></i>ショット</span><span><i style="background:#1B7F55"></i>パット</span></div>
+    <div class="tr-info" id="tr-info">棒をタップすると、いつのラウンドか出ます</div>
+  </div>`}
   ${barsPanel("スコアの内訳",DIST_SEGS(s),fmtPct(s.parOrBetter),"%","パー以内")}
 
 `:""}
@@ -2650,14 +2657,19 @@ after.stats = () => {
   const zoneFill = zf => c => zoneColor(zf(c.dataIndex));
   const tip = { filter: it => it.dataIndex < rs.length, displayColors:false, callbacks:{ title: items => { const r=rs[items[0].dataIndex]; if(!r) return ""; const [y,m,d]=r.date.split("-"); return `${+m}/${+d}  ${r.courseName}（${r.holes.length}H）`; }, label: () => [] } };
   // 2つの推移グラフを連動: タップした棒以外を薄くする
-  const SCORE_C="#22A06B", PUTT_C="#22A06B";
+  const SCORE_C="#22A06B", PUTT_C="#22A06B", SHOT_C="#A8DCC1", PUTTS_C="#1B7F55";
   const fade = (col, i) => state.trendSel==null || state.trendSel===i ? col : col+"38";
   let scoreChart, puttChart;
   const paintTrend = () => { [scoreChart,puttChart].forEach(ch=>{ if(!ch) return; ch.data.datasets.forEach(d=>{ if(d._c) d.backgroundColor = labels.map((_,i)=>fade(d._c,i)); }); ch.update("none"); }); };
+  const trInfo = () => { const el=$("#tr-info"); if(!el) return; const i=state.trendSel, r=rs[i];
+    if(i==null || !r){ el.classList.remove("on"); el.innerHTML="棒をタップすると、いつのラウンドか出ます"; return; }
+    const t=tot[i], [y,m,d]=r.date.split("-"), p=puttsOn(r);
+    el.classList.add("on");
+    el.innerHTML=`<div><b>${+y}/${+m}/${+d}</b> ${esc(r.courseName)}（${r.holes.length}H）<br><span>${t.score}打（${toPar(t.diff)}）${p?`・ショット ${t.score-t.putts}・パット ${t.putts}`:""}</span></div>${rs.length>1?`<button class="btn small" data-act="one-round" data-id="${esc(r.id)}">この日の分析 ›</button>`:""}`; };
   const onTap = (src) => (evt, els) => {
     const i = els.length ? els[0].index : null;
     state.trendSel = (i==null || i>=rs.length || state.trendSel===i) ? null : i;
-    paintTrend();
+    paintTrend(); trInfo();
     const other = src===scoreChart ? puttChart : scoreChart;
     if(other){ other.tooltip.setActiveElements([], {x:0,y:0}); other.update("none"); }
     if(state.trendSel==null){ src.tooltip.setActiveElements([], {x:0,y:0}); src.update("none"); }
@@ -2666,33 +2678,25 @@ after.stats = () => {
   const opts = (yTitle, yFmt, lo, hi) => ({ maintainAspectRatio:false, events:["click"], plugins:{ legend:{display:false}, tooltip:tip },
     scales:{ x:{ ticks:{ maxRotation:0, autoSkip:true, autoSkipPadding:14, maxTicksLimit:6 }, grid:{display:false} }, y:{ title:{display:true,text:yTitle}, ticks:{ precision:0, callback: yFmt || (v=>v) }, suggestedMin:lo, suggestedMax:hi, grid:{ color: cssv("--soft") } } } });
   const o1 = opts(oneCourse?"スコア":"対パー", oneCourse?null:(v=>toPar(v)), Math.min(parN-2, ...vals), Math.max(parN+2*holesN+1, ...vals));
-  const TM = state.trendMode || "total";
   const bar = (label, data, col, extra={}) => ({ label, data: pad(data), _c: col, backgroundColor: labels.map((_,i)=>fade(col,i)), borderWidth:0, borderRadius:3, borderSkipped:false, maxBarThickness:16, ...extra });
-  if($("#ch-score") && TM==="mix"){
-    // 内訳: 棒の高さは対パーのまま、中身をボギー（+1ずつ）・ダボ（+2ずつ）・トリプル以上で色分け。バーディ以上はゼロより下へ
-    const part = f => rs.map(r=>{ const v=r.holes.reduce((a,h)=>{ const d=h.strokes-h.par; return a+(f(d,h)?d:0); },0); return v||null; });
-    const ds = [ bar("バーディ", part(d=>d<0), cssv("--q-birdie")), bar("ボギー", part(d=>d===1), cssv("--q-bogey")), bar("ダボ", part(d=>d===2), cssv("--q-double")), bar("トリプル以上", part(d=>d>=3), cssv("--q-triple")) ];
-    const lo = Math.min(-2, ...ds[0].data.filter(v=>v!=null)), hi = Math.max(2*holesN+1, ...tot.map(t=>t.diff));
-    const o = opts("対パー", v=>toPar(v), lo, hi); o.scales.x.stacked=true; o.scales.y.stacked=true;
-    o.plugins.tooltip = { ...tip, callbacks:{ ...tip.callbacks, label: c => c.raw==null?"":` ${c.dataset.label} ${toPar(c.raw)}` } };
-    const zeroLine = [{ v:0, label:"±0", color: cssv("--q-par") }, { v:holesN, label:`+${holesN}`, color: cssv("--q-bogey") }, { v:2*holesN, label:`+${2*holesN}`, color: cssv("--q-double") }];
-    charts.push(scoreChart = new Chart($("#ch-score"), { type:"bar", data:{ labels, datasets: ds }, options:o, plugins:[refLines(zeroLine)] }));
-  } else if($("#ch-score") && TM==="putt"){
-    // パット: そのラウンドの打数を ショット（緑）とパット（うすい緑）に分けて積む。パット未記録のラウンドは灰色で合計だけ
+  if($("#ch-score")){
+    // スコアの推移: そのラウンドの打数を ショット（うすい緑）とパット（濃い緑）に分けて積む。パット未記録のラウンドは灰色で合計だけ
     const on = rs.map(puttsOn);
-    const ds = [ bar("ショット", tot.map((t,i)=>on[i]?t.score-t.putts:null), "#22A06B"), bar("パット", tot.map((t,i)=>on[i]?t.putts:null), "#9BD8B8"), bar("パット未記録", tot.map((t,i)=>on[i]?null:t.score), cssv("--q-neutral")) ];
-    const o = opts("打数", null, 0, Math.max(...tot.map(t=>t.score))+2); o.scales.x.stacked=true; o.scales.y.stacked=true; o.scales.y.min=0;
-    o.plugins.tooltip = { ...tip, callbacks:{ ...tip.callbacks, label: c => { if(c.raw==null) return ""; const t=tot[c.dataIndex]; return c.datasetIndex===1?` パット ${c.raw}（${Math.round(c.raw/t.score*100)}%）`:` ${c.dataset.label} ${c.raw}`; } } };
-    charts.push(scoreChart = new Chart($("#ch-score"), { type:"bar", data:{ labels, datasets: ds }, options:o }));
-  } else if($("#ch-score")) charts.push(scoreChart = new Chart($("#ch-score"), { type:"bar", data:{ labels, datasets:[
-    { label:"スコア", data: pad(vals), _c: SCORE_C, backgroundColor: labels.map((_,i)=>fade(SCORE_C,i)), borderColor: rs.map((r,i)=>zoneColor(scoreZone(i))), borderWidth:0, borderSkipped:"start", borderRadius:5, maxBarThickness:16, base: oneCourse ? undefined : 0 }
-  ]}, options:o1, plugins:[refLines(scoreLines)] }));
+    const ds = [ bar("ショット", tot.map((t,i)=>on[i]?t.score-t.putts:null), SHOT_C), bar("パット", tot.map((t,i)=>on[i]?t.putts:null), PUTTS_C), bar("パット未記録", tot.map((t,i)=>on[i]?null:t.score), cssv("--q-neutral")) ];
+    // 基準線（パー・ボギー）は、どのラウンドも同じパーのときだけ引く
+    const pars = [...new Set(tot.map(t=>t.par))], one = pars.length===1;
+    const o = opts("打数", null, 0, Math.max(...tot.map(t=>t.score), one?pars[0]+holesN:0)+2); o.scales.x.stacked=true; o.scales.y.stacked=true; o.scales.y.min=0;
+    o.plugins.tooltip = { enabled:false };
+    charts.push(scoreChart = new Chart($("#ch-score"), { type:"bar", data:{ labels, datasets: ds }, options:o,
+      plugins: one ? [refLines([{ v:pars[0], label:`パー ${pars[0]}`, color: cssv("--q-par") }, { v:pars[0]+holesN, label:`${pars[0]+holesN}`, color: cssv("--q-bogey") }])] : [] }));
+  }
   const pVals = tot.map((t,i)=>puttsOn(rs[i])?t.putts:null);
   const o2 = opts("パット", null); { const pv=pVals.filter(v=>v!=null); o2.scales.y.min = Math.min(holesN+1, ...pv); o2.scales.y.max = Math.max(holesN*2+6, ...pv); }
   if($("#ch-putt")) charts.push(puttChart = new Chart($("#ch-putt"), { type:"bar", data:{ labels, datasets:[
     { label:"パット", data: pad(pVals), _c: PUTT_C, backgroundColor: labels.map((_,i)=>fade(PUTT_C,i)), borderColor: rs.map((r,i)=>zoneColor(puttZone(i))), borderWidth:0, borderSkipped:"start", borderRadius:5, maxBarThickness:16 }
   ]}, options:o2, plugins:[refLines([{ v:2*holesN, label:`${2*holesN}`, color: cssv("--q-par") }])] }));
   if(scoreChart) scoreChart.options.onClick = onTap(scoreChart); if(puttChart) puttChart.options.onClick = onTap(puttChart);
+  trInfo();
   // パーオン率・ボギーオン率の推移（1ラウンドごと）
   const perRound = rs.map(r=>{ const hs=puttsOn(r)?r.holes.filter(h=>h.strokes>0):[]; // パット未記録のラウンドは数えない
     return { g: hs.filter(h=>h.strokes-h.putts<=h.par-2).length, b: hs.filter(h=>h.strokes-h.putts<=h.par-1).length, n: hs.length }; })
@@ -2750,6 +2754,7 @@ function viewHistory(){
         <div class="sc-tot"><b>${t.score}</b><small style="color:${tcol}">${toPar(t.diff)}</small>${puttsOn(r)?`<span>${t.putts}パット</span>`:""}</div>
       </button>
       ${open?`<div class="detail">${tables}${legend}
+        <button class="btn small one-go" data-act="one-round" data-id="${r.id}">このラウンドの分析を見る ›</button>
         ${state.demo?"":`<div class="actions">${conf?`<span class="muted" style="font-size:13px;align-self:center">このラウンドを削除しますか？</span><button class="btn small" data-act="cancel-confirm">やめる</button><button class="btn small danger" data-act="del-round" data-id="${r.id}">削除する</button>`:`<button class="btn small" data-act="edit-round" data-id="${r.id}">編集</button><button class="btn small" data-act="ask-del-round" data-id="${r.id}">削除</button>`}</div>`}
       </div>`:""}
     </div>`;
@@ -3093,7 +3098,7 @@ function saveDraft(){ if(state.draft) state.draft.cur=state.hole; LS.set("sc.dra
 document.addEventListener("click", async ev => {
   const b = ev.target.closest("[data-act], nav.tabs button, [data-stop], label.fs-row");
   if(!b || b.dataset.stop || b.classList.contains("fs-row")) return;
-  if(b.dataset.tab){ state.tab=b.dataset.tab; state.confirm=null; LS.set("sc.tab",state.tab); render(); window.scrollTo({top:0}); return; }
+  if(b.dataset.tab){ if(b.dataset.tab!==state.tab) state.oneRound=null; state.tab=b.dataset.tab; state.confirm=null; LS.set("sc.tab",state.tab); render(); window.scrollTo({top:0}); return; }
   const a=b.dataset.act, d=state.draft, h=d && d.holes[state.hole];
   state.tap = (a==="sv"||a==="pv"||a==="dir") ? a+b.dataset.v : null;
   switch(a){
@@ -3131,7 +3136,8 @@ document.addEventListener("click", async ev => {
     case "toggle-round": state.openRound = state.openRound===b.dataset.id ? null : b.dataset.id; state.confirm=null; render(); break;
     case "stat-tab": { const tb=$(".stat-tabs"), y0=tb?tb.getBoundingClientRect().top:0; state.statTab=b.dataset.v; LS.set("sc.statTab",b.dataset.v); state.trendSel=null; render();
       const t2=$(".stat-tabs"); if(t2) window.scrollBy(0, t2.getBoundingClientRect().top-y0); break; } // タブの位置を動かさない
-    case "trend-mode": state.trendMode=b.dataset.v; LS.set("sc.trendMode",b.dataset.v); state.trendSel=null; { const y=window.scrollY; render(); window.scrollTo(0,y); } break;
+    case "one-round": state.oneRound=b.dataset.id; state.trendSel=null; state.tab="stats"; LS.set("sc.tab","stats"); render(); window.scrollTo(0,0); break;
+    case "one-off": { const id=state.oneRound; state.oneRound=null; state.trendSel=null; render(); window.scrollTo(0,0); break; }
     case "pick-player": state.trendSel=null; state.fPlayer=b.dataset.v; LS.set("sc.fPlayer",state.fPlayer); render(); break;
     case "demo-on": state.demo=true; render(); break;
     case "demo-off": state.demo=false; render(); break;
