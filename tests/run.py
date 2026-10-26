@@ -570,6 +570,22 @@ with sync_playwright() as pw:
     check("狙い: 分析に「狙い通り」と外れた向き（パー3・パー4）", pg.evaluate("document.querySelectorAll('.aim-box').length===2") and "外れた向き" in pg.inner_text("body"))
     pg.context.close()
 
+    # 19e. 花道の狙い・記録中のスコアカード・同伴者の合計打数・コース画面の色分け
+    FA2 = dict(ALL); FA2["aim"] = True; FA2["club"] = False
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": ["はなこ", "", ""], "sc.fields": FA2}, offline=True)
+    start_preset(pg, "firtree")
+    C(pg, "[data-act=dir][data-v=short]")
+    check("狙い: 花道（ショートの帯）も狙いにできる", pg.evaluate("state.draft.holes[0].aim==='short'") and "②着弾" in pg.inner_text(".ap-wrap"))
+    C(pg, "[data-act=dir][data-v=short]")
+    check("狙い: 花道を狙って花道に落ちたら照準の真ん中にボール", pg.evaluate("(()=>{ const m=document.querySelector('.aim-mark').getAttribute('transform'), im=document.querySelector('.ballg image'); return m==='translate('+(+im.getAttribute('x')+7.5)+' '+(+im.getAttribute('y')+7.5)+')'; })()"))
+    check("同伴者の列にも合計打数と対パー（3(±0)）", pg.evaluate("[...document.querySelectorAll('.pboard .ph .tp')].every(e=>/^\\d+\\(/.test(e.textContent))"))
+    C(pg, "[data-act=open-card]")
+    check("くわしく記録でもスコアカードを開ける（自分と同伴者）", pg.evaluate("!!document.querySelector('.lc-sheet') && document.querySelectorAll('.lc-t tr').length>=4") and "はなこ" in pg.inner_text(".lc-sheet"))
+    check("新ペリア等なし: エラーなし", not errs); pg.context.close()
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.favs": ["preset:firtree"], "sc.tab": "\"courses\""}, offline=True)
+    check("コース画面: よく行くコースは色のついたかたまり", pg.evaluate("!!document.querySelector('.cp-favpanel .cp-ico')"))
+    pg.context.close()
+
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
     import subprocess, time
     PORT = 8791

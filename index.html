@@ -1560,6 +1560,29 @@ input,select,textarea{font-size:max(16px,1em)}
 .aim-miss span{font-size:12px;font-weight:700;color:var(--muted);margin-right:2px}
 .aim-miss i{font-style:normal;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--paper);border:1px solid var(--line);color:var(--fg)}
 .aim-miss i.top{color:var(--q-triple);border-color:color-mix(in srgb,var(--q-triple) 45%,var(--line))}
+/* 記録中のスコアカード */
+.card-btn svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.rec-top .card-btn{margin-left:auto}
+.lc-sheet p small{font-size:12px;color:var(--muted);margin-left:8px;font-weight:700}
+.lc-t{width:100%;border-collapse:collapse;table-layout:fixed;margin:4px 0 12px;font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.lc-t th{width:58px;text-align:left;font:700 12px var(--f-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:4px 4px 4px 0}
+.lc-t td{text-align:center;padding:3px 0;font-size:13px}
+.lc-t tr.h td{font-size:11px;color:var(--muted)}
+.lc-t tr.h td.cur{color:var(--fg);font-weight:700;text-decoration:underline}
+.lc-t tr.p td{font-size:12px;color:var(--muted)}
+.lc-t td.sum{width:34px;font-weight:700}
+.lc-t tr+tr td,.lc-t tr+tr th{border-top:1px solid var(--line)}
+.lc-t .mk3{width:22px;height:22px;font-size:13px}
+.lc-tot{display:flex;flex-wrap:wrap;gap:6px 14px;font:700 15px var(--f-num);margin-bottom:12px}
+.lc-tot b{font:700 12px var(--f-body);margin-right:6px}
+.lc-tot small{font-size:12px;color:var(--muted);margin-left:2px}
+.pboard .tp small{font-size:.8em;margin-left:1px;opacity:.85}
+/* コース画面の2つのかたまり */
+.cp-favpanel{background:color-mix(in srgb,#F5B700 10%,var(--paper));border:1.5px solid color-mix(in srgb,#F5B700 50%,var(--line))}
+.cp-favpanel .sec em{color:#B07A00}
+.cp-ico{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:7px;background:#F5B700;color:#fff;font-style:normal;font-size:13px;margin-right:6px;vertical-align:-3px}
+.cp-ico.s{background:var(--turf)}
+.cp-ico svg{width:15px;height:15px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round}
 </style>
 
 </head>
@@ -1646,7 +1669,7 @@ const FIELD_DEFS = [
   {k:"aim",    label:"狙いも記録する", def:false, sub:"shot"},
   {k:"club",   label:"使用クラブ", def:false},
   {k:"advice", label:"ホールのアドバイス", def:true, show:true},
-  {k:"tracer", label:"弾道のアニメーション", def:true, show:true},
+  {k:"tracer", label:"弾道のアニメーション", def:false, show:true},
   {k:"pace",   label:"自己ベストのペース表示", def:false, show:true},
 ];
 function fields(){ const saved = LS.get("sc.fields", {}); const f={}; if(saved.shot==null && (saved.approach||saved.tee)) saved.shot=true; FIELD_DEFS.forEach(d=>f[d.k] = saved[d.k]!=null ? saved[d.k] : d.def); return f; }
@@ -1670,7 +1693,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-26-1630";
+const BUILD = "2026-10-26-1700";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2076,8 +2099,8 @@ const HATCH = `<pattern id="hatchS" width="8" height="8" patternUnits="userSpace
 const mapPct = v => `${v==null?"—":Math.round(v)}<tspan class="pu">%</tspan>`;
 /* グリーンの中の5つの区画（狙いと着弾）: 真ん中・奥・手前・左・右 */
 const GSUB = { c:[170,100], b:[170,66], f:[170,130], l:[114,98], r:[226,98] };
-const GSUB_L = { c:"真ん中", b:"奥", f:"手前", l:"左", r:"右" };
-const FCOL = { l:[135,92], c:[170,92], r:[205,92] }; // フェアウェイの左・真ん中・右（着弾のボールの位置）
+const GSUB_L = { c:"真ん中", b:"奥", f:"手前", l:"左", r:"右", short:"花道" };
+const FCOL = { l:[121,92], c:[170,92], r:[219,92] }; // フェアウェイの左・真ん中・右（着弾のボールの位置）
 const FCOL_L = { l:"左", c:"真ん中", r:"右" };
 const aimMarkSVG = p => p ? `<g class="aim-mark" pointer-events="none" transform="translate(${p[0]} ${p[1]})"><circle r="11" fill="rgba(47,125,225,.2)" stroke="#fff" stroke-width="4"/><circle r="11" fill="none" stroke="#2F7DE1" stroke-width="2.4"/><circle r="2.6" fill="#2F7DE1"/><path d="M0 -17V-8M0 8V17M-17 0H-8M8 0H17" stroke="#fff" stroke-width="4.4" stroke-linecap="round"/><path d="M0 -17V-8M0 8V17M-17 0H-8M8 0H17" stroke="#2F7DE1" stroke-width="2.2" stroke-linecap="round"/></g>` : "";
 function approachSVG(dir, tap, stat, o={}){
@@ -2095,7 +2118,7 @@ function approachSVG(dir, tap, stat, o={}){
   const b = !stat && dir && (dir==="on" && GSUB[o.on] ? GSUB[o.on] : Z[dir]);
   const sx=170, sy=222;
   const cy = Math.min(sy,b?b[1]:sy) - (dir==="short"?70:dir==="long"?12:40);
-  const tpath = b ? `M${sx} ${sy} Q ${(sx+(b?b[0]:0))/2} ${cy} ${b[0]} ${b[1]}` : "";
+  const tpath = b ? `M${sx} ${sy} Q ${(sx+(b?b[0]:0))/2-28} ${cy} ${b[0]} ${b[1]}` : ""; // 少し左に膨らませる（真っすぐだと線がボールと重なる）
   const tracer = b ? `<g class="tr ${tap?"anim":""}">
       <path class="tr-shadow" d="M${sx+6} ${sy} L${b[0]+5} ${b[1]+3}" pathLength="1" filter="url(#soft)"/>
       <path class="tr-glow" d="${tpath}" pathLength="1" filter="url(#trGlow)"/>
@@ -2140,14 +2163,14 @@ function approachSVG(dir, tap, stat, o={}){
       ${onLabel}
     </g>
     ${greenSubs}
-    ${aimMarkSVG(!stat && GSUB[o.aim])}
+    ${aimMarkSVG(!stat && (o.aim==="short" ? Z.short : GSUB[o.aim]))}
     ${tracer}${ball}
   </svg>`;
 }
 /* ティーショット: 上から見たホール。手前がティー、奥にグリーン。光は左上から（影は右下） */
 function fairwaySVG(tee, tap, stat, o={}){
   // まっすぐなフェアウェイ（2026-10-26、狙いと着弾のために S字から変更）。フェアウェイは左・真ん中・右の3列。o = { on: 列（着弾）, aim: 狙いの列 }
-  const Z = { fw:[170,92], rl:[73,150], rr:[267,150], miss:[150,200] };
+  const Z = { fw:[170,92], rl:[59,150], rr:[281,150], miss:[150,200] };
   const id = stat?"S":"";
   const sel = k => !stat && tee===k;
   const maxMiss = stat ? Math.max(1, ...["rl","rr","miss"].map(k=>stat.teeC[k]||0)) : 1;
@@ -2161,25 +2184,25 @@ function fairwaySVG(tee, tap, stat, o={}){
   const b = !stat && tee && (tee==="fw" && FCOL[o.on] ? FCOL[o.on] : Z[tee]);
   const sx=170, sy=224;
   const cy = Math.min(sy, b?b[1]:sy) - (tee==="miss"?36:46);
-  const cx2 = (sx+(b?b[0]:sx))/2;
+  const cx2 = (sx+(b?b[0]:sx))/2 - 30; // 少し左に膨らませる（真ん中に飛んだとき線がボールと重ならないように）
   const ex = b ? b[0]-(b[0]-cx2)*0.12 : 0, ey = b ? b[1]-(b[1]-cy)*0.12 : 0; // 弾道はボールの手前で止める
   const tpath = b ? `M${sx} ${sy} Q ${cx2} ${cy} ${ex.toFixed(1)} ${ey.toFixed(1)}` : "";
   const tracer = b ? `<g class="tr ${tap?"anim":""}"><path class="tr-shadow" d="M${sx+6} ${sy} L${b[0]+5} ${b[1]+3}" pathLength="1" filter="url(#soft${id})"/><path class="tr-glow" d="${tpath}" pathLength="1" filter="url(#trGlow${id})"/><path class="tr-core" d="${tpath}" pathLength="1" stroke="url(#trGrad${id})"/><path class="tr-hi" d="${tpath}" pathLength="1"/></g>` : "";
   const ball = b ? `<g class="ballg ${tap?"drop":""}"><ellipse cx="${b[0]+3.5}" cy="${b[1]+5}" rx="7.5" ry="4.8" fill="rgba(0,0,0,.26)" filter="url(#soft${id})" transform="rotate(15 ${b[0]+3.5} ${b[1]+5})"/><image href="ball.png" x="${b[0]-7.5}" y="${b[1]-7.5}" width="15" height="15"/></g>` : "";
-  const FX=118, FW=104, FY=54, FH=128; // フェアウェイの四角
+  const FX=94, FW=152, FY=40, FH=140; // フェアウェイの四角（押しやすいよう広く・奥行きも長く）
   const fwShape = `<rect x="${FX-4}" y="${FY-4}" width="${FW+8}" height="${FH+8}" rx="20" fill="#86D9A2"/>
       <rect x="${FX}" y="${FY}" width="${FW}" height="${FH}" rx="16" fill="url(#gFw${id})" filter="url(#fwShadow${id})"/><rect x="${FX}" y="${FY}" width="${FW}" height="${FH}" rx="16" fill="url(#fwMow${id})"/><rect x="${FX}" y="${FY}" width="${FW}" height="${FH}" rx="16" class="g-ring"/>`;
   const colW = FW/3, colSel = k => !stat && tee==="fw" && o.on===k;
   const cols = stat ? "" : `<g clip-path="url(#fwClip)">${["l","c","r"].map((k,i)=>`<rect class="gsub ${colSel(k)?"sel":""}" x="${FX+i*colW}" y="${FY}" width="${colW}" height="${FH}" data-act="tee" data-v="fw" data-p="${k}" role="button" aria-pressed="${colSel(k)}" aria-label="フェアウェイの${FCOL_L[k]}"/>`).join("")}</g>
       <g class="gsub-lines" pointer-events="none"><line x1="${FX+colW}" y1="${FY+6}" x2="${FX+colW}" y2="${FY+FH-6}"/><line x1="${FX+2*colW}" y1="${FY+6}" x2="${FX+2*colW}" y2="${FY+FH-6}"/></g>`;
   const deco = `<g pointer-events="none">
-        <ellipse cx="170" cy="27" rx="33" ry="15" fill="#86D9A2"/>
-        <ellipse cx="170" cy="27" rx="28" ry="11.5" fill="url(#gGr${id})" filter="url(#fwShadow${id})"/>
-        <path d="M133 28 C129 34 133 41 140 41 C145 41 145 35 141 32 C139 30 137 26 133 28Z" class="sand"/>
-        <ellipse cx="206" cy="16" rx="8" ry="4" transform="rotate(12 206 16)" class="sand"/>
-        <g filter="url(#soft${id})"><path d="M176 27 L190 32" stroke="rgba(0,0,0,.24)" stroke-width="1.8" stroke-linecap="round"/><path d="M190 32 L199 31 L184 28Z" fill="rgba(0,0,0,.2)"/></g>
-        <ellipse cx="176" cy="27" rx="2.6" ry="1.2" fill="rgba(0,0,0,.45)"/>
-        <line x1="176" y1="27" x2="176" y2="6" stroke="#fff" stroke-width="1.6"/><path d="M177 6.5 L190 10.5 L177 14.5Z" fill="#E11D2E"/></g>`;
+        <ellipse cx="170" cy="21" rx="30" ry="12" fill="#86D9A2"/>
+        <ellipse cx="170" cy="21" rx="25.5" ry="9" fill="url(#gGr${id})" filter="url(#fwShadow${id})"/>
+        <path d="M136 21 C132 26 136 32 142 32 C147 32 147 27 143 25 C141 23 139 19 136 21Z" class="sand"/>
+        <ellipse cx="203" cy="12" rx="7" ry="3.4" transform="rotate(12 203 12)" class="sand"/>
+        <g filter="url(#soft${id})"><path d="M176 21 L188 25" stroke="rgba(0,0,0,.24)" stroke-width="1.6" stroke-linecap="round"/><path d="M188 25 L196 24 L183 22Z" fill="rgba(0,0,0,.2)"/></g>
+        <ellipse cx="176" cy="21" rx="2.4" ry="1.1" fill="rgba(0,0,0,.45)"/>
+        <line x1="176" y1="21" x2="176" y2="4" stroke="#fff" stroke-width="1.5"/><path d="M177 4.5 L188 8 L177 11.5Z" fill="#E11D2E"/></g>`;
   return `<svg class="approach fairway" viewBox="0 0 340 222" preserveAspectRatio="xMidYMid meet" role="${stat?"img":"group"}" aria-label="ティーショットの行き先">
     <defs>
       <linearGradient id="gFw${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#46C77B"/><stop offset="1" stop-color="#1F9E57"/></linearGradient>
@@ -2191,12 +2214,12 @@ function fairwaySVG(tee, tap, stat, o={}){
       <filter id="fwShadow${id}" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="3" dy="3" stdDeviation="3" flood-color="#0B3A1E" flood-opacity=".28"/></filter>
     </defs>
     <rect class="az-rough" x="0" y="0" width="340" height="222" rx="18"/>
-    ${zone("rl", `<path class="az-bg" d="M30 72 Q30 58 44 58 H100 Q112 58 112 70 V166 Q112 178 100 178 H44 Q30 178 30 164Z"/>`, 71, stat?122:118, "左")}
-    ${zone("rr", `<path class="az-bg" d="M310 72 Q310 58 296 58 H240 Q228 58 228 70 V166 Q228 178 240 178 H296 Q310 178 310 164Z"/>`, 269, stat?122:118, "右")}
+    ${zone("rl", `<path class="az-bg" d="M18 62 Q18 48 32 48 H74 Q86 48 86 60 V166 Q86 178 74 178 H32 Q18 178 18 164Z"/>`, 52, stat?122:118, "左")}
+    ${zone("rr", `<path class="az-bg" d="M322 62 Q322 48 308 48 H266 Q254 48 254 60 V166 Q254 178 266 178 H308 Q322 178 322 164Z"/>`, 288, stat?122:118, "右")}
     ${deco}
     ${stat ? zone("fw", fwShape, 170, 122, "フェアウェイ", "az-green") : `<g class="g-deco">${fwShape}<text x="170" y="150" class="az-t on-t">フェアウェイ</text></g>${cols}`}
-    ${zone("miss", `<path class="az-bg" d="M30 184 H310 V202 Q310 216 296 216 H44 Q30 216 30 202Z"/>`, 170, 200, "当たりそこね")}
-    ${aimMarkSVG(!stat && FCOL[o.aim] && [FCOL[o.aim][0], 72])}
+    ${zone("miss", `<path class="az-bg" d="M18 186 H322 V202 Q322 216 308 216 H32 Q18 216 18 202Z"/>`, 170, 201, "当たりそこね")}
+    ${aimMarkSVG(!stat && FCOL[o.aim])}
     ${tracer}${ball}
   </svg>`;
 }
@@ -2263,6 +2286,7 @@ function viewRecordDraft(d){
     <div class="rec-top">
       <button class="icon-btn" data-act="ask-discard" aria-label="記録を閉じる">${ICON.x}</button>
       <div class="rec-who"><b>${esc(d.player)}${(d.mates||[]).length?`<small> ほか${d.mates.length}人</small>`:""}</b><span>${esc(d.courseName)}・${esc(d.date.slice(5).replace("-","/"))}${d.editing?"・編集中":""}</span></div>
+      <button class="icon-btn card-btn" data-act="open-card" aria-label="スコアカードを見る"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16M15 4v16"/></svg></button>
       <button class="icon-btn gear-btn" data-act="open-fields" aria-label="記録する項目の設定">${ICON.gear}</button>
     </div>
     <div class="dots ${N>9?"two":""}">${d.holes.map((x,i)=>`<button data-act="hole" data-i="${i}" class="${dotCls(x)} ${i===state.hole?"cur":""}" aria-label="${i+1}番ホール${x.entered?" "+x.strokes+"打":""}">${i+1}H</button>`).join("")}</div>
@@ -2299,6 +2323,7 @@ function viewRecordDraft(d){
     </div>
     ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p><button data-act="pause">中断してホームへ（あとで続きから）</button><button class="danger" data-act="discard">${d.editing?"編集をやめる（変更は保存されません）":"記録を破棄する"}</button><button data-act="cancel-confirm">入力に戻る</button></div></div>`:""}
     ${state.sheet==="fields"?fieldsSheet():""}
+    ${state.sheet==="card"?liveCard():""}
     ${state.sheet==="medal"?medalSheet([d.player,...(d.mates||[]).map(m=>m.name)].map((n,i,a)=>dupLabel(a,i)), d.medals, state.medalHole):""}
     ${state.sheet==="pin"?pinSheet([d.player,...(d.mates||[]).map(m=>m.name)].map((n,i,a)=>dupLabel(a,i)), d.pins, state.pinHole):""}
     ${state.sheet==="mate" && (d.mates||[])[state.mateI] ? (()=>{ const nm=[d.player,...d.mates.map(m=>m.name)], k=state.mateI, cur=d.mates[k].s[state.hole];
@@ -2412,7 +2437,7 @@ function playerCols(d, h, F){
   const nm=[d.player,...d.mates.map(m=>m.name)], upto=state.hole;
   const mk=v=>`<b class="mk3 m-${v===1?"hio":TONE(v-h.par)}">${v}</b>`;
   const sk = d.game==="skins" ? skinsCalc([d.holes.map(x=>x.strokes), ...d.mates.map(m=>m.s)], state.hole, !!d.carry) : null; // このホールの前までのコイン
-  const tpRaw=sc=>{ let s=0,p=0; for(let i=0;i<=upto;i++){ s+=sc(i); p+=d.holes[i].par; } const x=s-p; return `<span class="tp ${x<0?"u":x>0?"o":""}">${toPar(x)}</span>`; };
+  const tpRaw=sc=>{ let s=0,p=0; for(let i=0;i<=upto;i++){ s+=sc(i); p+=d.holes[i].par; } const x=s-p; return `<span class="tp ${x<0?"u":x>0?"o":""}">${s}<small>(${toPar(x)})</small></span>`; }; // 今のホールまでの合計打数と対パー
   const gt = d.game && d.game!=="skins" ? gameTags(d.game, [d.holes.map(x=>x.strokes), ...d.mates.map(m=>m.s)], d.holes.map(x=>x.par), state.hole, d.holes.length, {medals:d.medals, pins:d.pins, hole:state.hole}) : null;
   let col=0; const tp=sc=>{ const k=col++; return `<span class="ph-l">${tpRaw(sc)}${sk?`<span class="skc ${sk.won[k]?"":"z"}">${coinSVG(12)}${sk.won[k]}</span>`:""}${gt?gt[k]:""}</span>`; };
   const step=(up,dn,label)=>`<div class="pstep"><button ${up} aria-label="${label}を1つ増やす">${ICON.up}</button><button ${dn} aria-label="${label}を1つ減らす">${ICON.down}</button></div>`;
@@ -2424,6 +2449,21 @@ function playerCols(d, h, F){
     return `<div class="pcol mate"><div class="ph"><b>${esc(dupLabel(nm,k+1))}</b>${tp(i=>m.s[i])}</div><div class="pcells">
       ${cell(F.putts?"打数":"", `<button class="pc-tap" data-act="mt-open" data-i="${k}" aria-label="${esc(m.name)}の打数を数字で入力">${mk(v)}</button>`, `data-act="mt" data-i="${k}" data-d="1" ${v>=15?"disabled":""}`, `data-act="mt" data-i="${k}" data-d="-1" ${v<=1?"disabled":""}`, esc(m.name)+"の打数")}</div></div>`; }).join("");
   return `<div class="pboard">${me}${mates}</div>`;
+}
+/* くわしく記録の途中でも見られるスコアカード（自分＋同伴者、今のホールまで） */
+function liveCard(){
+  const d=state.draft; if(!d) return "";
+  const N=d.holes.length, pl=[{name:d.player, s:d.holes.map(x=>x.strokes)}, ...(d.mates||[]).map(m=>({name:m.name, s:m.s}))], nm=pl.map(p=>p.name);
+  const done = i => d.holes[i].entered || i<=state.hole;
+  const mk = (v,par) => `<span class="mk3 m-${v===1?"hio":TONE(v-par)}">${v}</span>`;
+  const halves = N>9 ? [[0,9,"OUT"],[9,N,"IN"]] : [[0,N,"計"]];
+  const tbl = halves.map(([a,b,lab])=>{ const idx=[...Array(b-a)].map((_,k)=>a+k), dn=idx.filter(done);
+    return `<table class="lc-t"><tr class="h"><th></th>${idx.map(i=>`<td class="${i===state.hole?"cur":""}">${i+1}</td>`).join("")}<td class="sum">${lab}</td></tr>
+      <tr class="p"><th>PAR</th>${idx.map(i=>`<td>${d.holes[i].par}</td>`).join("")}<td class="sum">${sum(idx,i=>d.holes[i].par)}</td></tr>
+      ${pl.map((p,k)=>`<tr><th>${esc(dupLabel(nm,k))}</th>${idx.map(i=>`<td>${done(i)?mk(p.s[i],d.holes[i].par):""}</td>`).join("")}<td class="sum"><b>${dn.length?sum(dn,i=>p.s[i]):""}</b></td></tr>`).join("")}</table>`; }).join("");
+  const all=[...Array(N).keys()].filter(done), par=sum(all,i=>d.holes[i].par);
+  const tot = pl.map((p,k)=>{ const t=sum(all,i=>p.s[i]); return `<span><b>${esc(dupLabel(nm,k))}</b>${t}<small>(${toPar(t-par)})</small></span>`; }).join("");
+  return `<div class="sheet-back" data-act="close-sheet"><div class="sheet lc-sheet" data-stop="1"><p>スコアカード<small>${state.hole+1}Hまで</small></p>${tbl}<div class="lc-tot">${tot}</div><button data-act="close-sheet">閉じる</button></div></div>`;
 }
 let clubTimer=null;
 /* 前回このホール（同じ人・同じコース）で使ったティーショットのクラブ */
@@ -2662,7 +2702,7 @@ function donutSVG(segs, total, centerVal, centerLbl, title){
     <text x="${cx}" y="${cy+4}" class="dc-v">${String(centerVal).replace(/<small>%<\/small>/,'<tspan class="dc-u">%</tspan>')}</text><text x="${cx}" y="${cy+21}" class="dc-l">${centerLbl}</text></svg>`;
 }
 /* 狙いと着弾の分析: 狙い通り率と、外れたときの向き（狙いを記録したホールだけ） */
-const AIMXY = { c:[0,0], b:[0,1], f:[0,-1], l:[-1,0], r:[1,0] };
+const AIMXY = { c:[0,0], b:[0,1], f:[0,-1], l:[-1,0], r:[1,0], short:[0,-2] };
 const LANDXY = { left:[-2,0], right:[2,0], long:[0,2], short:[0,-2] };
 function aimStats(rs, kind){
   let n=0, hit=0; const c={right:0,left:0,long:0,short:0,miss:0}, X={l:-1,c:0,r:1};
@@ -2874,13 +2914,13 @@ function viewCourses(){
   }
   const all = pickableCourses(), F = favs(), pf = curPref(all);
   const favList = all.filter(c=>F.includes(c.id));
-  return `<div class="panel">
+  return `<div class="panel cp-favpanel">
     ${state.mode==="connecting"&&!all.length?`<div class="empty">読み込み中…</div>`:""}
-    <div class="sec"><em>FAVORITE</em><span>★ よく行くコース</span></div>
+    <div class="sec"><em>FAVORITE</em><span><i class="cp-ico">★</i>よく行くコース</span></div>
     ${favList.length?courseRows(favList,"edit"):`<p class="muted" style="font-size:13px;margin:4px 0 0">下の一覧で ☆ をタップすると、ここに移ります。ラウンド開始のときは、ここのコースから選びます。</p>`}
   </div>
   <div class="panel">
-    <div class="sec"><em>SEARCH</em><span>コースを探す</span></div>
+    <div class="sec"><em>SEARCH</em><span><i class="cp-ico s"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></i>コースを探す</span></div>
     ${prefSelect(all,pf,"cl-pref")}
     ${(()=>{ const inPf=byPref(all,pf), rest=inPf.filter(c=>!F.includes(c.id));
       return rest.length?courseRows(rest,"edit"):inPf.length?`<div class="muted" style="font-size:13px;padding:12px 2px">この県のコースは、すべて ★ よく行くコースに入っています。</div>`:courseRows([],"edit"); })()}
@@ -3260,11 +3300,13 @@ document.addEventListener("click", async ev => {
     case "dir": case "tee": {
       const v=b.dataset.v, sub=b.dataset.p||null, isT=a==="tee", onV=isT?"fw":"on", subK=isT?"teeOn":"dirOn";
       if(fields().aim && !h.aim){ // 狙いモード: 1回目のタップは狙い（グリーン／フェアウェイの中だけ）
-        if(v!==onV || !sub){ toast(isT?"先にフェアウェイの中で狙いをタップしてください":"先にグリーンの上で狙いをタップしてください"); break; }
-        h.aim=sub; h.entered=true; state.tap=null; saveDraft(); render(); break; }
+        const okAim = (v===onV && sub) || (!isT && v==="short"); // パー3は花道（グリーンの手前の帯）も狙える
+        if(!okAim){ toast(isT?"先にフェアウェイの中で狙いをタップしてください":"先にグリーンか花道で狙いをタップしてください"); break; }
+        h.aim = sub || v; h.entered=true; state.tap=null; saveDraft(); render(); break; }
       const same = h[a]===v && (h[subK]||null)===(v===onV?sub:null);
       if(same){ h[a]=null; h[subK]=null; } else { h[a]=v; h[subK]= v===onV ? sub : null; }
       h.entered=true; state.tap=a; saveDraft(); render(); askClub(h[a]); break; }
+    case "open-card": state.sheet="card"; render(); break;
     case "aim-reset": h.aim=null; if(state.draft.holes[state.hole]){ const isLong=h.par>=4; if(isLong){ h.tee=null; h.teeOn=null; } else { h.dir=null; h.dirOn=null; } } clearTimeout(clubTimer); saveDraft(); render(); break;
     case "tog": h[b.dataset.k]=!h[b.dataset.k]; h.entered=true; saveDraft();
       render(); break;
