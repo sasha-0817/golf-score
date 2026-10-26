@@ -1623,6 +1623,8 @@ input,select,textarea{font-size:max(16px,1em)}
 .stp-h .eyebrow{letter-spacing:.08em}
 .stp-h .eyebrow b{margin-left:4px}
 .game-sheet .gm-rule{font-size:13px!important;height:28px!important}
+.rec2.multi .pcell{gap:1px}
+.rec2.multi .pcol{padding:4px 4px 4px}
 .start-panel .im-seg button{padding-top:5px;padding-bottom:4px}
 .start-panel .lab-row{margin-top:7px}
 .sr-ex span{white-space:nowrap}
@@ -1737,7 +1739,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-26-1745";
+const BUILD = "2026-10-26-1815";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
