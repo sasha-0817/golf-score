@@ -531,7 +531,7 @@ with sync_playwright() as pw:
     check("サンプルデータは たろう だけ", pg.evaluate("state.demo") and "はなこ" not in pg.inner_text("body"))
     C(pg, "nav.tabs [data-tab=stats]"); C(pg, "[data-act=stat-tab][data-v=score]"); pg.wait_for_timeout(300)
     check("スコアの内訳は横棒の一覧（引き出し線なし）", pg.evaluate("document.querySelectorAll('.bk .bk-row').length>=3 && !document.querySelector('.dsvg')"))
-    check("スコア推移は切りかえなし・ショットとパットの見方・タップの案内", pg.evaluate("!document.querySelector('[data-act=trend-mode]') && !!document.querySelector('#tr-info')") and "ショット" in pg.inner_text(".panel:has(#ch-score)"))
+    check("スコア推移は元の緑の棒だけ（切りかえ・ショット/パットの内訳なし）", pg.evaluate("!document.querySelector('[data-act=trend-mode]') && !document.querySelector('#tr-info')") and "ショット" not in pg.inner_text(".panel:has(#ch-score)"))
     C(pg, "[data-act=demo-off]"); C(pg, "nav.tabs [data-tab=history]"); C(pg, "[data-act=toggle-round]")
     C(pg, "[data-act=one-round]"); pg.wait_for_timeout(200)
     check("履歴から1ラウンドだけの分析を開ける", pg.evaluate("state.tab==='stats' && !!document.querySelector('.one-band') && !document.querySelector('#f-course')") and "このラウンドだけの分析" in pg.inner_text("body"))
