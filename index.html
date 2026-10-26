@@ -1542,11 +1542,6 @@ input,select,textarea{font-size:max(16px,1em)}
 .gsub-c.sel{stroke:#F2B01E;stroke-width:2;stroke-dasharray:none}
 .gsub-lines line{stroke:rgba(255,255,255,.5);stroke-width:1.2;stroke-dasharray:3 3}
 .g-deco{pointer-events:none}
-.aim-step{margin-left:auto;margin-right:6px;flex:0 0 auto;font:700 11px var(--f-body);padding:4px 9px;border-radius:999px;background:#2F7DE1;color:#fff;border:0;line-height:1.3;white-space:nowrap}
-.aim-step.two{background:#F2B01E;color:#3A2A00;cursor:pointer}
-.aim-step.two i{font-style:normal;font-weight:700;font-size:10px;margin-left:6px;opacity:.75;text-decoration:underline}
-.aim-step.done{background:color-mix(in srgb,#2F7DE1 14%,var(--rec-surface));color:#2F7DE1;border:1px solid #2F7DE1;cursor:pointer}
-.aim-step.done b{font-size:13px}
 .fs-row.is-sub{padding-left:26px;position:relative}
 .fs-row.is-sub::before{content:"";position:absolute;left:12px;top:10px;width:8px;height:10px;border-left:1.5px solid var(--line);border-bottom:1.5px solid var(--line);border-bottom-left-radius:4px}
 .fs-row.dim{opacity:.45}
@@ -1583,6 +1578,21 @@ input,select,textarea{font-size:max(16px,1em)}
 .cp-ico{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:7px;background:#F5B700;color:#fff;font-style:normal;font-size:13px;margin-right:6px;vertical-align:-3px}
 .cp-ico.s{background:var(--turf)}
 .cp-ico svg{width:15px;height:15px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round}
+/* 狙い・着弾の切りかえ（2つのボタン） */
+.aim-seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 6px;flex-shrink:0}
+.aim-seg button{display:flex;align-items:center;justify-content:center;gap:6px;height:32px;border-radius:10px;border:1.5px solid var(--rec-line);background:var(--rec-surface);color:var(--rec-fg);font:700 12px var(--f-body);cursor:pointer;touch-action:manipulation;white-space:nowrap;overflow:hidden;padding:0 6px}
+.aim-seg button b{font-weight:900}
+.aim-seg .as-dot{width:10px;height:10px;border-radius:50%;flex:0 0 10px}
+.aim-seg .as-aim .as-dot{border:2.5px solid #2F7DE1;background:transparent}
+.aim-seg .as-land .as-dot{background:#fff;border:2px solid #9AA4A0}
+.aim-seg .as-aim.on{background:#2F7DE1;border-color:#2F7DE1;color:#fff}
+.aim-seg .as-aim.on .as-dot{border-color:#fff}
+.aim-seg .as-land.on{background:#F2B01E;border-color:#F2B01E;color:#3A2A00}
+.cp-ico{display:inline-flex;align-items:center;justify-content:center;line-height:0}
+.cp-ico svg{display:block}
+.cp-favpanel .cp-ico svg{width:15px;height:15px;fill:#fff;stroke:none}
+.rec2 .rec-top .card-btn{width:46px;height:46px;flex:0 0 46px}
+.rec2 .rec-top .card-btn svg{width:28px;height:28px;stroke-width:1.7}
 </style>
 
 </head>
@@ -1616,7 +1626,7 @@ const LS = {
 };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
 const today = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
-const DIRS = { on:"オン", left:"左", right:"右", long:"オーバー", short:"ショート", miss:"当たりそこね" };
+const DIRS = { on:"オン", left:"左", right:"右", long:"オーバー", short:"花道", miss:"当たりそこね" };
 // あらかじめ用意したコース（公開情報より。ヤードは現地のスコアカードで要確認）
 const PRESET_COURSES = [
   { key:"ooyodogawa", name:"大淀川ゴルフ場", pref:"宮崎県", area:"宮崎市", holes:[100,90,110,130,125,120,70,90,80].map(y=>({par:3, yards:y})) },
@@ -1693,7 +1703,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-26-1700";
+const BUILD = "2026-10-26-1730";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2145,7 +2155,7 @@ function approachSVG(dir, tap, stat, o={}){
     </defs>
     <rect class="az-rough" x="0" y="0" width="340" height="222" rx="18"/>
     ${zone("long", `<path class="az-bg" d="M70 4 H270 Q286 4 286 20 V36 Q240 46 170 48 Q100 46 54 36 V20 Q54 4 70 4Z"/>`, 170, stat?24:30, "オーバー")}
-    ${zone("short", `<path class="az-bg" d="M54 160 Q100 150 170 148 Q240 150 286 160 V188 H54Z"/>`, 170, stat?172:174, "ショート")}
+    ${zone("short", `<path class="az-bg" d="M54 160 Q100 150 170 148 Q240 150 286 160 V188 H54Z"/>`, 170, stat?172:174, "花道")}
     ${zone("miss", `<path class="az-bg" d="M54 192 H286 V204 Q286 218 270 218 H70 Q54 218 54 204Z"/>`, 170, 206, "当たりそこね")}
     ${zone("left", `<path class="az-bg" d="M4 22 Q4 6 20 6 H40 Q60 40 64 98 Q60 156 40 190 H20 Q4 190 4 174Z"/>`, 30, 100, "左")}
     ${zone("right", `<path class="az-bg" d="M336 22 Q336 6 320 6 H300 Q280 40 276 98 Q280 156 300 190 H320 Q336 190 336 174Z"/>`, 310, 100, "右")}
@@ -2224,11 +2234,14 @@ function fairwaySVG(tee, tap, stat, o={}){
   </svg>`;
 }
 /* 狙いと着弾: ① 狙いをタップ → ② 着弾をタップ。両方入ったら「狙い 奥 ↺」で狙いを選び直せる */
-function aimChip(h, isLong){
-  const landed = isLong ? h.tee : h.dir, L = isLong ? FCOL_L : GSUB_L;
-  if(!h.aim) return `<span class="aim-step">①狙いをタップ</span>`;
-  if(!landed) return `<button class="aim-step two" data-act="aim-reset" aria-label="狙いを選び直す">②着弾をタップ</button>`;
-  return `<button class="aim-step done" data-act="aim-reset" aria-label="狙いを選び直す">狙い ${L[h.aim]||""} <b>↺</b></button>`;
+/* 狙いと着弾: 「狙い」「着弾」の2つのボタンでどちらを入れるか選ぶ（狙いを入れると自動で着弾へ） */
+function aimModeOf(h){ if(!fields().aim) return "land"; const p=state.aimPick; return p && p.hole===state.hole ? p.v : (h.aim ? "land" : "aim"); }
+function aimRow(h, isLong){
+  const landed = isLong ? h.tee : h.dir, L = isLong ? FCOL_L : GSUB_L, mode = aimModeOf(h);
+  const landL = !landed ? "" : isLong ? (landed==="fw" ? "フェアウェイ"+(h.teeOn?"・"+FCOL_L[h.teeOn]:"") : TEES[landed]) : (landed==="on" ? "オン"+(h.dirOn?"・"+GSUB_L[h.dirOn]:"") : DIRS[landed]);
+  return `<div class="aim-seg" role="group" aria-label="狙いか着弾か">
+    <button class="as-aim ${mode==="aim"?"on":""}" data-act="aim-mode" data-v="aim" aria-pressed="${mode==="aim"}"><i class="as-dot"></i>${h.aim?`狙い <b>${L[h.aim]||""}</b>`:"狙いをタップ"}</button>
+    <button class="as-land ${mode==="land"?"on":""}" data-act="aim-mode" data-v="land" aria-pressed="${mode==="land"}"><i class="as-dot"></i>${landed?`着弾 <b>${landL}</b>`:"着弾をタップ"}</button></div>`;
 }
 /* 同じコース・同じホールの過去の記録から、ひとことアドバイス */
 const TERMJ = d => d<=-2?"イーグル以上":d===-1?"バーディ":d===0?"パー":d===1?"ボギー":d===2?"ダボ":"トリプル以上";
@@ -2238,7 +2251,7 @@ function holeAdvice(d, i){
   const hs = past.map(r=>r.holes[i]), last = hs[hs.length-1];
   const parts = [`前回 <b>${last.strokes}</b>（${TERMJ(last.strokes-last.par)}）`];
   if(hs.length>=2) parts.push(`平均 <b>${(hs.reduce((a,h)=>a+h.strokes,0)/hs.length).toFixed(1)}</b>`);
-  const key = last.par>=4 ? "tee" : "dir", lab = last.par>=4 ? {rl:"左",rr:"右",miss:"当たりそこね"} : {left:"左",right:"右",long:"オーバー",short:"ショート",miss:"当たりそこね"};
+  const key = last.par>=4 ? "tee" : "dir", lab = last.par>=4 ? {rl:"左",rr:"右",miss:"当たりそこね"} : {left:"左",right:"右",long:"オーバー",short:"花道",miss:"当たりそこね"};
   const cnt = {}; let n=0; hs.forEach(h=>{ if(h[key]){ n++; if(lab[h[key]]) cnt[h[key]]=(cnt[h[key]]||0)+1; } });
   const top = Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];
   if(top && cnt[top]>=2 && cnt[top]/n>=0.4) parts.push(`<em>${lab[top]}に外しやすい</em>`);
@@ -2310,7 +2323,7 @@ function viewRecordDraft(d){
           <button data-act="pt" data-d="1" aria-label="パットを1つ増やす" ${h.putts>=9?"disabled":""}>${ICON.up}</button></div></div>`:""}
       </div>`}
       ${multi?`<div class="me-zone">`:""}
-      ${F.shot?`<div class="ap-wrap"><div class="seg-head"><span class="eyebrow">TEE SHOT${multi?"":"<b>ティーショットの行き先</b>"}</span>${F.aim?aimChip(h,isLong):""}${F.club?`<button class="club-tag ${h.club?"has":""}" data-act="open-club">${h.club?esc(h.club):"クラブ"}</button>`:""}</div>${isLong?fairwaySVG(h.tee, state.tap&&state.tap.startsWith("tee"), null, {on:h.teeOn, aim:F.aim?h.aim:null}):approachSVG(h.dir, state.tap&&state.tap.startsWith("dir"), null, {on:h.dirOn, aim:F.aim?h.aim:null})}</div>`:""}
+      ${F.shot?`<div class="ap-wrap"><div class="seg-head"><span class="eyebrow">TEE SHOT${multi?"":"<b>ティーショットの行き先</b>"}</span>${F.club?`<button class="club-tag ${h.club?"has":""}" data-act="open-club">${h.club?esc(h.club):"クラブ"}</button>`:""}</div>${F.aim?aimRow(h,isLong):""}${isLong?fairwaySVG(h.tee, state.tap&&state.tap.startsWith("tee"), null, {on:h.teeOn, aim:F.aim?h.aim:null}):approachSVG(h.dir, state.tap&&state.tap.startsWith("dir"), null, {on:h.dirOn, aim:F.aim?h.aim:null})}</div>`:""}
       ${F.club && !F.shot ? (()=>{ const lc = lastClub(d, state.hole);
         // ショットの方向がOFFでもクラブだけ記録できるよう、クラブを横に並べて1タップで選ぶ（前回のクラブには小さく「前回」）
         return `<div class="club-strip"><span class="eyebrow">TEE SHOT<b>クラブ</b></span><div class="cs-chips">${myClubs().map(c=>`<button data-act="club-quick" data-v="${esc(c)}" aria-pressed="${h.club===c}" class="${lc===c?"last":""}">${esc(c)}</button>`).join("")}</div></div>`; })() : ""}
@@ -2609,7 +2622,7 @@ function clubTable(rs, kind){
     else { if(h.tee==="fw") x.ok++; else x.miss[h.tee]=(x.miss[h.tee]||0)+1; } }));
   const cl = sortClubs(Object.keys(m));
   if(!cl.length) return "";
-  const ML = {left:"左",right:"右",long:"オーバー",short:"ショート",miss:"当たりそこね",rl:"左",rr:"右"};
+  const ML = {left:"左",right:"右",long:"オーバー",short:"花道",miss:"当たりそこね",rl:"左",rr:"右"};
   const rate = x => x.ok/x.n*100;
   const ok = cl.filter(c=>m[c].n>=3);
   let best = ok.length>1 ? ok.reduce((a,c)=>rate(m[c])>rate(m[a])?c:a) : null, worst = ok.length>1 ? ok.reduce((a,c)=>rate(m[c])<rate(m[a])?c:a) : null;
@@ -2645,7 +2658,7 @@ function holePanel(rs){
   const c = courses().find(x=>x.id===cid); const rr = rs.filter(r=>r.courseId===cid);
   if(!rr.length) return `<div class="panel empty"><strong>記録がありません</strong></div>`;
   const n = Math.max(...rr.map(r=>r.holes.length));
-  const ML = {left:"左",right:"右",long:"オーバー",short:"ショート",miss:"当たりそこね",rl:"左",rr:"右"};
+  const ML = {left:"左",right:"右",long:"オーバー",short:"花道",miss:"当たりそこね",rl:"左",rr:"右"};
   const H = Array.from({length:n},(_,i)=>{ const hs=rr.map(r=>r.holes[i]).filter(Boolean); if(!hs.length) return null;
     const par=hs[0].par, avg=hs.reduce((a,h)=>a+h.strokes,0)/hs.length, miss={};
     hs.forEach(h=>{ const d = par>=4 ? (h.tee&&h.tee!=="fw"?h.tee:null) : (h.dir&&h.dir!=="on"?h.dir:null); if(d) miss[d]=(miss[d]||0)+1; });
@@ -2916,7 +2929,7 @@ function viewCourses(){
   const favList = all.filter(c=>F.includes(c.id));
   return `<div class="panel cp-favpanel">
     ${state.mode==="connecting"&&!all.length?`<div class="empty">読み込み中…</div>`:""}
-    <div class="sec"><em>FAVORITE</em><span><i class="cp-ico">★</i>よく行くコース</span></div>
+    <div class="sec"><em>FAVORITE</em><span><i class="cp-ico"><svg viewBox="0 0 24 24"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6l-5.3 2.9 1.1-5.9-4.4-4.1 6-.8z"/></svg></i>よく行くコース</span></div>
     ${favList.length?courseRows(favList,"edit"):`<p class="muted" style="font-size:13px;margin:4px 0 0">下の一覧で ☆ をタップすると、ここに移ります。ラウンド開始のときは、ここのコースから選びます。</p>`}
   </div>
   <div class="panel">
@@ -3299,14 +3312,16 @@ document.addEventListener("click", async ev => {
     case "pt": h.putts=Math.max(0,Math.min(9,h.putts+ +b.dataset.d)); if(h.strokes<h.putts+1) h.strokes=Math.min(15,h.putts+1); h.entered=true; state.tap="pt"; saveDraft(); render(); break;
     case "dir": case "tee": {
       const v=b.dataset.v, sub=b.dataset.p||null, isT=a==="tee", onV=isT?"fw":"on", subK=isT?"teeOn":"dirOn";
-      if(fields().aim && !h.aim){ // 狙いモード: 1回目のタップは狙い（グリーン／フェアウェイの中だけ）
-        const okAim = (v===onV && sub) || (!isT && v==="short"); // パー3は花道（グリーンの手前の帯）も狙える
-        if(!okAim){ toast(isT?"先にフェアウェイの中で狙いをタップしてください":"先にグリーンか花道で狙いをタップしてください"); break; }
-        h.aim = sub || v; h.entered=true; state.tap=null; saveDraft(); render(); break; }
+      if(aimModeOf(h)==="aim"){ // 「狙い」を選んでいるとき（狙いはグリーン／フェアウェイの中、パー3は花道も）
+        const okAim = (v===onV && sub) || (!isT && v==="short");
+        if(!okAim){ toast(isT?"狙いはフェアウェイの中を選んでください":"狙いはグリーンか花道を選んでください"); break; }
+        const nv = sub || v; h.aim = h.aim===nv ? null : nv; h.entered=true; state.tap=null;
+        if(h.aim) state.aimPick={hole:state.hole, v:"land"}; saveDraft(); render(); break; }
       const same = h[a]===v && (h[subK]||null)===(v===onV?sub:null);
       if(same){ h[a]=null; h[subK]=null; } else { h[a]=v; h[subK]= v===onV ? sub : null; }
       h.entered=true; state.tap=a; saveDraft(); render(); askClub(h[a]); break; }
     case "open-card": state.sheet="card"; render(); break;
+    case "aim-mode": state.aimPick={hole:state.hole, v:b.dataset.v}; render(); break;
     case "aim-reset": h.aim=null; if(state.draft.holes[state.hole]){ const isLong=h.par>=4; if(isLong){ h.tee=null; h.teeOn=null; } else { h.dir=null; h.dirOn=null; } } clearTimeout(clubTimer); saveDraft(); render(); break;
     case "tog": h[b.dataset.k]=!h[b.dataset.k]; h.entered=true; saveDraft();
       render(); break;
