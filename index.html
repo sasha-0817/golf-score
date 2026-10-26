@@ -1525,6 +1525,13 @@ input,select,textarea{font-size:max(16px,1em)}
 .one-band b{font-size:16px}
 .one-band .btn{background:rgba(255,255,255,.16);color:#fff;border-color:rgba(255,255,255,.35)}
 .one-go{display:block;width:100%;margin:10px 0 0}
+/* 推移グラフ: 左に固定の目盛り列、右は横スクロール（15ラウンド分の幅） */
+.tbox{display:flex;height:240px;position:relative}
+.tbox-ax{flex:0 0 40px;width:40px;min-width:0;overflow:hidden;position:relative}
+.tbox canvas{display:block}
+.tbox-sc{flex:1;min-width:0;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tbox-sc::-webkit-scrollbar{display:none}
+.tbox-in{position:relative;height:100%;min-width:100%}
 </style>
 
 </head>
@@ -1634,7 +1641,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-26-1100";
+const BUILD = "2026-10-26-1130";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2467,7 +2474,7 @@ function viewStats(){
   <div class="panel"><div class="sec"><em>RECENT</em><span>直近3ラウンド</span></div><div class="recent">${rs.slice(-3).reverse().map(r=>{ const t=roundTotals(r); const [y,m,d]=r.date.split("-");
       return `<div class="rr"><div class="rd"><small>${+m}/${+d}</small><b>${t.score}<i>(${toPar(t.diff)})</i></b></div><div class="rh">${r.holes.map(h=>`<span class="mk4 m-${TONEH(h)}" title="${h.strokes}"></span>`).join("")}</div></div>`; }).join("")}</div>
     <div class="mk-legend"><span><i class="mk4 m-eagle"></i>−2</span><span><i class="mk4 m-birdie"></i>−1</span><span><i class="mk4 m-par"></i>±0</span><span><i class="mk4 m-bogey"></i>+1</span><span><i class="mk4 m-double"></i>+2</span><span><i class="mk4 m-triple"></i>+3以上</span></div></div>
-  ${state.oneRound?"":`<div class="panel"><div class="sec"><em>TREND</em><span>スコアの推移</span></div><div class="chartbox"><canvas id="ch-score" aria-label="スコア推移"></canvas></div></div>`}
+  ${state.oneRound?"":`<div class="panel"><div class="sec"><em>TREND</em><span>スコアの推移</span></div><div class="tbox"><div class="tbox-ax"><canvas id="ch-score-ax" aria-hidden="true"></canvas></div><div class="tbox-sc"><div class="tbox-in"><canvas id="ch-score" aria-label="スコア推移"></canvas></div></div></div></div>`}
   ${barsPanel("スコアの内訳",DIST_SEGS(s),fmtPct(s.parOrBetter),"%","パー以内")}
 
 `:""}
@@ -2495,7 +2502,7 @@ function viewStats(){
     <div><span class="eyebrow">パーオン時</span><span class="num">${s.puttsPerGir==null?"—":s.puttsPerGir.toFixed(2)}</span></div>
     <div><span class="eyebrow">非パーオン時</span><span class="num">${s.puttsPerMiss==null?"—":s.puttsPerMiss.toFixed(2)}</span></div>
   </div></div>
-  <div class="panel"><div class="sec"><em>TREND</em><span>パット数の推移</span></div><div class="chartbox"><canvas id="ch-putt" aria-label="パット数推移"></canvas></div></div>
+  <div class="panel"><div class="sec"><em>TREND</em><span>パット数の推移</span></div><div class="tbox"><div class="tbox-ax"><canvas id="ch-putt-ax" aria-hidden="true"></canvas></div><div class="tbox-sc"><div class="tbox-in"><canvas id="ch-putt" aria-label="パット数推移"></canvas></div></div></div></div>
   ${barsPanel("パット数の割合",PUTT_SEGS(s),s.puttsPerHole==null?"—":s.puttsPerHole.toFixed(2),"","平均パット / H")}
 `:""}
   `}`;
@@ -2634,7 +2641,7 @@ after.stats = () => {
   const refLines = (lines) => ({ id:"refLines", afterDatasetsDraw(chart){ const {ctx, chartArea:a, scales:{y}} = chart; ctx.save();
     lines.forEach(L=>{ const py=y.getPixelForValue(L.v); if(py<a.top-1||py>a.bottom+1) return;
       ctx.strokeStyle=L.color; ctx.lineWidth=L.w||2.5; ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(a.left,py); ctx.lineTo(a.right,py); ctx.stroke();
-      ctx.font="700 12px "+cssv("--f-num"); ctx.fillStyle=L.color; ctx.textAlign="right"; ctx.textBaseline="bottom"; ctx.fillText(L.label,a.right-2,py-3); });
+      if(L.label){ ctx.font="700 12px "+cssv("--f-num"); ctx.fillStyle=L.color; ctx.textAlign="right"; ctx.textBaseline="bottom"; ctx.fillText(L.label,a.right-2,py-3); } });
     ctx.restore(); } });
   const scoreLines = [
     { v: parN, label: oneCourse?`${parN}`:"±0", color: cssv("--q-par") },
@@ -2664,15 +2671,38 @@ after.stats = () => {
   if(state.trendSel!=null && state.trendSel>=rs.length) state.trendSel=null;
   const opts = (yTitle, yFmt, lo, hi) => ({ maintainAspectRatio:false, events:["click"], plugins:{ legend:{display:false}, tooltip:tip },
     scales:{ x:{ ticks:{ maxRotation:0, autoSkip:true, autoSkipPadding:14, maxTicksLimit:6 }, grid:{display:false} }, y:{ title:{display:true,text:yTitle}, ticks:{ precision:0, callback: yFmt || (v=>v) }, suggestedMin:lo, suggestedMax:hi, grid:{ color: cssv("--soft") } } } });
-  const o1 = opts(oneCourse?"スコア":"対パー", oneCourse?null:(v=>toPar(v)), Math.min(parN-2, ...vals), Math.max(parN+2*holesN+1, ...vals));
+  const o1 = opts(oneCourse?"スコア":"対パー", oneCourse?null:(v=>toPar(v))); o1.scales.y.min = Math.floor(Math.min(parN-2, ...vals)/5)*5; o1.scales.y.max = Math.ceil(Math.max(parN+2*holesN+1, ...vals)/5)*5;
+  /* 推移の棒は15ラウンド分の幅で見せ、それより前は横にスクロール（最初は最新が見える右端）。
+     縦の目盛りと基準線の数字は左の固定の列に描く（棒に数字が重ならないように） */
+  const VIS = 15, wide = Math.max(1, SLOTS/VIS);
+  const scrollBox = (id, o, refs, fmt) => {
+    const cv=$("#"+id); if(!cv) return null;
+    const inner=cv.parentElement; inner.style.width = (wide*100)+"%";
+    o.scales.x.ticks.maxTicksLimit = Math.round(6*wide);
+    const yb = o.scales.y; const tf = yb.ticks.callback || (v=>v);
+    o.scales.y = { ...yb, title:{display:false}, ticks:{ ...yb.ticks, display:false }, border:{display:false}, afterFit:s=>{ s.width=0; } };
+    const ax=$("#"+id+"-ax");
+    if(ax) charts.push(new Chart(ax, { type:"bar", data:{ labels:["9/1"], datasets:[{ data:[null] }] },
+      options:{ maintainAspectRatio:false, events:[], animation:false, plugins:{ legend:{display:false}, tooltip:{enabled:false} },
+        scales:{ x:{ ticks:{ color:"rgba(0,0,0,0)", maxRotation:0 }, grid:{display:false}, border:{display:false} },
+          y:{ min:yb.min, max:yb.max, grid:{display:false}, border:{display:false}, afterFit:s=>{ s.width=40; },
+            ticks:{ precision:0, callback: v => refs.some(r=>Math.abs(r.v-v)<(yb.max-yb.min)/12) ? "" : tf(v) } } } },
+      plugins:[{ id:"refLbl", afterDraw(ch){ const {ctx, scales:{y}, chartArea:a} = ch; ctx.save(); ctx.font="700 13px "+cssv("--f-num"); ctx.textAlign="right"; ctx.textBaseline="middle";
+        refs.forEach(r=>{ const py=y.getPixelForValue(r.v); if(py<a.top-1||py>a.bottom+1) return; ctx.fillStyle=r.color; ctx.fillText(r.label, a.right-4, py); }); ctx.restore(); } }] }));
+    return refs.map(r=>({ ...r, label:"" }));
+  };
+  const scoreRefs = scrollBox("ch-score", o1, scoreLines);
   if($("#ch-score")) charts.push(scoreChart = new Chart($("#ch-score"), { type:"bar", data:{ labels, datasets:[
     { label:"スコア", data: pad(vals), _c: SCORE_C, backgroundColor: labels.map((_,i)=>fade(SCORE_C,i)), borderColor: rs.map((r,i)=>zoneColor(scoreZone(i))), borderWidth:0, borderSkipped:"start", borderRadius:5, maxBarThickness:16, base: oneCourse ? undefined : 0 }
-  ]}, options:o1, plugins:[refLines(scoreLines)] }));
+  ]}, options:o1, plugins:[refLines(scoreRefs||scoreLines)] }));
   const pVals = tot.map((t,i)=>puttsOn(rs[i])?t.putts:null);
   const o2 = opts("パット", null); { const pv=pVals.filter(v=>v!=null); o2.scales.y.min = Math.min(holesN+1, ...pv); o2.scales.y.max = Math.max(holesN*2+6, ...pv); }
+  const puttLines = [{ v:2*holesN, label:`${2*holesN}`, color: cssv("--q-par") }];
+  const puttRefs = scrollBox("ch-putt", o2, puttLines);
   if($("#ch-putt")) charts.push(puttChart = new Chart($("#ch-putt"), { type:"bar", data:{ labels, datasets:[
     { label:"パット", data: pad(pVals), _c: PUTT_C, backgroundColor: labels.map((_,i)=>fade(PUTT_C,i)), borderColor: rs.map((r,i)=>zoneColor(puttZone(i))), borderWidth:0, borderSkipped:"start", borderRadius:5, maxBarThickness:16 }
-  ]}, options:o2, plugins:[refLines([{ v:2*holesN, label:`${2*holesN}`, color: cssv("--q-par") }])] }));
+  ]}, options:o2, plugins:[refLines(puttRefs||puttLines)] }));
+  document.querySelectorAll(".tbox-sc").forEach(sc=>{ sc.scrollLeft = sc.scrollWidth; }); // 最新が見える右端から
   if(scoreChart) scoreChart.options.onClick = onTap(scoreChart); if(puttChart) puttChart.options.onClick = onTap(puttChart);
   // パーオン率・ボギーオン率の推移（1ラウンドごと）
   const perRound = rs.map(r=>{ const hs=puttsOn(r)?r.holes.filter(h=>h.strokes>0):[]; // パット未記録のラウンドは数えない
