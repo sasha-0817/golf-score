@@ -541,6 +541,35 @@ with sync_playwright() as pw:
     check("ほかのタブへ移ると1ラウンドの分析は解除", pg.evaluate("!document.querySelector('.one-band')"))
     check("自分だけの分析: エラーなし", not errs); pg.context.close()
 
+    # 19d. 狙いと着弾（記録する項目「狙いも記録する」）
+    FA = dict(ALL); FA["aim"] = True; FA["club"] = False
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": [], "sc.fields": FA}, offline=True)
+    start_preset(pg, "firtree")
+    check("狙い: 最初は「①狙いをタップ」", "①狙いをタップ" in pg.inner_text(".ap-wrap"))
+    C(pg, "[data-act=dir][data-v=right]")
+    check("狙い: グリーンの外を先に押しても狙いにならない", pg.evaluate("!state.draft.holes[0].aim && !state.draft.holes[0].dir"))
+    C(pg, '[data-act=dir][data-p="c"]')
+    check("狙い: 1回目のタップで狙い（照準が出る）", pg.evaluate("state.draft.holes[0].aim==='c' && !state.draft.holes[0].dir && !!document.querySelector('.aim-mark')") and "②着弾をタップ" in pg.inner_text(".ap-wrap"))
+    C(pg, '[data-act=dir][data-p="r"]'); pg.wait_for_timeout(300)
+    check("狙い: 2回目のタップで着弾（グリーンの右）", pg.evaluate("state.draft.holes[0].dir==='on' && state.draft.holes[0].dirOn==='r' && !!document.querySelector('.gsub.sel')") and "狙い 真ん中" in pg.inner_text(".ap-wrap"))
+    check("狙い: 記録画面が1画面に収まる", pg.evaluate("document.documentElement.scrollHeight <= innerHeight + 1"))
+    C(pg, "[data-act=aim-reset]")
+    check("狙い: ↺ で狙いからやり直し", pg.evaluate("!state.draft.holes[0].aim && !state.draft.holes[0].dir"))
+    C(pg, '[data-act=dir][data-p="b"]'); C(pg, "[data-act=dir][data-v=short]")
+    i4 = pg.evaluate("state.draft.holes.findIndex(x=>x.par>=4)")
+    C(pg, f'[data-act=hole][data-i="{i4}"]')
+    check("狙い: パー4はまっすぐなフェアウェイの3列", pg.evaluate("document.querySelectorAll('[data-act=tee][data-v=fw][data-p]').length===3"))
+    C(pg, '[data-act=tee][data-p="c"]'); C(pg, "[data-act=tee][data-v=rr]")
+    check("狙い: パー4の狙いと着弾（真ん中を狙って右のラフ）", pg.evaluate(f"state.draft.holes[{i4}].aim==='c' && state.draft.holes[{i4}].tee==='rr'"))
+    play_round(pg, {**FA, "shot": False})
+    r0 = pg.evaluate("JSON.stringify((pending[0]||state.rounds[0]).holes[0])")
+    check("狙い: 保存したラウンドに狙い・着弾の区画が残る", '"aim":"b"' in r0 and '"dir":"short"' in r0)
+    check("狙い: エラーなし", not errs); pg.context.close()
+    pg, errs = open_page(b, {"sc.player": "\"me\"", "sc.tab": "\"stats\"", "sc.statTab": "\"shot\""}, offline=True)
+    C(pg, "[data-act=demo-on]"); pg.wait_for_timeout(300)
+    check("狙い: 分析に「狙い通り」と外れた向き（パー3・パー4）", pg.evaluate("document.querySelectorAll('.aim-box').length===2") and "外れた向き" in pg.inner_text("body"))
+    pg.context.close()
+
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
     import subprocess, time
     PORT = 8791
