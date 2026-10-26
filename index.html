@@ -1602,6 +1602,31 @@ input,select,textarea{font-size:max(16px,1em)}
 .aim-seg button{width:100%;padding:0 6px;overflow:hidden;white-space:nowrap}
 /* 分析の絵: 花道はミスではないので、うすい緑（赤くしない） */
 .az-safe{fill:color-mix(in srgb,#22A06B 12%,var(--paper));stroke:color-mix(in srgb,#22A06B 40%,var(--line));stroke-width:1.2}
+/* ホールカードを薄く（パットの合計は外し、PAR とヤードを1行に。2026-10-26） */
+.hc2{padding:7px 14px;row-gap:6px}
+.hc2 .hno{font-size:44px}
+.hc2 .hc-m{flex-direction:row;flex-wrap:wrap;align-items:baseline;column-gap:8px;row-gap:5px}
+.hc2 .hc-m .badges{flex-basis:100%}
+.hc2 .yd{font-size:13px}
+/* 日本語の文字は最低13px（老眼でも読めるように、2026-10-26 オーナー指定）。英語の小見出しは小さいままでよい */
+.stp-h .eyebrow b,.stp-h .hint,.rec-who span,.rec-who b small,.aim-seg button,.club-tag,.pcell em,.pcol .ph b,
+.club-sheet p small,.lc-sheet p small,.lc-sheet th,.lc-sheet td.sum,.lc-tot b,.cp-main small,
+.im-seg button small,header.top .sync,.field label,.lab-row label,.game-btn,
+.putts .eyebrow,.hero-stat .who,.hero-stat .row span,.mk-legend span,.filters label,.gauge .gs,.ctag,.cs-note,.club-tbl th,.tr-rank small,
+.panel>p.muted,.aim-box span,.aim-box em,.aim-box i,
+.gm-n,.gm-rule,.gm-sec small,.gm-t small,.sr-ex span,.rp-chips i,.rp-sec,
+.fs-sub small,.fs-sec,.fs-note,.hc2 .advice{font-size:13px!important}
+.map-sub{font-size:14px!important}
+.gauge .gl{font-size:13px!important;white-space:nowrap}
+.gauges{grid-template-columns:repeat(3,minmax(0,1fr))}
+.stp-h{white-space:nowrap;gap:4px}
+.stp-h .eyebrow{letter-spacing:.08em}
+.stp-h .eyebrow b{margin-left:4px}
+.game-sheet .gm-rule{font-size:13px!important;height:28px!important}
+.start-panel .im-seg button{padding-top:5px;padding-bottom:4px}
+.start-panel .lab-row{margin-top:7px}
+.sr-ex span{white-space:nowrap}
+nav.tabs button{font-size:12px!important}
 </style>
 
 </head>
@@ -1712,7 +1737,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-26-1700";
+const BUILD = "2026-10-26-1745";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2318,7 +2343,7 @@ function viewRecordDraft(d){
       <div class="hc-l"><span class="lbl">HOLE</span><div class="hno">${state.hole+1}<small>/${N}</small></div></div>
       <div class="hc-m"><div class="par"><span>PAR</span>${h.par}</div>${d.gn && h.ys && h.ys[0] && h.ys[1] ? `<div class="gsw" role="group" aria-label="グリーン">${d.gn.map((n,i)=>`<button data-act="set-g" data-g="${i}" aria-pressed="${(h.gi||0)===i}">${esc(n)}</button>`).join("")}</div><div class="yd">${h.yards} YDS</div>` : h.yards?`<div class="yd">${h.yards} YDS</div>`:""}
         <div class="badges"><span class="badge ${hio?"hio":"b-"+TONE(diff)} ${/^s[vt]/.test(state.tap||"")?"pop":""}"><i></i>${hio?"HOLE IN ONE":TERM(diff)}</span>${bestPace&&fields().pace?`<span class="pace2">BEST PACE</span>`:""}${isOlympic(d.game)?`<span class="medal-wrap"><button class="medal-btn ${medalTip()&&state.hole===0?"tip":""}" data-act="medal-open">${medalSVG(4,14)}メダル</button>${medalTip()&&state.hole===0?`<span class="medal-tip">1パットで入ったらここ</span>`:""}</span>`:""}${d.game==="nearpin"&&d.holes[state.hole].par===3?(()=>{ const w=(d.pins||{})[state.hole]; const nm=w!=null?[d.player,...(d.mates||[]).map(m=>m.name)][w]:null; return `<button class="medal-btn pin-btn ${nm?"on":""}" data-act="pin-open">${PIN_ICON(13)}${nm?esc(nm):"ニアピン"}</button>`; })():""}${d.game==="skins"&&d.carry?(()=>{ const sk=skinsCalc([d.holes.map(x=>x.strokes), ...(d.mates||[]).map(m=>m.s)], state.hole, true); return `<span class="pot" title="このホールのコイン">${coinSVG(13)}×${sk.pot}</span>`; })():""}</div></div>
-      <div class="live"><div><span>TOTAL</span><b>${totLabel}</b></div>${F.putts?`<div><span>PUTTS</span><b>${done.length?tot.putts:"—"}</b></div>`:""}</div>
+      <div class="live"><div><span>TOTAL</span><b>${totLabel}</b></div></div>
       ${advice?`<div class="advice">${advice}</div>`:""}
     </div>
     <div class="rec-card rc2 ${slide} ${(d.mates||[]).length?"wm":""}" id="rec-card">
@@ -2599,8 +2624,8 @@ function viewStats(){
     ${!s.puttHoles?`<p class="muted" style="font-size:12.5px;grid-column:1/-1;margin:0 0 4px">パーオン率・ボギーオン率・リカバリー率は、パット数を記録したラウンドで出ます（歯車 → 記録する項目 → パット数）。</p>`:""}
     ${!s.puttHoles?"":gauge("パーオン率", s.gir, `${s.puttHoles}H中 ${s.girN}回`, "--c-gir")}
     ${!s.puttHoles?"":gauge("ボギーオン率", s.bon, `${s.puttHoles}H中 ${s.bonN}回`, "--c-bon")}
-    ${!s.puttHoles?"":gauge("リカバリー率", s.scramble, `<span class="nw">パーオン逃し${s.scrambleN}Hのうち</span><br><span class="nw">パー以内</span>`, "--accent2")}
-    ${!(s.bunkerN||fields().bunker)?"":gauge("サンドセーブ率", s.sandSave, `<span class="nw">バンカー${s.bunkerN}Hのうち</span><br><span class="nw">パー以内</span>`, "--c5")}
+    ${!s.puttHoles?"":gauge("リカバリー率", s.scramble, `パーオン逃し<br>${s.scrambleN}Hのうち<br>パー以内`, "--accent2")}
+    ${!(s.bunkerN||fields().bunker)?"":gauge("サンドセーブ率", s.sandSave, `バンカー<br>${s.bunkerN}Hのうち<br>パー以内`, "--c5")}
     ${s.bunkerN||fields().bunker?gauge("バンカー率", s.bunkerRate, `${s.holes}H中 ${s.bunkerN}回`, "--warn"):""}
     ${s.troubleN||fields().ob||fields().pen?gauge("OB・ペナ率", pct(s.troubleN,s.holes), `${s.holes}H中 ${s.troubleN}回`, "--under"):""}
   </div></div>
@@ -2990,14 +3015,14 @@ function mateDone(){ const d=state.draft; if(d){ d.mdone=d.mdone||[]; d.mdone[st
 /* ---------- ゲーム（スキンズ） ---------- */
 /* ---------- ゲーム（スキンズ・マッチプレー・ナッソー・ラスベガス・ステーブルフォード） ---------- */
 const GAMES = {
-  skins:  { name:"スキンズ", eng:"SKINS", n:"2〜4人", min:2, max:4, desc:"毎ホール、コインを取り合う", type:"solo" },
-  match:  { name:"マッチプレー", eng:"MATCH PLAY", n:"2人のみ", min:2, max:2, desc:"1対1・勝ったホール数で勝負", type:"solo" },
-  nassau: { name:"ナッソー", eng:"NASSAU", n:"2〜4人", min:2, max:4, desc:"前半・後半・合計の3つで勝負", type:"solo" },
-  vegas:  { name:"ラスベガス", eng:"LAS VEGAS", n:"4人のみ", min:4, max:4, desc:"2人の打数を数字にして勝負", type:"team" },
-  stable: { name:"ステーブルフォード", eng:"STABLEFORD", n:"2〜4人", min:2, max:4, desc:"パー2点・バーディ3点で競う", type:"solo" },
-  peoria: { name:"新ペリア", eng:"NEW PERIA", n:"2〜4人", min:2, max:4, desc:"ハンデで誰でも優勝チャンス", type:"solo" },
-  team:   { name:"ベストボール", eng:"BEST BALL", n:"4人のみ", min:4, max:4, desc:"2人の良い方のスコアで勝負", type:"team" },
-  nearpin:{ name:"ニアピン", eng:"NEAREST THE PIN", n:"2〜4人", min:2, max:4, desc:"パー3で一番近い人がコイン", type:"solo" },
+  skins:  { name:"スキンズ", eng:"SKINS", n:"2〜4人", min:2, max:4, desc:"毎ホールでコインを争う", type:"solo" },
+  match:  { name:"マッチプレー", eng:"MATCH PLAY", n:"2人のみ", min:2, max:2, desc:"1対1・勝ったホール数", type:"solo" },
+  nassau: { name:"ナッソー", eng:"NASSAU", n:"2〜4人", min:2, max:4, desc:"前半・後半・合計で勝負", type:"solo" },
+  vegas:  { name:"ラスベガス", eng:"LAS VEGAS", n:"4人のみ", min:4, max:4, desc:"打数を2桁にして勝負", type:"team" },
+  stable: { name:"ステーブルフォード", eng:"STABLEFORD", n:"2〜4人", min:2, max:4, desc:"パー2点・バーディ3点", type:"solo" },
+  peoria: { name:"新ペリア", eng:"NEW PERIA", n:"2〜4人", min:2, max:4, desc:"ハンデで誰でも勝てる", type:"solo" },
+  team:   { name:"ベストボール", eng:"BEST BALL", n:"4人のみ", min:4, max:4, desc:"2人の良い方で勝負", type:"team" },
+  nearpin:{ name:"ニアピン", eng:"NEAREST THE PIN", n:"2〜4人", min:2, max:4, desc:"ピンに近い人がコイン", type:"solo" },
   peoriateam:{ name:"新ペリア（チーム）", eng:"NEW PERIA TEAM", n:"4人のみ", min:4, max:4, desc:"2人のネットの合計で勝負", type:"team" },
   olympicteam:{ name:"オリンピック（チーム）", eng:"OLYMPIC TEAM", n:"4人のみ", min:4, max:4, desc:"2人のメダルの点数で勝負", type:"team" },
   teamsum:{ name:"合計スコア", eng:"TEAM TOTAL", n:"4人のみ", min:4, max:4, desc:"2人の合計スコアで勝負", type:"team" },
@@ -3165,7 +3190,7 @@ const CHECK = `<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true
 function gameSheet(){
   const g=state.game||"", cnt=1+(state.mates||LS.get("sc.mates",[])).filter(x=>String(x||"").trim()).length;
   const card=(k,name,n,desc,ill)=>{ const ok=gameFits(k,cnt);
-    return `<div class="gm-card ${g===k?"on":""} ${ok?"":"na"}" role="button" tabindex="0" data-act="pick-game" data-v="${k}" aria-pressed="${g===k}"><span class="gm-l">${ill}${n?`<i class="gm-n">${n}</i>`:""}</span><span class="gm-t"><span class="gm-h"><b class="${name.length>9?"long":""}">${name}</b></span><small>${ok?desc:`今は${cnt}人なので選べません`}</small></span>${k?`<button class="gm-rule" data-act="open-rules" data-v="${k}">ルール</button>`:""}<span class="cp-radio" aria-hidden="true">${g===k?CHECK:""}</span></div>`; };
+    return `<div class="gm-card ${g===k?"on":""} ${ok?"":"na"}" role="button" tabindex="0" data-act="pick-game" data-v="${k}" aria-pressed="${g===k}"><span class="gm-l">${ill}${n?`<i class="gm-n">${n}</i>`:""}</span><span class="gm-t"><span class="gm-h"><b class="${name.length>9?"long":""}">${name}</b></span><small>${ok?desc:`${cnt}人では選べません`}</small></span>${k?`<button class="gm-rule" data-act="open-rules" data-v="${k}">ルール</button>`:""}<span class="cp-radio" aria-hidden="true">${g===k?CHECK:""}</span></div>`; };
   return `<div class="sheet-back" data-act="close-game"><div class="sheet game-sheet" data-stop="1"><p>ゲーム</p>
     ${card("","なし","","スコアだけを記録する",`<span class="gm-ill none">—</span>`)}
     ${[["solo","個人戦","SOLO",""],["team","チーム戦","TEAM","2対2・4人で"]].map(([t,h,e,sub])=>`<div class="gm-sec"><span>${e}</span>${h}${sub?`<small>${sub}</small>`:""}</div>`+GAME_KEYS.filter(k=>GAMES[k].type===t).map(k=>card(k,GAMES[k].name,GAMES[k].n,GAMES[k].desc,GAME_ILL[k]())).join("")).join("")}

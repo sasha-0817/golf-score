@@ -576,6 +576,21 @@ with sync_playwright() as pw:
     check("ショート（旧 当たりそこね）の表記・エラーなし", "ショート" in pg.inner_text(".ap-wrap") and not errs)
     pg.context.close()
 
+    # 19d2. 日本語の文字は13px以上（英語の小見出し・絵の中の文字・下のタブは除く）、ホールカードにパットの合計はない
+    JPSMALL = r"""(()=>{const JP=/[\u3040-\u30ff\u4e00-\u9fff]/,o=[];document.querySelectorAll('body *').forEach(e=>{if(e.closest('svg,nav.tabs'))return;const t=[...e.childNodes].filter(n=>n.nodeType===3&&n.textContent.trim()).map(n=>n.textContent.trim()).join('');if(!t||!JP.test(t))return;const r=e.getBoundingClientRect();if(!r.width)return;if(parseFloat(getComputedStyle(e).fontSize)<12.95)o.push(t.slice(0,10));});return o})()"""
+    FX = dict(ALL); FX["aim"] = True
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": [], "sc.fields": FX}, offline=True)
+    small = pg.evaluate(JPSMALL)
+    start_preset(pg, "firtree"); small += pg.evaluate(JPSMALL)
+    check("ホールカードにパットの合計は出さない", "PUTTS" not in pg.inner_text(".hc2 .live"))
+    C(pg, "[data-act=open-fields]"); small += pg.evaluate(JPSMALL)
+    pg.context.close()
+    for tab in ("score", "shot", "putt"):
+        pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.tab": "\"stats\"", "sc.statTab": f"\"{tab}\""}, offline=True)
+        C(pg, "[data-act=demo-on]"); pg.wait_for_timeout(500); small += pg.evaluate(JPSMALL); pg.context.close()
+    if small: print("  小さい文字:", small[:8])
+    check("日本語の文字は13px以上（記録・設定・分析）", not small)
+
     # 19d. 狙いと着弾（記録する項目「狙いも記録する」）
     FA = dict(ALL); FA["aim"] = True; FA["club"] = False
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": [], "sc.fields": FA}, offline=True)
