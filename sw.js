@@ -36,9 +36,11 @@ self.addEventListener("fetch", e => {
     e.respondWith((async () => {
       try {
         const res = await fetch(req);
-        const c = await caches.open(CACHE); c.put("./index.html", res.clone());
+        const own = url.pathname.endsWith("simple.html"); // シンプル版（試作）は自分の場所に保存する
+        const c = await caches.open(CACHE); c.put(own ? req : "./index.html", res.clone());
         return res;
       } catch (err) {
+        if (url.pathname.endsWith("simple.html")) { const hit = await caches.match(req, { ignoreSearch: true }); if (hit) return hit; }
         return (await caches.match("./index.html")) || (await caches.match("./")) || Response.error();
       }
     })());

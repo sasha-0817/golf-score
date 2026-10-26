@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0B6B44">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>GOLF SC. シンプル版</title>
+<link rel="apple-touch-icon" sizes="180x180" href="icon.png?v=6">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Barlow+Condensed:wght@600;700&display=swap">
+<style>
+/* GOLF SC. シンプル版（試作、2026-10-27）
+   考え方: 1ホール2タップ（打数・パット）で自動で次へ。分析は「あなたの課題」を文章で3つだけ。タブなし・1ページ */
+:root{
+  --bg:#F3F6F4; --card:#FFFFFF; --fg:#0E1A14; --muted:#5E6E66; --line:#DDE5E0; --soft:#EEF3F0;
+  --brand:#0E9F62; --brand2:#0B6B44; --brand-ink:#FFFFFF;
+  --q-hio:#F5B700; --q-eagle:#1E3A8A; --q-birdie:#2563EB; --q-par:#4F9BEA; --q-bogey:#F28C28; --q-double:#E5484D; --q-triple:#9F1D2A;
+  --f-body:"Zen Kaku Gothic New",system-ui,sans-serif; --f-num:"Barlow Condensed","Zen Kaku Gothic New",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0C1210; --card:#16201C; --fg:#E9F1EC; --muted:#93A39B; --line:#2A3631; --soft:#1C2823;
+  --q-hio:#FFC53D; --q-eagle:#3B5BDB; --q-birdie:#4C8DFF; --q-par:#6FB1F5; --q-bogey:#FFA94D; --q-double:#FF5A5F; --q-triple:#C2323F;}}
+:root[data-theme="dark"]{--bg:#0C1210; --card:#16201C; --fg:#E9F1EC; --muted:#93A39B; --line:#2A3631; --soft:#1C2823;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5;font-feature-settings:"palt";letter-spacing:.02em}
+button{font:inherit;color:inherit;touch-action:manipulation;cursor:pointer}
+input{font:inherit;font-size:16px;color:inherit}
+.wrap{max-width:480px;margin:0 auto;padding:max(12px,env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom))}
+.num{font-family:var(--f-num);font-weight:700;letter-spacing:0}
+.muted{color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px}
+.card+.card,.sec+.card,.card+.sec{margin-top:14px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:58px;border:0;border-radius:16px;background:linear-gradient(135deg,var(--brand2),var(--brand) 60%,#13A9C2);color:#fff;font-size:18px;font-weight:900}
+.btn.sub{background:var(--soft);color:var(--fg);border:1px solid var(--line);height:50px;font-size:16px;font-weight:700}
+.link{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:14px;padding:8px}
+
+/* ---- ホーム ---- */
+.top{display:flex;align-items:center;gap:10px;margin:4px 0 14px}
+.top img{width:34px;height:34px}
+.top b{font-family:var(--f-num);font-size:24px;letter-spacing:.04em}
+.top small{margin-left:auto;font-size:13px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 10px}
+.resume{display:flex;align-items:center;gap:12px;border-color:var(--brand)}
+.resume div{flex:1;min-width:0}
+.resume strong{display:block;font-size:17px}
+.resume span{font-size:14px;color:var(--muted)}
+.resume .btn{width:auto;height:48px;padding:0 18px;font-size:16px}
+.start h2{margin:0 0 12px;font-size:18px}
+.f-row{display:grid;grid-template-columns:minmax(0,1fr) 148px;gap:10px;margin-bottom:10px}
+.fld{display:flex;flex-direction:column;gap:4px}
+.fld label{font-size:14px;color:var(--muted);font-weight:700}
+.fld input{height:48px;border:1px solid var(--line);border-radius:12px;padding:0 12px;background:var(--soft)}
+.fld input{width:100%;min-width:0}
+.fld input[type=date]{padding:0 8px}
+.course-btn{display:flex;align-items:center;gap:10px;width:100%;min-height:58px;border:1px solid var(--line);border-radius:14px;background:var(--soft);padding:8px 14px;text-align:left;margin-bottom:14px}
+.course-btn div{flex:1;min-width:0}
+.course-btn strong{display:block;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.course-btn span{font-size:14px;color:var(--muted)}
+.course-btn i{font-style:normal;font-size:22px;color:var(--muted)}
+
+.sec{display:flex;align-items:baseline;gap:8px;margin:26px 2px 10px}
+.sec em{font-style:normal;font-family:var(--f-num);font-weight:700;font-size:13px;letter-spacing:.2em;color:var(--brand)}
+.sec h3{margin:0;font-size:19px}
+.sec span{margin-left:auto;font-size:14px;color:var(--muted)}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.hero div{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.hero span{display:block;font-size:14px;color:var(--muted);font-weight:700}
+.hero b{font-family:var(--f-num);font-size:34px;line-height:1.1}
+.hero b small{font-size:18px;margin-left:4px;color:var(--muted)}
+.hero p{margin:0;font-size:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trend{margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px 8px}
+.trend p{margin:0 0 6px;font-size:14px;color:var(--muted);font-weight:700}
+.trend svg{display:block;width:100%;height:90px}
+
+.ins{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;padding:14px 16px;background:var(--card);border:1px solid var(--line);border-radius:16px;border-left:5px solid var(--q-bogey)}
+.ins+.ins{margin-top:10px}
+.ins.n1{border-left-color:var(--q-double)}
+.ins.tip{border-left-color:var(--q-par)}
+.ins strong{font-size:17px;line-height:1.4}
+.ins p{grid-column:1;margin:0;font-size:15px;color:var(--muted);line-height:1.5}
+.ins .gain{grid-row:1/3;grid-column:2;text-align:center}
+.ins .gain b{display:block;font-family:var(--f-num);font-size:30px;line-height:1;color:var(--q-double)}
+.ins .gain span{font-size:13px;color:var(--muted)}
+.good{padding:14px 16px;background:var(--card);border:1px solid var(--line);border-radius:16px;font-size:15px}
+
+.rl{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.rl li+li{border-top:1px solid var(--line)}
+.rl button{display:grid;grid-template-columns:56px 1fr auto;align-items:center;gap:10px;width:100%;padding:12px 14px;background:none;border:0;text-align:left}
+.rl .d{font-family:var(--f-num);font-size:18px;color:var(--muted)}
+.rl .c{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rl .s{font-family:var(--f-num);font-size:24px}
+.rl .s small{font-size:16px;color:var(--muted);margin-left:4px}
+.mini{display:flex;gap:4px;padding:0 14px 14px;flex-wrap:wrap}
+.mini i{font-style:normal;display:grid;place-items:center;width:32px;height:32px;border-radius:9px;font-family:var(--f-num);font-weight:700;font-size:18px;color:#fff}
+
+.opts{display:flex;flex-direction:column}
+.opt{display:flex;align-items:center;justify-content:space-between;padding:12px 2px;font-size:16px}
+.opt+.opt{border-top:1px solid var(--line)}
+.sw{width:52px;height:32px;border-radius:999px;border:0;background:var(--line);position:relative;flex:0 0 52px}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .15s}
+.sw[aria-pressed="true"]{background:var(--brand)}
+.sw[aria-pressed="true"]::after{transform:translateX(20px)}
+.foot{text-align:center;margin-top:18px}
+
+/* ---- 記録 ---- */
+.rec{display:flex;flex-direction:column;min-height:100dvh;max-width:480px;margin:0 auto;padding:max(10px,env(safe-area-inset-top)) 14px max(12px,env(safe-area-inset-bottom))}
+.rbar{display:flex;align-items:center;gap:10px}
+.x{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);font-size:20px;line-height:1;flex:0 0 44px}
+.rbar .cn{flex:1;min-width:0;font-size:15px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rbar .tot{font-family:var(--f-num);font-size:30px;line-height:1}
+.rbar .tot small{font-size:16px;color:var(--muted);margin-right:6px;font-family:var(--f-body);font-weight:700}
+.dots{display:flex;gap:5px;margin:12px 0 0}
+.dots button{flex:1;height:30px;border-radius:8px;border:0;background:var(--soft);font-family:var(--f-num);font-weight:700;font-size:16px;color:var(--muted);padding:0}
+.dots button.cur{outline:2.5px solid var(--fg);outline-offset:-2.5px;color:var(--fg)}
+.dots button.done{color:#fff}
+.hh{display:flex;align-items:baseline;gap:12px;margin:16px 2px 6px}
+.hh b{font-family:var(--f-num);font-size:52px;line-height:.9}
+.hh b small{font-family:var(--f-body);font-size:20px;margin-left:2px}
+.hh span{font-size:18px;font-weight:700}
+.hh span em{font-style:normal;font-family:var(--f-num);font-size:26px;margin-left:4px}
+.hh i{font-style:normal;margin-left:auto;font-size:15px;color:var(--muted)}
+.lab{display:flex;align-items:baseline;justify-content:space-between;margin:14px 2px 8px;font-size:15px;font-weight:700}
+.lab small{font-size:14px;color:var(--muted);font-weight:500}
+.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.sbtn{height:78px;border-radius:16px;border:1.5px solid var(--line);background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0}
+.sbtn b{font-family:var(--f-num);font-size:34px;line-height:1}
+.sbtn span{font-size:13px;color:var(--muted);font-weight:700;white-space:nowrap}
+.sbtn.on{border-color:transparent;color:#fff;background:var(--c)}
+.sbtn.on span{color:rgba(255,255,255,.9)}
+.pbtn{height:62px;border-radius:16px;border:1.5px solid var(--line);background:var(--card);font-family:var(--f-num);font-size:30px;font-weight:700;padding:0}
+.pbtn small{display:block;font-family:var(--f-body);font-size:12px;color:var(--muted);font-weight:700;line-height:1}
+.pbtn.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.pbtn.on small{color:var(--bg)}
+.pbtn:disabled{opacity:.3}
+.chips{display:flex;gap:6px}
+.chip{flex:1;height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-size:15px;font-weight:700;padding:0;white-space:nowrap}
+.chip.on{background:#F2B01E;border-color:#F2B01E;color:#2B1D00}
+.chip.ob{flex:0 0 58px}
+.chip.ob.on{background:var(--q-double);border-color:var(--q-double);color:#fff}
+.other{display:block;margin:6px auto 0;background:none;border:0;color:var(--muted);font-size:14px;text-decoration:underline;padding:4px 8px}
+.rnav{display:flex;gap:10px;margin-top:auto;padding-top:14px}
+.rnav button{height:52px;border-radius:14px;border:1px solid var(--line);background:var(--card);font-size:16px;font-weight:700;flex:1}
+.rnav button.go{background:var(--fg);color:var(--bg);border-color:var(--fg);flex:2}
+.ok{position:fixed;left:50%;top:44%;transform:translate(-50%,-50%);background:rgba(14,26,20,.86);color:#fff;border-radius:18px;padding:14px 22px;font-size:17px;font-weight:700;animation:fade .55s ease-out forwards;pointer-events:none;z-index:9}
+@keyframes fade{0%{opacity:0;transform:translate(-50%,-40%)}25%{opacity:1;transform:translate(-50%,-50%)}80%{opacity:1}100%{opacity:0}}
+
+/* シート */
+.back{position:fixed;inset:0;background:rgba(0,0,0,.42);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet{width:100%;max-width:480px;max-height:86dvh;overflow:auto;background:var(--card);border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+.sheet h3{margin:0 0 12px;font-size:18px}
+.sheet .grid5 .pbtn{height:56px}
+.clist{display:flex;flex-direction:column;gap:8px}
+.clist button{display:flex;flex-direction:column;align-items:flex-start;gap:0;padding:12px 14px;border:1.5px solid var(--line);border-radius:14px;background:var(--soft);text-align:left}
+.clist button.on{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 10%,var(--card))}
+.clist strong{font-size:16px}
+.clist span{font-size:14px;color:var(--muted)}
+
+/* ---- 終わり ---- */
+.res{background:linear-gradient(135deg,#08261C,#0B6B44 55%,#0E8FA0);color:#fff;border-radius:22px;padding:20px 18px;text-align:center}
+.res p{margin:0;font-size:15px;opacity:.85}
+.res b{display:block;font-family:var(--f-num);font-size:84px;line-height:1;margin:6px 0 2px}
+.res b small{font-size:34px;margin-left:8px;opacity:.85}
+.res .sc{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.res .sc i{font-style:normal;display:grid;place-items:center;width:30px;height:30px;border-radius:8px;font-family:var(--f-num);font-weight:700;font-size:17px;background:rgba(255,255,255,.14)}
+.stat3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.stat3 div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;text-align:center}
+.stat3 span{display:block;font-size:14px;color:var(--muted);font-weight:700}
+.stat3 b{font-family:var(--f-num);font-size:28px}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:15px;z-index:30;white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ======== データ（本体のアプリと同じ保存先・同じ形） ======== */
+const ON_CF = /^https?:$/.test(location.protocol) && !/github\.io$/.test(location.hostname) && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+const LS = {
+  get(k,d){ try{ const v=localStorage.getItem(k); if(v==null) return d; const x=JSON.parse(v); return x==null?d:x; }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+};
+const PRESETS = [
+  { key:"ooyodogawa", name:"大淀川ゴルフ場", pref:"宮崎県", area:"宮崎市", holes:[100,90,110,130,125,120,70,90,80].map(y=>({par:3, yards:y})) },
+  { key:"hyuga-seaside", name:"日向シーサイドゴルフクラブ", pref:"宮崎県", area:"日向市", holes:[152,92,154,218,148,93,138,94,160].map(y=>({par:3, yards:y})) },
+  { key:"firtree", name:"ファーツリーカントリークラブ", pref:"宮崎県", area:"延岡市", holes:[[3,76],[3,102],[3,88],[4,284],[3,109],[3,84],[4,366],[3,55],[3,160]].map(([p,y])=>({par:p, yards:y})) },
+];
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const today = () => { const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+const toPar = d => d===0 ? "±0" : (d>0?"+":"−")+Math.abs(d);
+const toParF = d => (Math.abs(d)<0.05 ? "±0.0" : (d>0?"+":"−")+Math.abs(d).toFixed(1));
+const md = s => { const [,m,d]=(s||"").split("-"); return m?`${+m}/${+d}`:""; };
+const TERM = d => d<=-3?"アルバ":d===-2?"イーグル":d===-1?"バーディ":d===0?"パー":d===1?"ボギー":d===2?"ダボ":d===3?"トリプル":`+${d}`;
+const COLOR = (s,par) => s===1 ? "var(--q-hio)" : ({"-2":"var(--q-eagle)","-1":"var(--q-birdie)","0":"var(--q-par)","1":"var(--q-bogey)","2":"var(--q-double)"})[Math.max(-2,Math.min(2,s-par))] || (s-par<=-2?"var(--q-eagle)":"var(--q-triple)");
+
+const S = {
+  view: "home",
+  name: LS.get("sc.player",""),
+  courses: LS.get("sc.courses",[]),
+  rounds: LS.get("sc.rounds",[]),
+  draft: LS.get("simple.draft",null),
+  opts: Object.assign({putts:true, shot:true}, LS.get("simple.opts",{})),
+  courseId: LS.get("sc.lastCourse",""),
+  date: today(),
+  sheet: null, open: null, demo: false, last: null, toast: "",
+};
+const saveDraft = () => LS.set("simple.draft", S.draft);
+
+async function api(action, payload){
+  const res = await fetch("/api", { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action, ...payload}) });
+  const j = await res.json(); if(!j.ok) throw new Error(j.error||"failed"); return j;
+}
+async function load(){
+  if(!ON_CF) return;
+  try{
+    const r = await fetch("/api", {cache:"no-store"}); const j = await r.json();
+    if(j.ok){ S.courses=j.courses||[]; S.rounds=j.rounds||[]; LS.set("sc.courses",S.courses); LS.set("sc.rounds",S.rounds); render(); }
+  }catch(e){}
+}
+/* 送れなかったら本体のアプリと同じ「未送信」に入れる（本体を開いたときにも自動で送られる） */
+function queue(key, item){ const a=LS.get(key,[]).filter(x=>x.id!==item.id); a.push(item); LS.set(key,a); }
+async function saveCourse(c){ try{ if(!ON_CF) throw 0; await api("saveCourse",{course:c}); }catch(e){ queue("sc.pendingCourses", c); } }
+async function saveRound(r){
+  const i=S.rounds.findIndex(x=>x.id===r.id); if(i>=0) S.rounds[i]=r; else S.rounds.push(r); LS.set("sc.rounds",S.rounds);
+  try{ if(!ON_CF) throw 0; await api("saveRound",{round:r}); }catch(e){ queue("sc.pending", r); }
+}
+
+/* コース: 登録済み＋まだ登録していない用意済み */
+function courseList(){
+  const taken = pc => S.courses.some(c=>c.presetKey===pc.key || (c.name||"").replace(/\s/g,"").includes(pc.name.replace(/\s/g,"")));
+  const favs = LS.get("sc.favs",[]);
+  const list = S.courses.map(c=>({id:c.id, name:c.name, holes:c.holes, pref:(c.holes[0]||{}).pref||"", area:(c.holes[0]||{}).area||""}))
+    .concat(PRESETS.filter(p=>!taken(p)).map(p=>({id:"preset:"+p.key, name:p.name, holes:p.holes, pref:p.pref, area:p.area, preset:p})));
+  const used = {}; S.rounds.forEach(r=>{ used[r.courseId]=(used[r.courseId]||0)+1; });
+  return list.sort((a,b)=>(favs.includes(b.id)-favs.includes(a.id)) || ((used[b.id]||0)-(used[a.id]||0)));
+}
+const curCourse = () => { const l=courseList(); return l.find(c=>c.id===S.courseId) || l[0]; };
+const parOf = c => c.holes.reduce((a,h)=>a+h.par,0);
+
+/* ======== 分析: 「あなたの課題」 ======== */
+const mine = () => (S.demo ? DEMO() : S.rounds.filter(r=>r.player===S.name && r.holes && r.holes.length)).slice().sort((a,b)=>(a.date+String(a.createdAt)).localeCompare(b.date+String(b.createdAt)));
+const tot = r => r.holes.reduce((a,h)=>a+h.strokes,0);
+const rpar = r => r.holes.reduce((a,h)=>a+h.par,0);
+const puttsOn = r => r.holes.some(h=>h.putts>0);
+const DIRJ = {left:"左", right:"右", long:"奥", short:"手前", miss:"ショート", rl:"左", rr:"右"};
+
+function insights(rs, oneRound){
+  const n = rs.length; if(!n) return [];
+  const per = x => x / n, out = [];
+  const pr = rs.filter(puttsOn), ph = pr.flatMap(r=>r.holes);
+  // 3パット
+  if(pr.length){
+    const c = ph.filter(h=>h.putts>=3).length, g = ph.reduce((a,h)=>a+Math.max(0,h.putts-2),0)/pr.length;
+    if(c) out.push({g, t:"3パットを減らす", p:`${oneRound?`今日は${c}回`:`1ラウンド平均${(c/pr.length).toFixed(1)}回`}。1パット目は「カップの周り1m」に寄せる意識で。`});
+  }
+  // 大たたき
+  const hs = rs.flatMap(r=>r.holes);
+  const big = hs.filter(h=>h.strokes>=h.par+2), gB = per(hs.reduce((a,h)=>a+Math.max(0,h.strokes-h.par-1),0));
+  if(big.length) out.push({g:gB, t:"ダボ以上をボギーで止める", p:`ダボ以上が${oneRound?`今日は${big.length}回`:`1ラウンド平均${per(big.length).toFixed(1)}回`}。ミスのあとはピンを狙わず、グリーンの真ん中へ。`});
+  // OB
+  const ob = hs.filter(h=>h.ob).length;
+  if(ob) out.push({g:per(ob)*2, t:"OBを減らす", p:`${oneRound?`今日は${ob}回`:`1ラウンド平均${per(ob).toFixed(1)}回`}（1回でおよそ2打）。危ないホールは短いクラブで安全に。`});
+  // 苦手なホール（同じコースを3回以上）
+  if(!oneRound){
+    const byC = {}; rs.forEach(r=>{ (byC[r.courseId]=byC[r.courseId]||[]).push(r); });
+    let worst=null;
+    Object.values(byC).filter(a=>a.length>=3).forEach(a=>{ a[0].holes.forEach((_,i)=>{ const v=a.map(r=>r.holes[i]).filter(Boolean); const d=v.reduce((s,h)=>s+h.strokes-h.par,0)/v.length; if(!worst||d>worst.d) worst={d,i,c:a[0].courseName,cnt:a.length/n}; }); });
+    if(worst && worst.d>=1) out.push({g:(worst.d-0.5)*worst.cnt, t:`${worst.c}の${worst.i+1}番が苦手`, p:`平均${toParF(worst.d)}打。このホールだけはボギー狙いでいくと楽になります。`});
+  }
+  // 外す向き（グリーン / ティーショット）
+  const dirs = {}; hs.forEach(h=>{ const d = h.par===3 ? (h.dir && h.dir!=="on" ? h.dir : null) : (h.tee && h.tee!=="fw" ? h.tee : null); if(d){ const k=DIRJ[d]; dirs[k]=(dirs[k]||0)+1; } });
+  const L=dirs["左"]||0, R=dirs["右"]||0;
+  if(L+R>=4 && Math.max(L,R) >= 2*Math.max(1,Math.min(L,R))){ const side=R>L?"右":"左"; out.push({g:null, t:`外すときは${side}が多い`, p:`左右に外した${L+R}回のうち${Math.max(L,R)}回が${side}。狙いを少し${side==="右"?"左":"右"}に。`}); }
+  return out.filter(x=>x.g==null || x.g>=0.3).sort((a,b)=>(b.g==null?-1:b.g)-(a.g==null?-1:a.g)).slice(0,3);
+}
+
+/* サンプル（自分の記録がないときに見た目を確かめる用） */
+let _demo=null;
+function DEMO(){
+  if(_demo) return _demo;
+  let seed=7; const rnd=()=>{ seed=(seed*16807)%2147483647; return seed/2147483647; };
+  const pick=o=>{ let r=rnd(),t=0; for(const k in o){ t+=o[k]; if(r<t) return k; } return Object.keys(o)[0]; };
+  const L=[[3,76],[3,102],[3,88],[4,284],[3,109],[3,84],[4,366],[3,55],[3,160]];
+  _demo = Array.from({length:24},(_,ri)=>{ const d=new Date("2026-04-05"); d.setDate(d.getDate()+ri*8);
+    const g=ri/24*.12;
+    return {id:"demo"+ri, player:S.name||"あなた", courseId:"demo", courseName:"ファーツリーカントリークラブ", date:d.toISOString().slice(0,10), createdAt:ri,
+      holes:L.map(([p,y],i)=>{ const hard = i===8;
+        if(p===3){ const on=rnd()<.42+g-(hard?.25:0); const dir=on?"on":pick({right:.45,left:.15,short:.2,long:.1,miss:.1}); const ob=!on&&rnd()<.04;
+          const putts=on?(rnd()<.15?1:rnd()<.78?2:3):(rnd()<.35?1:rnd()<.9?2:3); return {par:p, strokes:(on?1:2+(rnd()<.3?1:0))+putts+(ob?2:0), putts, dir, ob}; }
+        const tee=rnd()<.45+g?"fw":pick({rr:.55,rl:.3,miss:.15}); const ob=tee!=="fw"&&rnd()<.15; const putts=rnd()<.3?1:rnd()<.85?2:3;
+        return {par:p, strokes:(tee==="fw"?2:3)+(rnd()<.35?1:0)+putts+(ob?2:0), putts, tee, ob}; })}; });
+  return _demo;
+}
+
+/* ======== 画面 ======== */
+function render(){
+  const a=document.getElementById("app");
+  a.innerHTML = (S.view==="rec" && S.draft ? viewRec() : S.view==="done" ? viewDone() : viewHome()) + viewSheet() + (S.toast?`<div class="toast">${esc(S.toast)}</div>`:"");
+}
+function toast(t){ S.toast=t; render(); clearTimeout(toast.t); toast.t=setTimeout(()=>{ S.toast=""; render(); },2200); }
+
+function trendSVG(rs){
+  const v = rs.slice(-12).map(r=>tot(r)-rpar(r)); if(v.length<2) return "";
+  const W=320,H=90, max=Math.max(...v,1), min=Math.min(...v,0), bw=W/12;
+  const y = x => 8 + (max - x) / (max - min || 1) * (H-26);
+  return `<div class="trend"><p>最近${v.length}ラウンドの対パー</p><svg viewBox="0 0 ${W} ${H}">
+    <line x1="0" x2="${W}" y1="${y(0)}" y2="${y(0)}" stroke="var(--q-par)" stroke-width="1.5" stroke-dasharray="4 4"/>
+    ${v.map((d,i)=>{ const x=i*bw+bw*.2, w=bw*.6, y0=y(Math.max(d,0)), y1=y(Math.min(d,0)); return `<rect x="${x}" y="${y0}" width="${w}" height="${Math.max(2,y1-y0)}" rx="3" fill="${d<=0?"var(--q-par)":"var(--brand)"}"/>${i===v.length-1?`<text x="${x+w/2}" y="${H-2}" text-anchor="middle" font-size="13" fill="var(--muted)" font-family="Barlow Condensed">${toPar(d)}</text>`:""}`; }).join("")}
+  </svg></div>`;
+}
+
+function viewHome(){
+  const c = curCourse(), rs = mine(), d = S.draft;
+  const last = rs.slice(-10), ins = insights(last);
+  const avg = last.length ? last.reduce((a,r)=>a+tot(r)-rpar(r),0)/last.length : 0;
+  const best = rs.length ? rs.reduce((a,r)=>(tot(r)-rpar(r) < tot(a)-rpar(a) ? r : a)) : null;
+  return `<div class="wrap">
+    <div class="top"><img src="mark.png" alt=""><b>GOLF SC.</b><small>シンプル版（試作）</small></div>
+    ${d ? `<div class="card resume"><div><strong>${d.cur+1}番ホールから</strong><span>${esc(d.courseName)}・${md(d.date)}</span></div><button class="btn" data-act="resume">つづける</button></div>` : ""}
+    <div class="card start">
+      <h2>今日のラウンド</h2>
+      <div class="f-row">
+        <div class="fld"><label for="nm">あなたの名前</label><input id="nm" value="${esc(S.name)}" placeholder="名前" autocomplete="off"></div>
+        <div class="fld"><label for="dt">日付</label><input id="dt" type="date" value="${S.date}"></div>
+      </div>
+      <button class="course-btn" data-act="pick-course"><div><strong>${c?esc(c.name):"コースを選ぶ"}</strong>${c?`<span>${c.holes.length}H・パー${parOf(c)}${c.area?"・"+esc(c.area):""}</span>`:""}</div><i>›</i></button>
+      <button class="btn" data-act="start">始める</button>
+    </div>
+
+    <div class="sec"><em>FOR YOU</em><h3>あなたの課題</h3>${last.length?`<span>直近${last.length}ラウンド</span>`:""}</div>
+    ${!rs.length ? `<div class="good">まだ記録がありません。1ラウンド記録すると、ここに「何を直せば何打縮まるか」が出ます。<br><button class="link" data-act="demo">サンプルで見てみる</button></div>` : `
+      ${S.demo?`<div class="good" style="margin-bottom:10px">サンプルを表示中 <button class="link" data-act="demo">自分の記録に戻る</button></div>`:""}
+      <div class="hero">
+        <div><span>平均（対パー）</span><b>${toParF(avg)}</b><p>${last.length}ラウンドの平均</p></div>
+        <div><span>ベスト</span><b>${tot(best)}<small>${toPar(tot(best)-rpar(best))}</small></b><p>${md(best.date)} ${esc(best.courseName)}</p></div>
+      </div>
+      ${trendSVG(rs)}
+      <div style="margin-top:14px">${ins.length ? ins.map((x,i)=>`<div class="ins ${x.g==null?"tip":i===0?"n1":""}"><strong>${esc(x.t)}</strong>${x.g!=null?`<div class="gain"><b>−${x.g.toFixed(1)}</b><span>打/R</span></div>`:""}<p>${esc(x.p)}</p></div>`).join("") : `<div class="good">大きな課題は見つかりません。いい調子です。</div>`}</div>
+      <div class="sec"><em>ROUNDS</em><h3>最近のラウンド</h3></div>
+      <ul class="rl">${rs.slice(-5).reverse().map(r=>`<li><button data-act="open" data-id="${esc(r.id)}"><span class="d">${md(r.date)}</span><span class="c">${esc(r.courseName)}</span><span class="s">${tot(r)}<small>${toPar(tot(r)-rpar(r))}</small></span></button>
+        ${S.open===r.id?`<div class="mini">${r.holes.map(h=>`<i style="background:${COLOR(h.strokes,h.par)}">${h.strokes}</i>`).join("")}</div>`:""}</li>`).join("")}</ul>`}
+
+    <div class="sec"><em>SETTINGS</em><h3>記録する項目</h3></div>
+    <div class="card opts">
+      <div class="opt"><span>パット数</span><button class="sw" data-act="opt" data-k="putts" aria-pressed="${S.opts.putts}" aria-label="パット数"></button></div>
+      <div class="opt"><span>ティーショットの行き先・OB</span><button class="sw" data-act="opt" data-k="shot" aria-pressed="${S.opts.shot}" aria-label="ティーショットの行き先"></button></div>
+    </div>
+    <div class="foot"><a class="link" href="./">今までのアプリを開く</a></div>
+  </div>`;
+}
+
+function viewRec(){
+  const d=S.draft, i=d.cur, h=d.holes[i], N=d.holes.length;
+  const done=d.holes.filter(x=>x.strokes!=null), sum=done.reduce((a,x)=>a+x.strokes,0), par=done.reduce((a,x)=>a+x.par,0);
+  const p=h.par, opts=[p-1,p,p+1,p+2,p+3].filter(x=>x>=1);
+  const shot = d.opts.shot ? (p===3
+    ? [["on","オン"],["left","左"],["right","右"],["short","手前"],["long","奥"]].map(([k,l])=>`<button class="chip ${h.dir===k?"on":""}" data-act="dir" data-v="${k}">${l}</button>`).join("")
+    : [["fw","FW"],["rl","左"],["rr","右"],["miss","ミス"]].map(([k,l])=>`<button class="chip ${h.tee===k?"on":""}" data-act="tee" data-v="${k}">${l}</button>`).join("")) : "";
+  return `<div class="rec">
+    <div class="rbar"><button class="x" data-act="home" aria-label="ホームへ">×</button><span class="cn">${esc(d.courseName)}</span><span class="tot"><small>計</small>${done.length?`${sum}<span style="font-size:18px;color:var(--muted);margin-left:4px">${toPar(sum-par)}</span>`:"—"}</span></div>
+    <div class="dots">${d.holes.map((x,k)=>`<button class="${k===i?"cur":""} ${x.strokes!=null?"done":""}" ${x.strokes!=null?`style="background:${COLOR(x.strokes,x.par)}"`:""} data-act="go" data-i="${k}">${x.strokes!=null?x.strokes:k+1}</button>`).join("")}</div>
+    <div class="hh"><b>${i+1}<small>番</small></b><span>パー<em>${p}</em></span>${h.yards?`<i>${h.yards}Y</i>`:""}</div>
+    ${d.opts.shot?`<div class="lab">ティーショット<small>押さなくてもOK</small></div><div class="chips">${shot}<button class="chip ob ${h.ob?"on":""}" data-act="ob">OB</button></div>`:""}
+    <div class="lab">打数</div>
+    <div class="grid5">${opts.map(s=>`<button class="sbtn ${h.strokes===s?"on":""}" style="--c:${COLOR(s,p)}" data-act="st" data-v="${s}"><b>${s}</b><span>${s===1?"ホールインワン":TERM(s-p)}</span></button>`).join("")}</div>
+    ${h.strokes!=null && !opts.includes(h.strokes) ? `<p style="text-align:center;margin:6px 0 0;font-size:15px">打数 <b class="num" style="font-size:22px">${h.strokes}</b></p>` : `<button class="other" data-act="more">ほかの打数</button>`}
+    ${d.opts.putts?`<div class="lab">パット</div>
+    <div class="grid5">${[0,1,2,3,4].map(v=>`<button class="pbtn ${h.putts===v?"on":""}" data-act="pt" data-v="${v}" ${h.strokes!=null && v>=h.strokes && !(v===0) ? "disabled":""}>${v===4?"4+":v}</button>`).join("")}</div>`:""}
+    <div class="rnav">${i>0?`<button data-act="go" data-i="${i-1}">← ${i}番</button>`:""}<button class="go" data-act="${i===N-1?"finish":"next"}" ${h.strokes==null?"disabled style=\"opacity:.4\"":""}>${i===N-1?"終わる":`${i+2}番へ →`}</button></div>
+    ${S.last?`<div class="ok">${S.last}</div>`:""}
+  </div>`;
+}
+
+function viewDone(){
+  const r=S.result; if(!r) return viewHome();
+  const t=tot(r), d=t-rpar(r), pOn=puttsOn(r);
+  const ins=insights([r], true)[0];
+  const worst=r.holes.reduce((a,h,i)=>(h.strokes-h.par > a.d ? {d:h.strokes-h.par,i} : a), {d:-9,i:0});
+  return `<div class="wrap">
+    <div class="res"><p>${md(r.date)} ${esc(r.courseName)}</p><b>${t}<small>${toPar(d)}</small></b>
+      <div class="sc">${r.holes.map(h=>`<i style="background:${COLOR(h.strokes,h.par)}">${h.strokes}</i>`).join("")}</div></div>
+    <div class="stat3">
+      <div><span>パー以内</span><b>${r.holes.filter(h=>h.strokes<=h.par).length}</b></div>
+      <div><span>パット</span><b>${pOn?r.holes.reduce((a,h)=>a+h.putts,0):"—"}</b></div>
+      <div><span>OB</span><b>${r.holes.filter(h=>h.ob).length}</b></div>
+    </div>
+    <div class="sec"><em>TODAY</em><h3>今日のふり返り</h3></div>
+    ${ins&&ins.g!=null ? `<div class="ins n1"><strong>${esc(ins.t)}</strong><div class="gain"><b>−${ins.g.toFixed(1)}</b><span>打</span></div><p>${esc(ins.p)}</p></div>` : `<div class="good">大きなミスのない、いいラウンドでした。</div>`}
+    ${worst.d>=2?`<div class="good" style="margin-top:10px">いちばん悔しいのは <b>${worst.i+1}番（${TERM(worst.d)}）</b>。次はここだけボギーで。</div>`:""}
+    <div style="display:grid;gap:10px;margin-top:20px">
+      <button class="btn" data-act="home">ホームへ</button>
+      <button class="btn sub" data-act="fix">スコアを直す</button>
+    </div>
+    <p class="muted" style="text-align:center;font-size:14px;margin-top:12px">保存しました（今までのアプリの履歴にも出ます）</p>
+  </div>`;
+}
+
+function viewSheet(){
+  if(S.sheet==="course"){
+    const l=courseList(), c=curCourse();
+    return `<div class="back" data-act="close"><div class="sheet" data-stop="1"><h3>コースを選ぶ</h3><div class="clist">${l.map(x=>`<button class="${c&&c.id===x.id?"on":""}" data-act="set-course" data-id="${esc(x.id)}"><strong>${esc(x.name)}</strong><span>${x.holes.length}H・パー${parOf(x)}${x.area?"・"+esc(x.area):""}</span></button>`).join("")}</div>
+      <p class="muted" style="font-size:14px;margin:12px 2px 0">ここにないコースは、今までのアプリの「コース」で登録すると出ます。</p></div></div>`;
+  }
+  if(S.sheet==="more"){
+    const h=S.draft.holes[S.draft.cur];
+    return `<div class="back" data-act="close"><div class="sheet" data-stop="1"><h3>打数を選ぶ</h3><div class="grid5">${Array.from({length:15},(_,k)=>k+1).map(s=>`<button class="pbtn ${h.strokes===s?"on":""}" data-act="st" data-v="${s}">${s}</button>`).join("")}</div></div></div>`;
+  }
+  return "";
+}
+
+/* ======== 操作 ======== */
+function complete(h, o){ return h.strokes!=null && (!o.putts || h.putts!=null); }
+function afterTap(wasDone){
+  const d=S.draft, h=d.holes[d.cur];
+  saveDraft();
+  if(!wasDone && complete(h, d.opts)){
+    // 1ホール終わったら自動で次へ（最後のホールは終わりの画面へ）
+    S.last = `${d.cur+1}番 ${h.strokes}（${h.strokes===1?"ホールインワン":TERM(h.strokes-h.par)}）`; render();
+    setTimeout(()=>{ S.last=null; if(S.view!=="rec"||!S.draft) return; if(d.cur < d.holes.length-1){ d.cur++; saveDraft(); render(); } else finish(); }, 650);
+    return;
+  }
+  render();
+}
+async function finish(){
+  const d=S.draft; if(d.holes.some(h=>h.strokes==null)){ const k=d.holes.findIndex(h=>h.strokes==null); d.cur=k; render(); toast(`${k+1}番の打数がまだです`); return; }
+  const r={ id:d.id, player:d.player, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:d.createdAt,
+    holes:d.holes.map(h=>({par:h.par, strokes:h.strokes, putts:d.opts.putts?(h.putts||0):0, dir:h.dir||null, tee:h.tee||null, ob:!!h.ob, bunker:false, pen:false, club:null})) };
+  S.result=r; S.view="done"; render();
+  await saveRound(r);
+}
+document.addEventListener("input", e=>{
+  if(e.target.id==="nm"){ S.name=e.target.value.trim(); LS.set("sc.player", S.name); }
+  if(e.target.id==="dt"){ S.date=e.target.value||today(); }
+});
+document.addEventListener("click", async e=>{
+  const el=e.target.closest("[data-act]"); if(!el) return;
+  if(el.dataset.act==="close" && e.target.closest("[data-stop]")) return;
+  const a=el.dataset.act, d=S.draft;
+  if(a==="close"){ S.sheet=null; render(); }
+  else if(a==="pick-course"){ S.sheet="course"; render(); }
+  else if(a==="set-course"){ S.courseId=el.dataset.id; S.sheet=null; render(); }
+  else if(a==="opt"){ S.opts[el.dataset.k]=!S.opts[el.dataset.k]; LS.set("simple.opts",S.opts); render(); }
+  else if(a==="demo"){ S.demo=!S.demo; render(); }
+  else if(a==="open"){ S.open = S.open===el.dataset.id ? null : el.dataset.id; render(); }
+  else if(a==="start"){
+    if(!S.name){ toast("名前を入れてください"); document.getElementById("nm").focus(); return; }
+    let c=curCourse(); if(!c){ toast("コースを選んでください"); return; }
+    if(d && !confirm("つづきのラウンドがあります。新しく始めますか？")) return;
+    if(c.preset){ const p=c.preset; const nc={id:uid(), name:p.name, presetKey:p.key, holes:p.holes.map((x,i)=>i?{...x}:{...x, pref:p.pref, area:p.area}), createdAt:Date.now()};
+      S.courses.push(nc); LS.set("sc.courses",S.courses); saveCourse(nc); c={...nc}; }
+    S.courseId=c.id; LS.set("sc.lastCourse", c.id);
+    S.draft={ id:uid(), player:S.name, courseId:c.id, courseName:c.name, date:S.date, createdAt:Date.now(), cur:0, opts:{...S.opts},
+      holes:c.holes.map(x=>({par:x.par, yards:x.yards||null, strokes:null, putts:null, dir:null, tee:null, ob:false})) };
+    saveDraft(); S.view="rec"; scrollTo(0,0); render();
+  }
+  else if(a==="resume"){ S.view="rec"; render(); }
+  else if(a==="home"){ if(S.view==="done"){ S.draft=null; saveDraft(); S.result=null; } S.view="home"; S.sheet=null; scrollTo(0,0); render(); }
+  else if(a==="fix"){ S.view="rec"; S.draft.cur=S.draft.holes.length-1; render(); }
+  else if(!d) return;
+  else if(a==="st"){ const h=d.holes[d.cur], was=complete(h,d.opts); h.strokes=+el.dataset.v; if(h.putts!=null && h.putts>=h.strokes && !(h.putts===0)) h.putts=null; S.sheet=null; afterTap(was); }
+  else if(a==="pt"){ const h=d.holes[d.cur], was=complete(h,d.opts); h.putts=+el.dataset.v; afterTap(was); }
+  else if(a==="dir"){ const h=d.holes[d.cur]; h.dir = h.dir===el.dataset.v ? null : el.dataset.v; saveDraft(); render(); }
+  else if(a==="tee"){ const h=d.holes[d.cur]; h.tee = h.tee===el.dataset.v ? null : el.dataset.v; saveDraft(); render(); }
+  else if(a==="ob"){ const h=d.holes[d.cur]; h.ob=!h.ob; saveDraft(); render(); }
+  else if(a==="more"){ S.sheet="more"; render(); }
+  else if(a==="go"){ d.cur=+el.dataset.i; saveDraft(); render(); }
+  else if(a==="next"){ if(d.cur<d.holes.length-1){ d.cur++; saveDraft(); render(); } }
+  else if(a==="finish"){ finish(); }
+});
+/* 左右スワイプでホール移動 */
+let sx=null; document.addEventListener("touchstart",e=>{ sx=S.view==="rec"?e.touches[0].clientX:null; },{passive:true});
+document.addEventListener("touchend",e=>{ if(sx==null||!S.draft) return; const dx=e.changedTouches[0].clientX-sx; const d=S.draft;
+  if(Math.abs(dx)>70){ const k=d.cur+(dx<0?1:-1); if(k>=0&&k<d.holes.length){ d.cur=k; saveDraft(); render(); } } sx=null; },{passive:true});
+
+if(S.draft && S.draft.holes){ S.view="rec"; } else S.draft=null;
+render(); load();
+</script>
+</body>
+</html>
