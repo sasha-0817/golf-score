@@ -1634,7 +1634,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-26-1040";
+const BUILD = "2026-10-26-1100";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2434,7 +2434,7 @@ function viewStats(){
     return `<div class="panel empty"><strong>まだラウンドがありません</strong>ラウンドを保存すると、パーオン率やパットの割合、ミスの傾向がここに出ます。<div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn primary" data-act="goto-record">ラウンドを記録する</button><button class="btn" data-act="demo-on">デモデータで見てみる</button></div></div>`;
   }
   state.fPlayer = me();
-  if(!all.some(r=>r.player===state.fPlayer)) return `${demoBand}<button class="demo-link" data-act="demo-on">サンプルデータ（20ラウンド）で見てみる ›</button><div class="panel empty"><strong>まだ${esc(state.fPlayer)}さんのラウンドがありません</strong>ラウンドを保存すると、ここに分析が出ます。</div>`;
+  if(!all.some(r=>r.player===state.fPlayer)) return `${demoBand}<button class="demo-link" data-act="demo-on">サンプルデータ（60ラウンド）で見てみる ›</button><div class="panel empty"><strong>まだ${esc(state.fPlayer)}さんのラウンドがありません</strong>ラウンドを保存すると、ここに分析が出ます。</div>`;
   const cs = courses().filter(c=>all.some(r=>r.courseId===c.id));
   if(state.fCourse!=="all" && !cs.some(c=>c.id===state.fCourse)) state.fCourse="all"; // 消したコースで絞り込んだままにしない
   const rs = filteredRounds();
@@ -2450,7 +2450,7 @@ function viewStats(){
   const fx = v => v==null? "—" : v.toFixed(1);
   return `${demoBand}
   ${state.oneRound&&rs[0]?(()=>{ const r=rs[0], [y,m,d]=r.date.split("-"); return `<div class="one-band"><div><small>このラウンドだけの分析</small><b>${+m}/${+d} ${esc(r.courseName)}</b></div><button class="btn small" data-act="one-off">全体に戻る</button></div>`; })():`
-  ${state.demo?"":`<button class="demo-link" data-act="demo-on">サンプルデータ（20ラウンド）で見てみる ›</button>`}
+  ${state.demo?"":`<button class="demo-link" data-act="demo-on">サンプルデータ（60ラウンド）で見てみる ›</button>`}
   <div class="panel"><div class="filters">
     <div class="field"><label for="f-course">コース</label><select id="f-course"><option value="all">すべて</option>${cs.map(c=>`<option value="${c.id}" ${c.id===state.fCourse?"selected":""}>${esc(c.name)}</option>`).join("")}</select></div>
     <div class="field"><label for="f-range">期間</label><select id="f-range">${[["1","直近1ラウンド"],["3","直近3ラウンド"],["5","直近5ラウンド"],["10","直近10ラウンド"],["all","全ラウンド"]].map(([v,t])=>`<option value="${v}" ${v===state.fRange?"selected":""}>${t}</option>`).join("")}</select></div>
@@ -3290,7 +3290,7 @@ function newCourse(){ return { id:uid(), name:"", isNew:true, pref:LS.get("sc.pr
 
 /* ---------- demo data (never saved) ---------- */
 const DEMO = (() => {
-  // ファーツリーと同じ並び（パー3が7つ、パー4が2つ）で、全部の項目を記録した20ラウンド分
+  // ファーツリーと同じ並び（パー3が7つ、パー4が2つ）で、全部の項目を記録した60ラウンド分（1年分。データが多いときの見え方を確かめるため、2026-10-26 に20→60）
   const L=[[3,76],[3,102],[3,88],[4,284],[3,109],[3,84],[4,366],[3,55],[3,160]];
   const c={id:"demo-c", name:"サンプル・ショートコース", holes:L.map(([p,y],i)=>({par:p,yards:y, ...(i?{}:{pref:"宮崎県",area:"延岡市"})}))};
   let seed=11; const rnd=()=>{ seed=(seed*16807)%2147483647; return seed/2147483647; };
@@ -3314,8 +3314,8 @@ const DEMO = (() => {
       return {par:p, strokes, putts, dir, tee, club, bunker, ob, pen}; });
     rs.push({id:"demo-"+player+ri, player, courseId:c.id, courseName:c.name, date:dt, createdAt:ri, holes});
   });
-  const d0=new Date("2026-04-05"); const dates=(k,step)=>Array.from({length:k},(_,i)=>{ const d=new Date(d0); d.setDate(d.getDate()+i*step); return d.toISOString().slice(0,10); });
-  mk("たろう",0,{right:.42,short:.24,left:.14,long:.1,miss:.1},dates(20,9));
+  const d0=new Date("2025-10-20"); const dates=(k,step)=>Array.from({length:k},(_,i)=>{ const d=new Date(d0); d.setDate(d.getDate()+i*step); return d.toISOString().slice(0,10); });
+  mk("たろう",0,{right:.42,short:.24,left:.14,long:.1,miss:.1},dates(60,6));
   return {courses:[c], rounds:rs};
 })();
 
