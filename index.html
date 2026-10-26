@@ -1532,6 +1532,7 @@ input,select,textarea{font-size:max(16px,1em)}
 .tbox-sc{flex:1;min-width:0;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .tbox-sc::-webkit-scrollbar{display:none}
 .tbox-in{position:relative;height:100%;min-width:100%}
+.tbox-ref{flex:0 0 36px;width:36px;min-width:0;overflow:hidden;position:relative}
 </style>
 
 </head>
@@ -1641,7 +1642,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-26-1130";
+const BUILD = "2026-10-26-1500";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2474,7 +2475,7 @@ function viewStats(){
   <div class="panel"><div class="sec"><em>RECENT</em><span>直近3ラウンド</span></div><div class="recent">${rs.slice(-3).reverse().map(r=>{ const t=roundTotals(r); const [y,m,d]=r.date.split("-");
       return `<div class="rr"><div class="rd"><small>${+m}/${+d}</small><b>${t.score}<i>(${toPar(t.diff)})</i></b></div><div class="rh">${r.holes.map(h=>`<span class="mk4 m-${TONEH(h)}" title="${h.strokes}"></span>`).join("")}</div></div>`; }).join("")}</div>
     <div class="mk-legend"><span><i class="mk4 m-eagle"></i>−2</span><span><i class="mk4 m-birdie"></i>−1</span><span><i class="mk4 m-par"></i>±0</span><span><i class="mk4 m-bogey"></i>+1</span><span><i class="mk4 m-double"></i>+2</span><span><i class="mk4 m-triple"></i>+3以上</span></div></div>
-  ${state.oneRound?"":`<div class="panel"><div class="sec"><em>TREND</em><span>スコアの推移</span></div><div class="tbox"><div class="tbox-ax"><canvas id="ch-score-ax" aria-hidden="true"></canvas></div><div class="tbox-sc"><div class="tbox-in"><canvas id="ch-score" aria-label="スコア推移"></canvas></div></div></div></div>`}
+  ${state.oneRound?"":`<div class="panel"><div class="sec"><em>TREND</em><span>スコアの推移</span></div><div class="tbox"><div class="tbox-ax"><canvas id="ch-score-ax" aria-hidden="true"></canvas></div><div class="tbox-sc"><div class="tbox-in"><canvas id="ch-score" aria-label="スコア推移"></canvas></div></div><div class="tbox-ref"><canvas id="ch-score-ref" aria-hidden="true"></canvas></div></div></div>`}
   ${barsPanel("スコアの内訳",DIST_SEGS(s),fmtPct(s.parOrBetter),"%","パー以内")}
 
 `:""}
@@ -2502,7 +2503,7 @@ function viewStats(){
     <div><span class="eyebrow">パーオン時</span><span class="num">${s.puttsPerGir==null?"—":s.puttsPerGir.toFixed(2)}</span></div>
     <div><span class="eyebrow">非パーオン時</span><span class="num">${s.puttsPerMiss==null?"—":s.puttsPerMiss.toFixed(2)}</span></div>
   </div></div>
-  <div class="panel"><div class="sec"><em>TREND</em><span>パット数の推移</span></div><div class="tbox"><div class="tbox-ax"><canvas id="ch-putt-ax" aria-hidden="true"></canvas></div><div class="tbox-sc"><div class="tbox-in"><canvas id="ch-putt" aria-label="パット数推移"></canvas></div></div></div></div>
+  <div class="panel"><div class="sec"><em>TREND</em><span>パット数の推移</span></div><div class="tbox"><div class="tbox-ax"><canvas id="ch-putt-ax" aria-hidden="true"></canvas></div><div class="tbox-sc"><div class="tbox-in"><canvas id="ch-putt" aria-label="パット数推移"></canvas></div></div><div class="tbox-ref"><canvas id="ch-putt-ref" aria-hidden="true"></canvas></div></div></div>
   ${barsPanel("パット数の割合",PUTT_SEGS(s),s.puttsPerHole==null?"—":s.puttsPerHole.toFixed(2),"","平均パット / H")}
 `:""}
   `}`;
@@ -2671,7 +2672,7 @@ after.stats = () => {
   if(state.trendSel!=null && state.trendSel>=rs.length) state.trendSel=null;
   const opts = (yTitle, yFmt, lo, hi) => ({ maintainAspectRatio:false, events:["click"], plugins:{ legend:{display:false}, tooltip:tip },
     scales:{ x:{ ticks:{ maxRotation:0, autoSkip:true, autoSkipPadding:14, maxTicksLimit:6 }, grid:{display:false} }, y:{ title:{display:true,text:yTitle}, ticks:{ precision:0, callback: yFmt || (v=>v) }, suggestedMin:lo, suggestedMax:hi, grid:{ color: cssv("--soft") } } } });
-  const o1 = opts(oneCourse?"スコア":"対パー", oneCourse?null:(v=>toPar(v))); o1.scales.y.min = Math.floor(Math.min(parN-2, ...vals)/5)*5; o1.scales.y.max = Math.ceil(Math.max(parN+2*holesN+1, ...vals)/5)*5;
+  const o1 = opts(oneCourse?"スコア":"対パー", oneCourse?null:(v=>toPar(v))); o1.scales.y.min = Math.floor(Math.min(parN-2, ...vals)/5)*5; o1.scales.y.max = Math.ceil(Math.max(parN+5, ...vals.map(v=>v+2))/5)*5; // 上は自分のスコアに合わせる（上手い人は +18 まで要らない）
   /* 推移の棒は15ラウンド分の幅で見せ、それより前は横にスクロール（最初は最新が見える右端）。
      縦の目盛りと基準線の数字は左の固定の列に描く（棒に数字が重ならないように） */
   const VIS = 15, wide = Math.max(1, SLOTS/VIS);
@@ -2681,14 +2682,14 @@ after.stats = () => {
     o.scales.x.ticks.maxTicksLimit = Math.round(6*wide);
     const yb = o.scales.y; const tf = yb.ticks.callback || (v=>v);
     o.scales.y = { ...yb, title:{display:false}, ticks:{ ...yb.ticks, display:false }, border:{display:false}, afterFit:s=>{ s.width=0; } };
-    const ax=$("#"+id+"-ax");
-    if(ax) charts.push(new Chart(ax, { type:"bar", data:{ labels:["9/1"], datasets:[{ data:[null] }] },
+    const axisChart = (el, right) => el && charts.push(new Chart(el, { type:"bar", data:{ labels:["9/1"], datasets:[{ data:[null] }] },
       options:{ maintainAspectRatio:false, events:[], animation:false, plugins:{ legend:{display:false}, tooltip:{enabled:false} },
         scales:{ x:{ ticks:{ color:"rgba(0,0,0,0)", maxRotation:0 }, grid:{display:false}, border:{display:false} },
-          y:{ min:yb.min, max:yb.max, grid:{display:false}, border:{display:false}, afterFit:s=>{ s.width=40; },
-            ticks:{ precision:0, callback: v => refs.some(r=>Math.abs(r.v-v)<(yb.max-yb.min)/12) ? "" : tf(v) } } } },
-      plugins:[{ id:"refLbl", afterDraw(ch){ const {ctx, scales:{y}, chartArea:a} = ch; ctx.save(); ctx.font="700 13px "+cssv("--f-num"); ctx.textAlign="right"; ctx.textBaseline="middle";
-        refs.forEach(r=>{ const py=y.getPixelForValue(r.v); if(py<a.top-1||py>a.bottom+1) return; ctx.fillStyle=r.color; ctx.fillText(r.label, a.right-4, py); }); ctx.restore(); } }] }));
+          y:{ min:yb.min, max:yb.max, grid:{display:false}, border:{display:false}, afterFit:s=>{ s.width= right?2:40; },
+            ticks:{ display:!right, precision:0, callback: v => tf(v) } } } },
+      plugins: right ? [{ id:"refLbl", afterDraw(ch){ const {ctx, scales:{y}, chartArea:a} = ch; ctx.save(); ctx.font="700 13px "+cssv("--f-num"); ctx.textAlign="left"; ctx.textBaseline="middle";
+        refs.forEach(r=>{ const py=y.getPixelForValue(r.v); if(py<a.top-1||py>a.bottom+1) return; ctx.fillStyle=r.color; ctx.fillText(r.label, 4, py); }); ctx.restore(); } }] : [] }));
+    axisChart($("#"+id+"-ax"), false); axisChart($("#"+id+"-ref"), true);
     return refs.map(r=>({ ...r, label:"" }));
   };
   const scoreRefs = scrollBox("ch-score", o1, scoreLines);
