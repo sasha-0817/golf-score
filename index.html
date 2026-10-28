@@ -1765,7 +1765,7 @@ nav.tabs button{font-size:12px!important}
 .rowb .obp.ob{background:var(--rec-under);border-color:var(--rec-under);color:#fff}
 .rowb .obp.pn{background:var(--q-bogey);border-color:var(--q-bogey);color:#fff}
 .rowb .bk.on{background:#E2C27A;border-color:#CFA94E;color:#4A3509}
-.fpop.cross .fpc{position:absolute;width:70px;height:44px;margin:-22px 0 0 -35px;background:var(--rec-surface);border:1.5px solid var(--rec-line);box-shadow:0 6px 16px rgba(0,0,0,.25);font:700 15px var(--f-body)}
+.fpop.cross{filter:drop-shadow(0 6px 10px rgba(0,0,0,.25))}.fpop.cross .fpc{position:absolute;width:70px;height:44px;margin:-22px 0 0 -35px;background:var(--rec-surface);border:1.5px solid var(--rec-line);box-shadow:none;font:700 15px var(--f-body)}
 .fpop.cross .fpc.on{background:#F2B01E;border-color:#F2B01E;color:#2B1D00}.fpop.cross .fpc.off{opacity:.3}
 .fpop.clubs .fpc{font-size:16px}
 .fpop .fpc.med{font-size:0}
@@ -1803,9 +1803,16 @@ nav.tabs button{font-size:12px!important}
 .frow.ghostrow{opacity:.95}
 .frow .pt .na{font-size:13px;color:var(--rec-muted)}
 .frow .pt b.gd{font:700 26px/1 var(--f-num)}.frow .pt b.gd.up{color:#14935C}.frow .pt b.gd.dn{color:var(--q-double)}.frow .pt b.gd.z{color:var(--rec-muted)}
-.frow.teamA{border-left:5px solid #1F3A68;background:color-mix(in srgb,#1F3A68 8%,transparent);padding-left:6px;border-radius:6px}
-.frow.teamB{border-left:5px solid #F2B01E;background:color-mix(in srgb,#F2B01E 12%,transparent);padding-left:6px;border-radius:6px}
-.fhead+.frow.teamA,.fhead+.frow.teamB{border-top:0}
+
+/* ---- チーム戦（2026-10-28）: 2人を1つのうすい色の囲みに入れ、右に値を1つ。A=紺・B=金 ---- */
+.tgrp{display:grid;grid-template-columns:62px 76px 76px 1fr;column-gap:6px;row-gap:5px;align-items:center;padding:4px 6px;margin:0 -6px;border-radius:10px}
+.tgrp .frow{display:contents}
+.tgrp .tpt{grid-column:4;grid-row:1/span 2;display:flex;align-items:center;justify-content:center;font:700 32px/1 var(--f-num)}
+.tgrp.teamA{background:color-mix(in srgb,#1F3A68 9%,transparent);box-shadow:inset 5px 0 0 #1F3A68}.tgrp.teamA .tpt{color:#1F3A68}
+.tgrp.teamB{background:color-mix(in srgb,#F2B01E 14%,transparent);box-shadow:inset 5px 0 0 #F2B01E}.tgrp.teamB .tpt{color:#B07D00}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tgrp.teamA .tpt{color:#9DB8EA}:root:not([data-theme="light"]) .tgrp.teamB .tpt{color:#F2C54D}}
+:root[data-theme="dark"] .tgrp.teamA .tpt{color:#9DB8EA}:root[data-theme="dark"] .tgrp.teamB .tpt{color:#F2C54D}
+.rec2.multi .tgrp{row-gap:3px;padding:3px 6px}
 </style>
 
 </head>
@@ -1885,15 +1892,14 @@ function clubRank(n){ const t=String(n).toUpperCase().replace(/\s/g,""); let m;
 // 記録する項目（打数は常に記録）
 const FIELD_DEFS = [
   {k:"putts",  label:"パット数",              def:true},
-  {k:"ob",     label:"OB",                    def:true},
+  {k:"ob",     label:"OB・1ペナ",             def:true},
   {k:"bunker", label:"バンカー",              def:true},
-  {k:"pen",    label:"1ペナ（池・赤杭など）", def:false},
   {k:"shot",   label:"ショットの方向", def:false},
   {k:"club",   label:"使用クラブ", def:false},
   {k:"advice", label:"ホールのアドバイス", def:true, show:true},
   {k:"pace",   label:"自己ベストのペース表示", def:false, show:true},
 ];
-function fields(){ const saved = LS.get("sc.fields", {}); const f={}; if(saved.shot==null && (saved.approach||saved.tee)) saved.shot=true; FIELD_DEFS.forEach(d=>f[d.k] = saved[d.k]!=null ? saved[d.k] : d.def); return f; }
+function fields(){ const saved = LS.get("sc.fields", {}); const f={}; if(saved.shot==null && (saved.approach||saved.tee)) saved.shot=true; FIELD_DEFS.forEach(d=>f[d.k] = saved[d.k]!=null ? saved[d.k] : d.def); f.pen = f.ob; return f; }   // OB と 1ペナは1つの設定（入力するかしないか）
 
 const state = {
   tab: LS.get("sc.tab","record"),
@@ -1914,7 +1920,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-28-1200";
+const BUILD = "2026-10-28-1900";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2528,14 +2534,17 @@ function viewRecordDraft(d){
     const tone = kind==="s" ? (v===1?"hio":TONE(v-h.par)) : (v<=1?"birdie":v===2?"par":v===3?"bogey":"double");
     const lab = kind==="s" ? TJ(v-h.par,v) : (v===0?"チップ":v+"パット");
     return `<div class="fc t-${tone}" role="button" tabindex="0" data-k="${kind}" data-i="${who}" aria-label="${esc(pNames[who])}の${kind==="s"?"打数":"パット"} ${v}。押したまま左右に動かして離すと変わります"><b>${v}</b><small>${lab}</small></div>`; };
-  const mcell = who => { const v=medalOf(who); return `<div class="fc fm ${v?"set":""}" role="button" tabindex="0" data-k="m" data-i="${who}" aria-label="${esc(pNames[who])}のメダル。押したまま左右に動かして離すと変わります">${v?medalSVG(v,34):"<span>—</span>"}</div>`; };
+  const mcell = who => { const v=medalOf(who); return `<div class="fc fm ${v?"set":""}" role="button" tabindex="0" data-k="m" data-i="${who}" aria-label="${esc(pNames[who])}のメダル。押したまま左右に動かして離すと変わります">${v?medalSVG(v,30):"<span>—</span>"}</div>`; };
   const ncell = who => { const on=(d.pins||{})[state.hole]===who; return h.par===3 ? `<button class="fc fn ${on?"set":""}" data-act="pin-q" data-i="${who}" aria-pressed="${on}" aria-label="${esc(pNames[who])}がニアピン">${on?PIN_ICON(20):"<span>—</span>"}</button>` : `<span class="na">パー3のみ</span>`; };
   const ghost = d.game==="ghost" ? ghostBest(d.player,d.courseId,N,d.id) : null;
   const gStr = k => ghost && ghost.holes[k] ? ghost.holes[k].strokes : null;
   let ghostDiff=0; if(ghost) for(let k=0;k<=state.hole;k++){ ghostDiff += gStr(k)-d.holes[k].strokes; }   // ＋ = ゴーストより少ない打数（勝ち越し）
   const ghostRow = d.game==="ghost" ? `<div class="frow ${gcls} ghostrow"><div class="mn"><span>ゴースト</span>${ghost?`<small>ベスト ${roundTotals(ghost).score}</small>`:""}</div>${ghost?(()=>{ const gs=gStr(state.hole); return `<div class="gc t-${gs===1?"hio":TONE(gs-h.par)}"><b>${gs}</b><small>${TJ(gs-h.par,gs)}</small></div>`; })():`<div class="gc"><b>—</b></div>`}<span></span><div class="pt"><span class="na">${ghost?"":"ベストなし"}</span></div></div>` : "";
   const scoreBlock = `<div class="fhead ${gcls}"><span></span><span>打数</span><span>${F.putts?"パット":""}</span>${gx?`<span>${gx==="m"?"メダル":"ニアピン"}</span>`:""}${d.game?`<span>${d.game==="ghost"?"差":"ポイント"}</span>`:""}</div>`
-    + pNames.map((n,i)=>`<div class="frow ${gcls} ${i===0?"me":""} ${teamOf(i)?"team"+teamOf(i):""}"><div class="mn"><span class="${[...String(dupLabel(pNames,i))].length>=5?"long":""}">${esc(dupLabel(pNames,i))}</span></div>${fcell("s",i)}${i===0&&F.putts?fcell("p",0):"<span></span>"}${gx==="m"?mcell(i):gx==="n"?ncell(i):""}${d.game?ptCell(i):""}</div>`).join("") + ghostRow;
+    + (()=>{ const rowH=(i,noPt)=>`<div class="frow ${gcls} ${i===0?"me":""}"><div class="mn"><span class="${[...String(dupLabel(pNames,i))].length>=5?"long":""}">${esc(dupLabel(pNames,i))}</span></div>${fcell("s",i)}${i===0&&F.putts?fcell("p",0):"<span></span>"}${gx==="m"?mcell(i):gx==="n"?ncell(i):""}${d.game&&!noPt?ptCell(i):""}</div>`;
+      if(teamOf(0)){ const tv=i=>String(gt&&gt[i]||"").replace(/<[^>]+>/g,"").replace(/^[AB]\s*/,"").replace(/[勝打]|pt$/g,"");   // チーム戦: 2人を1つの囲みに入れ、右に値を1つだけ（A・Bの文字は色で分かる）
+        return [0,2].map(i=>`<div class="tgrp team${teamOf(i)}"><div class="tpt">${esc(tv(i))}</div>${rowH(i,true)}${rowH(i+1,true)}</div>`).join(""); }
+      return pNames.map((n,i)=>rowH(i)).join(""); })() + ghostRow;
   // 自分だけの記録（2段目）: クラブと方向はフリック。OB・ペナとバンカーはボタン
   const dirTxt = h.par>=4 ? ({fw:"真ん中",rl:"左",rr:"右",miss:"ショート"})[h.tee] : ({on:"真ん中",left:"左",right:"右",long:"オーバー",short:"花道",miss:"ショート"})[h.dir];
   const bItems=[];
@@ -3213,7 +3222,7 @@ function mateDone(){ const d=state.draft; if(d){ d.mdone=d.mdone||[]; d.mdone[st
 /* ---------- ゲーム（スキンズ） ---------- */
 /* ---------- ゲーム（スキンズ・マッチプレー・ナッソー・ラスベガス・ステーブルフォード） ---------- */
 const GAMES = {
-  ghost:  { name:"ゴースト", eng:"GHOST", n:"1人〜", min:1, max:4, desc:"過去のベストの自分と勝負", type:"solo" },
+  ghost:  { name:"ゴースト", eng:"GHOST", n:"1人のみ", min:1, max:1, desc:"過去のベストの自分と勝負", type:"solo" },
   skins:  { name:"スキンズ", eng:"SKINS", n:"2〜4人", min:2, max:4, desc:"毎ホールでコインを争う", type:"solo" },
   match:  { name:"マッチプレー", eng:"MATCH PLAY", n:"2人のみ", min:2, max:2, desc:"1対1・勝ったホール数", type:"solo" },
   nassau: { name:"ナッソー", eng:"NASSAU", n:"2〜4人", min:2, max:4, desc:"前半・後半・合計で勝負", type:"solo" },
@@ -3248,14 +3257,14 @@ const coinSVG = (sz=14, cls="") => `<svg class="coin ${cls}" viewBox="0 0 24 24"
 function ghostBest(player,courseId,N,exId){ const rs=state.rounds.filter(r=>r.player===player&&r.courseId===courseId&&r.id!==exId&&r.holes&&r.holes.length===N); if(!rs.length) return null;
   return rs.reduce((a,r)=>{ const da=roundTotals(a).diff, dr=roundTotals(r).diff; return (dr<da||(dr===da&&(r.date||"")>(a.date||"")))?r:a; }); }
 const GAME_ILL = {
-  ghost: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><ellipse cx="28" cy="40" rx="14" ry="2.6" fill="#1F3A68" opacity=".18"/><g transform="rotate(-8 28 22)"><path d="M13 36V19C13 9.5 19.5 4 28 4s15 5.5 15 15v17c0 1.6-1.6 2.2-2.8 1.2l-3-2.5c-.8-.7-2-.7-2.8 0l-3.2 2.7c-.8.7-2 .7-2.8 0l-3.2-2.7c-.8-.7-2-.7-2.8 0l-3 2.5C14.6 38.2 13 37.6 13 36z" fill="#EAF1FF" stroke="#1F3A68" stroke-width="2.2" stroke-linejoin="round"/><ellipse cx="23" cy="19" rx="2.3" ry="3.3" fill="#1F3A68"/><ellipse cx="33" cy="19" rx="2.3" ry="3.3" fill="#1F3A68"/><circle cx="23.8" cy="17.7" r=".9" fill="#fff"/><circle cx="33.8" cy="17.7" r=".9" fill="#fff"/><ellipse cx="28" cy="26.5" rx="2.4" ry="2.8" fill="#1F3A68"/><circle cx="19" cy="24" r="2" fill="#F2B01E" opacity=".55"/><circle cx="37" cy="24" r="2" fill="#F2B01E" opacity=".55"/></g><path d="M47 6v6M44 9h6" stroke="#F2B01E" stroke-width="2" stroke-linecap="round"/></svg></span>`,
+  ghost: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><g fill="none" stroke="#1F3A68" stroke-width="1.8" stroke-dasharray="3 2.6" stroke-linecap="round" opacity=".55"><circle cx="18" cy="13" r="6.4"/><path d="M6 38c0-9 5-14.5 12-14.5s12 5.500 12 14.500z"/></g><circle cx="35" cy="13" r="7" fill="#1F3A68"/><path d="M22 39c0-10 5.800-16 13-16s13 6 13 16z" fill="#1F3A68"/><path d="M45 4l1.400 3.200 3.200 1.400-3.200 1.400L45 13.200l-1.400-3.200-3.200-1.400 3.200-1.400z" fill="#F2B01E"/></svg></span>`,
   skins: ()=>`<span class="gm-ill">${coinSVG(26,"c1")}${coinSVG(26,"c2")}${coinSVG(26,"c3")}</span>`,
   match: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><circle cx="17" cy="14" r="7" fill="#1F3A68"/><path d="M5 38c0-8 5.4-13 12-13s12 5 12 13z" fill="#1F3A68"/><circle cx="39" cy="14" r="7" fill="#F2B01E"/><path d="M27 38c0-8 5.4-13 12-13s12 5 12 13z" fill="#F2B01E"/><text x="28" y="22" text-anchor="middle" font-size="9" font-weight="900" fill="#E5484D" font-family="Barlow Condensed,sans-serif">VS</text></svg></span>`,
   nassau: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${[[4,"前"],[20,"後"],[36,"計"]].map(([x,t],i)=>`<rect x="${x}" y="${i===2?6:12}" width="16" height="${i===2?30:24}" rx="4" fill="${i===2?"#F2B01E":"#1F3A68"}"/><text x="${x+8}" y="${i===2?26:29}" text-anchor="middle" font-size="9" font-weight="900" fill="#fff">${t}</text>`).join("")}</svg></span>`,
   vegas: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><rect x="8" y="6" width="22" height="32" rx="4" fill="#1F3A68" transform="rotate(-10 19 22)"/><rect x="26" y="6" width="22" height="32" rx="4" fill="#F2B01E" transform="rotate(8 37 22)"/><text x="19" y="27" text-anchor="middle" font-size="11" font-weight="900" fill="#fff" transform="rotate(-10 19 22)">A</text><text x="37" y="27" text-anchor="middle" font-size="11" font-weight="900" fill="#fff" transform="rotate(8 37 22)">B</text></svg></span>`,
   stable: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><rect x="8" y="28" width="9" height="10" rx="2" fill="#F2B01E"/><rect x="20" y="20" width="9" height="18" rx="2" fill="#F2B01E"/><rect x="32" y="12" width="9" height="26" rx="2" fill="#F2B01E"/><path d="M6 22 L22 12 L30 15 L46 5" fill="none" stroke="#1F3A68" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M40 4 L47 4 L46 11" fill="none" stroke="#1F3A68" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`,
   peoria: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${[[10,22,"#1F3A68"],[28,14,"#F2B01E"],[46,22,"#1F3A68"]].map(([x,y,c])=>`<circle cx="${x}" cy="${y}" r="8.5" fill="${c}"/><text x="${x}" y="${y+4}" text-anchor="middle" font-size="11" font-weight="900" fill="#fff">?</text>`).join("")}<path d="M6 38h44" stroke="#1F3A68" stroke-width="3" stroke-linecap="round"/></svg></span>`,
-  olympic: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${medalSVG(5,22,{x:17,y:0})}${medalSVG(3,18,{x:1,y:22})}${medalSVG(4,20,{x:18,y:21})}${medalSVG(2,18,{x:37,y:22})}</svg></span>`,
+  olympic: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${medalSVG(3,19,{x:1,y:21})}${medalSVG(2,19,{x:36,y:21})}${medalSVG(4,28,{x:14,y:0})}</svg></span>`,
   nearpin: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><ellipse cx="28" cy="35" rx="24" ry="7" fill="#7FCB8A"/><ellipse cx="28" cy="35" rx="15" ry="4.4" fill="#5DB56B"/><path d="M28 34V5" stroke="#1F3A68" stroke-width="2" stroke-linecap="round"/><path d="M28 5l14 5-14 5z" fill="#E5484D"/><ellipse cx="28" cy="35" rx="2.6" ry="1.2" fill="#1F3A68"/><circle cx="37" cy="34" r="3.2" fill="#fff" stroke="#9AA7B4" stroke-width=".8"/></svg></span>`,
   peoriateam: ()=>GAME_ILL.peoria(),
   olympicteam: ()=>GAME_ILL.olympic(),
@@ -3320,18 +3329,18 @@ const MEDAL_LOOK={ // 縁・中・刻む数字の色（円形。色で見分け�
 function sealPath(cx,cy,R,A,N){ let d=""; for(let i=0;i<=96;i++){ const t=i/96*Math.PI*2, r=R+A*Math.cos(N*t); d+=(i?"L":"M")+(cx+r*Math.cos(t)).toFixed(2)+" "+(cy+r*Math.sin(t)).toFixed(2); } return d+"Z"; }
 function medalSVG(v, sz=16, pos=null){ const m=MEDALS[v]; if(!m) return "";
   const L=MEDAL_LOOK[v];
-  const g = v===5 ? `<path d="M9 2h18l7 8-16 20L2 10z" fill="${m.c}" stroke="${m.d}" stroke-width="1.6" stroke-linejoin="round"/><path d="M2 10h32M12 2l6 28 6-28" fill="none" stroke="${m.d}" stroke-width="1" opacity=".7"/>`
+  const g = v===5 ? `<g transform="translate(0 5)"><path d="M9 2h18l7 8-16 20L2 10z" fill="${m.c}" stroke="${m.d}" stroke-width="1.6" stroke-linejoin="round"/><path d="M2 10h32M12 2l6 28 6-28" fill="none" stroke="${m.d}" stroke-width="1" opacity=".7"/><text x="18" y="22.6" text-anchor="middle" font-family="Barlow Condensed,sans-serif" font-weight="700" font-size="13.5" fill="#fff" stroke="${m.d}" stroke-width=".9" paint-order="stroke">5</text></g>`
     : `<defs><linearGradient id="mr${v}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${L.r0}"/><stop offset=".55" stop-color="${L.d1}"/><stop offset="1" stop-color="${L.r1}"/></linearGradient>
       <radialGradient id="md${v}" cx="34%" cy="26%" r="90%"><stop offset="0" stop-color="${L.d0}"/><stop offset="1" stop-color="${L.d1}"/></radialGradient></defs>
-      <circle cx="18" cy="16" r="13.4" fill="url(#mr${v})" stroke="${L.r1}" stroke-width="1"/>
-      <circle cx="18" cy="16" r="10.4" fill="url(#md${v})" stroke="${L.r1}" stroke-width="1"/>
-      <circle cx="18" cy="16" r="8.7" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width=".8"/>
-      <circle cx="18" cy="16" r="8.7" fill="none" stroke="${L.r1}" stroke-opacity=".3" stroke-width=".5" transform="translate(.5 .6)"/>
-      <text x="18" y="21.6" text-anchor="middle" font-family="Barlow Condensed,sans-serif" font-weight="700" font-size="14.5" fill="#fff" fill-opacity=".7" transform="translate(.45 .6)">${v}</text>
-      <text x="18" y="21.6" text-anchor="middle" font-family="Barlow Condensed,sans-serif" font-weight="700" font-size="14.5" fill="${L.n}">${v}</text>
-      <path d="M8.2 11.6a10.6 10.6 0 0 1 7.6-4.6" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.5" stroke-linecap="round"/>
-      <circle cx="12.6" cy="8.6" r=".9" fill="#fff" fill-opacity=".95"/>`;
-  return pos ? `<svg x="${pos.x}" y="${pos.y}" width="${sz}" height="${(sz*32/36).toFixed(1)}" viewBox="0 0 36 32">${g}</svg>` : `<svg class="medal" viewBox="0 0 36 32" width="${sz}" height="${(sz*32/36).toFixed(1)}" aria-hidden="true">${g}</svg>`; }
+      <path d="M21 0h8.5L22.2 18h-8.5z" fill="#1F3A68"/><path d="M15 0H6.5l7.3 18h8.5z" fill="#3B6FC4"/><path d="M15 0h2.2l7.2 18h-2.2z" fill="#fff" fill-opacity=".25"/>
+      <circle cx="18" cy="17" r="2.3" fill="none" stroke="${L.r1}" stroke-width="1.3"/>
+      <circle cx="18" cy="28" r="11.6" fill="url(#mr${v})" stroke="${L.r1}" stroke-width="1"/>
+      <circle cx="18" cy="28" r="9.2" fill="url(#md${v})" stroke="${L.r1}" stroke-width=".9"/>
+      <circle cx="18" cy="28" r="7.8" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width=".7"/>
+      <text x="18" y="33" text-anchor="middle" font-family="Barlow Condensed,sans-serif" font-weight="700" font-size="13.5" fill="#fff" fill-opacity=".7" transform="translate(.4 .5)">${v}</text>
+      <text x="18" y="33" text-anchor="middle" font-family="Barlow Condensed,sans-serif" font-weight="700" font-size="13.5" fill="${L.n}">${v}</text>
+      <path d="M9.6 24a9.6 9.6 0 0 1 6.6-4.4" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.4" stroke-linecap="round"/>`;
+  return pos ? `<svg x="${pos.x}" y="${pos.y}" width="${sz}" height="${(sz*40/36).toFixed(1)}" viewBox="0 0 36 40">${g}</svg>` : `<svg class="medal" viewBox="0 0 36 40" width="${sz}" height="${(sz*40/36).toFixed(1)}" aria-hidden="true">${g}</svg>`; }
 function olympicCalc(medals, P){ const pts=Array(P).fill(0), cnt=Array.from({length:P},()=>[0,0,0,0,0,0]);
   Object.values(medals||{}).forEach(arr=>(arr||[]).forEach((v,i)=>{ if(v>0 && i<P){ pts[i]+=v; cnt[i][v]++; } })); return {pts, cnt}; }
 /* 新ペリア: 隠しホール（9Hは6つ・18Hは12）をラウンド後にくじで選び、ハンデ＝(隠しホールの合計×(全ホール数÷隠しホール数) − パー)×0.8。ネット＝合計−ハンデ */
@@ -3779,13 +3788,13 @@ if(state.draft){ const i=state.draft.holes.findIndex(x=>!x.entered); state.hole 
     if(kind==="b") return { type:"row", vals:[0,1], def:h.bunker?1:0, cw:52, min:30, par };
     return { type:"row", vals:[1,2,3,4,5,6,7,8,9,10], def:Math.min(9,par-1), cw:32, min:20, par };
   }
-  const cellHTML=(kind,v,par)=>kind==="m"?(v?medalSVG(v,22):"—"):kind==="c"?esc(v):kind==="o"?["なし","OB","ペナ"][v]:kind==="b"?["なし","あり"][v]:v;
+  const cellHTML=(kind,v,par)=>kind==="m"?(v?medalSVG(v,25):"—"):kind==="c"?esc(v):kind==="o"?["なし","OB","ペナ"][v]:kind==="b"?["なし","あり"][v]:v;
   const cellTone=(kind,v,par)=>kind==="s"?"t-"+toneS(v,par):kind==="p"?"t-"+toneP(v):"nt";
   function build(){
     const c=st.cfg, W=document.documentElement.clientWidth;
     pop=document.createElement("div");
     if(c.type==="cross"){
-      const cx=Math.max(117,Math.min(W-117,st.x)), cy=Math.max(84,st.y-130), off=c.par>=4;
+      const cx=Math.max(117,Math.min(W-117,st.x)), cy=Math.max(84,st.y-104), off=c.par>=4;
       pop.className="fpop cross"; pop.style.left=cx+"px"; pop.style.top=cy+"px";
       pop.innerHTML=[["C","真ん中",0,0],["L","左",-74,0],["R","右",74,0],["U","オーバー",0,-50],["D","ショート",0,50]].map(([k,l,x,y])=>`<div class="fpc ${k==="U"&&off?"off":""}" data-k="${k}" style="left:${x}px;top:${y}px">${l}</div>`).join("");
       document.body.appendChild(pop); st.idx="C"; mark("C"); return; }
@@ -3795,7 +3804,7 @@ if(state.draft){ const i=state.draft.holes.findIndex(x=>!x.entered); state.hole 
       if(rs>0) step=Math.min(step,(W-M-st.x)/rs); if(ls>0) step=Math.min(step,(st.x-M)/ls); step=Math.max(c.min,Math.floor(step));
       left=st.x-(c.def*step+step/2)-4; left=Math.max(8,Math.min(W-8-(n*step+8),left)); }
     st.step=step; st.left=left;
-    pop.className="fpop"+(st.kind==="c"?" clubs":""); pop.style.left=left+"px"; pop.style.top=Math.max(8,st.y-100-58)+"px";
+    pop.className="fpop"+(st.kind==="c"?" clubs":""); pop.style.left=left+"px"; pop.style.top=Math.max(8,st.y-100-20)+"px";
     pop.innerHTML=`<div class="fprow">${c.vals.map((v,k)=>`<div class="fpc ${cellTone(st.kind,v,c.par)} ${st.kind==="m"?"med":""}" data-k="${k}" style="width:${step}px">${cellHTML(st.kind,v,c.par)}</div>`).join("")}</div>`;
     document.body.appendChild(pop); mark(st.idx);
   }

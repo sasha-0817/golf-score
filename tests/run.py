@@ -591,7 +591,11 @@ with sync_playwright() as pw:
     check("メダル: 同じメダルは1人だけ（金は後の人へ移る）", pg.evaluate("JSON.stringify(state.draft.medals[0])") == "[0,4,0,0]")
     flick(pg, "m", 3, 5); check("メダル: ダイヤ（5）", D()["medals"]["0"][3] == 5)
     check("メダルのマスは図だけ（文字なし）で、ポイントは数字だけ", pg.evaluate("[...document.querySelectorAll('.fc.fm')].every(e=>[...e.childNodes].every(n=>n.nodeType!==3||!n.textContent.trim()||n.textContent.trim()==='—')&&![...e.children].some(c=>c.tagName==='SPAN'&&c.textContent.trim()&&c.textContent.trim()!=='—'))") and "pt" not in pg.inner_text(".scoreblock") and pg.evaluate("[...document.querySelectorAll('.frow .pt b')].map(e=>e.textContent).join()") == "0,4,0,5")
-    check("メダルは円形（ギザギザなし）", "<circle" in pg.evaluate("document.querySelector('.fc.fm.set svg').innerHTML") and pg.evaluate("document.querySelectorAll('.fc.fm.set svg path').length") <= 3)
+    check("メダルは円形でリボンつき（ギザギザなし）", "<circle" in pg.evaluate("document.querySelector('.fc.fm.set svg').innerHTML") and pg.evaluate("document.querySelectorAll('.fc.fm.set svg path').length") <= 8 and pg.evaluate("document.querySelector('.fc.fm.set svg').getAttribute('viewBox')") == "0 0 36 40")
+    check("ダイヤのメダルにも数字の5が入る", pg.evaluate("document.querySelectorAll('.fc.fm')[3].querySelector('svg text')&&document.querySelectorAll('.fc.fm')[3].querySelector('svg text').textContent") == "5")
+    C(pg, "[data-act=open-fields]")
+    check("OB・1ペナは1つの設定（入力するかしないか）", pg.query_selector("#fld-pen") is None and "OB・1ペナ" in pg.inner_text(".fields-sheet"))
+    C(pg, "[data-act=close-sheet]")
     flick(pg, "c", 0, 8); check("クラブ: 指の下のクラブ（9I）がそのまま選ばれる（並びは動かない）", D()["holes"][0]["club"] == "9I")
     flick(pg, "c", 0, 11); check("クラブ: 右端（SW）も選べる・SWのあとに別のクラブも選べる", D()["holes"][0]["club"] == "SW")
     flick(pg, "c", 0, 4); check("クラブ: SWのあとに5Iを選べる（SWを基準にずれない）", D()["holes"][0]["club"] == "5I")
@@ -604,7 +608,8 @@ with sync_playwright() as pw:
     # チーム戦の色分け・長い名前
     pg, errs = open_page(b, {"sc.player": "\"たろうたろう\"", "sc.mates": ["はなこ", "じろう", "さぶろうさぶろう"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"team\"", "sc.fields": ALL}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
-    check("チーム戦: 1・2人目は A（紺）、3・4人目は B（金）の色", pg.evaluate("[...document.querySelectorAll('.scoreblock .frow:not(.ghostrow)')].map(e=>e.classList.contains('teamA')?'A':e.classList.contains('teamB')?'B':'-').join('')") == "AABB")
+    check("チーム戦: 1・2人目は A（紺）、3・4人目は B（金）の囲みに2人ずつ入る", pg.evaluate("[...document.querySelectorAll('.scoreblock .tgrp')].map(e=>(e.classList.contains('teamA')?'A':'B')+e.querySelectorAll('.frow').length).join()") == "A2,B2")
+    check("チーム戦: 値は1チームに1つだけ・A/Bの文字や単位は出さない", pg.evaluate("[...document.querySelectorAll('.tgrp .tpt')].map(e=>e.textContent).join()") == "0,0" and pg.evaluate("document.querySelectorAll('.scoreblock .gtag').length") == 0)
     check("長い名前（6文字）は「…」にせず折り返す", pg.evaluate("[...document.querySelectorAll('.frow .mn span')].every(e=>e.scrollHeight<=e.clientHeight+2 && e.scrollWidth<=e.clientWidth+1)"))
     check("チーム戦・長い名前: エラーなし", not errs); pg.context.close()
     # ゴースト（個人戦）: 過去のベストの自分と勝負
