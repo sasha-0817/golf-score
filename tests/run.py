@@ -537,10 +537,10 @@ with sync_playwright() as pw:
     # 19d1. 花道はミスにしない（一番多くても赤くしない）
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": [], "sc.fields": ALL}, offline=True)
     start_preset(pg, "firtree")
-    svg = pg.evaluate("approachSVG(null,false,{dirs:{on:3,left:2,right:0,long:0,short:5,miss:0},dirN:10})")
+    svg = pg.evaluate("approachSVG(null,false,{dirs:{on:3,left:2,right:0,long:0,short:0,miss:5},dirN:10})")
     import re as _re
     hl = _re.findall(r'class="az-hatch"', svg)
-    check("分析: 花道が一番多くても赤くせず、ミスの一番は左", len(hl) == 1 and "az-safe" in svg and "左" in pg.evaluate("greenMap({dirs:{on:3,left:2,right:0,long:0,short:5,miss:0},dirN:10})").split("一番多いミスは")[1][:60])
+    check("分析の絵に花道はない（左・右・オーバー・ショートだけ）・一番多いミスはショート", "花道" not in svg and "az-safe" not in svg and len(hl) == 1 and "ショート" in pg.evaluate("greenMap({dirs:{on:3,left:2,right:0,long:0,short:0,miss:5},dirN:10})").split("一番多いミスは")[1][:60])
     check("花道のあともエラーなし", not errs)
     pg.context.close()
 
@@ -591,7 +591,7 @@ with sync_playwright() as pw:
     check("メダル: 同じメダルは1人だけ（金は後の人へ移る）", pg.evaluate("JSON.stringify(state.draft.medals[0])") == "[0,4,0,0]")
     flick(pg, "m", 3, 5); check("メダル: ダイヤ（5）", D()["medals"]["0"][3] == 5)
     check("メダルのマスは図だけ（文字なし）で、ポイントは数字だけ", pg.evaluate("[...document.querySelectorAll('.fc.fm')].every(e=>[...e.childNodes].every(n=>n.nodeType!==3||!n.textContent.trim()||n.textContent.trim()==='—')&&![...e.children].some(c=>c.tagName==='SPAN'&&c.textContent.trim()&&c.textContent.trim()!=='—'))") and "pt" not in pg.inner_text(".scoreblock") and pg.evaluate("[...document.querySelectorAll('.frow .pt b')].map(e=>e.textContent).join()") == "0,4,0,5")
-    check("メダルは円形でリボンつき（ギザギザなし）", "<circle" in pg.evaluate("document.querySelector('.fc.fm.set svg').innerHTML") and pg.evaluate("document.querySelectorAll('.fc.fm.set svg path').length") <= 8 and pg.evaluate("document.querySelector('.fc.fm.set svg').getAttribute('viewBox')") == "0 0 36 40")
+    check("メダルは円形でリボンつき（ギザギザなし）", "<circle" in pg.evaluate("document.querySelector('.fc.fm.set svg').innerHTML") and pg.evaluate("document.querySelector('.fc.fm.set svg').querySelectorAll('path').length") <= 5 and pg.evaluate("document.querySelector('.fc.fm.set svg').getAttribute('viewBox')") == "0 0 36 40")
     check("ダイヤのメダルにも数字の5が入る", pg.evaluate("document.querySelectorAll('.fc.fm')[3].querySelector('svg text')&&document.querySelectorAll('.fc.fm')[3].querySelector('svg text').textContent") == "5")
     C(pg, "[data-act=open-fields]")
     check("OB・1ペナは1つの設定（入力するかしないか）", pg.query_selector("#fld-pen") is None and "OB・1ペナ" in pg.inner_text(".fields-sheet"))
@@ -599,6 +599,7 @@ with sync_playwright() as pw:
     flick(pg, "c", 0, 8); check("クラブ: 指の下のクラブ（9I）がそのまま選ばれる（並びは動かない）", D()["holes"][0]["club"] == "9I")
     flick(pg, "c", 0, 11); check("クラブ: 右端（SW）も選べる・SWのあとに別のクラブも選べる", D()["holes"][0]["club"] == "SW")
     flick(pg, "c", 0, 4); check("クラブ: SWのあとに5Iを選べる（SWを基準にずれない）", D()["holes"][0]["club"] == "5I")
+    flick(pg, "d", 0, "C"); check("方向: パー3 の真ん中は「オン」", D()["holes"][0]["dir"] == "on" and pg.inner_text('.fc[data-k="d"]').strip() == "オン")
     flick(pg, "d", 0, "R"); check("方向: パー3 右へ＝右", D()["holes"][0]["dir"] == "right")
     flick(pg, "d", 0, "U"); check("方向: 上＝オーバー", D()["holes"][0]["dir"] == "long")
     flick(pg, "o", 0, 1); check("OB・ペナ: OB", pg.inner_text('.fc[data-k="o"]').strip() == "OB")
@@ -620,7 +621,9 @@ with sync_playwright() as pw:
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
     check("ゴースト: 始まる・ゴーストの行が出る（ベストは27打）", pg.evaluate("state.draft.game") == "ghost" and pg.query_selector(".ghostrow") is not None and "27" in pg.inner_text(".ghostrow"))
     flick(pg, "s", 0, 3)
-    check("ゴースト: 差の列（ゴーストより1打多い＝−1）", "−1" in pg.evaluate("document.querySelector('.frow.me .pt').textContent") and "差" in pg.inner_text(".fhead"))
+    check("ゴースト: 差の列（ゴーストより1打多い＝＋1打。ゴルフのスコアと同じ向き）", "+1" in pg.evaluate("document.querySelector('.frow.me .pt').textContent") and "差" in pg.inner_text(".fhead"))
+    flick(pg, "s", 0, 1)
+    check("ゴースト: ゴーストより少ない打数なら −（勝ち）", "−1" in pg.evaluate("document.querySelector('.frow.me .pt').textContent") and pg.query_selector(".frow.me .pt b.gd.up") is not None)
     check("ゴースト: 全部ONでも1画面", pg.evaluate("document.documentElement.scrollHeight") <= 667)
     for _ in range(12):
         if pg.evaluate("state.hole") >= 8: break
