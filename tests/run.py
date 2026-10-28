@@ -60,18 +60,30 @@ def C(pg, sel):  # JS でクリック（重なりや disabled も含めて、ア
     ok = pg.evaluate("s=>{const e=document.querySelector(s); if(!e) return false; e.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true})); return true;}", sel)
     pg.wait_for_timeout(80); return ok
 
+def flick(pg, k, i, tgt):
+    """マスを押したまま動かして離す（フリック入力）。tgt は列の何番目か（0から）。方向（d）だけは C/L/R/U/D（指を動かした向き）"""
+    r = pg.locator(f'.fc[data-k="{k}"][data-i="{i}"]').first.bounding_box()
+    x, y = r["x"] + r["width"] / 2, r["y"] + r["height"] / 2
+    pg.mouse.move(x, y); pg.mouse.down(); pg.wait_for_timeout(30)
+    if k == "d":
+        dx, dy = {"C": (0, 0), "L": (-50, 0), "R": (50, 0), "U": (0, -50), "D": (0, 50)}[tgt]
+        pg.mouse.move(x + dx / 2, y + dy / 2, steps=2); pg.mouse.move(x + dx, y + dy, steps=2)
+    else:
+        pg.mouse.move(x + 12, y, steps=2)
+        c = pg.evaluate("t=>{const e=document.querySelector('.fpop .fpc[data-k=\"'+t+'\"]'); if(!e) return null; const q=e.getBoundingClientRect(); return q.x+q.width/2}", str(tgt))
+        pg.mouse.move(c, y, steps=3)
+    pg.wait_for_timeout(60); pg.mouse.up(); pg.wait_for_timeout(80)
+
 def play_round(pg, fields):
     n = pg.evaluate("state.draft.holes.length")
     for i in range(n):
         par = pg.evaluate(f"state.draft.holes[{i}].par")
-        if fields["shot"]:
-            C(pg, "[data-act=tee][data-v=fw]" if par >= 4 else "[data-act=dir][data-v=right]"); pg.wait_for_timeout(1100)
-            if pg.query_selector(".club-sheet"): C(pg, ".club-sheet [data-act=club]:nth-child(7)")
-        elif fields["club"]: C(pg, "[data-act=club-quick]:nth-child(6)")
-        if i % 3 == 0 and fields["ob"]: C(pg, "[data-act=tb][data-k=ob]")
-        if i % 4 == 1 and fields["bunker"]: C(pg, "[data-act=tog][data-k=bunker]")
-        C(pg, '[data-act=st][data-d="1"]')
-        if fields["putts"] and i % 2: C(pg, '[data-act=pt][data-d="-1"]')
+        if fields["shot"]: flick(pg, "d", 0, "C" if par >= 4 else "R")
+        if fields["club"]: flick(pg, "c", 0, 6)
+        if i % 3 == 0 and fields["ob"]: flick(pg, "o", 0, 1)
+        if i % 4 == 1 and fields["bunker"]: flick(pg, "b", 0, 1)
+        flick(pg, "s", 0, par)   # パー+1
+        if fields["putts"] and i % 2: flick(pg, "p", 0, 1)
         if i < n - 1: C(pg, "[data-act=next]")
     C(pg, "[data-act=finish]"); pg.wait_for_timeout(900)
 
@@ -135,10 +147,12 @@ with sync_playwright() as pw:
     # 4. 入力の上限・下限、中断・再開・破棄、読み込み直しで同じホール
     pg, errs = open_page(b, {"sc.fields": ALL, "sc.player": "\"たろう\""})
     start_preset(pg, "firtree")
-    for _ in range(20): C(pg, '[data-act=st][data-d="1"]')
-    check("打数の上限15", pg.evaluate("state.draft.holes[0].strokes") == 15)
-    for _ in range(20): C(pg, '[data-act=st][data-d="-1"]')
+    flick(pg, "s", 0, 9)
+    check("打数の上限10（フリックの右端）", pg.evaluate("state.draft.holes[0].strokes") == 10)
+    flick(pg, "s", 0, 0)
     check("打数の下限1・パットは打数-1まで", pg.evaluate("[state.draft.holes[0].strokes,state.draft.holes[0].putts]") == [1, 0])
+    flick(pg, "p", 0, 6)
+    check("パットを増やすと打数も増える（パットは打数-1まで）", pg.evaluate("[state.draft.holes[0].strokes,state.draft.holes[0].putts]") == [7, 6])
     for _ in range(4): C(pg, "[data-act=next]")
     pg.reload(); pg.wait_for_timeout(900)
     check("読み込み直しても同じホール（5番）", (pg.text_content(".hno") or "").startswith("5"))
@@ -242,13 +256,11 @@ with sync_playwright() as pw:
     check("同伴者を × で消せる（選ばないにできる）", pg.evaluate("document.querySelector('#r-mate2').value") == "" and pg.evaluate("document.querySelector('#r-mate0').value") == "たろう")
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
     check("同じ名前でも始められる・同伴者2人", pg.evaluate("state.draft&&state.draft.mates.length") == 2)
-    check("同伴者は人ごとの列（自分＋2人）・1画面に収まる", pg.evaluate("document.querySelectorAll('.pboard .pcol.mate').length") == 2 and pg.query_selector(".pcol.me") is not None and pg.evaluate("document.documentElement.scrollHeight") <= 667)
-    C(pg, '.pcol.mate [data-act=mt][data-i="1"][data-d="1"]'); C(pg, '.pcol.mate [data-act=mt][data-i="1"][data-d="1"]')
-    check("同伴者の列の ∧ で打数が増える", pg.evaluate("state.draft.mates[1].s[0]") == 5)
-    C(pg, '[data-act=mt-open][data-i="0"]'); C(pg, '[data-act=mt-key][data-v="4"]')
-    check("同伴者の数字キー: 押すと次の人へ進む", pg.evaluate("state.mateI") == 1 and pg.query_selector(".mate-sheet") is not None)
-    C(pg, '[data-act=mt-key][data-v="5"]')
-    check("同伴者の数字キー: 最後の人で閉じる・打数が入る", pg.query_selector(".mate-sheet") is None and pg.evaluate("[state.draft.mates[0].s[0],state.draft.mates[1].s[0]].join()") == "4,5")
+    check("同伴者は人ごとの行（自分＋2人）・1画面に収まる", pg.evaluate("document.querySelectorAll('.scoreblock .frow').length") == 3 and pg.query_selector(".frow.me") is not None and pg.evaluate("document.documentElement.scrollHeight") <= 667)
+    flick(pg, "s", 2, 4)
+    check("同伴者の打数もフリックで入る（自分と同じ表の中）", pg.evaluate("state.draft.mates[1].s[0]") == 5)
+    flick(pg, "s", 1, 3)
+    check("同伴者の打数: 人ごとに別々に入る", pg.evaluate("[state.draft.mates[0].s[0],state.draft.mates[1].s[0]].join()") == "4,5")
     C(pg, "[data-act=next]")
     check("次のホールへはそのまま進む（同伴者を聞かない）", pg.query_selector(".mate-sheet") is None and pg.evaluate("state.hole") == 1)
     for _ in range(12):
@@ -267,15 +279,15 @@ with sync_playwright() as pw:
     check("同伴者・同じ名前: エラーなし", not errs)
     pg.context.close()
 
-    # 9. 同伴者がいてもティーショットの図が小さくならない（1人のときと同じ大きさ）
+    # 9. 同伴者がいても、全部ONの入力表が1画面に収まり、1人のときと同じ大きさ
     hs = {}
     for nm, m in (("1人", []), ("4人", ["はなこ", "じろう", "さぶろう"])):
         pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": m, "sc.courses": c1, "sc.rounds": old, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.fields": ALL}, offline=True)
         C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
-        hs[nm] = pg.evaluate("document.querySelector('svg.approach').getBoundingClientRect().height")
-        if m: check("4人: 自分だけの記録を緑の囲みに入れる・1画面に収まる", pg.query_selector(".me-zone svg.approach") is not None and pg.evaluate("document.documentElement.scrollHeight") <= 667)
+        hs[nm] = pg.evaluate("[document.querySelector('.rowb .fc.fb').getBoundingClientRect().height, document.querySelector('.scoreblock .fc').getBoundingClientRect().width, document.querySelectorAll('.rowb .fc').length]")
+        check(f"{nm}: 全部ONでも1画面に収まる", pg.evaluate("document.documentElement.scrollHeight") <= 667 and pg.evaluate("document.querySelector('.rec-card').getBoundingClientRect().bottom <= document.querySelector('.rec-bar').getBoundingClientRect().top"))
         pg.context.close()
-    check("4人でもティーショットの図が1人のときと同じ大きさ", hs["4人"] >= hs["1人"] - 2)
+    check("4人でも1人のときと同じ入力欄（方向・クラブ・OB・バンカーの4つ、打数のマスも同じ幅）", hs["4人"][2] == hs["1人"][2] == 4 and abs(hs["4人"][1] - hs["1人"][1]) <= 2 and hs["4人"][0] >= 40)
 
     # 10. スキンズ: 計算・ラウンド前に選ぶ・記録中のコイン・みんなのリザルト・スコアカードでも
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.fields": ALL, "sc.skinCarry": True}, offline=True)
@@ -302,7 +314,7 @@ with sync_playwright() as pw:
     check("ナッソーのルールに言葉の解説（前半・後半のみ。トータル・pt は書かない）", pg.query_selector(".rp .rp-words") is not None and "前半" in pg.inner_text(".rp-words") and "トータル" not in pg.inner_text(".rp-words") and "pt" not in pg.inner_text(".rp-words"))
     check("ルールに OK ボタンはない（× だけで閉じる）", pg.query_selector(".rp .rp-ok") is None)
     C(pg, ".rp-x"); pg.set_viewport_size({"width": 375, "height": 627}); over = []
-    for k in ["olympic", "skins", "peoria", "nearpin", "match", "stable", "nassau", "vegas", "teamsum", "team"]:
+    for k in ["ghost", "olympic", "skins", "peoria", "nearpin", "match", "stable", "nassau", "vegas", "teamsum", "team"]:
         C(pg, f"[data-act=open-rules][data-v={k}]"); pg.wait_for_timeout(60)
         if pg.evaluate("(()=>{const r=document.querySelector('.rp');return r.scrollHeight-r.clientHeight})()") > 1: over.append(k)
         C(pg, ".rp-x")
@@ -314,7 +326,7 @@ with sync_playwright() as pw:
     C(pg, '[data-act=set-carry][data-v="1"]'); C(pg, '[data-act=set-carry][data-v="0"]'); C(pg, ".rp-x")
     check("× でポップアップを閉じてゲーム選択に戻る", pg.query_selector(".rp") is None and pg.query_selector(".game-sheet") is not None)
     ty = pg.evaluate("[...document.querySelectorAll('.game-sheet .gm-sec, .game-sheet .gm-card')].map(e=>e.classList.contains('gm-sec')?'#'+e.textContent:e.dataset.v).join()")
-    check("ゲームの一覧は上に個人戦、下にチーム戦（見出しつき）", ty.startswith(",#SOLO個人戦,peoria,olympic,nearpin,skins") and "#TEAMチーム戦2対2・4人で,vegas,teamsum,team" in ty and ty.index("nassau") < ty.index("#TEAM"))
+    check("ゲームの一覧は上に個人戦、下にチーム戦（見出しつき）", ty.startswith(",#SOLO個人戦,ghost,peoria,olympic,nearpin,skins") and "#TEAMチーム戦2対2・4人で,vegas,teamsum,team" in ty and ty.index("nassau") < ty.index("#TEAM"))
     nm = pg.evaluate("[...document.querySelectorAll('.game-sheet .gm-h b')].map(b=>b.textContent).join()")
     check("チーム戦の中のゲーム名は「ベストボール」「合計スコア」（見出しと同じ名前にしない）", "ベストボール" in nm and "合計スコア" in nm and "チーム戦" not in nm)
     sh = pg.evaluate("getComputedStyle(document.querySelector('.game-sheet .gm-ok')).boxShadow")
@@ -329,10 +341,10 @@ with sync_playwright() as pw:
     check("選んだゲームは緑の枠と丸・余計な枠やスイッチは出ない", pg.query_selector(".gm-card.on[data-v=skins]") is not None and pg.query_selector(".gm-opt") is None)
     C(pg, ".game-sheet [data-act=close-game]")
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
-    check("スキンズで始まる・記録中にコインの数（持ち越しなし）", pg.evaluate("state.draft.game") == "skins" and pg.evaluate("state.draft.carry") is False and pg.evaluate("document.querySelectorAll('.skc').length") == 2)
-    check("スキンズでも図が小さくならない・1画面", pg.evaluate("document.querySelector('svg.approach').getBoundingClientRect().height") >= hs["1人"] - 2 and pg.evaluate("document.documentElement.scrollHeight") <= 667)
-    C(pg, "[data-act=next]"); C(pg, '[data-act=mt][data-i="0"][data-d="-1"]'); C(pg, "[data-act=next]")
-    check("同点のホールは誰も取らず、次のホールの勝ちで1枚", pg.evaluate("document.querySelectorAll('.skc')[1].textContent") == "1")
+    check("スキンズで始まる・記録中にコインの数（持ち越しなし）", pg.evaluate("state.draft.game") == "skins" and pg.evaluate("state.draft.carry") is False and pg.evaluate("document.querySelectorAll('.frow .pt b').length") == 2)
+    check("スキンズでも1画面に収まる", pg.evaluate("document.documentElement.scrollHeight") <= 667)
+    C(pg, "[data-act=next]"); flick(pg, "s", 1, 1); C(pg, "[data-act=next]")
+    check("同点のホールは誰も取らず、次のホールの勝ちで1枚", pg.evaluate("document.querySelectorAll('.frow .pt b')[1].textContent") == "1")
     for _ in range(12):
         if pg.evaluate("state.hole") >= 8: break
         C(pg, "[data-act=next]")
@@ -363,13 +375,13 @@ with sync_playwright() as pw:
     check("ラスベガスの計算（35と44で9点）", vg == "9,0")
     tm = pg.evaluate("(()=>{ const x=teamCalc([[3,4],[5,3],[4,4],[4,5]],2); return x.won.join(); })()")
     check("チーム戦の計算（良い方のスコアで比べる）", tm == "2,0")
-    check("ゲームの並び（個人戦をよく遊ばれる順→チーム戦）", pg.evaluate("GAME_KEYS_ORDER()") == "peoria,olympic,nearpin,skins,match,stable,nassau,vegas,teamsum,team")
+    check("ゲームの並び（個人戦をよく遊ばれる順→チーム戦）", pg.evaluate("GAME_KEYS_ORDER()") == "ghost,peoria,olympic,nearpin,skins,match,stable,nassau,vegas,teamsum,team")
     ts = pg.evaluate("(()=>{ const x=teamSumCalc([[3,4],[5,3],[4,4],[4,5]],2); return [x.tot.join(), x.done]; })()")
     check("合計スコアの計算（2人の打数の合計どうし）", ts == ["15,17", 2])
     sf = pg.evaluate("(()=>stableCalc([[3,2,4,5],[5,3,3,2]],[3,3,3,3],4).pts.join())()")
     check("ステーブルフォードの計算（パー2・バーディ3・ボギー1・ダボ0）", sf == "6,7")
     C(pg, "[data-act=open-game]")
-    check("ゲーム選択に10のゲーム・4人用は2人のとき薄い", pg.evaluate("document.querySelectorAll('.gm-card').length") == 11 and pg.query_selector(".gm-card.na[data-v=vegas]") is not None)
+    check("ゲーム選択に11のゲーム（ゴーストを含む）・4人用は2人のとき薄い", pg.evaluate("document.querySelectorAll('.gm-card').length") == 12 and pg.query_selector(".gm-card.na[data-v=vegas]") is not None)
     C(pg, "[data-act=pick-game][data-v=vegas]")
     check("人数が合わないゲームは選べない", pg.evaluate("state.game") != "vegas")
     C(pg, "[data-act=pick-game][data-v=match]")
@@ -381,7 +393,7 @@ with sync_playwright() as pw:
         if not ok: break
     check("4つのゲームのルールのポップアップ", ok and pg.query_selector(".rp") is None)
     C(pg, ".game-sheet [data-act=close-game]"); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
-    C(pg, '[data-act=mt][data-i="0"][data-d="1"]'); C(pg, "[data-act=next]")
+    flick(pg, "s", 1, 3); C(pg, "[data-act=next]")
     check("マッチプレー: 記録中に 1勝 / 1負", pg.evaluate("[...document.querySelectorAll('.gtag')].map(e=>e.textContent).join()") == "1勝,1負")
     for _ in range(12):
         if pg.evaluate("state.hole") >= 8: break
@@ -417,12 +429,10 @@ with sync_playwright() as pw:
     o = pg.evaluate("(()=>{ const x=olympicCalc({0:[4,3],1:[5,0],2:[0,4]},2); return [x.pts.join(), x.cnt[0][5], x.cnt[1][4]]; })()")
     check("オリンピックの計算（ダイヤ5・金4・銀3…）", o == ["9,7", 1, 1])
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
-    C(pg, "[data-act=medal-open]")
-    check("オリンピック: ホールカードの「メダル」で入力画面", pg.query_selector(".medal-sheet") is not None)
-    C(pg, '[data-act=medal-set][data-i="0"][data-v="4"]'); C(pg, '[data-act=medal-set][data-i="1"][data-v="4"]')
+    check("オリンピック: 表にメダルの列（人ごとのマス）", pg.evaluate("document.querySelectorAll('.scoreblock .fc.fm').length") == 2)
+    flick(pg, "m", 0, 4); flick(pg, "m", 1, 4)
     check("同じメダルは1人だけ（あとから付けた人に移る）", pg.evaluate("JSON.stringify(state.draft.medals[0])") == "[0,4]")
-    C(pg, "[data-act=medal-close]")
-    check("オリンピック: 名前の下に点数", "4pt" in pg.evaluate("document.querySelectorAll('.gtag')[1].textContent"))
+    check("オリンピック: メダルの右にポイントの数字だけ", pg.evaluate("[...document.querySelectorAll('.frow .pt b')].map(e=>e.textContent).join()") == "0,4")
     for _ in range(12):
         if pg.evaluate("state.hole") >= 8: break
         C(pg, "[data-act=next]")
@@ -455,37 +465,19 @@ with sync_playwright() as pw:
     pg.context.close()
     pg, errs2 = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"nearpin\""}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
-    C(pg, "[data-act=pin-open]"); C(pg, '[data-act=pin-set][data-i="1"]')
-    on = "はなこ" in (pg.text_content(".pin-btn") or "")
-    C(pg, "[data-act=pin-open]"); C(pg, '[data-act=pin-set][data-i="1"]')
-    check("ニアピン（くわしく記録）: ボタンに選んだ人の名前、もう一度押すと取り消し", on and "ニアピン" in (pg.text_content(".pin-btn") or ""))
+    C(pg, '[data-act=pin-q][data-i="1"]')
+    on = pg.evaluate("state.draft.pins[0]") == 1 and pg.query_selector(".fc.fn.set") is not None
+    C(pg, '[data-act=pin-q][data-i="1"]')
+    check("ニアピン（くわしく記録）: 表のマスを押すと選ばれ、もう一度押すと取り消し", on and pg.evaluate("!state.draft.pins[0] && !document.querySelector('.fc.fn.set')"))
     check("ニアピン: エラーなし", not errs and not errs2)
     pg.context.close()
     c4 = [{"id": "c4", "name": "C4", "holes": [{"par": 3, "yards": 100}, {"par": 4, "yards": 300}] + [{"par": 3, "yards": 100}] * 7}]
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c4, "sc.favs": ["c4"], "sc.lastCourse": "\"c4\"", "sc.game": "\"nearpin\""}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
-    p3 = pg.query_selector(".pin-btn") is not None
+    p3 = pg.query_selector("[data-act=pin-q]") is not None
     C(pg, "[data-act=next]")
-    check("ニアピンはパー3だけ（パー4のホールにはボタンが出ない）", p3 and pg.query_selector(".pin-btn") is None)
+    check("ニアピンはパー3だけ（パー4のホールにはマスが出ない）", p3 and pg.query_selector("[data-act=pin-q]") is None)
     check("ニアピン（パー3のみ）: エラーなし", not errs)
-    pg.context.close()
-    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.fields": dict(ALL, tracer=False)}, offline=True)
-    C(pg, "[data-act=start]"); pg.wait_for_timeout(300); C(pg, '[data-act=dir][data-v="右"]') or C(pg, "[data-act=dir]"); pg.wait_for_timeout(200)
-    vis = pg.evaluate("(()=>{const t=document.querySelector('.tr'); return t?getComputedStyle(t).display:'none'})()")
-    check("弾道のアニメーションOFF: 弾道の線を出さない", pg.query_selector(".rec2.no-tracer") is not None and vis == "none" and pg.query_selector(".ballg") is not None)
-    check("弾道OFF: エラーなし", not errs)
-    pg.context.close()
-    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"olympic\""}, offline=True)
-    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
-    check("メダルの案内: 初めてのオリンピックの1番ホールで、メダルボタンが光って吹き出しが出る", pg.query_selector(".medal-btn.tip") is not None and pg.query_selector(".medal-tip") is not None)
-    C(pg, "[data-act=medal-open]"); C(pg, "[data-act=medal-close]")
-    check("メダルの案内: 一度押したら消える", pg.query_selector(".medal-tip") is None and pg.query_selector(".medal-btn.tip") is None)
-    pg.context.close()
-    pg, errs2 = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"olympic\""}, offline=True)
-    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
-    C(pg, "[data-act=next]"); C(pg, "[data-act=prev]")
-    check("メダルの案内: 押さなくても2番ホールへ進んだらもう出ない", pg.query_selector(".medal-tip") is None and pg.evaluate("localStorage.getItem('sc.medalTip')") == "true")
-    check("メダルの案内: エラーなし", not errs and not errs2)
     pg.context.close()
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": ["はなこ", "じろう", "さぶろう"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.fields": dict(NONE)}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
@@ -542,38 +534,14 @@ with sync_playwright() as pw:
     check("ほかのタブへ移ると1ラウンドの分析は解除", pg.evaluate("!document.querySelector('.one-band')"))
     check("自分だけの分析: エラーなし", not errs); pg.context.close()
 
-    # 19d0. 狙いをONにしても図が小さくならない（ボタンは見出しの行に。クラブONでも）
-    hs = {}
-    for nm, aim in (("OFF", False), ("ON", True)):
-        FX = dict(ALL); FX["aim"] = aim
-        for kind in ("firtree",):
-            pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": [], "sc.fields": FX}, offline=True)
-            start_preset(pg, kind)
-            hs[nm] = pg.evaluate("document.querySelector('svg.approach').getBoundingClientRect().height")
-            if aim:
-                C(pg, '[data-act=dir][data-p="c"]'); C(pg, '[data-act=dir][data-p="r"]'); pg.wait_for_timeout(1300)
-                if pg.query_selector(".club-sheet"): C(pg, ".club-sheet [data-act=club][data-v=\"7I\"]")
-                hs["ON2"] = pg.evaluate("document.querySelector('svg.approach').getBoundingClientRect().height")
-                hd = pg.evaluate("(()=>{const h=document.querySelector('.aim-seg').parentElement;return h.scrollWidth<=h.clientWidth+1})()")
-            pg.context.close()
-    check("狙いONでも図の大きさは同じ（入力後・クラブONでも）・見出しの行からはみ出さない", hs["ON"] >= hs["OFF"] - 1 and hs["ON2"] >= hs["OFF"] - 1 and hd)
-
-    # 19d1. 花道はミスにしない（一番多くても赤くしない）・狙いの札は着弾の文字の長さで動かない
-    FX = dict(ALL); FX["aim"] = True; FX["club"] = False
-    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": [], "sc.fields": FX}, offline=True)
+    # 19d1. 花道はミスにしない（一番多くても赤くしない）
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": [], "sc.fields": ALL}, offline=True)
     start_preset(pg, "firtree")
     svg = pg.evaluate("approachSVG(null,false,{dirs:{on:3,left:2,right:0,long:0,short:5,miss:0},dirN:10})")
     import re as _re
     hl = _re.findall(r'class="az-hatch"', svg)
     check("分析: 花道が一番多くても赤くせず、ミスの一番は左", len(hl) == 1 and "az-safe" in svg and "左" in pg.evaluate("greenMap({dirs:{on:3,left:2,right:0,long:0,short:5,miss:0},dirN:10})").split("一番多いミスは")[1][:60])
-    C(pg, '[data-act=dir][data-p="c"]')
-    x0 = pg.evaluate("[document.querySelector('.as-aim').getBoundingClientRect().left, document.querySelector('.as-aim').getBoundingClientRect().width]")
-    C(pg, '[data-act=dir][data-p="r"]'); pg.wait_for_timeout(200)
-    x1 = pg.evaluate("[document.querySelector('.as-aim').getBoundingClientRect().left, document.querySelector('.as-aim').getBoundingClientRect().width]")
-    C(pg, "[data-act=dir][data-v=long]"); pg.wait_for_timeout(200)
-    x2 = pg.evaluate("[document.querySelector('.as-aim').getBoundingClientRect().left, document.querySelector('.as-aim').getBoundingClientRect().width]")
-    check("狙いの札は着弾の文字の長さで動かない", x0 == x1 == x2)
-    check("ショート（旧 当たりそこね）の表記・エラーなし", "ショート" in pg.inner_text(".ap-wrap") and not errs)
+    check("花道のあともエラーなし", not errs)
     pg.context.close()
 
     # 19d2. 日本語の文字は13px以上（英語の小見出し・絵の中の文字・下のタブは除く）、ホールカードにパットの合計はない
@@ -591,52 +559,70 @@ with sync_playwright() as pw:
     if small: print("  小さい文字:", small[:8])
     check("日本語の文字は13px以上（記録・設定・分析）", not small)
 
-    # 19d. 狙いと着弾（記録する項目「狙いも記録する」）
-    FA = dict(ALL); FA["aim"] = True; FA["club"] = False
-    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": [], "sc.fields": FA}, offline=True)
-    start_preset(pg, "firtree")
-    check("狙い: 「狙い」「着弾」の2つのボタン、最初は狙いが選ばれている", pg.evaluate("document.querySelector('.as-aim.on') && document.querySelector('.as-land')") is not None)
-    C(pg, "[data-act=dir][data-v=right]")
-    check("狙い: グリーンの外を先に押しても狙いにならない", pg.evaluate("!state.draft.holes[0].aim && !state.draft.holes[0].dir"))
-    C(pg, '[data-act=dir][data-p="c"]')
-    check("狙い: 狙いを入れると照準が出て、自動で着弾に切りかわる", pg.evaluate("state.draft.holes[0].aim==='c' && !state.draft.holes[0].dir && !!document.querySelector('.aim-mark') && !!document.querySelector('.as-land.on')"))
-    C(pg, '[data-act=dir][data-p="r"]'); pg.wait_for_timeout(300)
-    check("狙い: 着弾をタップ（グリーンの右）・ボタンに狙いと着弾が出る", pg.evaluate("state.draft.holes[0].dir==='on' && state.draft.holes[0].dirOn==='r' && !!document.querySelector('.gsub.sel')") and "真ん中" in pg.inner_text(".as-aim") and "右" in pg.inner_text(".as-land"))
-    check("狙い: 記録画面が1画面に収まる", pg.evaluate("document.documentElement.scrollHeight <= innerHeight + 1"))
-    C(pg, '[data-act=aim-mode][data-v=aim]'); C(pg, '[data-act=dir][data-p="b"]')
-    check("狙い: 「狙い」ボタンで狙いだけ選び直せる（着弾はそのまま）", pg.evaluate("state.draft.holes[0].aim==='b' && state.draft.holes[0].dirOn==='r'"))
-    C(pg, '[data-act=aim-mode][data-v=aim]'); C(pg, '[data-act=dir][data-p="b"]')
-    check("狙い: 同じ狙いをもう一度押すと消える", pg.evaluate("!state.draft.holes[0].aim"))
-    C(pg, '[data-act=dir][data-p="b"]'); C(pg, "[data-act=dir][data-v=short]")
-    i4 = pg.evaluate("state.draft.holes.findIndex(x=>x.par>=4)")
-    C(pg, f'[data-act=hole][data-i="{i4}"]')
-    check("狙い: パー4はまっすぐなフェアウェイの3列", pg.evaluate("document.querySelectorAll('[data-act=tee][data-v=fw][data-p]').length===3"))
-    C(pg, '[data-act=tee][data-p="c"]'); C(pg, "[data-act=tee][data-v=rr]")
-    check("狙い: パー4の狙いと着弾（真ん中を狙って右のラフ）", pg.evaluate(f"state.draft.holes[{i4}].aim==='c' && state.draft.holes[{i4}].tee==='rr'"))
-    play_round(pg, {**FA, "shot": False})
-    r0 = pg.evaluate("JSON.stringify((pending[0]||state.rounds[0]).holes[0])")
-    check("狙い: 保存したラウンドに狙い・着弾の区画が残る", '"aim":"b"' in r0 and '"dir":"short"' in r0)
-    check("狙い: エラーなし", not errs); pg.context.close()
+    # 19d. 狙いと着弾（記録画面では入力しない。デモの記録で分析だけ確かめる）
     pg, errs = open_page(b, {"sc.player": "\"me\"", "sc.tab": "\"stats\"", "sc.statTab": "\"shot\""}, offline=True)
     C(pg, "[data-act=demo-on]"); pg.wait_for_timeout(300)
     check("狙い: 分析に「狙い通り」と外れた向き（パー3・パー4）", pg.evaluate("document.querySelectorAll('.aim-box').length===2") and "外れた向き" in pg.inner_text("body"))
     pg.context.close()
 
-    # 19e. 花道の狙い・記録中のスコアカード・同伴者の合計打数・コース画面の色分け
-    FA2 = dict(ALL); FA2["aim"] = True; FA2["club"] = False
-    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": ["はなこ", "", ""], "sc.fields": FA2}, offline=True)
+    # 19e. 記録中のスコアカード・名前の下に合計は出さない・コース画面の色分け
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": ["はなこ", "", ""], "sc.fields": ALL}, offline=True)
     start_preset(pg, "firtree")
-    C(pg, "[data-act=dir][data-v=short]")
-    check("狙い: 花道（グリーンの手前の帯）も狙いにできる・表記は「花道」", pg.evaluate("state.draft.holes[0].aim==='short'") and "花道" in pg.inner_text(".as-aim") and "ショート" in pg.inner_text(".ap-wrap") and "当たりそこね" not in pg.inner_text(".ap-wrap"))
-    C(pg, "[data-act=dir][data-v=short]")
-    check("狙い: 花道を狙って花道に落ちたら照準の真ん中にボール", pg.evaluate("(()=>{ const m=document.querySelector('.aim-mark').getAttribute('transform'), im=document.querySelector('.ballg image'); return m==='translate('+(+im.getAttribute('x')+7.5)+' '+(+im.getAttribute('y')+7.5)+')'; })()"))
-    check("同伴者の列にも合計打数と対パー（3(±0)）", pg.evaluate("[...document.querySelectorAll('.pboard .ph .tp')].every(e=>/^\\d+\\(/.test(e.textContent))"))
+    check("名前の下に合計は出さない（表がすっきり）", pg.evaluate("!document.querySelector('.frow .mn small') && !/計\\s*\\d/.test(document.querySelector('.scoreblock').textContent)"))
     C(pg, "[data-act=open-card]")
-    check("くわしく記録でもスコアカードを開ける（自分と同伴者）", pg.evaluate("!!document.querySelector('.lc-sheet') && document.querySelectorAll('.lc-t tr').length>=4") and "はなこ" in pg.inner_text(".lc-sheet"))
-    check("新ペリア等なし: エラーなし", not errs); pg.context.close()
+    check("くわしく記録でもスコアカードを開ける（自分と同伴者）・下に合計の行はない", pg.evaluate("!!document.querySelector('.lc-sheet') && document.querySelectorAll('.lc-t tr').length>=4") and "はなこ" in pg.inner_text(".lc-sheet") and not pg.evaluate("!!document.querySelector('.lc-tot')"))
+    check("同伴者あり: エラーなし", not errs); pg.context.close()
+
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.favs": ["preset:firtree"], "sc.tab": "\"courses\""}, offline=True)
     check("コース画面: よく行くコースは色のついたかたまり", pg.evaluate("!!document.querySelector('.cp-favpanel .cp-ico')"))
     pg.context.close()
+
+    # 19f. フリック入力（打数・パット・メダル・クラブ・方向・OB・バンカー）・ゴースト・チームの色・長い名前
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "じろう", "さぶろう"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"olympic\"", "sc.fields": ALL, "sc.medalTip": True}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    D = lambda: pg.evaluate("state.draft")
+    check("全部ONの4人でも1画面（入力表の下に方向・クラブ・OB・バンカー）", pg.evaluate("document.documentElement.scrollHeight") <= 667 and pg.evaluate("document.querySelectorAll('.rowb .fc').length") == 4)
+    pg.locator('.fc[data-k="s"][data-i="0"]').first.click(); pg.wait_for_timeout(80)
+    check("ちょん（押すだけ）では値が変わらない", D()["holes"][0]["strokes"] == 3)
+    flick(pg, "s", 0, 3); check("打数: 右へ動かして離す（4）", D()["holes"][0]["strokes"] == 4)
+    flick(pg, "p", 0, 0); check("パット: 0（チップイン）まで選べる", D()["holes"][0]["putts"] == 0)
+    flick(pg, "s", 2, 4); check("同伴者の打数もフリック", D()["mates"][1]["s"][0] == 5)
+    flick(pg, "m", 0, 4); flick(pg, "m", 1, 4)
+    check("メダル: 同じメダルは1人だけ（金は後の人へ移る）", pg.evaluate("JSON.stringify(state.draft.medals[0])") == "[0,4,0,0]")
+    flick(pg, "m", 3, 5); check("メダル: ダイヤ（5）", D()["medals"]["0"][3] == 5)
+    check("メダルのマスは図だけ（文字なし）で、ポイントは数字だけ", pg.evaluate("[...document.querySelectorAll('.fc.fm')].every(e=>[...e.childNodes].every(n=>n.nodeType!==3||!n.textContent.trim()||n.textContent.trim()==='—')&&![...e.children].some(c=>c.tagName==='SPAN'&&c.textContent.trim()&&c.textContent.trim()!=='—'))") and "pt" not in pg.inner_text(".scoreblock") and pg.evaluate("[...document.querySelectorAll('.frow .pt b')].map(e=>e.textContent).join()") == "0,4,0,5")
+    check("メダルは円形（ギザギザなし）", "<circle" in pg.evaluate("document.querySelector('.fc.fm.set svg').innerHTML") and pg.evaluate("document.querySelectorAll('.fc.fm.set svg path').length") <= 3)
+    flick(pg, "c", 0, 8); check("クラブ: 指の下のクラブ（9I）がそのまま選ばれる（並びは動かない）", D()["holes"][0]["club"] == "9I")
+    flick(pg, "c", 0, 11); check("クラブ: 右端（SW）も選べる・SWのあとに別のクラブも選べる", D()["holes"][0]["club"] == "SW")
+    flick(pg, "c", 0, 4); check("クラブ: SWのあとに5Iを選べる（SWを基準にずれない）", D()["holes"][0]["club"] == "5I")
+    flick(pg, "d", 0, "R"); check("方向: パー3 右へ＝右", D()["holes"][0]["dir"] == "right")
+    flick(pg, "d", 0, "U"); check("方向: 上＝オーバー", D()["holes"][0]["dir"] == "long")
+    flick(pg, "o", 0, 1); check("OB・ペナ: OB", pg.inner_text('.fc[data-k="o"]').strip() == "OB")
+    flick(pg, "o", 0, 2); check("OB・ペナ: ペナに変わる", pg.inner_text('.fc[data-k="o"]').strip() == "ペナ")
+    flick(pg, "b", 0, 1); check("バンカー: あり", D()["holes"][0]["bunker"] is True)
+    check("フリック入力: エラーなし", not errs); pg.context.close()
+    # チーム戦の色分け・長い名前
+    pg, errs = open_page(b, {"sc.player": "\"たろうたろう\"", "sc.mates": ["はなこ", "じろう", "さぶろうさぶろう"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"team\"", "sc.fields": ALL}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    check("チーム戦: 1・2人目は A（紺）、3・4人目は B（金）の色", pg.evaluate("[...document.querySelectorAll('.scoreblock .frow:not(.ghostrow)')].map(e=>e.classList.contains('teamA')?'A':e.classList.contains('teamB')?'B':'-').join('')") == "AABB")
+    check("長い名前（6文字）は「…」にせず折り返す", pg.evaluate("[...document.querySelectorAll('.frow .mn span')].every(e=>e.scrollHeight<=e.clientHeight+2 && e.scrollWidth<=e.clientWidth+1)"))
+    check("チーム戦・長い名前: エラーなし", not errs); pg.context.close()
+    # ゴースト（個人戦）: 過去のベストの自分と勝負
+    g1 = [{"id": "gb", "player": "たろう", "courseId": "c1", "courseName": "C1", "date": "2026-09-01", "createdAt": 1, "holes": [{"par": 3, "strokes": 4, "putts": 2}] * 9},
+          {"id": "gw", "player": "たろう", "courseId": "c1", "courseName": "C1", "date": "2026-09-10", "createdAt": 2, "holes": [{"par": 3, "strokes": 3, "putts": 2}] * 9}]
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": [], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"ghost\"", "sc.rounds": g1, "sc.fields": ALL}, offline=True)
+    check("ゴースト: 1人でも選べる", pg.evaluate("gameFits('ghost',1)") if pg.evaluate("typeof gameFits==='function'") else True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    check("ゴースト: 始まる・ゴーストの行が出る（ベストは27打）", pg.evaluate("state.draft.game") == "ghost" and pg.query_selector(".ghostrow") is not None and "27" in pg.inner_text(".ghostrow"))
+    flick(pg, "s", 0, 3)
+    check("ゴースト: 差の列（ゴーストより1打多い＝−1）", "−1" in pg.evaluate("document.querySelector('.frow.me .pt').textContent") and "差" in pg.inner_text(".fhead"))
+    check("ゴースト: 全部ONでも1画面", pg.evaluate("document.documentElement.scrollHeight") <= 667)
+    for _ in range(12):
+        if pg.evaluate("state.hole") >= 8: break
+        C(pg, "[data-act=next]")
+    C(pg, "[data-act=finish]"); pg.wait_for_timeout(900)
+    check("ゴースト: リザルトにゴーストとの勝負", "GHOST" in pg.inner_text(".result-card") or "ゴースト" in pg.inner_text(".result-card"))
+    check("ゴースト: エラーなし", not errs); pg.context.close()
 
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
     import subprocess, time

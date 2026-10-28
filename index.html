@@ -1629,6 +1629,183 @@ input,select,textarea{font-size:max(16px,1em)}
 .start-panel .lab-row{margin-top:7px}
 .sr-ex span{white-space:nowrap}
 nav.tabs button{font-size:12px!important}
+/* ---- 入力の作り直し（2026-10-27）: 打数・パットは数字を1タップ、方向は十字キー、ゲームの入力は入力欄の中 ---- */
+.nrow-wrap{flex:0 0 auto}
+.nrow-wrap .stp-h{margin:0 2px 3px}
+.nrow{display:grid;gap:5px}.nrow.c6{grid-template-columns:repeat(6,1fr)}.nrow.c5{grid-template-columns:repeat(5,1fr)}
+.nb{height:54px;border-radius:12px;border:1px solid var(--rec-line);background:var(--rec-bg);color:var(--rec-fg);display:flex;flex-direction:column;align-items:center;justify-content:center;font:700 26px/1 var(--f-num);padding:0;min-width:0;touch-action:manipulation;cursor:pointer}
+.nb small{font:700 13px/1.1 var(--f-body)!important;color:var(--rec-muted);white-space:nowrap;letter-spacing:-.05em;margin-top:1px}
+.nb.nbp{height:44px}
+.nb[aria-pressed="true"]{background:var(--sel);border-color:transparent;color:#fff}
+.nb[aria-pressed="true"] small{color:rgba(255,255,255,.92)}
+.nb:active{transform:scale(.95)}
+.nb:disabled{opacity:.35}
+.nb.t-hio{--sel:var(--q-hio)}.nb.t-eagle{--sel:var(--q-eagle)}.nb.t-birdie{--sel:var(--q-birdie)}.nb.t-par{--sel:var(--q-par)}.nb.t-bogey{--sel:var(--q-bogey)}.nb.t-double{--sel:var(--q-double)}.nb.t-triple{--sel:var(--q-triple)}
+.nb.t-hio[aria-pressed="true"],.nb.t-hio[aria-pressed="true"] small{color:#3A2600}
+.pstrip{display:grid;gap:5px;flex:0 0 auto}
+.pstrip button{height:46px;border-radius:12px;border:1.5px solid var(--rec-line);background:var(--rec-bg);color:var(--rec-fg);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;min-width:0;padding:0 2px;touch-action:manipulation}
+.pstrip button>span{font-size:13px;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pstrip button b{display:flex;align-items:center;gap:3px;font-weight:700}
+.pstrip button.cur{border-color:var(--rec-fg);box-shadow:0 0 0 1px var(--rec-fg);background:var(--rec-surface)}
+.pstrip .mk3{width:22px;height:22px;font:700 15px var(--f-num)}
+.grow{display:flex;align-items:center;gap:8px;min-height:44px;padding:4px 8px;border-radius:12px;background:var(--rec-bg);flex:0 0 auto}
+.grow>span{flex:0 0 auto;font-size:13px;font-weight:700;color:var(--rec-muted)}
+.grow .gchips{flex:1;display:flex;gap:5px;min-width:0}
+.grow .gchips button{flex:1;height:36px;border-radius:10px;border:1.5px solid var(--mc,var(--rec-line));background:color-mix(in srgb,var(--mc,transparent) 26%,var(--rec-surface));color:var(--rec-fg);font:700 13px var(--f-body);padding:0;white-space:nowrap;min-width:0;touch-action:manipulation;cursor:pointer}
+.grow .gchips button[aria-pressed="true"]{background:var(--mc,#F2B01E);color:#2B1D00}
+.grow .ghint{font-size:13px;color:var(--rec-muted)}
+.ap-wrap2{flex:0 0 auto}
+.shotrow{display:grid;grid-template-columns:172px 1fr;gap:8px;align-items:start}
+.shotrow.solo{grid-template-columns:1fr}.shotrow.solo .dpad{max-width:260px;margin:0 auto;width:100%}
+.dpad{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,40px);gap:3px}
+.dpad i{visibility:hidden}
+.dpad .ctr{display:contents}
+.dpad button{border-radius:11px;border:1.5px solid var(--rec-line);background:var(--rec-bg);color:var(--rec-fg);font:700 13px/1.1 var(--f-body);padding:0;white-space:nowrap;letter-spacing:-.03em;min-width:0;touch-action:manipulation;cursor:pointer}
+.dpad .ctr button{border-radius:50%;background:color-mix(in srgb,var(--rec-turf) 14%,var(--rec-bg));border-color:color-mix(in srgb,var(--rec-turf) 45%,var(--rec-line))}
+.dpad button[aria-pressed="true"]{background:#F2B01E;border-color:#F2B01E;color:#2B1D00}
+.dpad button:disabled{opacity:.3}
+.clubs2{display:grid;gap:4px}
+.clubs2 button{height:30px;border-radius:9px;border:1.5px solid var(--rec-line);background:var(--rec-bg);color:var(--rec-fg);font:700 16px var(--f-num);padding:0;touch-action:manipulation;cursor:pointer}
+.clubs2 button.last{border-style:dashed;border-color:var(--rec-turf)}
+.clubs2 button[aria-pressed="true"]{background:var(--rec-fg);color:var(--rec-bg);border-color:var(--rec-fg)}
+.clubs2 button:disabled{opacity:.35}
+.rc2{gap:7px}
+.rec2.multi .rc2{gap:5px}
+.nb{height:50px}.nb.nbp{height:40px}
+.pstrip button{height:42px}
+.grow{min-height:40px}.grow .gchips button{height:32px}
+.dpad{grid-template-rows:repeat(3,36px)}
+.dpad .tl{font:700 13px/1.15 var(--f-body);color:var(--rec-muted);display:flex;align-items:center;justify-content:center;text-align:center;letter-spacing:-.04em}
+.clubs2{gap:3px}.clubs2 button{height:30px}
+.rec2.multi .nb{height:48px}.rec2.multi .nb.nbp{height:38px}
+.rec2.multi .pstrip button{height:40px}
+.rec2.multi .clubs2 button{height:27px}.rec2.multi .dpad{grid-template-rows:repeat(3,34px)}
+.rc2:not(:has(.dpad)):not(:has(.mrow)) .nb{height:68px}
+.rc2:not(:has(.dpad)):not(:has(.mrow)) .nb.nbp{height:58px}
+.rc2:not(:has(.dpad)):not(:has(.mrow)) .trouble button{height:56px;font-size:16px}
+.rc2:not(:has(.dpad)):not(:has(.mrow)){gap:12px}
+.rec2.multi .rc2:not(:has(.dpad)):not(:has(.mrow)) .nb{height:62px}
+.rec2.multi .rc2:not(:has(.dpad)):not(:has(.mrow)) .nb.nbp{height:52px}
+.rec2.multi .dpad{grid-template-rows:repeat(3,30px)}
+.rec2.multi .ap-wrap2 .seg-head{margin-bottom:3px}
+/* ---- 4人でも1画面（2026-10-27）: 人ごとに1行の数字ボタン。自分だけの入力は緑の囲みにまとめる ---- */
+.scoreblock{flex:0 0 auto;display:flex;flex-direction:column;gap:4px}
+.mhead{display:grid;grid-template-columns:64px 1fr;gap:6px;align-items:end}
+.mhead .mcols{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;text-align:center}
+.mhead .mcols i{font:700 13px var(--f-num);font-style:normal;color:var(--rec-muted)}
+.mrow{display:grid;grid-template-columns:64px 1fr;gap:6px;align-items:center}
+.mrow .mn{display:flex;flex-direction:column;justify-content:center;min-width:0;line-height:1.1}
+.mrow .mn>span:first-child{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mrow.me .mn>span:first-child{color:var(--rec-turf)}
+.mrow .gtag,.mrow .skc{font-size:13px}
+.nb.nbm{height:34px;font-size:20px;border-radius:9px}
+.meact{display:grid;grid-template-columns:150px 1fr;gap:8px;align-items:stretch}
+.meact.solo{grid-template-columns:1fr}
+.acts{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:5px}
+.acts.a1{grid-template-columns:1fr}.acts button{border-radius:11px;border:1.5px solid var(--rec-line);background:var(--rec-surface);color:var(--rec-fg);font:700 14px var(--f-body);padding:0;touch-action:manipulation;cursor:pointer;min-height:36px}
+.acts .club-tag{height:auto;border-style:dashed;color:var(--rec-muted)}
+.acts .club-tag.has{border:1.5px solid #F2B01E;background:color-mix(in srgb,#F2B01E 22%,var(--rec-surface));color:var(--rec-fg);font:700 16px var(--f-num)}
+.acts .ob[aria-pressed="true"]{background:var(--rec-under);border-color:var(--rec-under);color:#fff}
+.acts .pn[aria-pressed="true"]{background:var(--q-bogey);border-color:var(--q-bogey);color:#fff}
+.acts .bk[aria-pressed="true"]{background:#E2C27A;border-color:#CFA94E;color:#4A3509}
+.gchips button em{font-style:normal;font-size:13px;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gchips button u{text-decoration:none;color:var(--rec-muted)}
+.grow .gchips button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:var(--rec-surface);border-color:var(--rec-line)}
+.grow .gchips button[aria-pressed="true"]{background:color-mix(in srgb,#F2B01E 28%,var(--rec-surface));border-color:#F2B01E;color:var(--rec-fg)}
+.me-zone{gap:6px;padding:6px 8px 8px}
+.rec2.multi .rc2{gap:6px}
+.rec2.multi .meact .dpad{grid-template-rows:repeat(3,32px)}
+.rec2.multi .nb.nbp{height:36px}
+.grow .gchips button{height:38px}
+.rec2.multi .nb.nbm{height:34px}
+.rec2.multi .scoreblock{gap:3px}
+/* ---- フリック入力（2026-10-27）: 名前の横のマスを押したまま左右に動かして離す。数字は指の少し上に1列 ---- */
+.fhead,.frow{display:grid;grid-template-columns:70px 86px 86px 1fr;gap:6px}
+.fhead span{font-size:13px;font-weight:700;color:var(--rec-muted);text-align:center}
+.frow{align-items:center;padding:3px 0;border-top:1px solid var(--rec-line)}
+.fhead+.frow{border-top:0}
+.frow .mn{display:flex;flex-direction:column;justify-content:center;min-width:0;line-height:1.1}
+.frow .mn>span:first-child{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frow.me .mn>span:first-child{color:var(--rec-turf)}
+.frow .mn small{font:700 13px var(--f-num);color:var(--rec-muted)}
+.frow .gtag,.frow .skc{font-size:13px}
+.fc{height:46px;border-radius:12px;border:1.5px solid transparent;background:var(--sel);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;touch-action:none;position:relative;cursor:pointer;-webkit-user-select:none;user-select:none}
+.fc b{font:700 26px/1 var(--f-num)}
+.fc small{font:700 13px/1.1 var(--f-body);color:rgba(255,255,255,.92);margin-top:1px;white-space:nowrap}
+.fc.t-hio{--sel:var(--q-hio);color:#3A2600}.fc.t-hio small{color:rgba(58,38,0,.8)}
+.fc.t-eagle{--sel:var(--q-eagle)}.fc.t-birdie{--sel:var(--q-birdie)}.fc.t-par{--sel:var(--q-par)}.fc.t-bogey{--sel:var(--q-bogey)}.fc.t-double{--sel:var(--q-double)}.fc.t-triple{--sel:var(--q-triple)}
+.fc.down{border-color:var(--rec-fg)}
+.rec2:not(.multi) .fc{height:64px}.rec2:not(.multi) .fc b{font-size:32px}
+.rec2:not(.multi) .frow{padding:6px 0}
+.rec2.multi .rc2{gap:6px}
+.fpop{position:fixed;z-index:500;pointer-events:none}
+.fprow{display:flex;background:var(--rec-surface);border:1.5px solid var(--rec-line);border-radius:14px;box-shadow:0 8px 22px rgba(0,0,0,.3);padding:4px}
+.fpc{height:50px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--rec-fg);font:700 20px/1 var(--f-num)}
+.fpc.on{background:var(--sel);color:#fff}.fpc.on.t-hio{color:#3A2600}
+.fpc.t-hio{--sel:var(--q-hio)}.fpc.t-eagle{--sel:var(--q-eagle)}.fpc.t-birdie{--sel:var(--q-birdie)}.fpc.t-par{--sel:var(--q-par)}.fpc.t-bogey{--sel:var(--q-bogey)}.fpc.t-double{--sel:var(--q-double)}.fpc.t-triple{--sel:var(--q-triple)}
+.rec2.multi .fc{height:42px}.rec2.multi .fc b{font-size:24px}.rec2.multi .frow{padding:2px 0}
+.frow .pt{display:flex;align-items:center;justify-content:flex-start;min-width:0}
+/* ---- 表（2026-10-27）: 1段目=全員（打数・パット・メダル・ポイント）、2段目=自分だけ（方向・クラブ・OB/ペナ・バンカー） ---- */
+.fhead.gt0,.frow.gt0{grid-template-columns:70px 86px 86px 1fr}
+.fhead.gtp,.frow.gtp{grid-template-columns:62px 76px 76px 1fr}
+.fhead.gtx,.frow.gtx{grid-template-columns:56px 62px 62px 62px 1fr}
+.frow.gtx .mn>span:first-child,.frow.gtp .mn>span:first-child{font-size:13px}
+.frow.gtx .fc small{letter-spacing:-.05em}
+.fc.fm,.fc.fn,.fc.fb{background:var(--rec-bg);color:var(--rec-fg);border:1.5px solid var(--rec-line)}
+.fc.fm.set,.fc.fn.set{background:color-mix(in srgb,#F2B01E 26%,var(--rec-surface));border-color:#F2B01E}
+.fc.fm span,.fc.fn span{font:700 18px var(--f-body);color:var(--rec-muted)}
+.fc.fm small{color:var(--rec-fg)}
+.fc.fb{height:46px;font:700 17px var(--f-body);text-align:center}
+.fc.fb.set{background:var(--rec-fg);color:var(--rec-bg);border-color:var(--rec-fg)}
+.frow .na{font-size:13px;color:var(--rec-muted);text-align:center}
+.rowb{display:grid;gap:6px}
+.rowb .bc{display:flex;flex-direction:column;gap:3px;min-width:0}
+.rowb .bc>span{font-size:13px;font-weight:700;color:var(--rec-muted);text-align:center}
+.rowb .fb{height:46px;border-radius:12px;border:1.5px solid var(--rec-line);background:var(--rec-bg);color:var(--rec-fg);font:700 16px var(--f-body);padding:0;touch-action:manipulation;cursor:pointer}
+.rowb .obp.ob{background:var(--rec-under);border-color:var(--rec-under);color:#fff}
+.rowb .obp.pn{background:var(--q-bogey);border-color:var(--q-bogey);color:#fff}
+.rowb .bk.on{background:#E2C27A;border-color:#CFA94E;color:#4A3509}
+.fpop.cross .fpc{position:absolute;width:70px;height:44px;margin:-22px 0 0 -35px;background:var(--rec-surface);border:1.5px solid var(--rec-line);box-shadow:0 6px 16px rgba(0,0,0,.25);font:700 15px var(--f-body)}
+.fpop.cross .fpc.on{background:#F2B01E;border-color:#F2B01E;color:#2B1D00}.fpop.cross .fpc.off{opacity:.3}
+.fpop.clubs .fpc{font-size:16px}
+.fpop .fpc.med{font-size:0}
+.fpc.nt.on{background:var(--rec-fg);color:var(--rec-bg)}
+.fpop .fpc.med svg{display:block}
+/* ---- 見た目の整え（2026-10-27）: 角は小さく、数字は大きく。文字は「ラベルは小さく・数字は大きく」で区別 ---- */
+.rec2 .hole-card{border-radius:12px}
+.rec2 .rec-card{border-radius:14px}
+.rec2 .fc{border-radius:9px}.rec2 .fpop .fprow{border-radius:10px}.rec2 .fpc{border-radius:7px}
+.rec2 .hc2 .live span{font-size:13px;letter-spacing:.12em;opacity:.8;margin-bottom:3px}
+.rec2 .hc2 .live b{font-size:36px;line-height:.95}
+.rec2 .hc2 .live b small{font-size:20px;margin-left:3px;opacity:.9}
+.fhead span{font-size:14px}
+.frow .mn>span:first-child{font-size:16px}
+.frow.gtx .mn>span:first-child,.frow.gtp .mn>span:first-child{font-size:15px}
+.fhead.gtp,.frow.gtp{grid-template-columns:62px 76px 76px 1fr}
+.fhead.gtx,.frow.gtx{grid-template-columns:64px 58px 58px 58px 1fr}
+.frow .pt{justify-content:center}
+.frow .pt b{font:700 26px/1 var(--f-num);color:var(--rec-fg)}.frow .pt b.z{color:var(--rec-muted);opacity:.55}
+.fc.fb.set.ob{background:var(--rec-under);border-color:var(--rec-under);color:#fff}
+.fc.fb.set.pn{background:var(--q-bogey);border-color:var(--q-bogey);color:#fff}
+.fc.fb.set.bk{background:#E2C27A;border-color:#CFA94E;color:#4A3509}
+.fc.fb{font-size:18px}
+.rowb .bc>span{font-size:14px}
+.fc.fm small{font-size:13px}
+/* ---- 仕上げ（2026-10-28） ---- */
+.fc.fm{padding:0}.fc.fm svg{display:block;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.28))}
+.fc.fb{font-size:15px}.fc.fb:not(.set){color:var(--rec-muted)}
+.frow .mn>span:first-child{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;white-space:normal;overflow-wrap:anywhere;line-height:1.1}
+.frow .mn>span.long{font-size:13px!important}
+.frow .mn small{font:700 13px var(--f-num);color:var(--rec-muted)}
+.gc{height:46px;border-radius:9px;border:1.5px dashed var(--rec-line);background:var(--rec-bg);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;opacity:.92}
+.gc b{font:700 24px/1 var(--f-num);color:var(--rec-fg)}.gc small{font:700 13px/1.1 var(--f-body);color:var(--rec-muted)}
+.rec2.multi .gc{height:42px}.rec2:not(.multi) .gc{height:64px}.rec2:not(.multi) .gc b{font-size:32px}
+.frow.ghostrow{opacity:.95}
+.frow .pt .na{font-size:13px;color:var(--rec-muted)}
+.frow .pt b.gd{font:700 26px/1 var(--f-num)}.frow .pt b.gd.up{color:#14935C}.frow .pt b.gd.dn{color:var(--q-double)}.frow .pt b.gd.z{color:var(--rec-muted)}
+.frow.teamA{border-left:5px solid #1F3A68;background:color-mix(in srgb,#1F3A68 8%,transparent);padding-left:6px;border-radius:6px}
+.frow.teamB{border-left:5px solid #F2B01E;background:color-mix(in srgb,#F2B01E 12%,transparent);padding-left:6px;border-radius:6px}
+.fhead+.frow.teamA,.fhead+.frow.teamB{border-top:0}
 </style>
 
 </head>
@@ -1712,10 +1889,8 @@ const FIELD_DEFS = [
   {k:"bunker", label:"バンカー",              def:true},
   {k:"pen",    label:"1ペナ（池・赤杭など）", def:false},
   {k:"shot",   label:"ショットの方向", def:false},
-  {k:"aim",    label:"狙いも記録する", def:false, sub:"shot"},
   {k:"club",   label:"使用クラブ", def:false},
   {k:"advice", label:"ホールのアドバイス", def:true, show:true},
-  {k:"tracer", label:"弾道のアニメーション", def:false, show:true},
   {k:"pace",   label:"自己ベストのペース表示", def:false, show:true},
 ];
 function fields(){ const saved = LS.get("sc.fields", {}); const f={}; if(saved.shot==null && (saved.approach||saved.tee)) saved.shot=true; FIELD_DEFS.forEach(d=>f[d.k] = saved[d.k]!=null ? saved[d.k] : d.def); return f; }
@@ -1728,7 +1903,7 @@ const state = {
   // スコアカード入力（紙と同じ表に最大4人分）の下書き。1ホールずつの下書きとは別に持つ
   cdraft: (d=>d && Array.isArray(d.holes) && d.holes.length && Array.isArray(d.players) && d.players.length && d.players.every(p=>p && Array.isArray(p.s) && Array.isArray(p.p) && p.s.length===d.holes.length) ? d : null)(LS.get("sc.cdraft", null)),
   im: LS.get("sc.inputMode","hole")==="card" ? "card" : "hole",
-  game: (g=>["skins","match","nassau","vegas","stable","peoria","olympic","team","teamsum","nearpin"].includes(g) ? g : "")(LS.get("sc.game","")),
+  game: (g=>["ghost","skins","match","nassau","vegas","stable","peoria","olympic","team","teamsum","nearpin"].includes(g) ? g : "")(LS.get("sc.game","")),
   skinCarry: LS.get("sc.skinCarry", false)===true, // 同点のコインを次のホールへ持ち越すか（ルールのポップアップで選ぶ。初期はしない）
   hole: 0, // 下書きがあれば下で復元
   fPlayer: LS.get("sc.fPlayer", LS.get("sc.player","") || "all"), fCourse:"all", fRange:"all",
@@ -1739,7 +1914,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-26-1815";
+const BUILD = "2026-10-28-1200";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -1999,6 +2174,7 @@ function resultOverlay(r){
         <div><span>3パット</span><b>${puttsOn(r)?s.putt[3]:"—"}</b></div>
         <div><span>OB</span><b>${s.obN||(fields().ob&&!r.card)?s.obN:"—"}</b></div>
       </div>
+      ${state.resultGhost?(()=>{ const g=state.resultGhost, me=t.score, df=me-g.best; return `<div class="rc-skins rc-game"><div class="rs-h"><span>GHOST</span>ゴースト<em>${df<0?"ベスト更新":df===0?"ベストと同じ":"ベストに届かず"}</em></div><div class="rs-row"><span class="rs-n">ゴースト</span><span class="rs-c"></span><b>${g.best}</b></div><div class="rs-row top"><span class="rs-n">今回</span><span class="rs-c"></span><b>${me}</b></div><div class="rs-sum">${df<0?`ゴーストに ${-df}打 勝ち`:df===0?"ゴーストと同じスコア":`ゴーストに ${df}打 負け`}</div></div>`; })():""}
       <div class="rc-brand"><span class="rc-logo"><img src="mark.png" alt=""><span><b>GOLF SC.</b><small>SHORT COURSE SCORECARD</small></span></span></div>
     </div></div>`}
     ${(state.resultGroup||[]).length>1?(()=>{ const g=state.resultGroup, nm=g.map(x=>x.player);
@@ -2333,6 +2509,42 @@ function viewRecordDraft(d){
     F.bunker ? `<button class="bk" data-act="tog" data-k="bunker" aria-pressed="${!!h.bunker}">バンカー</button>` : "",
   ].filter(Boolean);
   const multi=(d.mates||[]).length>0; // 同伴者がいるとき: 自分だけの記録（ティーショット・OBなど）を緑の囲みに入れる
+  // ---- 入力（2026-10-27）: 表にして、横に並べる。打数・パット・メダル・クラブ・方向は「マスを押したまま動かして離す」フリック ----
+  const PN=(d.mates||[]).length+1, pNames=[d.player,...(d.mates||[]).map(m=>m.name)];
+  const TJ = (dd,s) => s===1?"HIO":dd<=-3?"アルバ":dd===-2?"イーグル":dd===-1?"バーディ":dd===0?"パー":dd===1?"ボギー":dd===2?"ダボ":dd===3?"トリプル":"+"+dd;
+  const pRows=[d.holes.map(x=>x.strokes), ...(d.mates||[]).map(m=>m.s)];
+  const sk = d.game==="skins" ? skinsCalc(pRows, state.hole, !!d.carry) : null;
+  const gt = d.game && d.game!=="skins" ? gameTags(d.game, pRows, d.holes.map(x=>x.par), state.hole, N, {medals:d.medals, pins:d.pins, hole:state.hole}) : null;
+  const ptag = i => sk ? `<span class="skc ${sk.won[i]?"":"z"}">${coinSVG(12)}${sk.won[i]}</span>` : gt ? gt[i] : "";
+  const totTxt = i => { let a=0,b2=0; for(let k=0;k<=state.hole;k++){ a+= i ? d.mates[i-1].s[k] : d.holes[k].strokes; b2+=d.holes[k].par; } return `計 ${a}(${toPar(a-b2)})`; }; // 今のホールまでの合計
+  const parsAll=d.holes.map(x=>x.par);
+  const ptVal = i => isOlympic(d.game) ? olympicCalc(d.medals,PN).pts[i] : d.game==="nearpin" ? pinCalc(d.pins,PN,parsAll).won[i] : d.game==="skins" ? sk.won[i] : d.game==="stable" ? stableCalc(pRows,parsAll,state.hole+1).pts[i] : null;
+  const ptCell = i => { if(d.game==="ghost") return `<div class="pt">${i===0&&ghost?`<b class="gd ${ghostDiff>0?"up":ghostDiff<0?"dn":"z"}">${ghostDiff>0?"+":ghostDiff<0?"−":""}${Math.abs(ghostDiff)}</b>`:""}</div>`; const n=ptVal(i); return n==null ? `<div class="pt">${ptag(i)}</div>` : `<div class="pt"><b class="${n?"":"z"}">${n}</b></div>`; };
+  const teamOf = i => (GAMES[d.game]&&GAMES[d.game].type==="team"&&PN===4) ? (i<2?"A":"B") : "";   // チーム戦は 1・2人目=A（ネイビー）、3・4人目=B（ゴールド）
+  const gx = isOlympic(d.game) ? "m" : d.game==="nearpin" ? "n" : "";          // ゲームの入力の列（オリンピック=メダル / ニアピン）
+  const gcls = d.game ? (gx ? "gtx" : "gtp") : "gt0";                          // 列の幅（ゲームなし / ポイントだけ / 入力＋ポイント）
+  const medalOf = i => (((d.medals||{})[state.hole])||[])[i]||0;
+  const fcell = (kind,who) => { const v = kind==="s" ? (who ? d.mates[who-1].s[state.hole] : h.strokes) : h.putts;
+    const tone = kind==="s" ? (v===1?"hio":TONE(v-h.par)) : (v<=1?"birdie":v===2?"par":v===3?"bogey":"double");
+    const lab = kind==="s" ? TJ(v-h.par,v) : (v===0?"チップ":v+"パット");
+    return `<div class="fc t-${tone}" role="button" tabindex="0" data-k="${kind}" data-i="${who}" aria-label="${esc(pNames[who])}の${kind==="s"?"打数":"パット"} ${v}。押したまま左右に動かして離すと変わります"><b>${v}</b><small>${lab}</small></div>`; };
+  const mcell = who => { const v=medalOf(who); return `<div class="fc fm ${v?"set":""}" role="button" tabindex="0" data-k="m" data-i="${who}" aria-label="${esc(pNames[who])}のメダル。押したまま左右に動かして離すと変わります">${v?medalSVG(v,34):"<span>—</span>"}</div>`; };
+  const ncell = who => { const on=(d.pins||{})[state.hole]===who; return h.par===3 ? `<button class="fc fn ${on?"set":""}" data-act="pin-q" data-i="${who}" aria-pressed="${on}" aria-label="${esc(pNames[who])}がニアピン">${on?PIN_ICON(20):"<span>—</span>"}</button>` : `<span class="na">パー3のみ</span>`; };
+  const ghost = d.game==="ghost" ? ghostBest(d.player,d.courseId,N,d.id) : null;
+  const gStr = k => ghost && ghost.holes[k] ? ghost.holes[k].strokes : null;
+  let ghostDiff=0; if(ghost) for(let k=0;k<=state.hole;k++){ ghostDiff += gStr(k)-d.holes[k].strokes; }   // ＋ = ゴーストより少ない打数（勝ち越し）
+  const ghostRow = d.game==="ghost" ? `<div class="frow ${gcls} ghostrow"><div class="mn"><span>ゴースト</span>${ghost?`<small>ベスト ${roundTotals(ghost).score}</small>`:""}</div>${ghost?(()=>{ const gs=gStr(state.hole); return `<div class="gc t-${gs===1?"hio":TONE(gs-h.par)}"><b>${gs}</b><small>${TJ(gs-h.par,gs)}</small></div>`; })():`<div class="gc"><b>—</b></div>`}<span></span><div class="pt"><span class="na">${ghost?"":"ベストなし"}</span></div></div>` : "";
+  const scoreBlock = `<div class="fhead ${gcls}"><span></span><span>打数</span><span>${F.putts?"パット":""}</span>${gx?`<span>${gx==="m"?"メダル":"ニアピン"}</span>`:""}${d.game?`<span>${d.game==="ghost"?"差":"ポイント"}</span>`:""}</div>`
+    + pNames.map((n,i)=>`<div class="frow ${gcls} ${i===0?"me":""} ${teamOf(i)?"team"+teamOf(i):""}"><div class="mn"><span class="${[...String(dupLabel(pNames,i))].length>=5?"long":""}">${esc(dupLabel(pNames,i))}</span></div>${fcell("s",i)}${i===0&&F.putts?fcell("p",0):"<span></span>"}${gx==="m"?mcell(i):gx==="n"?ncell(i):""}${d.game?ptCell(i):""}</div>`).join("") + ghostRow;
+  // 自分だけの記録（2段目）: クラブと方向はフリック。OB・ペナとバンカーはボタン
+  const dirTxt = h.par>=4 ? ({fw:"真ん中",rl:"左",rr:"右",miss:"ショート"})[h.tee] : ({on:"真ん中",left:"左",right:"右",long:"オーバー",short:"花道",miss:"ショート"})[h.dir];
+  const bItems=[];
+  if(F.shot) bItems.push(["方向", `<div class="fc fb ${dirTxt?"set":""}" role="button" tabindex="0" data-k="d" data-i="0" aria-label="ティーショットの方向。押したまま動かして離すと変わります">${dirTxt||"選ぶ"}</div>`]);
+  if(F.club) bItems.push(["クラブ", `<div class="fc fb ${h.club?"set":""}" role="button" tabindex="0" data-k="c" data-i="0" aria-label="使ったクラブ。押したまま左右に動かして離すと変わります">${h.club?esc(h.club):"選ぶ"}</div>`]);
+  if(F.ob||F.pen){ const ob=evs(h,"ob").length>0, pn=evs(h,"pen").length>0, cur=ob?1:pn?2:0;
+    bItems.push([F.ob&&F.pen?"OB・ペナ":F.ob?"OB":"1ペナ", `<div class="fc fb ${cur?"set "+(cur===1?"ob":"pn"):""}" role="button" tabindex="0" data-k="o" data-i="0" aria-label="OBか1ペナ。押したまま左右に動かして離すと変わります">${["なし","OB","ペナ"][cur]}</div>`]); }
+  if(F.bunker) bItems.push(["バンカー", `<div class="fc fb ${h.bunker?"set bk":""}" role="button" tabindex="0" data-k="b" data-i="0" aria-label="バンカー。押したまま左右に動かして離すと変わります">${h.bunker?"あり":"なし"}</div>`]);
+  const rowB = bItems.length ? `<div class="rowb" style="grid-template-columns:repeat(${bItems.length},1fr)">${bItems.map(([c,x])=>`<div class="bc"><span>${c}</span>${x}</div>`).join("")}</div>` : "";
   return `<div class="rec rec2 ${multi?"multi":""} ${fields().tracer?"":"no-tracer"}">
     <div class="rec-top">
       <button class="icon-btn" data-act="ask-discard" aria-label="記録を閉じる">${ICON.x}</button>
@@ -2344,29 +2556,13 @@ function viewRecordDraft(d){
     <div class="hole-card hc2 ${slide} ${celebrate?"flash":""}">${confetti}
       <div class="hc-l"><span class="lbl">HOLE</span><div class="hno">${state.hole+1}<small>/${N}</small></div></div>
       <div class="hc-m"><div class="par"><span>PAR</span>${h.par}</div>${d.gn && h.ys && h.ys[0] && h.ys[1] ? `<div class="gsw" role="group" aria-label="グリーン">${d.gn.map((n,i)=>`<button data-act="set-g" data-g="${i}" aria-pressed="${(h.gi||0)===i}">${esc(n)}</button>`).join("")}</div><div class="yd">${h.yards} YDS</div>` : h.yards?`<div class="yd">${h.yards} YDS</div>`:""}
-        <div class="badges"><span class="badge ${hio?"hio":"b-"+TONE(diff)} ${/^s[vt]/.test(state.tap||"")?"pop":""}"><i></i>${hio?"HOLE IN ONE":TERM(diff)}</span>${bestPace&&fields().pace?`<span class="pace2">BEST PACE</span>`:""}${isOlympic(d.game)?`<span class="medal-wrap"><button class="medal-btn ${medalTip()&&state.hole===0?"tip":""}" data-act="medal-open">${medalSVG(4,14)}メダル</button>${medalTip()&&state.hole===0?`<span class="medal-tip">1パットで入ったらここ</span>`:""}</span>`:""}${d.game==="nearpin"&&d.holes[state.hole].par===3?(()=>{ const w=(d.pins||{})[state.hole]; const nm=w!=null?[d.player,...(d.mates||[]).map(m=>m.name)][w]:null; return `<button class="medal-btn pin-btn ${nm?"on":""}" data-act="pin-open">${PIN_ICON(13)}${nm?esc(nm):"ニアピン"}</button>`; })():""}${d.game==="skins"&&d.carry?(()=>{ const sk=skinsCalc([d.holes.map(x=>x.strokes), ...(d.mates||[]).map(m=>m.s)], state.hole, true); return `<span class="pot" title="このホールのコイン">${coinSVG(13)}×${sk.pot}</span>`; })():""}</div></div>
+        <div class="badges"><span class="badge ${hio?"hio":"b-"+TONE(diff)} ${/^s[vt]/.test(state.tap||"")?"pop":""}"><i></i>${hio?"HOLE IN ONE":TERM(diff)}</span>${bestPace&&fields().pace?`<span class="pace2">BEST PACE</span>`:""}${d.game==="skins"&&d.carry?(()=>{ const sk=skinsCalc([d.holes.map(x=>x.strokes), ...(d.mates||[]).map(m=>m.s)], state.hole, true); return `<span class="pot" title="このホールのコイン">${coinSVG(13)}×${sk.pot}</span>`; })():""}</div></div>
       <div class="live"><div><span>TOTAL</span><b>${totLabel}</b></div></div>
       ${advice?`<div class="advice">${advice}</div>`:""}
     </div>
-    <div class="rec-card rc2 ${slide} ${(d.mates||[]).length?"wm":""}" id="rec-card">
-      ${(d.mates||[]).length ? playerCols(d, h, F) : `
-      <div class="stp-row ${F.putts?"":"one"}">
-        <div class="stp"><div class="stp-h"><span class="eyebrow">SCORE<b>打数</b></span></div>
-          <div class="stp-b"><button data-act="st" data-d="-1" aria-label="打数を1つ減らす" ${h.strokes<=1?"disabled":""}>${ICON.down}</button>
-          <div class="stp-v ${state.tap&&state.tap.startsWith("st")?"pop":""}"><b>${h.strokes}</b><span class="tm t-${hio?"hio":TONE(diff)}">${hio?"HIO":TERMS(diff)}</span></div>
-          <button data-act="st" data-d="1" aria-label="打数を1つ増やす" ${h.strokes>=15?"disabled":""}>${ICON.up}</button></div></div>
-        ${F.putts?`<div class="stp"><div class="stp-h"><span class="eyebrow">PUTTS<b>パット</b></span><span class="hint">${hint}</span></div>
-          <div class="stp-b"><button data-act="pt" data-d="-1" aria-label="パットを1つ減らす" ${h.putts<=0?"disabled":""}>${ICON.down}</button>
-          <div class="stp-v ${state.tap&&state.tap.startsWith("pt")?"pop":""}"><b>${h.putts}</b><span class="tm p-${h.putts<=1?"birdie":h.putts===2?"par":h.putts===3?"bogey":"double"}">${h.putts===0?"CHIP IN":h.putts+" PUTT"+(h.putts>1?"S":"")}</span></div>
-          <button data-act="pt" data-d="1" aria-label="パットを1つ増やす" ${h.putts>=9?"disabled":""}>${ICON.up}</button></div></div>`:""}
-      </div>`}
-      ${multi?`<div class="me-zone">`:""}
-      ${F.shot?`<div class="ap-wrap"><div class="seg-head"><span class="eyebrow">TEE SHOT${multi||F.aim?"":"<b>ティーショットの行き先</b>"}</span>${F.aim?aimRow(h,isLong):""}${F.club?`<button class="club-tag ${h.club?"has":""}" data-act="open-club">${h.club?esc(h.club):"クラブ"}</button>`:""}</div>${isLong?fairwaySVG(h.tee, state.tap&&state.tap.startsWith("tee"), null, {on:h.teeOn, aim:F.aim?h.aim:null}):approachSVG(h.dir, state.tap&&state.tap.startsWith("dir"), null, {on:h.dirOn, aim:F.aim?h.aim:null})}</div>`:""}
-      ${F.club && !F.shot ? (()=>{ const lc = lastClub(d, state.hole);
-        // ショットの方向がOFFでもクラブだけ記録できるよう、クラブを横に並べて1タップで選ぶ（前回のクラブには小さく「前回」）
-        return `<div class="club-strip"><span class="eyebrow">TEE SHOT<b>クラブ</b></span><div class="cs-chips">${myClubs().map(c=>`<button data-act="club-quick" data-v="${esc(c)}" aria-pressed="${h.club===c}" class="${lc===c?"last":""}">${esc(c)}</button>`).join("")}</div></div>`; })() : ""}
-      ${troubles.length?`<div class="trouble t${troubles.length}">${troubles.join("")}</div>`:""}
-      ${multi?`</div>`:""}
+    <div class="rec-card rc2 ${slide} ${multi?"wm":""}" id="rec-card">
+      <div class="scoreblock">${scoreBlock}</div>
+      ${rowB}
     </div>
     <div class="rec-bar">
       <button class="back" data-act="prev" ${state.hole===0?"disabled":""} aria-label="前のホール">${ICON.back}</button>
@@ -2514,7 +2710,7 @@ function liveCard(){
       ${pl.map((p,k)=>`<tr><th>${esc(dupLabel(nm,k))}</th>${idx.map(i=>`<td>${done(i)?mk(p.s[i],d.holes[i].par):""}</td>`).join("")}<td class="sum"><b>${dn.length?sum(dn,i=>p.s[i]):""}</b></td></tr>`).join("")}</table>`; }).join("");
   const all=[...Array(N).keys()].filter(done), par=sum(all,i=>d.holes[i].par);
   const tot = pl.map((p,k)=>{ const t=sum(all,i=>p.s[i]); return `<span><b>${esc(dupLabel(nm,k))}</b>${t}<small>(${toPar(t-par)})</small></span>`; }).join("");
-  return `<div class="sheet-back" data-act="close-sheet"><div class="sheet lc-sheet" data-stop="1"><p>スコアカード<small>${state.hole+1}Hまで</small></p>${tbl}<div class="lc-tot">${tot}</div><button data-act="close-sheet">閉じる</button></div></div>`;
+  return `<div class="sheet-back" data-act="close-sheet"><div class="sheet lc-sheet" data-stop="1"><p>スコアカード<small>${state.hole+1}Hまで</small></p>${tbl}<button data-act="close-sheet">閉じる</button></div></div>`;
 }
 let clubTimer=null;
 /* 前回このホール（同じ人・同じコース）で使ったティーショットのクラブ */
@@ -2558,7 +2754,7 @@ after.record = () => {
 
   const card = $("#rec-card"); if(!card) return;
   let x0=null, y0=null;
-  card.addEventListener("touchstart", e=>{ const t=e.touches[0]; x0=t.clientX; y0=t.clientY; }, {passive:true});
+  card.addEventListener("touchstart", e=>{ if(e.target.closest&&e.target.closest(".fc")){ x0=null; return; } const t=e.touches[0]; x0=t.clientX; y0=t.clientY; }, {passive:true});
   card.addEventListener("touchend", e=>{ if(x0==null) return; const t=e.changedTouches[0]; const dx=t.clientX-x0, dy=t.clientY-y0; x0=null;
     if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.5){ const N=state.draft.holes.length; mark_entered();
       if(dx<0 && state.hole<N-1){ state.hole++; state.slide="l"; } else if(dx>0 && state.hole>0){ state.hole--; state.slide="r"; } else return; saveDraft(); render(); } }, {passive:true});
@@ -3017,6 +3213,7 @@ function mateDone(){ const d=state.draft; if(d){ d.mdone=d.mdone||[]; d.mdone[st
 /* ---------- ゲーム（スキンズ） ---------- */
 /* ---------- ゲーム（スキンズ・マッチプレー・ナッソー・ラスベガス・ステーブルフォード） ---------- */
 const GAMES = {
+  ghost:  { name:"ゴースト", eng:"GHOST", n:"1人〜", min:1, max:4, desc:"過去のベストの自分と勝負", type:"solo" },
   skins:  { name:"スキンズ", eng:"SKINS", n:"2〜4人", min:2, max:4, desc:"毎ホールでコインを争う", type:"solo" },
   match:  { name:"マッチプレー", eng:"MATCH PLAY", n:"2人のみ", min:2, max:2, desc:"1対1・勝ったホール数", type:"solo" },
   nassau: { name:"ナッソー", eng:"NASSAU", n:"2〜4人", min:2, max:4, desc:"前半・後半・合計で勝負", type:"solo" },
@@ -3032,7 +3229,7 @@ const GAMES = {
 };
 // 並びは日本の仲間内でよく遊ばれる順（オーナー指定。おおよそ）。ナッソーは日本ではほぼ使われないが、海外（特にアメリカ）では定番なので一番下に残す
 /* 上に個人戦、下にチーム戦。それぞれの中はよく遊ばれる順 */
-const GAME_KEYS = ["peoria","olympic","nearpin","skins","match","stable","nassau","vegas","teamsum","team"];
+const GAME_KEYS = ["ghost","peoria","olympic","nearpin","skins","match","stable","nassau","vegas","teamsum","team"];
 /* オリンピックの「メダル」ボタンの案内（初めての1回だけ。一度押したら二度と出ない） */
 const medalTip = () => !LS.get("sc.medalTip", false);
 /* 吹き出しはホールカード（はみ出しを隠している）の外に出すため、画面に固定してボタンの真下に置く */
@@ -3047,7 +3244,11 @@ const isPeoria = g => g==="peoria" || g==="peoriateam", isOlympic = g => g==="ol
 const gameFits = (k, n) => !k || (GAMES[k] && n>=GAMES[k].min && n<=GAMES[k].max);
 const coinSVG = (sz=14, cls="") => `<svg class="coin ${cls}" viewBox="0 0 24 24" width="${sz}" height="${sz}" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#E9A517"/><circle cx="12" cy="12" r="9" fill="#FFCF3F"/><circle cx="12" cy="12" r="7.2" fill="none" stroke="#E9A517" stroke-width="1.2"/><path d="M12 7.2l1.4 2.9 3.2.4-2.3 2.2.6 3.2L12 14.4l-2.9 1.5.6-3.2-2.3-2.2 3.2-.4z" fill="#E9A517"/></svg>`;
 /* ゲームのイラスト（小さなSVG。紺と金） */
+/* ゴースト: 同じコースの、自分の過去のベスト（対パーが一番良いラウンド。同じなら新しい方）。ホール数が同じものだけ */
+function ghostBest(player,courseId,N,exId){ const rs=state.rounds.filter(r=>r.player===player&&r.courseId===courseId&&r.id!==exId&&r.holes&&r.holes.length===N); if(!rs.length) return null;
+  return rs.reduce((a,r)=>{ const da=roundTotals(a).diff, dr=roundTotals(r).diff; return (dr<da||(dr===da&&(r.date||"")>(a.date||"")))?r:a; }); }
 const GAME_ILL = {
+  ghost: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><ellipse cx="28" cy="40" rx="14" ry="2.6" fill="#1F3A68" opacity=".18"/><g transform="rotate(-8 28 22)"><path d="M13 36V19C13 9.5 19.5 4 28 4s15 5.5 15 15v17c0 1.6-1.6 2.2-2.8 1.2l-3-2.5c-.8-.7-2-.7-2.8 0l-3.2 2.7c-.8.7-2 .7-2.8 0l-3.2-2.7c-.8-.7-2-.7-2.8 0l-3 2.5C14.6 38.2 13 37.6 13 36z" fill="#EAF1FF" stroke="#1F3A68" stroke-width="2.2" stroke-linejoin="round"/><ellipse cx="23" cy="19" rx="2.3" ry="3.3" fill="#1F3A68"/><ellipse cx="33" cy="19" rx="2.3" ry="3.3" fill="#1F3A68"/><circle cx="23.8" cy="17.7" r=".9" fill="#fff"/><circle cx="33.8" cy="17.7" r=".9" fill="#fff"/><ellipse cx="28" cy="26.5" rx="2.4" ry="2.8" fill="#1F3A68"/><circle cx="19" cy="24" r="2" fill="#F2B01E" opacity=".55"/><circle cx="37" cy="24" r="2" fill="#F2B01E" opacity=".55"/></g><path d="M47 6v6M44 9h6" stroke="#F2B01E" stroke-width="2" stroke-linecap="round"/></svg></span>`,
   skins: ()=>`<span class="gm-ill">${coinSVG(26,"c1")}${coinSVG(26,"c2")}${coinSVG(26,"c3")}</span>`,
   match: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><circle cx="17" cy="14" r="7" fill="#1F3A68"/><path d="M5 38c0-8 5.4-13 12-13s12 5 12 13z" fill="#1F3A68"/><circle cx="39" cy="14" r="7" fill="#F2B01E"/><path d="M27 38c0-8 5.4-13 12-13s12 5 12 13z" fill="#F2B01E"/><text x="28" y="22" text-anchor="middle" font-size="9" font-weight="900" fill="#E5484D" font-family="Barlow Condensed,sans-serif">VS</text></svg></span>`,
   nassau: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${[[4,"前"],[20,"後"],[36,"計"]].map(([x,t],i)=>`<rect x="${x}" y="${i===2?6:12}" width="16" height="${i===2?30:24}" rx="4" fill="${i===2?"#F2B01E":"#1F3A68"}"/><text x="${x+8}" y="${i===2?26:29}" text-anchor="middle" font-size="9" font-weight="900" fill="#fff">${t}</text>`).join("")}</svg></span>`,
@@ -3111,9 +3312,25 @@ function teamCalc(rows, n){ const won=[0,0]; let tot=[0,0];
   return {won, tot}; }
 /* オリンピック: パットのメダル。1鉄 2銅 3銀 4金 5ダイヤ（点数は同じ数） */
 const MEDALS=[null,{n:"鉄",c:"#7A8594",d:"#4B5563"},{n:"銅",c:"#D08A4C",d:"#8A4B1E"},{n:"銀",c:"#C9D1DA",d:"#7B8794"},{n:"金",c:"#F5C23A",d:"#B07A00"},{n:"ダイヤ",c:"#7FDBFF",d:"#1C7FB0"}];
+const MEDAL_LOOK={ // 縁・中・刻む数字の色（円形。色で見分ける）
+  4:{r0:"#FFF6C2",r1:"#9A5F00",d0:"#FFE45C",d1:"#D18F00",n:"#5A3500",k:12,a:1.25},
+  3:{r0:"#FFFFFF",r1:"#6A778A",d0:"#FAFCFE",d1:"#A3B1C2",n:"#2F3A4B",k:10,a:1.05},
+  2:{r0:"#FFDDBD",r1:"#74340E",d0:"#F8BE86",d1:"#AE5A1C",n:"#4B1F05",k:8,a:0.95},
+  1:{r0:"#E6ECF3",r1:"#27313E",d0:"#B4BFCD",d1:"#4E5A6C",n:"#10161E",k:6,a:0.85} };
+function sealPath(cx,cy,R,A,N){ let d=""; for(let i=0;i<=96;i++){ const t=i/96*Math.PI*2, r=R+A*Math.cos(N*t); d+=(i?"L":"M")+(cx+r*Math.cos(t)).toFixed(2)+" "+(cy+r*Math.sin(t)).toFixed(2); } return d+"Z"; }
 function medalSVG(v, sz=16, pos=null){ const m=MEDALS[v]; if(!m) return "";
+  const L=MEDAL_LOOK[v];
   const g = v===5 ? `<path d="M9 2h18l7 8-16 20L2 10z" fill="${m.c}" stroke="${m.d}" stroke-width="1.6" stroke-linejoin="round"/><path d="M2 10h32M12 2l6 28 6-28" fill="none" stroke="${m.d}" stroke-width="1" opacity=".7"/>`
-    : `<circle cx="18" cy="16" r="13.5" fill="${m.c}" stroke="${m.d}" stroke-width="1.8"/><circle cx="18" cy="16" r="9" fill="none" stroke="${m.d}" stroke-width="1.1" opacity=".55"/><path d="M10.5 10.5a10 10 0 0 1 6-4" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".55"/>`;
+    : `<defs><linearGradient id="mr${v}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${L.r0}"/><stop offset=".55" stop-color="${L.d1}"/><stop offset="1" stop-color="${L.r1}"/></linearGradient>
+      <radialGradient id="md${v}" cx="34%" cy="26%" r="90%"><stop offset="0" stop-color="${L.d0}"/><stop offset="1" stop-color="${L.d1}"/></radialGradient></defs>
+      <circle cx="18" cy="16" r="13.4" fill="url(#mr${v})" stroke="${L.r1}" stroke-width="1"/>
+      <circle cx="18" cy="16" r="10.4" fill="url(#md${v})" stroke="${L.r1}" stroke-width="1"/>
+      <circle cx="18" cy="16" r="8.7" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width=".8"/>
+      <circle cx="18" cy="16" r="8.7" fill="none" stroke="${L.r1}" stroke-opacity=".3" stroke-width=".5" transform="translate(.5 .6)"/>
+      <text x="18" y="21.6" text-anchor="middle" font-family="Barlow Condensed,sans-serif" font-weight="700" font-size="14.5" fill="#fff" fill-opacity=".7" transform="translate(.45 .6)">${v}</text>
+      <text x="18" y="21.6" text-anchor="middle" font-family="Barlow Condensed,sans-serif" font-weight="700" font-size="14.5" fill="${L.n}">${v}</text>
+      <path d="M8.2 11.6a10.6 10.6 0 0 1 7.6-4.6" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="12.6" cy="8.6" r=".9" fill="#fff" fill-opacity=".95"/>`;
   return pos ? `<svg x="${pos.x}" y="${pos.y}" width="${sz}" height="${(sz*32/36).toFixed(1)}" viewBox="0 0 36 32">${g}</svg>` : `<svg class="medal" viewBox="0 0 36 32" width="${sz}" height="${(sz*32/36).toFixed(1)}" aria-hidden="true">${g}</svg>`; }
 function olympicCalc(medals, P){ const pts=Array(P).fill(0), cnt=Array.from({length:P},()=>[0,0,0,0,0,0]);
   Object.values(medals||{}).forEach(arr=>(arr||[]).forEach((v,i)=>{ if(v>0 && i<P){ pts[i]+=v; cnt[i][v]++; } })); return {pts, cnt}; }
@@ -3226,6 +3443,9 @@ function rulesPop(k){
     opt=`<div class="rp-opt"><div class="rp-opt-h">同点のとき</div><div class="rp-seg" role="group" aria-label="同点のとき"><button data-act="set-carry" data-v="0" aria-pressed="${!carry}">誰ももらえない</button><button data-act="set-carry" data-v="1" aria-pressed="${carry}">次へ持ち越し</button></div></div>`;
     ex = carry ? row("1H",3,3,"同点 → 持ち越し")+row("2H",4,3,`はなこ が2枚${coins(2)}`)+row("3H",2,4,`たろう が1枚${coins(1)}`)+`<div class="sr-sum">はなこ ${coinSVG(14)}2　たろう ${coinSVG(14)}1　→ <b>はなこの勝ち</b></div>`
                : row("1H",3,3,"同点 → なし")+row("2H",4,3,`はなこ が1枚${coins(1)}`)+row("3H",2,4,`たろう が1枚${coins(1)}`)+`<div class="sr-sum">はなこ ${coinSVG(14)}1　たろう ${coinSVG(14)}1　→ <b>引き分け</b></div>`; }
+  if(k==="ghost"){
+    list=`<li>同じコースの<b>自分のベストスコア</b>が「ゴースト」（もう1人の自分）として一緒に回ります</li><li>ホールごとに、ゴーストの打数が表に出ます。<b>少ない打数が勝ち</b></li><li>右の「差」は、ゴーストより<b>何打よいか</b>（＋は勝ち越し、−は負け越し）です</li>`;
+    ex=`<div class="sr-row2"><span>1H</span><span>たろう 3・ゴースト 4</span><b class="w">+1</b></div><div class="sr-row2"><span>2H</span><span>たろう 4・ゴースト 3</span><b>0</b></div><div class="sr-row2"><span>3H</span><span>たろう 3・ゴースト 4</span><b class="w">+1</b></div><div class="sr-sum">3ホール終わって <b>+1</b>（ゴーストに1打勝ち）</div>`; }
   if(k==="match"){
     list=`<li><b>2人</b>で、ホールごとに打数が少ない方が勝ち（同じなら引き分け）</li><li>勝ったホールの差を「<b>2勝</b>」「<b>五分</b>」「<b>2負</b>」と数えます</li><li>残りで追いつけない差になったら決着。合計の打数は関係ありません</li>`;
     ex=row("1H",3,4,"たろう 1勝")+row("2H",3,3,"引き分け")+row("3H",4,3,"はなこ → 五分")+`<div class="sr-sum">3ホール終わって <b>五分</b></div>`; }
@@ -3344,8 +3564,8 @@ document.addEventListener("click", async ev => {
       state.hole=0; saveDraft(); render(); break;
     }
     case "hole": mark_entered(); state.slide = +b.dataset.i>state.hole?"l":"r"; state.hole=+b.dataset.i; saveDraft(); render(); break;
-    case "sv": { const v=+b.dataset.v; h.strokes = v===8 ? (h.strokes>=8 ? h.strokes+1 : 8) : v; if(h.strokes>15) h.strokes=8; if(h.putts>h.strokes-1) h.putts=Math.max(0,h.strokes-1); h.entered=true; saveDraft(); render(); break; }
-    case "pv": h.putts=+b.dataset.v; if(h.strokes<h.putts+1) h.strokes=h.putts+1; h.entered=true; saveDraft(); render(); break;
+    case "sv": { const v=+b.dataset.v, big=+b.dataset.big||0; h.strokes = (big && v===big && h.strokes>=big) ? Math.min(15,h.strokes+1) : v; if(h.putts>h.strokes-1) h.putts=Math.max(0,h.strokes-1); h.entered=true; saveDraft(); render(); break; }
+    case "pv": h.putts = (b.dataset.big==="1" && h.putts>=4) ? Math.min(9,h.putts+1) : +b.dataset.v; if(h.strokes<h.putts+1) h.strokes=h.putts+1; h.entered=true; saveDraft(); render(); break;
     case "st": h.strokes=Math.max(1,Math.min(15,h.strokes+ +b.dataset.d)); if(h.putts>h.strokes-1) h.putts=Math.max(0,h.strokes-1); h.entered=true; state.tap="st"; saveDraft(); render(); break;
     case "pt": h.putts=Math.max(0,Math.min(9,h.putts+ +b.dataset.d)); if(h.strokes<h.putts+1) h.strokes=Math.min(15,h.putts+1); h.entered=true; state.tap="pt"; saveDraft(); render(); break;
     case "dir": case "tee": {
@@ -3359,6 +3579,18 @@ document.addEventListener("click", async ev => {
       if(same){ h[a]=null; h[subK]=null; } else { h[a]=v; h[subK]= v===onV ? sub : null; }
       h.entered=true; state.tap=a; saveDraft(); render(); askClub(h[a]); break; }
     case "open-card": state.sheet="card"; render(); break;
+    case "obpen": { const ob=evs(h,"ob").length>0, pn=evs(h,"pen").length>0; // なし → OB → 1ペナ → なし（OBだけ・1ペナだけがONのときは、それだけを切りかえ）
+      const F2=fields(); let nob=false, npn=false;
+      if(!ob&&!pn){ if(F2.ob) nob=true; else npn=true; } else if(ob){ if(F2.pen) npn=true; }
+      h.ob=nob; h.pen=npn; delete h.obC; delete h.penC; h.entered=true; saveDraft(); render(); break; }
+    case "mts": { const m=d.mates[+b.dataset.i]; if(!m) break; const v=+b.dataset.v, big=+b.dataset.big||0;
+      m.s[state.hole] = (big&&v===big&&m.s[state.hole]>=big) ? Math.min(15,m.s[state.hole]+1) : v; saveDraft(); render(); break; }
+    case "medal-c": { const hh=state.hole, i=+b.dataset.i, PP=1+(d.mates||[]).length; d.medals=d.medals||{}; const arr=(d.medals[hh]||Array(PP).fill(0)).slice();
+      const ORDER=[0,5,4,3,2,1], taken=new Set(arr.filter((x,k)=>k!==i&&x>0)), at=ORDER.indexOf(arr[i]); // 押すたびに ダイヤ→金→銀→銅→鉄→なし。ほかの人がもう持っているメダルは飛ばす
+      let nx=0; for(let t=1;t<=ORDER.length;t++){ const c=ORDER[(at+t)%ORDER.length]; if(c===0||!taken.has(c)){ nx=c; break; } } arr[i]=nx; d.medals[hh]=arr; saveDraft(); render(); break; }
+    case "medal-q": { const hh=state.hole, i=(state.pc&&state.pc.hole===hh?state.pc.i:0), v=+b.dataset.v; d.medals=d.medals||{}; const PP=1+(d.mates||[]).length;
+      const arr=(d.medals[hh]||Array(PP).fill(0)).slice(), on=arr[i]===v; arr.forEach((x,k)=>{ if(x===v) arr[k]=0; }); arr[i]=on?0:v; d.medals[hh]=arr; saveDraft(); render(); break; }
+    case "pin-q": { const hh=state.hole, i=+b.dataset.i; d.pins=d.pins||{}; if(d.pins[hh]===i) delete d.pins[hh]; else d.pins[hh]=i; saveDraft(); render(); break; }
     case "aim-mode": state.aimPick={hole:state.hole, v:b.dataset.v}; render(); break;
     case "aim-reset": h.aim=null; if(state.draft.holes[state.hole]){ const isLong=h.par>=4; if(isLong){ h.tee=null; h.teeOn=null; } else { h.dir=null; h.dirOn=null; } } clearTimeout(clubTimer); saveDraft(); render(); break;
     case "tog": h[b.dataset.k]=!h[b.dataset.k]; h.entered=true; saveDraft();
@@ -3374,7 +3606,7 @@ document.addEventListener("click", async ev => {
       const mr=(!d.editing && Array.isArray(d.mates)) ? d.mates.map((m,k)=>({ id:uid(), card:true, player:m.name, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:r.createdAt+k+1,
         holes:d.holes.map((x,i)=>({par:x.par, strokes:m.s[i], putts:0, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null})) })) : [];
       try{ await Promise.all([r,...mr].map(x=>store.saveRound(x))); state.saving=false;
-        state.draft=null; saveDraft(); state.tab="history"; LS.set("sc.tab","history"); state.fPlayer=r.player; state.openRound=r.id; state.result=r; state.resultGroup=mr.length?[r,...mr]:null; state.resultAll=mr.length>0; state.resultGame=mr.length?d.game:null; state.resultCarry=!!d.carry; state.resultEx={medals:d.medals||{}, pins:d.pins||{}, hidden:isPeoria(d.game)?peoriaHidden(d.holes.length):null}; render(); }
+        state.draft=null; saveDraft(); state.tab="history"; LS.set("sc.tab","history"); state.fPlayer=r.player; state.openRound=r.id; state.result=r; state.resultGroup=mr.length?[r,...mr]:null; state.resultAll=mr.length>0; state.resultGame=mr.length?d.game:null; state.resultGhost=d.game==="ghost"?(g=>g?{best:roundTotals(g).score}:null)(ghostBest(d.player,d.courseId,d.holes.length,r.id)):null; state.resultCarry=!!d.carry; state.resultEx={medals:d.medals||{}, pins:d.pins||{}, hidden:isPeoria(d.game)?peoriaHidden(d.holes.length):null}; render(); }
       catch(e){ state.saving=false; render(); writeErr(e); }
       break;
     }
@@ -3530,6 +3762,76 @@ const DEMO = (() => {
 })();
 
 if(state.draft){ const i=state.draft.holes.findIndex(x=>!x.entered); state.hole = i<0 ? state.draft.holes.length-1 : i; }
+/* ---------- フリック入力（打数・パット・メダル・クラブ・方向） ----------
+   マスを押すと、指の少し上に選べるものが出る。押したまま動かして離すと決まる。ちょんと押すだけなら、いちばん多い値（打数はパー、パットは2、方向は真ん中、クラブは前回のもの）。
+   打数（1〜10）・パット（0〜6）・メダル・クラブは、左右に動かして選ぶ（1列）。方向は十字（上=オーバー、下=ショート、左、右、そのまま=真ん中）。
+   右端・左端に近いときは、1つぶんの動かす距離を縮めて端まで届くようにする */
+(function flick(){
+  let st=null, pop=null;
+  const toneS=(v,par)=>v===1?"hio":TONE(v-par), toneP=v=>v<=1?"birdie":v===2?"par":v===3?"bogey":"double";
+  function cfg(kind){ const d=state.draft, h=d.holes[state.hole], par=h.par;
+    if(kind==="p") return { type:"row", vals:[0,1,2,3,4,5,6], def:2, cw:36, min:20, par };
+    if(kind==="m") return { type:"row", vals:[0,1,2,3,4,5], def:0, cw:34, min:20, par };
+    if(kind==="c"){ const cl=myClubs(); let def=cl.indexOf(h.club); if(def<0) def=cl.indexOf(lastClub(d,state.hole)); if(def<0) def=cl.indexOf("7I"); if(def<0) def=Math.floor(cl.length/2);
+      return { type:"row", abs:true, vals:cl, def, cw:28, min:20, par }; }
+    if(kind==="d") return { type:"cross", par };
+    if(kind==="o"){ const F2=fields(), ob=evs(h,"ob").length>0, pn=evs(h,"pen").length>0, vals=F2.ob&&F2.pen?[0,1,2]:F2.ob?[0,1]:[0,2]; return { type:"row", vals, def:Math.max(0,vals.indexOf(ob?1:pn?2:0)), cw:52, min:30, par }; }
+    if(kind==="b") return { type:"row", vals:[0,1], def:h.bunker?1:0, cw:52, min:30, par };
+    return { type:"row", vals:[1,2,3,4,5,6,7,8,9,10], def:Math.min(9,par-1), cw:32, min:20, par };
+  }
+  const cellHTML=(kind,v,par)=>kind==="m"?(v?medalSVG(v,22):"—"):kind==="c"?esc(v):kind==="o"?["なし","OB","ペナ"][v]:kind==="b"?["なし","あり"][v]:v;
+  const cellTone=(kind,v,par)=>kind==="s"?"t-"+toneS(v,par):kind==="p"?"t-"+toneP(v):"nt";
+  function build(){
+    const c=st.cfg, W=document.documentElement.clientWidth;
+    pop=document.createElement("div");
+    if(c.type==="cross"){
+      const cx=Math.max(117,Math.min(W-117,st.x)), cy=Math.max(84,st.y-130), off=c.par>=4;
+      pop.className="fpop cross"; pop.style.left=cx+"px"; pop.style.top=cy+"px";
+      pop.innerHTML=[["C","真ん中",0,0],["L","左",-74,0],["R","右",74,0],["U","オーバー",0,-50],["D","ショート",0,50]].map(([k,l,x,y])=>`<div class="fpc ${k==="U"&&off?"off":""}" data-k="${k}" style="left:${x}px;top:${y}px">${l}</div>`).join("");
+      document.body.appendChild(pop); st.idx="C"; mark("C"); return; }
+    const n=c.vals.length, M=10; let step=c.cw, left;
+    if(c.abs){ step=Math.max(c.min,Math.floor((W-24)/n)); left=8; }   // クラブ: 画面の幅いっぱいに並べ、指のいる場所の番手を選ぶ
+    else { const rs=n-1-c.def, ls=c.def;
+      if(rs>0) step=Math.min(step,(W-M-st.x)/rs); if(ls>0) step=Math.min(step,(st.x-M)/ls); step=Math.max(c.min,Math.floor(step));
+      left=st.x-(c.def*step+step/2)-4; left=Math.max(8,Math.min(W-8-(n*step+8),left)); }
+    st.step=step; st.left=left;
+    pop.className="fpop"+(st.kind==="c"?" clubs":""); pop.style.left=left+"px"; pop.style.top=Math.max(8,st.y-100-58)+"px";
+    pop.innerHTML=`<div class="fprow">${c.vals.map((v,k)=>`<div class="fpc ${cellTone(st.kind,v,c.par)} ${st.kind==="m"?"med":""}" data-k="${k}" style="width:${step}px">${cellHTML(st.kind,v,c.par)}</div>`).join("")}</div>`;
+    document.body.appendChild(pop); mark(st.idx);
+  }
+  function mark(i){ st.idx=i; pop.querySelectorAll(".fpc").forEach(e=>e.classList.toggle("on",e.dataset.k==String(i))); }
+  document.addEventListener("pointerdown",e=>{
+    const c=e.target.closest&&e.target.closest(".fc"); if(!c||!c.dataset.k||st||!state.draft) return; e.preventDefault();
+    try{ c.setPointerCapture(e.pointerId); }catch(_){}
+    const kind=c.dataset.k, cf=cfg(kind); st={x:e.clientX,y:e.clientY,kind,who:+c.dataset.i,id:e.pointerId,el:c,cfg:cf,idx:cf.type==="row"?cf.def:"C"}; c.classList.add("down"); build();
+  });
+  document.addEventListener("pointermove",e=>{ if(!st||e.pointerId!==st.id) return;
+    const c=st.cfg, dx=e.clientX-st.x, dy=e.clientY-st.y;
+    if(c.type==="cross"){ const k=Math.hypot(dx,dy)<22?"C":Math.abs(dx)>Math.abs(dy)?(dx<0?"L":"R"):(dy<0?"U":"D"); if(k!==st.idx) mark(k); return; }
+    if(c.abs){ if(!st.moved && Math.abs(dx)<10 && Math.abs(dy)<10) return; st.moved=true; // 少し動くまでは、今のクラブのまま
+      const i=Math.max(0,Math.min(c.vals.length-1,Math.floor((e.clientX-(st.left+4))/st.step))); if(i!==st.idx) mark(i); return; }
+    const i=Math.max(0,Math.min(c.vals.length-1,c.def+Math.round(dx/st.step))); if(i!==st.idx) mark(i); });
+  function end(e,commit){
+    if(!st||e.pointerId!==st.id) return;
+    const c=st.cfg, kind=st.kind, who=st.who, idx=st.idx; st.el.classList.remove("down"); if(pop) pop.remove(); pop=null; st=null;
+    if(!commit) return;
+    const d=state.draft; if(!d) return; const h=d.holes[state.hole];
+    if(kind==="s"||kind==="p"){ const v=c.vals[idx];
+      if(kind==="s"){ if(who===0){ h.strokes=v; if(h.putts>h.strokes-1) h.putts=Math.max(0,h.strokes-1); h.entered=true; state.tap="sv"+v; } else d.mates[who-1].s[state.hole]=v; }
+      else { h.putts=v; if(h.strokes<h.putts+1) h.strokes=Math.min(15,h.putts+1); h.entered=true; state.tap="pv"+v; } }
+    else if(kind==="m"){ const v=c.vals[idx], PP=1+(d.mates||[]).length; d.medals=d.medals||{}; const arr=(d.medals[state.hole]||Array(PP).fill(0)).slice();
+      if(v>0) arr.forEach((x,k)=>{ if(x===v) arr[k]=0; }); arr[who]=v; d.medals[state.hole]=arr; }
+    else if(kind==="c"){ h.club=c.vals[idx]; h.clubAuto=false; h.entered=true; }
+    else if(kind==="o"){ const v=c.vals[idx]; h.ob=v===1; h.pen=v===2; delete h.obC; delete h.penC; h.entered=true; }
+    else if(kind==="b"){ h.bunker=c.vals[idx]===1; h.entered=true; }
+    else if(kind==="d"){ const isL=h.par>=4, M=isL?{C:"fw",L:"rl",R:"rr",D:"miss"}:{C:"on",L:"left",R:"right",U:"long",D:"miss"}, v=M[idx]; if(!v) return;
+      if(isL){ h.tee=v; h.teeOn=null; } else { h.dir=v; h.dirOn=null; } h.entered=true; state.tap=null; }
+    saveDraft(); render();
+  }
+  document.addEventListener("pointerup",e=>end(e,true));
+  document.addEventListener("pointercancel",e=>end(e,false));
+  document.addEventListener("contextmenu",e=>{ if(e.target.closest&&e.target.closest(".fc")) e.preventDefault(); });
+})();
 render();
 connect();
 })();
