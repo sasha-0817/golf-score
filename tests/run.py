@@ -81,6 +81,19 @@ def flick(pg, k, i, tgt):
         pg.mouse.move(c, y, steps=3)
     pg.wait_for_timeout(60); pg.mouse.up(); pg.wait_for_timeout(80)
 
+def tap_un(pg):
+    """未入力（グレーの「入力」）の打数マスを、押すだけで（パー）入れていく"""
+    for _ in range(12):
+        el = pg.locator('.fc.un[data-k="s"]')
+        if el.count() == 0: break
+        r = el.first.bounding_box(); pg.mouse.click(r["x"] + r["width"] / 2, r["y"] + r["height"] / 2); pg.wait_for_timeout(60)
+
+def walk(pg, last=8):
+    """今のホールから最後まで、打数はそのまま（パー）で入れて進む"""
+    while pg.evaluate("state.hole") < last:
+        tap_un(pg); C(pg, "[data-act=next]")
+    tap_un(pg)
+
 def play_round(pg, fields):
     n = pg.evaluate("state.draft.holes.length")
     for i in range(n):
@@ -90,7 +103,8 @@ def play_round(pg, fields):
         if i % 3 == 0 and fields["ob"]: flick(pg, "o", 0, 1)
         if i % 4 == 1 and fields["bunker"]: flick(pg, "b", 0, 1)
         flick(pg, "s", 0, par)   # パー+1
-        if fields["putts"] and i % 2: flick(pg, "p", 0, 1)
+        tap_un(pg)
+        if fields["putts"]: flick(pg, "p", 0, 1 if i % 2 else 2)
         if i < n - 1: C(pg, "[data-act=next]")
     C(pg, "[data-act=finish]"); pg.wait_for_timeout(900)
 
@@ -160,7 +174,7 @@ with sync_playwright() as pw:
     check("打数の下限1・パットは打数-1まで", pg.evaluate("[state.draft.holes[0].strokes,state.draft.holes[0].putts]") == [1, 0])
     flick(pg, "p", 0, 6)
     check("パットを増やすと打数も増える（パットは打数-1まで）", pg.evaluate("[state.draft.holes[0].strokes,state.draft.holes[0].putts]") == [7, 6])
-    for _ in range(4): C(pg, "[data-act=next]")
+    for _ in range(4): tap_un(pg); C(pg, "[data-act=next]")
     pg.reload(); pg.wait_for_timeout(900)
     check("読み込み直しても同じホール（5番）", (pg.text_content(".hno") or "").startswith("5"))
     C(pg, "[data-act=ask-discard]"); C(pg, "[data-act=pause]")
@@ -210,7 +224,7 @@ with sync_playwright() as pw:
                 if pg.evaluate("state.cdraft.sel&&state.cdraft.sel.h") == sel["h"] and pg.evaluate("state.cdraft.sel.i") == sel["i"]: break
                 continue
             C(pg, '[data-act=cd-key][data-v="4"]' if sel["k"] == "s" else '[data-act=cd-key][data-v="2"]')
-    LSC = {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": ["はなこ", "じろう", "さぶろう"], "sc.fields": dict(ALL, matePutts=True)}
+    LSC = {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": ["はなこ", "じろう", "さぶろう"]}
     pg, errs = open_page(b, LSC)
     check("スコアカード: 開始画面に3人分の同伴者欄", pg.evaluate("document.querySelectorAll('.mates input').length") == 3)
     start_preset(pg, "firtree")
@@ -225,11 +239,11 @@ with sync_playwright() as pw:
     C(pg, "[data-act=ask-discard]"); C(pg, "[data-act=cd-pause]")
     check("スコアカード: 中断カードが出る", pg.query_selector("[data-act=cd-resume]") is not None)
     C(pg, "nav.tabs [data-tab=history]"); C(pg, "nav.tabs [data-tab=record]"); C(pg, "[data-act=cd-resume]")
-    card_fill(pg, putts_for={0, 1})
+    card_fill(pg, putts_for={0})
     C(pg, "[data-act=cd-finish]"); pg.wait_for_timeout(900)
     rs = pg.evaluate("__db.rounds.map(r=>({p:r.player,s:r.holes.reduce((a,h)=>a+h.strokes,0),pt:r.holes.reduce((a,h)=>a+h.putts,0),n:r.holes.length}))")
     check("スコアカード: 4人分が別々のラウンドで保存", sorted(x["p"] for x in rs) == sorted(["たろう", "はなこ", "じろう", "さぶろう"]) and all(x["n"] == 9 for x in rs))
-    check("スコアカード: パットを書かなかった人は putts 0（記録なし）", {x["p"]: x["pt"] > 0 for x in rs} == {"たろう": True, "はなこ": True, "じろう": False, "さぶろう": False})
+    check("スコアカード: パットを書かなかった人は putts 0（記録なし）", {x["p"]: x["pt"] > 0 for x in rs} == {"たろう": True, "はなこ": False, "じろう": False, "さぶろう": False})
     check("スコアカード: 保存後はみんなのリザルト（順位と全員のスコア）", pg.query_selector(".grp-card") is not None and pg.evaluate("document.querySelectorAll('.rc-rank>div').length") == 4)
     check("スコアカード: リザルトで「みんな」＋4人を切りかえられる", pg.evaluate("document.querySelectorAll('.rc-who button').length") == 5 and C(pg, '.rc-who button:nth-child(3)') and pg.evaluate("state.result.player") == "はなこ")
     check("リザルト: 2回目からは出てくるアニメーションをくり返さない（点滅しない）", "still" in pg.evaluate("document.querySelector('.result-back').className"))
@@ -268,12 +282,9 @@ with sync_playwright() as pw:
     check("同伴者の打数もフリックで入る（自分と同じ表の中）", pg.evaluate("state.draft.mates[1].s[0]") == 5)
     flick(pg, "s", 1, 3)
     check("同伴者の打数: 人ごとに別々に入る", pg.evaluate("[state.draft.mates[0].s[0],state.draft.mates[1].s[0]].join()") == "4,5")
-    C(pg, "[data-act=next]")
+    tap_un(pg); C(pg, "[data-act=next]")
     check("次のホールへはそのまま進む（同伴者を聞かない）", pg.query_selector(".mate-sheet") is None and pg.evaluate("state.hole") == 1)
-    for _ in range(12):
-        if pg.evaluate("state.hole") >= 8: break
-        C(pg, "[data-act=next]")
-        if pg.query_selector(".mate-sheet"): C(pg, "[data-act=mt-ok]")
+    walk(pg)
     C(pg, "[data-act=finish]"); pg.wait_for_timeout(900)
     rs = pg.evaluate("pending.map(r=>({p:r.player,s:r.holes.reduce((a,h)=>a+h.strokes,0),pt:r.holes.reduce((a,h)=>a+h.putts,0)}))")
     check("1ホールずつ: 自分＋同伴者2人が別々のラウンドで保存", sorted(x["p"] for x in rs) == ["たろう", "たろう", "はなこ"])
@@ -344,14 +355,12 @@ with sync_playwright() as pw:
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
     check("スキンズで始まる・記録中にコインの数（持ち越しなし）", pg.evaluate("state.draft.game") == "skins" and pg.evaluate("state.draft.carry") is False and pg.evaluate("document.querySelectorAll('.frow .pt b').length") == 2)
     check("スキンズでも1画面に収まる", pg.evaluate("document.documentElement.scrollHeight") <= 667)
-    C(pg, "[data-act=next]"); flick(pg, "s", 1, 1)
+    tap_un(pg); C(pg, "[data-act=next]"); flick(pg, "s", 1, 1)
     check("全員が入力するまでは、そのホールのポイントは入らない", pg.evaluate("document.querySelectorAll('.frow .pt b')[1].textContent") == "0")
     flick(pg, "s", 0, 2)
     check("同点のホールは誰も取らず、全員が入力したそのホールの勝ちですぐ1枚", pg.evaluate("document.querySelectorAll('.frow .pt b')[1].textContent") == "1")
     C(pg, "[data-act=next]")
-    for _ in range(12):
-        if pg.evaluate("state.hole") >= 8: break
-        C(pg, "[data-act=next]")
+    walk(pg)
     C(pg, "[data-act=finish]"); pg.wait_for_timeout(900)
     check("みんなのリザルトにスキンズの結果", pg.query_selector(".grp-card .rc-skins") is not None and pg.evaluate("document.querySelectorAll('.rs-row').length") == 2)
     check("スキンズ: エラーなし", not errs)
@@ -400,9 +409,7 @@ with sync_playwright() as pw:
     C(pg, ".game-sheet [data-act=close-game]"); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
     flick(pg, "s", 0, 2); flick(pg, "s", 1, 3)
     check("マッチプレー: 入力したそのホールですぐ 1勝 / 1負", pg.evaluate("[...document.querySelectorAll('.gtag')].map(e=>e.textContent).join()") == "1勝,1負")
-    for _ in range(12):
-        if pg.evaluate("state.hole") >= 8: break
-        C(pg, "[data-act=next]")
+    walk(pg)
     C(pg, "[data-act=finish]"); pg.wait_for_timeout(900)
     check("マッチプレー: みんなのリザルトに結果", pg.query_selector(".grp-card .rc-game") is not None and "たろう の勝ち" in pg.evaluate("document.querySelector('.rc-game').textContent"))
     check("ほかのゲーム: エラーなし", not errs)
@@ -438,9 +445,7 @@ with sync_playwright() as pw:
     flick(pg, "m", 0, 4); flick(pg, "m", 1, 4)
     check("同じメダルは1人だけ（あとから付けた人に移る）", pg.evaluate("JSON.stringify(state.draft.medals[0])") == "[0,4]")
     check("オリンピック: メダルの右にポイントの数字だけ", pg.evaluate("[...document.querySelectorAll('.frow .pt b')].map(e=>e.textContent).join()") == "0,4")
-    for _ in range(12):
-        if pg.evaluate("state.hole") >= 8: break
-        C(pg, "[data-act=next]")
+    walk(pg)
     C(pg, "[data-act=finish]"); pg.wait_for_timeout(900)
     check("オリンピック: リザルトに点数とメダル", pg.query_selector(".rc-game .md-c") is not None)
     pg.context.close()
@@ -457,12 +462,12 @@ with sync_playwright() as pw:
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": ["はなこ", "じろう", "さぶろう"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"nearpin\"", "sc.fields": dict(NONE)}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
     for v in ["3", "3", "3", "3"]: C(pg, f'[data-act=cd-key][data-v="{v}"]')
-    C(pg, '[data-act=cd-cell][data-h="0"][data-i="1"][data-k=s]'); C(pg, '[data-act=cd-pin]')
+    C(pg, '[data-act=cd-cell][data-h="0"][data-i="1"][data-k=s]'); C(pg, '[data-act=cd-pin][data-i="1"]')
     tg = pg.evaluate("[...document.querySelectorAll('.cdt tr.gr .gtag')].map(e=>e.textContent).join()")
     check("ニアピン（スコアカード）: 一番近い人を選ぶとコイン1枚（記録中の行）", tg == "0,1,0,0" and pg.query_selector(".pin-sheet") is None)
-    C(pg, '[data-act=cd-pin]')
-    check("ニアピン（スコアカード）: もう一度押すと取り消し・同じ行に旗のボタン", pg.evaluate("!state.cdraft.pins[0]") and pg.query_selector(".cd-gi .pinflag") is not None)
-    C(pg, '[data-act=cd-pin]')
+    C(pg, '[data-act=cd-pin][data-i="1"]')
+    check("ニアピン（スコアカード）: もう一度押すと取り消し・旗は人ごとの列（計の下）にある", pg.evaluate("!state.cdraft.pins[0]") and pg.evaluate("document.querySelectorAll('.cdt tfoot .pinflag').length") == 4)
+    C(pg, '[data-act=cd-pin][data-i="1"]')
     for _ in range(80):
         if not pg.evaluate("state.cdraft&&state.cdraft.sel"): break
         C(pg, '[data-act=cd-key][data-v="3"]')
@@ -625,9 +630,7 @@ with sync_playwright() as pw:
     flick(pg, "s", 0, 1)
     check("ゴースト: ゴーストより少ない打数なら −（勝ち）", "−1" in pg.evaluate("document.querySelector('.frow.me .pt').textContent") and pg.query_selector(".frow.me .pt b.gd.up") is not None)
     check("ゴースト: 全部ONでも1画面", pg.evaluate("document.documentElement.scrollHeight") <= 667)
-    for _ in range(12):
-        if pg.evaluate("state.hole") >= 8: break
-        C(pg, "[data-act=next]")
+    walk(pg)
     C(pg, "[data-act=finish]"); pg.wait_for_timeout(900)
     check("ゴースト: リザルトにゴーストとの勝負", "GHOST" in pg.inner_text(".result-card") or "ゴースト" in pg.inner_text(".result-card"))
     check("ゴースト: エラーなし", not errs); pg.context.close()
@@ -665,31 +668,35 @@ with sync_playwright() as pw:
     flick(pg, "s", 0, 2)
     check("次のホールで打数を入れると差に加わる（3打=ゴーストより1打少ない→−3）", "−3" in pg.inner_text(".frow.me .pt"))
     C(pg, "[data-act=prev]")
-    check("前のホールに戻ると、進んだホールは値が出る（そのまま進んだ分も入力ずみ扱い）", pg.evaluate("document.querySelectorAll('.scoreblock .fc.un').length") == 0 and pg.inner_text('.fc[data-k="s"]').strip().startswith("2"))
+    check("前のホールに戻ると、入力した打数が出る（パットは入力していないので「入力」のまま）", pg.evaluate("document.querySelectorAll('.scoreblock .fc.un').length") == 1 and pg.inner_text('.fc[data-k="s"]').strip().startswith("2"))
     pg.context.close()
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.fields": ALL}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
-    check("同伴者のパットは最初はなし（設定でON）", pg.query_selector('.fc[data-k="p"][data-i="1"]') is None)
-    pg.context.close()
-    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.fields": dict(ALL, matePutts=True)}, offline=True)
-    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
-    check("設定「同伴者のパット数」をONにすると同伴者にもパットのマスが出る", pg.query_selector('.fc[data-k="p"][data-i="1"]') is not None)
-    flick(pg, "p", 1, 3)
-    check("同伴者のパットを入れると、同伴者の打数も増える（パット3なら打数4以上）", pg.evaluate("[state.draft.mates[0].p[0], state.draft.mates[0].s[0]]") == [3, 4])
+    check("パットのマスは自分だけ（同伴者は打数だけ）・同伴者のパットの設定はない", pg.query_selector('.fc[data-k="p"][data-i="1"]') is None and pg.query_selector('.fc[data-k="p"][data-i="0"]') is not None)
+    flick(pg, "s", 0, 1); C(pg, "[data-act=next]")
+    check("入力していないまま次のホールへ進んでも、勝手にパー・2パットにならない（「入力」のまま）", pg.evaluate("document.querySelectorAll('.scoreblock .fc.un').length") == 3 and pg.evaluate("state.draft.holes[1].sT") is False)
+    C(pg, "[data-act=prev]")
+    check("戻ると、入力したホールの値と、入力していないパットの「入力」が残っている", pg.evaluate("document.querySelectorAll('.scoreblock .fc.un').length") == 2)
     for _ in range(8): C(pg, "[data-act=next]")
-    C(pg, "[data-act=finish]"); pg.wait_for_timeout(900)
-    mp = pg.evaluate("pending.filter(r=>r.player==='はなこ')[0].holes[0].putts")
-    check("同伴者のパットが保存される", mp == 3)
+    C(pg, "[data-act=finish]"); pg.wait_for_timeout(300)
+    check("未入力の打数があると保存せず、そのホールへ案内する", pg.evaluate("state.draft!=null") and pg.evaluate("state.hole") == 0 and "まだです" in pg.inner_text(".toast, #toast, body"))
     pg.context.close()
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": ["はなこ", "じろう"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"olympic\""}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
     C(pg, '[data-act=cd-key][data-v="3"]')
-    C(pg, '[data-act=cd-medal][data-v="4"]')
-    check("スコアカード＋オリンピック: 数字キーの上でメダルを選べる（金）", pg.evaluate("state.cdraft.medals[0][0]") == 4 and pg.query_selector(".cd-gi") is not None)
-    C(pg, '[data-act=cd-cell][data-h="0"][data-i="1"][data-k=s]'); C(pg, '[data-act=cd-medal][data-v="4"]')
+    check("スコアカード＋オリンピック: 計の下に人ごとのメダルのマス（フリック）", pg.evaluate("document.querySelectorAll('.cdt tfoot .fc.fm').length") == 3)
+    flick(pg, "m", 0, 4)
+    check("スコアカード＋オリンピック: 自分の列でメダルをフリックで入れる（金）", pg.evaluate("state.cdraft.medals[0][0]") == 4)
+    flick(pg, "m", 1, 4)
     check("スコアカード＋オリンピック: 同じメダルは1人だけ（金が後の人へ移る）", pg.evaluate("JSON.stringify(state.cdraft.medals[0])") == "[0,4,0]")
+    check("スコアカード: 9ホールがスクロールなしで見える（4人・ゲームあり）", pg.evaluate("(()=>{const s=document.querySelector('.cd-scroll'); return s.scrollHeight<=s.clientHeight+4})()"))
     check("スコアカード: 計の行とゲームの行はくっついている（すき間なし）", pg.evaluate("(()=>{const f=[...document.querySelectorAll('.cdt tfoot tr')]; return f.length>=2 && Math.abs(f[0].getBoundingClientRect().bottom-f[1].getBoundingClientRect().top)<=1})()"))
     check("スコアカード: 文字は大きめ（打数のマスが20px以上）", pg.evaluate("parseFloat(getComputedStyle(document.querySelector('.cdt td button')).fontSize)") >= 20)
+    pg.context.close()
+
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": [], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.fields": ALL}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300); C(pg, "[data-act=open-fields]")
+    check("入力中の歯車の画面は左右に動かない（上下だけ）", pg.evaluate("(()=>{const e=document.querySelector('.fields-sheet'); return e.scrollWidth<=e.clientWidth && getComputedStyle(e).overflowX==='hidden'})()"))
     pg.context.close()
 
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
