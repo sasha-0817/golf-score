@@ -40,7 +40,7 @@ def open_page(b, ls=None, dark=False, offline=False, repl=None):
     src = (src.replace("setTimeout(checkUpdate, 1500);", "").replace("setTimeout(maybeShowA2HS, 2500);", "")
               .replace("const state = {", "const state = window.state = {")
               .replace("function skinsCalc(", "window.skinsCalc=skinsCalc; function skinsCalc(")
-              .replace("function greenMap(", "window.approachSVG=approachSVG; window.greenMap=greenMap; function greenMap(")
+              .replace("function greenMap(", "window.dirHeat=dirHeat; window.greenMap=greenMap; function greenMap(")
               .replace("function matchCalc(", "window.matchCalc=matchCalc; window.teamCalc=teamCalc; window.teamSumCalc=teamSumCalc; window.GAME_KEYS_ORDER=()=>GAME_KEYS.join(); window.nassauCalc=nassauCalc; window.vegasCalc=vegasCalc; window.stableCalc=stableCalc; window.peoriaCalc=peoriaCalc; window.olympicCalc=olympicCalc; window.peoriaHidden=peoriaHidden; function matchCalc(")
               .replace("async function connect(){", "window.connect=()=>connect(); async function connect(){")
               .replace("let loading = false;", 'let loading = false; Object.defineProperty(window,"pending",{get:()=>pending});'))
@@ -68,6 +68,12 @@ def flick(pg, k, i, tgt):
     if k == "d":
         dx, dy = {"C": (0, 0), "L": (-50, 0), "R": (50, 0), "U": (0, -50), "D": (0, 50)}[tgt]
         pg.mouse.move(x + dx / 2, y + dy / 2, steps=2); pg.mouse.move(x + dx, y + dy, steps=2)
+    elif k == "m":
+        pg.mouse.move(x + 6, y, steps=2)
+        n = pg.evaluate("document.querySelectorAll('.fpop .fpc').length"); de = pg.evaluate("[...document.querySelectorAll('.fpop .fpc')].findIndex(e=>e.classList.contains('on'))")
+        rs, ls = n - 1 - de, de
+        st = min(36, (375 - 10 - x) / rs) if tgt > de and rs else (min(36, (x - 10) / ls) if ls else 36)
+        pg.mouse.move(x + (tgt - de) * max(14, st), y, steps=3)
     else:
         pg.mouse.move(x + 12, y, steps=2)
         c = pg.evaluate("t=>{const e=document.querySelector('.fpop .fpc[data-k=\"'+t+'\"]'); if(!e) return null; const q=e.getBoundingClientRect(); return q.x+q.width/2}", str(tgt))
@@ -513,12 +519,11 @@ with sync_playwright() as pw:
     check("履歴: 自分のラウンドだけ・プレーヤーの切りかえなし", pg.evaluate("document.querySelectorAll('.who-pick').length===0 && document.querySelectorAll('[data-act=toggle-round]').length===2"))
     C(pg, "nav.tabs [data-tab=stats]"); C(pg, "[data-act=stat-tab][data-v=shot]"); pg.wait_for_timeout(300)
     check("分析: プレーヤーの切りかえなし", pg.evaluate("document.querySelectorAll('.who-pick').length===0"))
-    st = pg.evaluate("""(()=>{ const g=[...document.querySelectorAll('svg.approach .az-s')]; const f=k=>g.find(x=>x.textContent.includes(k));
-      const L=f('左'), O=f('オーバー'); const bg=e=>e.querySelector('.az-bg').getAttribute('style');
-      const px=e=>getComputedStyle(e.querySelector('.az-p')).fontSize;
-      return {same: bg(L)===bg(O), hatch: !!L.querySelector('.az-hatch') && !!O.querySelector('.az-hatch'), size: px(L)===px(O)}; })()""")
-    check("分析の絵: 同じ割合のミスは同じ赤（斜線も両方）", st["same"] and st["hatch"])
-    check("分析の絵: 左右の%もほかと同じ大きさ", st["size"])
+    st = pg.evaluate("""(()=>{ const f=k=>document.querySelector('.heat.p3 .ht[data-k="'+k+'"]'); const L=f('left'), O=f('long');
+      return {same: L.style.background===O.style.background, worst: L.classList.contains('worst') && O.classList.contains('worst'), size: getComputedStyle(L.querySelector('b')).fontSize===getComputedStyle(O.querySelector('b')).fontSize}; })()""")
+    check("分析のヒートマップ: 同じ割合のミスは同じ濃さ（枠も両方）", st["same"] and st["worst"])
+    check("分析のヒートマップ: 左右の%もほかと同じ大きさ", st["size"])
+    check("分析: 狙い通りの枠は出さない", pg.query_selector(".aim-box") is None)
     check("分析: 一番多いミスが同率なら両方書く", "左・オーバー" in pg.inner_text("body"))
     C(pg, "[data-act=demo-on]"); C(pg, "nav.tabs [data-tab=history]")
     check("サンプルデータは たろう だけ", pg.evaluate("state.demo") and "はなこ" not in pg.inner_text("body"))
@@ -537,10 +542,8 @@ with sync_playwright() as pw:
     # 19d1. 花道はミスにしない（一番多くても赤くしない）
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": [], "sc.fields": ALL}, offline=True)
     start_preset(pg, "firtree")
-    svg = pg.evaluate("approachSVG(null,false,{dirs:{on:3,left:2,right:0,long:0,short:0,miss:5},dirN:10})")
-    import re as _re
-    hl = _re.findall(r'class="az-hatch"', svg)
-    check("分析の絵に花道はない（左・右・オーバー・ショートだけ）・一番多いミスはショート", "花道" not in svg and "az-safe" not in svg and len(hl) == 1 and "ショート" in pg.evaluate("greenMap({dirs:{on:3,left:2,right:0,long:0,short:0,miss:5},dirN:10})").split("一番多いミスは")[1][:60])
+    hm = pg.evaluate("dirHeat('p3',{on:3,left:2,right:0,long:0,miss:5},10)")
+    check("分析のヒートマップ: 花道はなく、5つのマス（オーバー・左・オン・右・ショート）で一番多いミスに強い枠", "花道" not in hm and hm.count('class="ht ') == 5 and 'worst' in hm)
     check("花道のあともエラーなし", not errs)
     pg.context.close()
 
@@ -560,11 +563,6 @@ with sync_playwright() as pw:
     check("日本語の文字は13px以上（記録・設定・分析）", not small)
 
     # 19d. 狙いと着弾（記録画面では入力しない。デモの記録で分析だけ確かめる）
-    pg, errs = open_page(b, {"sc.player": "\"me\"", "sc.tab": "\"stats\"", "sc.statTab": "\"shot\""}, offline=True)
-    C(pg, "[data-act=demo-on]"); pg.wait_for_timeout(300)
-    check("狙い: 分析に「狙い通り」と外れた向き（パー3・パー4）", pg.evaluate("document.querySelectorAll('.aim-box').length===2") and "外れた向き" in pg.inner_text("body"))
-    pg.context.close()
-
     # 19e. 記録中のスコアカード・名前の下に合計は出さない・コース画面の色分け
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": ["はなこ", "", ""], "sc.fields": ALL}, offline=True)
     start_preset(pg, "firtree")
@@ -631,6 +629,26 @@ with sync_playwright() as pw:
     C(pg, "[data-act=finish]"); pg.wait_for_timeout(900)
     check("ゴースト: リザルトにゴーストとの勝負", "GHOST" in pg.inner_text(".result-card") or "ゴースト" in pg.inner_text(".result-card"))
     check("ゴースト: エラーなし", not errs); pg.context.close()
+
+    # 19g. ゴーストは過去の記録がないコースでは選べない・前回のクラブが最初から入る・画面は上下に動かない・スコアカード入力は4人分の幅
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": [], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"ghost\"", "sc.fields": ALL}, offline=True)
+    C(pg, "[data-act=open-game]")
+    check("ゴースト: そのコースの記録がないとカードが薄く「記録がないと選べません」", pg.query_selector(".gm-card.na[data-v=ghost]") is not None and "記録がないと選べません" in pg.inner_text(".gm-card[data-v=ghost]"))
+    C(pg, ".game-sheet [data-act=close-game]"); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    check("ゴースト: 記録がないコースで始めるとゲームなしで始まる", pg.evaluate("state.draft.game") is None)
+    pg.context.close()
+    old2 = [{"id": "o2", "player": "たろう", "courseId": "c1", "courseName": "C1", "date": "2026-09-01", "createdAt": 1, "holes": [{"par": 3, "strokes": 3, "putts": 2, "club": "8I"}] * 9}]
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": [], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.rounds": old2, "sc.fields": ALL}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    check("前に回ったホールは、前回のクラブが最初から入っている（点線の枠）", pg.inner_text('.fc[data-k="c"]').strip() == "8I" and pg.evaluate("document.querySelector('.fc[data-k=c]').classList.contains('auto')"))
+    check("記録画面は上下に動かない（1画面に収まるとき）", pg.evaluate("document.documentElement.classList.contains('noscroll')"))
+    pg.context.close()
+    for nm, m in (("2人", ["はなこ"]), ("4人", ["はなこ", "じろう", "さぶろう"])):
+        pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": m, "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\""}, offline=True)
+        C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+        hs[nm] = pg.evaluate("[document.querySelectorAll('.cdt thead tr:first-child th').length, Math.round(document.querySelector('.cdt td.c-s').getBoundingClientRect().width)]")
+        pg.context.close()
+    check("スコアカード入力は、2人でも4人と同じ列の数・同じ幅（使わない列は空）", hs["2人"] == hs["4人"])
 
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
     import subprocess, time
