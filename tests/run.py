@@ -428,7 +428,7 @@ with sync_playwright() as pw:
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.game": "\"teamsum\"", "sc.mates": ["はなこ", "じろう", "さぶろう"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.fields": dict(NONE)}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
     for v in ["3", "4", "5", "4"]: C(pg, f'[data-act=cd-key][data-v="{v}"]')
-    check("合計スコア: 記録中にチームの合計（A 7打 / B 9打）", pg.evaluate("[...document.querySelectorAll('.cdt tr.gr .gtag')].map(e=>e.textContent).join()") == "A 7打,A 7打,B 9打,B 9打")
+    check("合計スコア: 記録中にチームの合計（A=7 / B=9）を2人で1つずつ、A・Bの文字や単位なし", pg.evaluate("[...document.querySelectorAll('.cdt tr.gr td.tm')].map(e=>e.textContent).join()") == "7,9")
     check("合計スコア: エラーなし", not errs)
     pg.context.close()
 
@@ -716,6 +716,24 @@ with sync_playwright() as pw:
     check("初めて詳細入力を開くと、フリックの使いかたの案内が出る", pg.query_selector(".ftip") is not None and pg.query_selector(".ftip .ft-finger") is not None and pg.query_selector(".ftip-x") is not None and pg.query_selector(".ftip p") is None)
     C(pg, ".ftip-x")
     check("右上の×で閉じて、二度と出ない", pg.query_selector(".ftip") is None and pg.evaluate("localStorage.getItem('sc.flickTip')") == "true")
+    pg.context.close()
+
+    # 19j. スコアカード入力: ポイントの行名・ダボなどの枠が重ならない・4文字の名前・ルールの再確認
+    pg, errs = open_page(b, {"sc.player": "\"さぶろう\"", "sc.inputMode": "\"card\"", "sc.mates": ["はなこ", "じろう", "ごんべえ"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"nearpin\""}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    check("スコアカード: ゲームの行は「ポイント」（ニアピンでも）", "ポイント" in pg.inner_text(".cd-game tr.gr .ft") or "ポイント" in pg.inner_text(".cd-game"))
+    check("スコアカード: 4文字の名前も「…」にならない", pg.evaluate("[...document.querySelectorAll('.cdt thead th.nm')].filter(e=>e.textContent.trim()).every(e=>e.scrollWidth<=e.clientWidth)"))
+    check("スコアカード: ダボなどの記号の枠が上下の行にはみ出さない（行の高さに収まる）", pg.evaluate("(()=>{const td=document.querySelector('.cdt tbody td.c-s'); const m=document.createElement('span'); m.className='mk3 m-double'; td.appendChild(m); const r=m.getBoundingClientRect(); const cs=getComputedStyle(m).boxShadow; m.remove(); const ext=2.5; return r.height+ext*2 <= td.getBoundingClientRect().height})()"))
+    C(pg, "[data-act=open-rules][data-v=nearpin]")
+    check("スコアカード入力中もゲームのルールを見られる", pg.query_selector(".rp") is not None)
+    C(pg, ".rp-x")
+    pg.context.close()
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"skins\"", "sc.fields": ALL}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    C(pg, "[data-act=open-rules][data-v=skins]")
+    check("くわしく記録中もゲームのルールを見られる（右上の？ボタン）", pg.query_selector(".rp") is not None and pg.query_selector(".rule-btn") is not None)
+    C(pg, ".rp-x")
+    check("スキンズのコインは光沢つき（グラデーション）で、表の中でも大きい", pg.evaluate("(()=>{const c=document.querySelector('.frow .pt .coin'); return !!c && c.innerHTML.includes('radialGradient') && c.getBoundingClientRect().width>=24})()"))
     pg.context.close()
 
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
