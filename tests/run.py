@@ -528,10 +528,9 @@ with sync_playwright() as pw:
     check("履歴: 自分のラウンドだけ・プレーヤーの切りかえなし", pg.evaluate("document.querySelectorAll('.who-pick').length===0 && document.querySelectorAll('[data-act=toggle-round]').length===2"))
     C(pg, "nav.tabs [data-tab=stats]"); C(pg, "[data-act=stat-tab][data-v=shot]"); pg.wait_for_timeout(300)
     check("分析: プレーヤーの切りかえなし", pg.evaluate("document.querySelectorAll('.who-pick').length===0"))
-    st = pg.evaluate("""(()=>{ const f=k=>document.querySelector('.heat.p3 .ht[data-k="'+k+'"]'); const L=f('left'), O=f('long');
-      return {same: L.style.background===O.style.background, worst: L.classList.contains('worst') && O.classList.contains('worst'), size: getComputedStyle(L.querySelector('b')).fontSize===getComputedStyle(O.querySelector('b')).fontSize}; })()""")
-    check("分析のヒートマップ: 同じ割合のミスは同じ濃さ（枠も両方）", st["same"] and st["worst"])
-    check("分析のヒートマップ: 左右の%もほかと同じ大きさ", st["size"])
+    st = pg.evaluate("""(()=>{ const f=k=>document.querySelector('.dmap .bb[data-k="'+k+'"]'); const L=f('left'), O=f('long');
+      return {same: L.querySelector('circle').getAttribute('r')===O.querySelector('circle').getAttribute('r'), worst: L.classList.contains('worst') && O.classList.contains('worst')}; })()""")
+    check("分析の方向（グリーンの上の丸）: 同じ割合のミスは同じ大きさ・金の輪も両方", st["same"] and st["worst"])
     check("分析: 狙い通りの枠は出さない", pg.query_selector(".aim-box") is None)
     check("分析: 一番多いミスが同率なら両方書く", "左・オーバー" in pg.inner_text("body"))
     C(pg, "[data-act=demo-on]"); C(pg, "nav.tabs [data-tab=history]")
@@ -552,7 +551,7 @@ with sync_playwright() as pw:
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": [], "sc.fields": ALL}, offline=True)
     start_preset(pg, "firtree")
     hm = pg.evaluate("dirHeat('p3',{on:3,left:2,right:0,long:0,miss:5},10)")
-    check("分析のヒートマップ: 花道はなく、5つのマス（オーバー・左・オン・右・ショート）で一番多いミスに強い枠", "花道" not in hm and hm.count('class="ht ') == 5 and 'worst' in hm)
+    check("分析の方向: 花道はなく、5つの丸（オーバー・左・オン・右・ショート）で一番多いミスに金の輪、グリーンの図つき", "花道" not in hm and hm.count('class="bb ') == 5 and 'worst' in hm and "<ellipse" in hm)
     check("花道のあともエラーなし", not errs)
     pg.context.close()
 
@@ -723,7 +722,9 @@ with sync_playwright() as pw:
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
     check("スコアカード: ゲームの行は「ポイント」（ニアピンでも）", "ポイント" in pg.inner_text(".cd-game tr.gr .ft") or "ポイント" in pg.inner_text(".cd-game"))
     check("スコアカード: 4文字の名前も「…」にならない", pg.evaluate("[...document.querySelectorAll('.cdt thead th.nm')].filter(e=>e.textContent.trim()).every(e=>e.scrollWidth<=e.clientWidth)"))
-    check("スコアカード: ダボなどの記号の枠が上下の行にはみ出さない（行の高さに収まる）", pg.evaluate("(()=>{const td=document.querySelector('.cdt tbody td.c-s'); const m=document.createElement('span'); m.className='mk3 m-double'; td.appendChild(m); const r=m.getBoundingClientRect(); const cs=getComputedStyle(m).boxShadow; m.remove(); const ext=2.5; return r.height+ext*2 <= td.getBoundingClientRect().height})()"))
+    check("スコアカード: ダボなどの記号の枠が上下の行にはみ出さない（外側の輪まで含めて行の高さに収まる）", pg.evaluate("(()=>{const td=document.querySelector('.cdt tbody td.c-s'); const m=document.createElement('span'); m.className='mk3 m-double'; td.appendChild(m); const r=m.getBoundingClientRect(), cs=getComputedStyle(m), ring=parseFloat(cs.outlineWidth)+parseFloat(cs.outlineOffset); m.remove(); return r.height+ring*2+2 <= td.getBoundingClientRect().height-4})()"))
+    check("スコアカード: サブタイトルに「◯人」は出さない", "人" not in pg.inner_text(".rec-who span"))
+    check("スコアカード: H・PAR の下に空きの行はない（2行ぶち抜き）", pg.evaluate("document.querySelectorAll('.cdt thead th[rowspan]').length") == 2)
     C(pg, "[data-act=open-rules][data-v=nearpin]")
     check("スコアカード入力中もゲームのルールを見られる", pg.query_selector(".rp") is not None)
     C(pg, ".rp-x")
@@ -734,6 +735,11 @@ with sync_playwright() as pw:
     check("くわしく記録中もゲームのルールを見られる（右上の？ボタン）", pg.query_selector(".rp") is not None and pg.query_selector(".rule-btn") is not None)
     C(pg, ".rp-x")
     check("スキンズのコインは光沢つき（グラデーション）で、表の中でも大きい", pg.evaluate("(()=>{const c=document.querySelector('.frow .pt .coin'); return !!c && c.innerHTML.includes('radialGradient') && c.getBoundingClientRect().width>=24})()"))
+    pg.context.close()
+
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": ["はなこ", "じろう", "さぶろう"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"teamsum\""}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    check("スコアカード（チーム戦）: 1・2人目はA（紺）、3・4人目はB（金）の列の色で囲う", pg.evaluate("[document.querySelectorAll('.cdt thead th.nm.tA').length, document.querySelectorAll('.cdt thead th.nm.tB').length, document.querySelectorAll('.cdt tbody td.tA').length>0, document.querySelectorAll('.cdt tbody td.tB').length>0].join()") == "2,2,true,true")
     pg.context.close()
 
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす

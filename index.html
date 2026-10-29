@@ -1827,18 +1827,11 @@ nav.tabs button{font-size:12px!important}
 .rcard>button{padding:7px 12px;gap:10px}
 .rcard .day b{font-size:20px}.rcard .strip{margin-top:4px}
 .rcard .sc-tot b{font-size:26px}.rcard .sc-tot small{display:inline;font-size:15px;margin:0 0 0 3px}
-.heat{display:grid;gap:6px;margin:8px auto 0;max-width:320px}
-.heat.p3{grid-template-columns:1fr 1.15fr 1fr;grid-template-areas:". u ." "l c r" ". d ."}
-.heat.fw{grid-template-columns:1fr 1.15fr 1fr;grid-template-areas:"l c r" "d d d"}
-.heat .ht{border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 2px;min-height:62px;line-height:1.1;transition:none}
-.heat .ht span{font-size:14px;font-weight:600;opacity:.92;letter-spacing:.02em}
-.heat .ht b{font:700 24px/1.1 var(--f-num);margin-top:2px}.heat .ht b i{font-size:14px;font-style:normal;margin-left:1px;opacity:.85}
-.heat .ht.worst{outline:2.5px solid #F2B01E;outline-offset:2px}
-.heat .ht-u{grid-area:u}.heat .ht-l{grid-area:l}.heat .ht-c{grid-area:c}.heat .ht-r{grid-area:r}.heat .ht-d{grid-area:d}
-.heat.fw .ht-d{min-height:50px}
-.heat-leg{display:flex;align-items:center;gap:8px;max-width:320px;margin:10px auto 0;font-size:13px;color:var(--muted)}
-.heat-leg i{flex:0 0 70px;height:8px;border-radius:4px;background:linear-gradient(90deg,color-mix(in srgb,#2F5DA8 8%,var(--paper)),#2F5DA8)}
-.heat-leg em{font-style:normal;margin-left:auto;font-size:12.5px}
+.dmap{margin:6px auto 0;max-width:360px}
+.dsvg{display:block;width:100%;height:auto}
+.dsvg text{fill:#fff;text-anchor:middle;font-family:var(--f-body);font-weight:700;pointer-events:none}
+.dsvg text.pc{font-family:var(--f-num)}
+.dmap-leg{text-align:center;font-size:13.5px;color:var(--muted);margin-top:6px}
 .cdt th.pad,.cdt td.pad{background:color-mix(in srgb,var(--rec-line) 28%,transparent)}
 html,body{overscroll-behavior-y:none}
 html.noscroll,html.noscroll body{overflow:hidden;height:100%}
@@ -1846,7 +1839,6 @@ html.noscroll,html.noscroll body{overflow:hidden;height:100%}
 body[data-tab=stats] #main :is(label,button,.btn,.demo-band,.gl,.gs,.muted,.cs-note,.map-sub,.sec span,.who span,.who,.eyebrow,.ctag,.rv,th,td,p,select,option,.bk-row span,.legend span,.sc-legend span){font-size:15px}
 body[data-tab=stats] #main .sec em{font-size:12px}
 body[data-tab=stats] #main :is(.gs,.cs-note,.muted){line-height:1.45}
-body[data-tab=stats] #main .heat .ht span{font-size:15px}
 .fc.un{background:var(--rec-bg);color:var(--rec-muted);border:1.5px dashed var(--rec-line)}
 .fc.un span{font:700 15px var(--f-body)}
 .badge.b-none{background:rgba(255,255,255,.16);color:#fff}
@@ -1878,7 +1870,6 @@ body[data-tab=stats] #main .heat .ht span{font-size:15px}
 .cdt thead th.nm{font-size:15px;padding:0 2px}
 .badge.b-none{font-size:13px}
 .heat-leg em,.heat-leg span{font-size:13px}
-.heat-leg span{white-space:nowrap}
 .club-tbl th{font-size:13px!important;white-space:nowrap;padding-left:0;padding-right:0}
 .club-tbl th:nth-child(1){width:52px}.club-tbl th:nth-child(2){width:46px}.club-tbl th:nth-child(3){width:46px}.club-tbl th:nth-child(5){width:70px}
 .club-tbl .cs-bar{width:52px}
@@ -1941,6 +1932,33 @@ body[data-tab=stats] #main .heat .ht span{font-size:15px}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cdt tfoot td.tmA{color:#9DB8EA}:root:not([data-theme="light"]) .cdt tfoot td.tmB{color:#F2C54D}}
 .rule-btn svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;width:26px;height:26px}
 .cd-rule{margin-right:6px}
+/* ---- 2026-10-31: スコアカード入力の整え（記号の重なり・文字・メダルの切れ・チームの色） ---- */
+.cdt col.h{width:26px}.cdt col.par{width:30px}.cdt.wp col.p{width:42px}
+.cdt thead tr.sub th{top:30px;font-size:13px}
+.cdt thead th[rowspan]{vertical-align:middle}
+.cdt .mk3{width:23px;height:23px;font-size:17px}
+.cdt .m-eagle{box-shadow:0 0 0 1px var(--paper),0 0 0 2px var(--q-eagle)}
+.cdt .m-double{box-shadow:0 0 0 1px var(--paper),0 0 0 2px var(--q-double)}
+.cdt .m-hio{outline-offset:1px;outline-width:1.5px}
+.cdt td button{height:36px;font-size:23px}
+.cdt td.hn{font-size:21px}.cdt td.pr{font-size:21px}
+.cdt tfoot td{height:44px;font-size:22px}
+.cdt tfoot td.ft{font-size:17px}.cdt tfoot td.ft small{font-size:15px}
+.cdt tfoot small{font-size:15px;margin-top:1px}
+.cdt tfoot tr.gin td{height:48px}
+.cdt .gin-c .fc{height:38px}
+.cdt tA,.cdt .tA{background:color-mix(in srgb,#1F3A68 7%,transparent)}
+.cdt .tB{background:color-mix(in srgb,#F2B01E 12%,transparent)}
+.cdt thead th.nm.tA{box-shadow:inset 0 3px 0 #1F3A68}.cdt thead th.nm.tB{box-shadow:inset 0 3px 0 #F2B01E}
+.cdt tbody td.tB.c-s:first-of-type{border-left-width:2px}
+.cdt thead th.c-s.tA,.cdt thead th.tA,.cdt thead tr.sub th.tA{background:color-mix(in srgb,#1F3A68 10%,var(--rec-raise))}
+.cdt thead th.tB,.cdt thead tr.sub th.tB{background:color-mix(in srgb,#F2B01E 16%,var(--rec-raise))}
+.cdt .m-eagle,.cdt .m-double,.cdt .m-hio{outline-width:1.5px;outline-offset:1px}
+.cdt .mk3{width:22px;height:22px;font-size:17px}
+.cd.wg .cdt:not(.cdg) td button{height:33px}
+.cd.wg .cdt:not(.cdg) tfoot td{height:40px}
+.cd.wg .cdt tfoot tr.gin td{height:44px}.cd.wg .cdt .gin-c .fc{height:34px}
+.cd.wg .cdt tfoot tr.skr td{height:36px}
 </style>
 
 </head>
@@ -2048,7 +2066,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-30-1900";
+const BUILD = "2026-10-31-0900";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2801,9 +2819,10 @@ function viewCard(cd){
   const N=cd.holes.length, two=N>9, half=two?(cd.half||0):0, pOn=fields().putts, sel=cd.sel;
   const rows=cd.holes.map((x,i)=>i).filter(i=>!two || (half?i>=9:i<9));
   const isSel=(h,i,k)=>sel && sel.h===h && sel.i===i && sel.k===k;
+  const teamG = cd.players.length===4 && GAMES[cd.game] && GAMES[cd.game].type==="team", tcl = i => teamG ? (i<2?"tA":"tB") : "";   // チーム戦: 1・2人目=A（紺）、3・4人目=B（金）の列を色で囲う
   const cell=(h,i,k)=>{ const pl=cd.players[i], v=k==="s"?pl.s[h]:pl.p[h];
     const inner = v==null ? "" : k==="s" ? `<span class="mk3 m-${v===1?"hio":TONE(v-cd.holes[h].par)}">${v}</span>` : `<span class="cp ${v>=3?"bad":""}">${v}</span>`;
-    return `<td class="c-${k} ${isSel(h,i,k)?"sel":""}"><button data-act="cd-cell" data-h="${h}" data-i="${i}" data-k="${k}" aria-label="${esc(pl.name)} ${h+1}番 ${k==="s"?"打数":"パット"}${v!=null?" "+v:""}">${inner}</button></td>`; };
+    return `<td class="c-${k} ${isSel(h,i,k)?"sel":""} ${tcl(i)}"><button data-act="cd-cell" data-h="${h}" data-i="${i}" data-k="${k}" aria-label="${esc(pl.name)} ${h+1}番 ${k==="s"?"打数":"パット"}${v!=null?" "+v:""}">${inner}</button></td>`; };
   const subt=(i,idx)=>{ const pl=cd.players[i], hs=idx.filter(h=>pl.s[h]!=null); if(!hs.length) return {s:"",d:""};
     const sc=hs.reduce((a,h)=>a+pl.s[h],0), par=hs.reduce((a,h)=>a+cd.holes[h].par,0), pt=hs.filter(h=>pl.p[h]!=null).reduce((a,h)=>a+pl.p[h],0);
     return {s:sc, d:toPar(sc-par), p:hs.some(h=>pl.p[h]!=null)?pt:""}; };
@@ -2811,7 +2830,7 @@ function viewCard(cd){
   const skc = cd.game==="skins" ? skinsCalc(cd.players.map(p=>p.s), N, !!cd.carry) : null;
   const FH=38, GH=32, IH=42;   // 計の行・ゲームの行・入力の行の高さ（下から積む位置の計算に使う）
   const foot=(lab,idx,cls="",bot=0)=>`<tr class="${cls}"><td colspan="2" class="ft" style="bottom:${bot}px">${lab}<small>${idx.reduce((a,h)=>a+cd.holes[h].par,0)}</small></td>${cd.players.map((p,i)=>{ const t=subt(i,idx);
-    return `<td class="c-s" style="bottom:${bot}px">${t.s}<small>${t.d}</small></td>${cdP(i)?`<td class="c-p" style="bottom:${bot}px">${t.p??""}</td>`:""}`; }).join("")}${padTd.replace(/<td /g,`<td style="bottom:${bot}px" `)}</tr>`;
+    return `<td class="c-s ${tcl(i)}" style="bottom:${bot}px">${t.s}<small>${t.d}</small></td>${cdP(i)?`<td class="c-p ${tcl(i)}" style="bottom:${bot}px">${t.p??""}</td>`:""}`; }).join("")}${padTd.replace(/<td /g,`<td style="bottom:${bot}px" `)}</tr>`;
   // 紙のスコアカードのように、人数が少なくても列は4人分の幅（使わない列は空のまま）
   const nPad=Math.max(0,4-cd.players.length), rp=n=>Array(n).fill(0), pw=1, cwOf=i=>cdP(i)?2:1;
   const padCols=rp(nPad).map(()=>`<col class="s">${pw===2?`<col class="p">`:""}`).join(""), padTh=rp(nPad).map(()=>`<th class="nm pad" colspan="${pw}"></th>`).join(""),
@@ -2819,7 +2838,7 @@ function viewCard(cd){
         padSp=nPad?`<td class="pad" colspan="${nPad*pw}"></td>`:"";
   const nDone = (()=>{ let i=0; while(i<N && cd.players.every(p=>p.s[i]!=null)) i++; return i; })();
   const gtc = cd.game && cd.game!=="skins" && !isPeoria(cd.game) ? gameTags(cd.game, cd.players.map(p=>p.s), cd.holes.map(x=>x.par), nDone, N, {medals:cd.medals, pins:cd.pins, hole:-1}) : null;
-  const isTeamG = cd.players.length===4 && GAMES[cd.game] && GAMES[cd.game].type==="team";
+  const isTeamG = teamG;
   const tv = i => String(gtc&&gtc[i]||"").replace(/<[^>]+>/g,"").replace(/^[AB]\s*/,"").replace(/[勝打]|pt$/g,"");   // チーム戦は A/B の文字や単位を出さない
   const gameRow = gtc ? `<tr class="skr gr"><td colspan="2" class="ft">ポイント</td>${isTeamG ? [0,2].map(i=>`<td class="c-s tm tm${i?"B":"A"}" colspan="${cwOf(i)+cwOf(i+1)}">${esc(tv(i))}</td>`).join("") : gtc.map((t,i)=>`<td class="c-s" colspan="${cwOf(i)}">${t}</td>`).join("")}${padSp}</tr>` : "";
   const skinRow = skc ? `<tr class="skr"><td colspan="2" class="ft">ポイント${cd.carry?`<small class="blk">次${skc.pot}枚</small>`:""}</td>${cd.players.map((p,i)=>`<td class="c-s" colspan="${cwOf(i)}"><span class="skp">${coinSVG(24)}<b>${skc.won[i]}</b></span></td>`).join("")}${padSp}</tr>` : "";
@@ -2836,16 +2855,16 @@ function viewCard(cd){
   const plSel = sel && cd.players[sel.i];
   const key=(v,lab,dis)=>`<button data-act="cd-key" data-v="${v}" ${dis?"disabled":""} aria-label="${lab}">${lab}</button>`;
   const ks = sel ? sel.k : "s";
-  return `<div class="cd">
+  return `<div class="cd ${(inputRow||skinRow||gameRow)?"wg":""}">
     <div class="rec-top">
       <button class="icon-btn" data-act="ask-discard" aria-label="記録を閉じる">${ICON.x}</button>
-      <div class="rec-who"><b>${esc(cd.courseName)}</b><span>${esc(cd.date.slice(5).replace("-","/"))}・スコアカード・${cd.players.length}人</span></div>
+      <div class="rec-who"><b>${esc(cd.courseName)}</b><span>${esc(cd.date.slice(5).replace("-","/"))}・スコアカード</span></div>
       ${cd.game?`<button class="cd-pt cd-rule" data-act="open-rules" data-v="${cd.game}">ルール</button>`:""}<button class="cd-pt" data-act="cd-putts" aria-pressed="${pOn}">パット${pOn?"あり":"なし"}</button>
     </div>
     ${two?`<div class="cd-tabs" role="group" aria-label="前半・後半">${["OUT 1–9","IN 10–"+N].map((l,k)=>`<button data-act="cd-half" data-v="${k}" aria-pressed="${half===k}">${l}</button>`).join("")}</div>`:""}
     <div class="cd-scroll"><table class="cdt ${pOn?"wp":""}">${colg}
-      <thead><tr><th>H</th><th>PAR</th>${cd.players.map((p,i)=>`<th class="nm" colspan="${cwOf(i)}">${esc(dupLabel(cd.players.map(x=>x.name),i))}</th>`).join("")}${padTh}</tr>
-      ${pOn?`<tr class="sub"><th></th><th></th>${cd.players.map((p,i)=>cdP(i)?`<th class="c-s">打数</th><th>パット</th>`:`<th class="c-s">打数</th>`).join("")}${padSub}</tr>`:""}</thead>
+      <thead><tr><th rowspan="${pOn?2:1}">H</th><th rowspan="${pOn?2:1}">PAR</th>${cd.players.map((p,i)=>`<th class="nm ${tcl(i)}" colspan="${cwOf(i)}">${esc(dupLabel(cd.players.map(x=>x.name),i))}</th>`).join("")}${padTh}</tr>
+      ${pOn?`<tr class="sub">${cd.players.map((p,i)=>cdP(i)?`<th class="c-s ${tcl(i)}">打数</th><th class="${tcl(i)}">パット</th>`:`<th class="c-s ${tcl(i)}">打数</th>`).join("")}${padSub}</tr>`:""}</thead>
       <tbody>${rows.map(h=>`<tr><td class="hn">${h+1}</td><td class="pr">${cd.holes[h].par}</td>${cd.players.map((p,i)=>cell(h,i,"s")+(cdP(i)?cell(h,i,"p"):"")).join("")}${padTd}</tr>`).join("")}</tbody>
       <tfoot>${two?foot(half?"IN":"OUT",rows,"",FH)+foot("計",all,"all",0):foot("計",all,"",0)}</tfoot></table></div>
     ${(inputRow||skinRow||gameRow)?`<div class="cd-game"><table class="cdt cdg ${pOn?"wp":""}">${colg}<tfoot>${inputRow}${skinRow}${gameRow}</tfoot></table></div>`:""}
@@ -3156,19 +3175,44 @@ function aimBox(rs, kind){
     ${ks.length?`<div class="aim-miss"><span>外れた向き</span>${ks.map((k,i)=>`<i class="${i===0?"top":""}">${L[k]} ${Math.round(pct(a.c[k],a.n))}%</i>`).join("")}</div>`:""}</div>`;
 }
 /* ティーショットの行き先: 記録画面のフリックと同じ形のヒートマップ（ミスが多いほど濃い赤。同じ数は同じ濃さ） */
+let dmN=0;
 function dirHeat(kind, c, n){
-  const tiles = kind==="p3" ? [["long","オーバー","u"],["left","左","l"],["on","オン","c"],["right","右","r"],["miss","ショート","d"]] : [["rl","左","l"],["fw","真ん中","c"],["rr","右","r"],["miss","ショート","d"]];
-  const good = kind==="p3" ? "on" : "fw", vals = tiles.map(t=>c[t[0]]||0), mx = Math.max(1,...vals);
-  const top = Math.max(0,...tiles.filter(t=>t[0]!==good).map(t=>c[t[0]]||0));
-  return `<div class="heat ${kind}">${tiles.map(([k,l,pos])=>{ const v=c[k]||0, pc=pct(v,n), x=v?Math.round(10+v/mx*78):4, worst=k!==good&&top>0&&v===top;
-    return `<div class="ht ht-${pos} ${worst?"worst":""} ${k===good?"good":""}" data-k="${k}" style="background:color-mix(in srgb,#2F5DA8 ${x}%,var(--paper));color:${x>50?"#fff":"var(--fg)"}"><span>${l}</span><b>${Math.round(pc)}<i>%</i></b></div>`; }).join("")}</div>
-    <div class="heat-leg"><span>少ない</span><i></i><span>多い</span></div>`; }
+  /* ティーショットの行き先: グリーン（パー4・5はフェアウェイ）の図の上に、割合の大きさの丸。いちばん多いミスは金の輪 */
+  const par3 = kind==="p3", id=++dmN;
+  const keys = par3 ? [["on","オン"],["left","左"],["right","右"],["long","オーバー"],["miss","ショート"]] : [["fw","真ん中"],["rl","左"],["rr","右"],["miss","ショート"]];
+  const good = par3?"on":"fw", get = k => c[k]||0, R = k => 16+5.6*Math.sqrt(pct(get(k),n)), rOn = R(good);
+  const top = Math.max(0,...keys.filter(k=>k[0]!==good).map(k=>get(k[0])));
+  const kl = par3?"left":"rl", kr = par3?"right":"rr", rl=R(kl), rr=R(kr), rs=R("miss"), ro=par3?R("long"):0;
+  let bg, pos={}, ext;
+  if(par3){ const rx=rOn+44, ry=rOn*0.85+34; ext=[rx+10,ry+9,rx+10,ry+9];
+    pos.on=[0,0]; pos.left=[-(rx+rl*0.9),0]; pos.right=[rx+rr*0.9,0]; pos.long=[0,-(ry+ro*0.9)]; pos.miss=[0,ry+rs*0.9];
+    bg=`<defs><radialGradient id="dg${id}" cx="42%" cy="36%" r="75%"><stop offset="0" stop-color="#46D59B"/><stop offset=".65" stop-color="#17A468"/><stop offset="1" stop-color="#0E8A55"/></radialGradient><clipPath id="dc${id}"><ellipse rx="${rx}" ry="${ry}"/></clipPath></defs>
+      <ellipse rx="${rx+9}" ry="${ry+8}" fill="#7FDDB0" opacity=".55"/><ellipse rx="${rx}" ry="${ry}" fill="url(#dg${id})"/>
+      <g clip-path="url(#dc${id})" opacity=".14">${[-3,-1,1,3].map(i=>`<rect x="${i*rx/4.2-rx/8.4}" y="${-ry}" width="${rx/4.2}" height="${ry*2}" fill="#fff"/>`).join("")}</g>
+      <ellipse rx="${rx}" ry="${ry}" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1.5"/>
+      <g transform="translate(${-(rOn+16)} ${-ry*0.18})"><ellipse cx="0" cy="22" rx="5" ry="2" fill="#064D2E" opacity=".5"/><path d="M0 22V-18" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M1.2-18l17 6.5-17 6.5z" fill="#E5484D"/></g>`;
+  } else { const fw=rOn+34, topY=-(rOn+62), botY=rOn+34; ext=[fw+10,Math.abs(topY)+8,fw+10,botY+8];
+    pos.fw=[0,0]; pos.rl=[-(fw+rl*0.9),0]; pos.rr=[fw+rr*0.9,0]; pos.miss=[0,botY+rs*0.9];
+    bg=`<defs><linearGradient id="dg${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2FBF86"/><stop offset="1" stop-color="#139A62"/></linearGradient><clipPath id="dc${id}"><rect x="${-fw}" y="${topY}" width="${fw*2}" height="${botY-topY}" rx="${fw*0.5}"/></clipPath></defs>
+      <rect x="${-fw-8}" y="${topY-6}" width="${fw*2+16}" height="${botY-topY+12}" rx="${fw*0.5+6}" fill="#7FDDB0" opacity=".5"/>
+      <rect x="${-fw}" y="${topY}" width="${fw*2}" height="${botY-topY}" rx="${fw*0.5}" fill="url(#dg${id})"/>
+      <g clip-path="url(#dc${id})" opacity=".13">${[0,1,2,3,4,5].map(i=>`<rect x="${-fw}" y="${topY+i*(botY-topY)/6}" width="${fw*2}" height="${(botY-topY)/12}" fill="#fff"/>`).join("")}</g>
+      <rect x="${-fw}" y="${topY}" width="${fw*2}" height="${botY-topY}" rx="${fw*0.5}" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1.5"/>
+      <g transform="translate(0 ${topY+16})"><ellipse rx="${fw*0.62}" ry="14" fill="#7BE7B4" opacity=".55"/><g transform="translate(${fw*0.3} 0)"><path d="M0 6V-20" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><path d="M1-20l13 5-13 5z" fill="#E5484D"/></g></g>`; }
+  const pts=keys.map(([k])=>{ const r=R(k), [x,y]=pos[k]; return [x-r,y-r,x+r,y+r]; });
+  const x0=Math.min(...pts.map(q=>q[0]),-ext[0])-8, y0=Math.min(...pts.map(q=>q[1]),-ext[1])-6, x1=Math.max(...pts.map(q=>q[2]),ext[2])+8, y1=Math.max(...pts.map(q=>q[3]),ext[3])+6;
+  const bub=keys.map(([k,l])=>{ const v=get(k), r=R(k), pc=pct(v,n), isG=k===good, worst=!isG&&top>0&&v===top, [x,y]=pos[k], a=isG?1:Math.min(1,0.55+pc/60), fs=r>=44?27:r>=34?22:18;
+    return `<g class="bb ${worst?"worst":""} ${isG?"good":""}" data-k="${k}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><circle r="${r.toFixed(1)}" fill="${isG?"#2F5DA8":"#D9483B"}" fill-opacity="${a.toFixed(2)}" stroke="#fff" stroke-width="2.5"/>
+      <circle r="${r.toFixed(1)}" fill="url(#dh${id})"/>${worst?`<circle r="${(r+5).toFixed(1)}" fill="none" stroke="#F2B01E" stroke-width="3.5"/>`:""}
+      <text y="${(-fs*0.12).toFixed(1)}" font-size="${r<30?11:13}">${l}</text><text class="pc" y="${(fs*0.78).toFixed(1)}" font-size="${fs}">${Math.round(pc)}<tspan font-size="${Math.round(fs*0.55)}">%</tspan></text></g>`; }).join("");
+  return `<div class="dmap"><svg class="dsvg" viewBox="${x0.toFixed(0)} ${y0.toFixed(0)} ${(x1-x0).toFixed(0)} ${(y1-y0).toFixed(0)}" role="img" aria-label="${par3?"パー3":"パー4・5"}の方向の割合"><defs><radialGradient id="dh${id}" cx="32%" cy="26%" r="75%"><stop offset="0" stop-color="#fff" stop-opacity=".38"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>${bg}${bub}</svg>
+    <div class="dmap-leg">丸が大きいほど多い・金の輪＝いちばん多いミス</div></div>`; }
 function greenMap(s){
   if(!s.dirN) return `<p class="muted" style="font-size:13px">まだ記録がありません。記録画面でグリーンのどこに行ったかを選ぶとここに出ます。</p>`;
   const miss = s.dirN - s.dirs.on;
   const top = Math.max(0, ...["left","right","long","miss"].map(k=>s.dirs[k]||0));
   const worst = miss && top ? ["left","right","long","miss"].filter(k=>(s.dirs[k]||0)===top).map(k=>DIRS[k]).join("・") : null;
-  return dirHeat("p3", s.dirs, s.dirN) + `<p class="muted" style="font-size:14px;text-align:center;margin:8px 0 0">${s.dirN}球の記録${worst?`・金の枠は一番多いミス（<b style="color:var(--q-triple)">${worst}</b>）`:""}</p>`;
+  return dirHeat("p3", s.dirs, s.dirN) + `<p class="muted" style="font-size:14px;text-align:center;margin:8px 0 0">${s.dirN}球の記録${worst?`・一番多いミスは<b style="color:var(--q-triple)">${worst}</b>`:""}</p>`;
 }
 function cssv(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 after.stats = () => {
