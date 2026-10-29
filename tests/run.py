@@ -34,6 +34,7 @@ def check(name, cond):
     results.append((bool(cond), name)); print(("OK  " if cond else "NG  ") + name)
 
 def open_page(b, ls=None, dark=False, offline=False, repl=None):
+    ls = {"sc.flickTip": True, **(ls or {})}   # 初回のフリック案内は、ふだんのテストでは出さない
     src = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
     src = re.sub(r'const CF_URL = "[^"]*";', 'const CF_URL = "";', src, count=1)  # ふだんのテストは引っ越しの案内なし
     for a, z in (repl or {}).items(): src = src.replace(a, z)
@@ -70,6 +71,7 @@ def flick(pg, k, i, tgt):
         pg.mouse.move(x + dx / 2, y + dy / 2, steps=2); pg.mouse.move(x + dx, y + dy, steps=2)
     elif k in ("m", "c"):
         pg.mouse.move(x + 6, y, steps=2)
+        if k == "m": tgt = pg.evaluate("v=>[...document.querySelectorAll('.fpop .fpc')].findIndex(e=>e.dataset.v===String(v))", tgt)   # メダルは「点数」で指定する
         n = pg.evaluate("document.querySelectorAll('.fpop .fpc').length"); de = pg.evaluate("[...document.querySelectorAll('.fpop .fpc')].findIndex(e=>e.classList.contains('on'))")
         rs, ls = n - 1 - de, de
         cap = 36 if k == "m" else 44
@@ -699,6 +701,21 @@ with sync_playwright() as pw:
     check("入力中の歯車の画面は左右に動かない（上下だけ）", pg.evaluate("(()=>{const e=document.querySelector('.fields-sheet'); return e.scrollWidth<=e.clientWidth && getComputedStyle(e).overflowX==='hidden'})()"))
     pg.context.close()
 
+    # 19i. オリンピックのメダルは人数に合わせる・初回のフリック案内
+    for nm, m, want in (("4人", ["はなこ", "じろう", "さぶろう"], "0,1,2,3,4,5"), ("3人", ["はなこ", "じろう"], "0,2,3,4,5"), ("2人", ["はなこ"], "0,3,4,5")):
+        pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": m, "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"olympic\""}, offline=True)
+        C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+        r = pg.locator('.fc[data-k="m"][data-i="0"]').first.bounding_box(); pg.mouse.move(r["x"] + r["width"] / 2, r["y"] + r["height"] / 2); pg.mouse.down(); pg.mouse.move(r["x"] + r["width"] / 2 + 10, r["y"] + r["height"] / 2, steps=2)
+        got = pg.evaluate("[...document.querySelectorAll('.fpop .fpc')].map(e=>e.dataset.v).join()"); pg.mouse.up()
+        check(f"オリンピック{nm}: 選べるメダルは {want}（人数が少ないと下のメダルから外れる）", got == want)
+        pg.context.close()
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": [], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.flickTip": False}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    check("初めて詳細入力を開くと、フリックの使いかたの案内が出る", pg.query_selector(".ftip") is not None and "押したまま" in pg.inner_text(".ftip"))
+    C(pg, "[data-act=ftip-ok]")
+    check("「わかった」で閉じて、二度と出ない", pg.query_selector(".ftip") is None and pg.evaluate("localStorage.getItem('sc.flickTip')") == "true")
+    pg.context.close()
+
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
     import subprocess, time
     PORT = 8791
@@ -708,7 +725,7 @@ with sync_playwright() as pw:
         src = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
         src = (src.replace("setTimeout(checkUpdate, 1500);", "").replace("setTimeout(maybeShowA2HS, 2500);", "").replace("const state = {", "const state = window.state = {")
                   .replace("async function connect(){", "window.connect=()=>connect(); async function connect(){"))
-        src = src.replace("<body>", "<body><script>if(!sessionStorage.t){sessionStorage.t=1;localStorage.clear();localStorage.setItem('sc.player',JSON.stringify('たろう'));localStorage.setItem('sc.fields',JSON.stringify(%s));}</script>" % json.dumps(ALL), 1)
+        src = src.replace("<body>", "<body><script>if(!sessionStorage.t){sessionStorage.t=1;localStorage.clear();localStorage.setItem('sc.player',JSON.stringify('たろう'));localStorage.setItem('sc.flickTip','true');localStorage.setItem('sc.fields',JSON.stringify(%s));}</script>" % json.dumps(ALL), 1)
         open(os.path.join(ROOT, "_test_cf.html"), "w", encoding="utf-8").write(src)
         ctx = b.new_context(viewport={"width": 375, "height": 667}, service_workers="block"); pg = ctx.new_page(); errs = []
         pg.on("pageerror", lambda e: errs.append(str(e)))

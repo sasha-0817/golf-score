@@ -1902,6 +1902,22 @@ body[data-tab=stats] #main .heat .ht span{font-size:15px}
 .cd-lbl{min-height:18px}
 .cdt tfoot td.ft small.blk{display:block;margin:0;font-size:13px;line-height:1.1}
 .cdt td button{height:33px}
+.ftip{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px}
+.ftip-card{background:var(--rec-surface);color:var(--rec-fg);border-radius:20px;padding:18px 18px 16px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.ftip-card>b{font-size:19px;display:block;margin-bottom:6px}
+.ftip-card p{margin:8px 0 0;font-size:15px;line-height:1.5}.ftip-card .ftip-s{color:var(--rec-muted);font-size:14px}
+.ftip-card button{margin-top:14px;width:100%;height:48px;border:0;border-radius:12px;background:var(--rec-fg);color:var(--rec-bg);font:700 17px var(--f-body);cursor:pointer}
+.ft-n{font:700 22px var(--f-num);fill:var(--rec-fg)}.ft-lab{font:700 16px var(--f-body);fill:var(--rec-muted)}
+.ft-finger,.ft-hl{transform-box:fill-box}
+.ft-finger{animation:ftf 3s ease-in-out infinite}
+.ft-hl{animation:fth 3s steps(1,end) infinite}
+.ft-n.n0{animation:ftn0 3s steps(1,end) infinite}.ft-n.n1{animation:ftn1 3s steps(1,end) infinite}.ft-n.n2{animation:ftn2 3s steps(1,end) infinite}
+@keyframes ftf{0%,12%{transform:translateX(0)}60%,85%{transform:translateX(100px)}100%{transform:translateX(0)}}
+@keyframes fth{0%,12%{transform:translateX(0)}30%{transform:translateX(50px)}45%{transform:translateX(100px)}85%{transform:translateX(100px)}100%{transform:translateX(0)}}
+@keyframes ftn0{0%,12%{fill:#fff}12.1%,85%{fill:var(--rec-fg)}85.1%,100%{fill:#fff}}
+@keyframes ftn1{0%,30%{fill:var(--rec-fg)}30.1%,45%{fill:#fff}45.1%{fill:var(--rec-fg)}}
+@keyframes ftn2{0%,45%{fill:var(--rec-fg)}45.1%,85%{fill:#fff}85.1%{fill:var(--rec-fg)}}
+@media (prefers-reduced-motion:reduce){.ft-finger,.ft-hl,.ft-n{animation:none!important}}
 </style>
 
 </head>
@@ -2009,7 +2025,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-29-2100";
+const BUILD = "2026-10-30-0900";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2573,6 +2589,21 @@ function holeAdvice(d, i){
 const sOf = x => x.sT!==undefined ? !!x.sT : !!x.entered;   // そのホールの自分の打数を入れたか（昔の下書きは entered で代用）
 function touchedS(d,who,i){ const h=d.holes[i]; if(d.editing) return true; if(who===0) return sOf(h); const m=d.mates[who-1]; return m.t ? !!m.t[i] : sOf(h); }
 function touchedP(d,who,i){ const h=d.holes[i]; if(d.editing) return true; if(who===0) return h.pT!==undefined ? !!h.pT : !!h.entered; const m=d.mates[who-1]; return m.pt ? !!m.pt[i] : !!h.entered; }
+/* 初めて詳細入力を開いたときだけ出す、フリックの使いかた */
+function flickTip(){ return `<div class="ftip" data-act="ftip-ok" role="dialog" aria-label="入力のしかた"><div class="ftip-card" data-stop="1">
+  <b>押したまま動かして、離す</b>
+  <svg viewBox="0 0 300 170" width="100%" aria-hidden="true">
+    <g class="ft-pop"><rect x="22" y="10" width="256" height="50" rx="12" fill="var(--rec-surface)" stroke="var(--rec-line)" stroke-width="2"/>
+      <rect class="ft-hl" x="28" y="15" width="48" height="40" rx="9" fill="#0B1411"/>
+      ${[1,2,3,4,5].map((n,i)=>`<text class="ft-n n${i}" x="${52+i*50}" y="42" text-anchor="middle">${n}</text>`).join("")}</g>
+    <rect x="22" y="100" width="116" height="56" rx="12" fill="var(--rec-bg)" stroke="var(--rec-line)" stroke-width="2" stroke-dasharray="6 5"/>
+    <text x="80" y="135" text-anchor="middle" class="ft-lab">入力</text>
+    <g class="ft-finger"><circle cx="80" cy="128" r="14" fill="#F2B01E" opacity=".9"/><circle cx="80" cy="128" r="6" fill="#fff"/></g>
+    <path class="ft-arrow" d="M150 128h110m-12-10l12 10-12 10" fill="none" stroke="#F2B01E" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <p>打数やパットのマスを<b>押したまま右や左へ</b>動かすと、指の上に選択肢が出ます。<b>離すと決まります</b>。</p>
+  <p class="ftip-s">押すだけ（ちょん）なら、パーの数字が入ります。</p>
+  <button data-act="ftip-ok">わかった</button></div></div>`; }
 function viewRecordDraft(d){
   const h = d.holes[state.hole];
   const N = d.holes.length;
@@ -2680,6 +2711,7 @@ function viewRecordDraft(d){
     </div>
     ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p><button data-act="pause">中断してホームへ（あとで続きから）</button><button class="danger" data-act="discard">${d.editing?"編集をやめる（変更は保存されません）":"記録を破棄する"}</button><button data-act="cancel-confirm">入力に戻る</button></div></div>`:""}
     ${state.sheet==="fields"?fieldsSheet():""}
+    ${LS.get("sc.flickTip",false)?"":flickTip()}
     ${state.sheet==="card"?liveCard():""}
     ${state.sheet==="medal"?medalSheet([d.player,...(d.mates||[]).map(m=>m.name)].map((n,i,a)=>dupLabel(a,i)), d.medals, state.medalHole):""}
     ${state.sheet==="pin"?pinSheet([d.player,...(d.mates||[]).map(m=>m.name)].map((n,i,a)=>dupLabel(a,i)), d.pins, state.pinHole):""}
@@ -3618,7 +3650,7 @@ function rulesPop(k){
     list=`<li>保存したあと、<b>くじで「隠しホール」</b>を選びます（ホール数の3分の2）</li><li><b>ハンデ＝（隠しホールの合計×1.5 − パー）×0.8</b></li><li>合計−ハンデの<b>ネットが一番少ない人が優勝</b>。大たたきが隠しホールに入るほどハンデが増えます</li>`;
     ex=`<div class="sr-row4 h"><span></span><span>合計</span><span>隠し6H</span><span>ハンデ</span><span>ネット</span></div><div class="sr-row4"><span>たろう</span><span>28</span><span>19</span><span>1.2</span><b>26.8</b></div><div class="sr-row4"><span>はなこ</span><span>36</span><span>25</span><span>8.4</span><b>27.6</b></div><div class="sr-sum">パー27のコース → <b>たろうの優勝</b>（隠しホールしだいで逆転も）</div>`; }
   if(k==="olympic"){
-    list=`<li>グリーンに乗ってから<b>1パットで入れた人だけ</b>がメダルをもらえます</li><li>ピンから遠かった人から ${medalSVG(4,14)}金4点・${medalSVG(3,14)}銀3点・${medalSVG(2,14)}銅2点・${medalSVG(1,14)}鉄1点。グリーンの外から入れたら ${medalSVG(5,14)}<b>ダイヤ5点</b></li><li>毎ホール「メダル」ボタンで入力。<b>点数が一番多い人の勝ち</b></li>`;
+    list=`<li>グリーンに乗ってから<b>1パットで入れた人だけ</b>がメダルをもらえます</li><li>ピンから遠かった人から ${medalSVG(4,14)}金4点・${medalSVG(3,14)}銀3点・${medalSVG(2,14)}銅2点・${medalSVG(1,14)}鉄1点。グリーンの外から入れたら ${medalSVG(5,14)}<b>ダイヤ5点</b></li><li>人数が少ないときは、上のメダルから使います（2人なら金・銀、3人なら金・銀・銅）</li><li>毎ホール、メダルのマスを押したまま右へ動かして入力。<b>点数が一番多い人の勝ち</b></li>`;
     ex=`<div class="sr-row2"><span>はなこ</span><span>8mを1パット</span><b>${medalSVG(4,18)}</b></div><div class="sr-row2"><span>たろう</span><span>3mを1パット</span><b>${medalSVG(3,18)}</b></div><div class="sr-row2"><span>じろう</span><span>2パット</span><b class="sr-none">なし</b></div><div class="sr-sum">このホール　はなこ 4点・たろう 3点</div>`; }
   return `<div class="rp-back" data-act="close-rules"><div class="rp" data-stop="1" role="dialog" aria-label="${G.name}のルール">
     <div class="rp-hero ${G.type}"><span class="rp-ill">${GAME_ILL[k]()}</span><div class="rp-tt"><small>${G.eng}</small><b class="${G.name.length>8?"long":""}">${G.name}</b><span class="rp-chips"><i>${G.type==="team"?"チーム戦":"個人戦"}</i><i>${G.n}</i></span></div><button class="rp-x" data-act="close-rules" aria-label="閉じる">${ICON.x}</button></div>
@@ -3786,6 +3818,7 @@ document.addEventListener("click", async ev => {
     case "cd-cell": { const cd=state.cdraft; cd.sel={h:+b.dataset.h, i:+b.dataset.i, k:b.dataset.k}; saveCDraft(); render(); break; }
     case "cd-key": cardKey(b.dataset.v); break;
     case "cd-half": { const cd=state.cdraft; cd.half=+b.dataset.v; cd.sel={h:cd.half*9, i:0, k:"s"}; saveCDraft(); render(); break; }
+    case "ftip-ok": LS.set("sc.flickTip", true); render(); break;
     case "cd-pin": { const cd=state.cdraft; if(!cd) break; const hh=cdHole(cd), i=+b.dataset.i; cd.pins=cd.pins||{}; if(cd.pins[hh]===i) delete cd.pins[hh]; else cd.pins[hh]=i; saveCDraft(); render(); break; }
     case "cd-putts": { const f=fields(); f.putts=!f.putts; LS.set("sc.fields",f); const cd=state.cdraft; if(!f.putts && cd.sel.k==="p") cd.sel.k="s"; render(); break; }
     case "cd-pause": state.cdraft.paused=true; state.confirm=null; saveCDraft(); render(); window.scrollTo({top:0}); break;
@@ -3919,7 +3952,8 @@ if(state.draft){ const i=state.draft.holes.findIndex(x=>!sOf(x)); state.hole = i
   function fctx(){ if(state.draft) return {d:state.draft, hole:state.hole, card:false}; const cd=state.cdraft; return cd&&!cd.paused ? {d:cd, hole:cdHole(cd), card:true} : null; }
   function cfg(kind,who){ const X=fctx(), d=X.d, h=d.holes[X.hole], par=h.par; const medalOf0=()=>((((d.medals||{})[X.hole])||[])[who||0])||0;
     if(kind==="p") return { type:"row", vals:[0,1,2,3,4,5,6], def:2, cw:36, min:20, par };
-    if(kind==="m") return { type:"row", prop:true, vals:[0,1,2,3,4,5], def:medalOf0(), cw:36, min:36, par };   // メダル: 今の値（なし）から右へ行くほど高得点。画面の端までの距離に合わせて指の動きを割り当てる
+    if(kind==="m"){ const PP=X.card?d.players.length:1+(d.mates||[]).length, vals=[0,...[1,2,3,4].filter(v=>v>4-PP),5];   // 人数が少ないときは下のメダルから外す（3人=鉄なし、2人=鉄・銅なし）
+      return { type:"row", prop:true, vals, def:Math.max(0,vals.indexOf(medalOf0())), cw:36, min:36, par }; }   // メダル: 今の値（なし）から右へ行くほど高得点。画面の端までの距離に合わせて指の動きを割り当てる
     if(kind==="c"){ const cl=myClubs(); let def=cl.indexOf(h.club); if(def<0) def=cl.indexOf(lastClub(d,state.hole)); if(def<0) def=cl.indexOf("7I"); if(def<0) def=Math.floor(cl.length/2);
       return { type:"row", prop:true, wide:true, vals:cl, def, cw:44, min:20, par }; }   // クラブ: 並びは画面の幅いっぱいに固定。今のクラブから、指の動きを端までの距離に割り当てる（真ん中に飛ばない）
     if(kind==="d") return { type:"cross", par };
@@ -3945,7 +3979,7 @@ if(state.draft){ const i=state.draft.holes.findIndex(x=>!sOf(x)); state.hole = i
       left=st.x-(c.def*step+step/2)-4; left=Math.max(8,Math.min(W-8-(n*step+8),left)); }
     st.step=step; st.left=left;
     pop.className="fpop k-"+st.kind+(st.kind==="c"?" clubs":""); pop.style.left=left+"px"; pop.style.top=Math.max(8,st.y-100-20)+"px";
-    pop.innerHTML=`<div class="fprow">${c.vals.map((v,k)=>`<div class="fpc ${cellTone(st.kind,v,c.par)} ${st.kind==="m"?"med":""}" data-k="${k}" style="width:${step}px">${cellHTML(st.kind,v,c.par)}</div>`).join("")}</div>`;
+    pop.innerHTML=`<div class="fprow">${c.vals.map((v,k)=>`<div class="fpc ${cellTone(st.kind,v,c.par)} ${st.kind==="m"?"med":""}" data-k="${k}" data-v="${v}" style="width:${step}px">${cellHTML(st.kind,v,c.par)}</div>`).join("")}</div>`;
     document.body.appendChild(pop); mark(st.idx);
   }
   function mark(i){ st.idx=i; pop.querySelectorAll(".fpc").forEach(e=>e.classList.toggle("on",e.dataset.k==String(i))); }
