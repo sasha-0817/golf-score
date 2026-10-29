@@ -1903,21 +1903,19 @@ body[data-tab=stats] #main .heat .ht span{font-size:15px}
 .cdt tfoot td.ft small.blk{display:block;margin:0;font-size:13px;line-height:1.1}
 .cdt td button{height:33px}
 .ftip{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px}
-.ftip-card{background:var(--rec-surface);color:var(--rec-fg);border-radius:20px;padding:18px 18px 16px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.4)}
-.ftip-card>b{font-size:19px;display:block;margin-bottom:6px}
-.ftip-card p{margin:8px 0 0;font-size:15px;line-height:1.5}.ftip-card .ftip-s{color:var(--rec-muted);font-size:14px}
-.ftip-card button{margin-top:14px;width:100%;height:48px;border:0;border-radius:12px;background:var(--rec-fg);color:var(--rec-bg);font:700 17px var(--f-body);cursor:pointer}
+.ftip-card{position:relative;background:var(--rec-surface);color:var(--rec-fg);border-radius:20px;padding:34px 18px 16px;max-width:340px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.ftip-x{position:absolute;top:8px;right:8px;width:40px;height:40px;border:0;border-radius:50%;background:var(--rec-bg);color:var(--rec-fg);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .ft-n{font:700 22px var(--f-num);fill:var(--rec-fg)}.ft-lab{font:700 16px var(--f-body);fill:var(--rec-muted)}
 .ft-finger,.ft-hl{transform-box:fill-box}
 .ft-finger{animation:ftf 3s ease-in-out infinite}
 .ft-hl{animation:fth 3s steps(1,end) infinite}
-.ft-n.n0{animation:ftn0 3s steps(1,end) infinite}.ft-n.n1{animation:ftn1 3s steps(1,end) infinite}.ft-n.n2{animation:ftn2 3s steps(1,end) infinite}
 @keyframes ftf{0%,12%{transform:translateX(0)}60%,85%{transform:translateX(100px)}100%{transform:translateX(0)}}
 @keyframes fth{0%,12%{transform:translateX(0)}30%{transform:translateX(50px)}45%{transform:translateX(100px)}85%{transform:translateX(100px)}100%{transform:translateX(0)}}
-@keyframes ftn0{0%,12%{fill:#fff}12.1%,85%{fill:var(--rec-fg)}85.1%,100%{fill:#fff}}
-@keyframes ftn1{0%,30%{fill:var(--rec-fg)}30.1%,45%{fill:#fff}45.1%{fill:var(--rec-fg)}}
-@keyframes ftn2{0%,45%{fill:var(--rec-fg)}45.1%,85%{fill:#fff}85.1%{fill:var(--rec-fg)}}
-@media (prefers-reduced-motion:reduce){.ft-finger,.ft-hl,.ft-n{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.ft-finger,.ft-hl{animation:none!important}}
+.cdt tfoot td.ft{font-size:15px}.cdt tfoot tr.skr td.ft,.cdt tfoot tr.gr td.ft{font-size:14px}
+.cdt tfoot td.ft small.blk{font-size:14px}.cdt tfoot small{font-size:13px}
+.cdt thead tr.sub th{font-size:13px}.cdt thead th{font-size:15px}
+.cdt col.h{width:30px}.cdt col.par{width:36px}
 </style>
 
 </head>
@@ -2025,7 +2023,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-30-0900";
+const BUILD = "2026-10-30-1200";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2591,19 +2589,15 @@ function touchedS(d,who,i){ const h=d.holes[i]; if(d.editing) return true; if(wh
 function touchedP(d,who,i){ const h=d.holes[i]; if(d.editing) return true; if(who===0) return h.pT!==undefined ? !!h.pT : !!h.entered; const m=d.mates[who-1]; return m.pt ? !!m.pt[i] : !!h.entered; }
 /* 初めて詳細入力を開いたときだけ出す、フリックの使いかた */
 function flickTip(){ return `<div class="ftip" data-act="ftip-ok" role="dialog" aria-label="入力のしかた"><div class="ftip-card" data-stop="1">
-  <b>押したまま動かして、離す</b>
-  <svg viewBox="0 0 300 170" width="100%" aria-hidden="true">
-    <g class="ft-pop"><rect x="22" y="10" width="256" height="50" rx="12" fill="var(--rec-surface)" stroke="var(--rec-line)" stroke-width="2"/>
-      <rect class="ft-hl" x="28" y="15" width="48" height="40" rx="9" fill="#0B1411"/>
-      ${[1,2,3,4,5].map((n,i)=>`<text class="ft-n n${i}" x="${52+i*50}" y="42" text-anchor="middle">${n}</text>`).join("")}</g>
-    <rect x="22" y="100" width="116" height="56" rx="12" fill="var(--rec-bg)" stroke="var(--rec-line)" stroke-width="2" stroke-dasharray="6 5"/>
-    <text x="80" y="135" text-anchor="middle" class="ft-lab">入力</text>
-    <g class="ft-finger"><circle cx="80" cy="128" r="14" fill="#F2B01E" opacity=".9"/><circle cx="80" cy="128" r="6" fill="#fff"/></g>
-    <path class="ft-arrow" d="M150 128h110m-12-10l12 10-12 10" fill="none" stroke="#F2B01E" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>
-  <p>打数やパットのマスを<b>押したまま右や左へ</b>動かすと、指の上に選択肢が出ます。<b>離すと決まります</b>。</p>
-  <p class="ftip-s">押すだけ（ちょん）なら、パーの数字が入ります。</p>
-  <button data-act="ftip-ok">わかった</button></div></div>`; }
+  <button class="ftip-x" data-act="ftip-ok" aria-label="閉じる"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button>
+  <svg viewBox="0 0 300 190" width="100%" aria-hidden="true">
+    <g class="ft-pop"><rect x="22" y="8" width="256" height="54" rx="12" fill="var(--rec-surface)" stroke="var(--rec-line)" stroke-width="2"/>
+      <rect class="ft-hl" x="28" y="13" width="48" height="44" rx="9" fill="#F2B01E"/>
+      ${[1,2,3,4,5].map((n,i)=>`<text class="ft-n n${i}" x="${52+i*50}" y="44" text-anchor="middle">${n}</text>`).join("")}</g>
+    <rect x="22" y="112" width="100" height="58" rx="12" fill="var(--rec-bg)" stroke="var(--rec-line)" stroke-width="2" stroke-dasharray="6 5"/>
+    <text x="72" y="148" text-anchor="middle" class="ft-lab">入力</text>
+    <g class="ft-finger"><g transform="translate(56 118)"><path d="M16 4c-3 0-5 2-5 5v22l-4-4c-2-2-5-2-7 0s-2 4 0 6l12 16c3 4 6 6 11 6h8c8 0 13-5 13-13V28c0-3-2-5-5-5-1 0-2 0-3 1-1-2-3-3-5-3-1 0-3 1-4 2-1-2-3-3-5-3-1 0-2 0-3 1V9c0-3-2-5-5-5z" fill="#fff" stroke="#0B1411" stroke-width="2.4" stroke-linejoin="round"/></g></g>
+  </svg></div></div>`; }
 function viewRecordDraft(d){
   const h = d.holes[state.hole];
   const N = d.holes.length;
@@ -2798,7 +2792,7 @@ function viewCard(cd){
         padSp=nPad?`<td class="pad" colspan="${nPad*pw}"></td>`:"";
   const nDone = (()=>{ let i=0; while(i<N && cd.players.every(p=>p.s[i]!=null)) i++; return i; })();
   const gtc = cd.game && cd.game!=="skins" && !isPeoria(cd.game) ? gameTags(cd.game, cd.players.map(p=>p.s), cd.holes.map(x=>x.par), nDone, N, {medals:cd.medals, pins:cd.pins, hole:-1}) : null;
-  const gameRow = gtc ? `<tr class="skr gr"><td colspan="2" class="ft">${esc(GAMES[cd.game].name.slice(0,4))}</td>${gtc.map((t,i)=>`<td class="c-s" colspan="${cwOf(i)}">${t}</td>`).join("")}${padSp}</tr>` : "";
+  const gameRow = gtc ? `<tr class="skr gr"><td colspan="2" class="ft">${cd.game==="nearpin"?"ニアピン":"ポイント"}</td>${gtc.map((t,i)=>`<td class="c-s" colspan="${cwOf(i)}">${t}</td>`).join("")}${padSp}</tr>` : "";
   const skinRow = skc ? `<tr class="skr"><td colspan="2" class="ft">${coinSVG(14)}${cd.carry?`<small>次${skc.pot}枚</small>`:""}</td>${cd.players.map((p,i)=>`<td class="c-s" colspan="${cwOf(i)}">${skc.won[i]}</td>`).join("")}${padSp}</tr>` : "";
   // 計の下に、人ごとのゲーム入力（オリンピック=メダルをフリック、ニアピン=旗をタップ）。見ているホールの分
   const gh = cdHole(cd), gb = (skinRow||gameRow)?GH:0;

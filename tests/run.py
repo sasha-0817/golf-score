@@ -711,9 +711,9 @@ with sync_playwright() as pw:
         pg.context.close()
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": [], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.flickTip": False}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
-    check("初めて詳細入力を開くと、フリックの使いかたの案内が出る", pg.query_selector(".ftip") is not None and "押したまま" in pg.inner_text(".ftip"))
-    C(pg, "[data-act=ftip-ok]")
-    check("「わかった」で閉じて、二度と出ない", pg.query_selector(".ftip") is None and pg.evaluate("localStorage.getItem('sc.flickTip')") == "true")
+    check("初めて詳細入力を開くと、フリックの使いかたの案内が出る", pg.query_selector(".ftip") is not None and pg.query_selector(".ftip .ft-finger") is not None and pg.query_selector(".ftip-x") is not None and pg.query_selector(".ftip p") is None)
+    C(pg, ".ftip-x")
+    check("右上の×で閉じて、二度と出ない", pg.query_selector(".ftip") is None and pg.evaluate("localStorage.getItem('sc.flickTip')") == "true")
     pg.context.close()
 
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
