@@ -692,7 +692,9 @@ with sync_playwright() as pw:
     flick(pg, "m", 1, 4)
     check("スコアカード＋オリンピック: 同じメダルは1人だけ（金が後の人へ移る）", pg.evaluate("JSON.stringify(state.cdraft.medals[0])") == "[0,4,0]")
     check("スコアカード: 9ホールがスクロールなしで見える（4人・ゲームあり）", pg.evaluate("(()=>{const s=document.querySelector('.cd-scroll'); return s.scrollHeight<=s.clientHeight+4})()"))
-    check("スコアカード: 計の行とゲームの行はくっついている（すき間なし）", pg.evaluate("(()=>{const f=[...document.querySelectorAll('.cdt tfoot tr')]; return f.length>=2 && Math.abs(f[0].getBoundingClientRect().bottom-f[1].getBoundingClientRect().top)<=1})()"))
+    check("スコアカード: 1〜9Hと計は1つの枠、ゲームの入力・ポイントは別の枠", pg.evaluate("(()=>{const g=document.querySelector('.cd-game'), s=document.querySelector('.cd-scroll'); return !!g && !s.contains(g) && s.querySelector('tfoot').textContent.includes('計') && g.querySelector('.fc.fm')!==null})()"))
+    check("スコアカード: 「◯◯・2H（PAR 3）の打数」の行はない（黄色のマスで分かる）", pg.query_selector(".cd-lbl") is None)
+    check("スコアカード: ポイントの数字は大きい（20px以上）", pg.evaluate("parseFloat(getComputedStyle(document.querySelector('.cd-game tr.skr td:nth-child(2)')).fontSize)") >= 20)
     check("スコアカード: 文字は大きめ（打数のマスが20px以上）", pg.evaluate("parseFloat(getComputedStyle(document.querySelector('.cdt td button')).fontSize)") >= 20)
     pg.context.close()
 

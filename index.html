@@ -1916,6 +1916,13 @@ body[data-tab=stats] #main .heat .ht span{font-size:15px}
 .cdt tfoot td.ft small.blk{font-size:14px}.cdt tfoot small{font-size:13px}
 .cdt thead tr.sub th{font-size:13px}.cdt thead th{font-size:15px}
 .cdt col.h{width:30px}.cdt col.par{width:36px}
+.cd-game{flex:0 0 auto;border:1px solid var(--rec-line);border-radius:14px;overflow:hidden;background:var(--rec-surface)}
+.cdg tfoot td{position:static}
+.cdg{margin:0}
+.cdt tfoot tr.skr td .gtag,.cdt tfoot tr.gr td .gtag,.cdt tfoot tr.skr td{font:700 24px/1 var(--f-num)}
+.cdt tfoot tr.skr td.ft{font:700 14px var(--f-body)}
+.cdt tfoot tr.skr td .gtag.z{opacity:.5}
+.cd-scroll{flex:0 1 auto}.cd-pad{margin-top:auto}
 </style>
 
 </head>
@@ -2023,7 +2030,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-30-1200";
+const BUILD = "2026-10-30-1500";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2794,8 +2801,9 @@ function viewCard(cd){
   const gtc = cd.game && cd.game!=="skins" && !isPeoria(cd.game) ? gameTags(cd.game, cd.players.map(p=>p.s), cd.holes.map(x=>x.par), nDone, N, {medals:cd.medals, pins:cd.pins, hole:-1}) : null;
   const gameRow = gtc ? `<tr class="skr gr"><td colspan="2" class="ft">${cd.game==="nearpin"?"ニアピン":"ポイント"}</td>${gtc.map((t,i)=>`<td class="c-s" colspan="${cwOf(i)}">${t}</td>`).join("")}${padSp}</tr>` : "";
   const skinRow = skc ? `<tr class="skr"><td colspan="2" class="ft">${coinSVG(14)}${cd.carry?`<small>次${skc.pot}枚</small>`:""}</td>${cd.players.map((p,i)=>`<td class="c-s" colspan="${cwOf(i)}">${skc.won[i]}</td>`).join("")}${padSp}</tr>` : "";
+  const colg=`<colgroup><col class="h"><col class="par">${cd.players.map((p,i)=>`<col class="s">${cdP(i)?`<col class="p">`:""}`).join("")}${padCols}</colgroup>`;
   // 計の下に、人ごとのゲーム入力（オリンピック=メダルをフリック、ニアピン=旗をタップ）。見ているホールの分
-  const gh = cdHole(cd), gb = (skinRow||gameRow)?GH:0;
+  const gh = cdHole(cd), gb = 0;
   const padSpB = b => nPad?`<td class="pad" style="bottom:${b}px" colspan="${nPad*pw}"></td>`:"";
   const inputRow = (isOlympic(cd.game)||cd.game==="nearpin") ? `<tr class="gin"><td colspan="2" class="ft" style="bottom:${gb}px">${gh+1}H<small class="blk">${isOlympic(cd.game)?"メダル":"ニアピン"}</small></td>${cd.players.map((p,i)=>{
       let c; if(isOlympic(cd.game)){ const v=(((cd.medals||{})[gh])||[])[i]||0; c=`<div class="fc fm ${v?"set":""}" role="button" tabindex="0" data-k="m" data-i="${i}" aria-label="${esc(p.name)}の${gh+1}Hのメダル。押したまま左右に動かして離すと変わります">${v?medalSVG(v,26):"<span>—</span>"}</div>`; }
@@ -2813,13 +2821,14 @@ function viewCard(cd){
       <button class="cd-pt" data-act="cd-putts" aria-pressed="${pOn}">パット${pOn?"あり":"なし"}</button>
     </div>
     ${two?`<div class="cd-tabs" role="group" aria-label="前半・後半">${["OUT 1–9","IN 10–"+N].map((l,k)=>`<button data-act="cd-half" data-v="${k}" aria-pressed="${half===k}">${l}</button>`).join("")}</div>`:""}
-    <div class="cd-scroll"><table class="cdt ${pOn?"wp":""}"><colgroup><col class="h"><col class="par">${cd.players.map((p,i)=>`<col class="s">${cdP(i)?`<col class="p">`:""}`).join("")}${padCols}</colgroup>
+    <div class="cd-scroll"><table class="cdt ${pOn?"wp":""}">${colg}
       <thead><tr><th>H</th><th>PAR</th>${cd.players.map((p,i)=>`<th class="nm" colspan="${cwOf(i)}">${esc(dupLabel(cd.players.map(x=>x.name),i))}</th>`).join("")}${padTh}</tr>
       ${pOn?`<tr class="sub"><th></th><th></th>${cd.players.map((p,i)=>cdP(i)?`<th class="c-s">打数</th><th>パット</th>`:`<th class="c-s">打数</th>`).join("")}${padSub}</tr>`:""}</thead>
       <tbody>${rows.map(h=>`<tr><td class="hn">${h+1}</td><td class="pr">${cd.holes[h].par}</td>${cd.players.map((p,i)=>cell(h,i,"s")+(cdP(i)?cell(h,i,"p"):"")).join("")}${padTd}</tr>`).join("")}</tbody>
-      <tfoot>${(()=>{ const ex=gb+(inputRow?IH:0); return two?foot(half?"IN":"OUT",rows,"",ex+FH)+foot("計",all,"all",ex):foot("計",all,"",ex); })()}${inputRow}${skinRow}${gameRow}</tfoot></table></div>
+      <tfoot>${two?foot(half?"IN":"OUT",rows,"",FH)+foot("計",all,"all",0):foot("計",all,"",0)}</tfoot></table></div>
+    ${(inputRow||skinRow||gameRow)?`<div class="cd-game"><table class="cdt cdg ${pOn?"wp":""}">${colg}<tfoot>${inputRow}${skinRow}${gameRow}</tfoot></table></div>`:""}
     <div class="cd-pad">
-      <div class="cd-lbl">${sel?`<span><b>${esc(dupLabel(cd.players.map(x=>x.name),sel.i))}</b>・${sel.h+1}H（PAR ${cd.holes[sel.h].par}）の<em>${ks==="s"?"打数":"パット"}</em></span>`:`<span>${done?"全部入りました。保存しましょう":"マスをタップして入力"}</span>`}</div>
+      ${sel?"":`<div class="cd-lbl"><span>${done?"全部入りました。保存しましょう":"マスをタップして入力"}</span></div>`}
       ${sel||!done?`<div class="cd-keys">${[1,2,3,4,5,6,7,8,9].map(n=>key(n,String(n),!sel || (ks==="p" && n>9))).join("")}${key("10","10+",!sel||ks==="p")}${key("0","0",!sel||ks==="s")}${key("del","消す",!sel)}</div>`:""}
       ${done?`<button class="cd-save ${state.saving?"busy":""}" data-act="cd-finish" ${state.saving?"disabled":""}>${state.saving?`<i class="spin"></i>保存中…`:`ラウンドを保存${cd.players.length>1?`（${cd.players.length}人分）`:""}`}</button>`:""}
     </div>
