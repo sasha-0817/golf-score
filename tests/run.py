@@ -745,9 +745,8 @@ with sync_playwright() as pw:
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.tab": "\"stats\"", "sc.statTab": "\"shot\""}, offline=True)
     C(pg, "[data-act=demo-on]"); pg.wait_for_timeout(500)
     ttl = pg.evaluate("[...document.querySelectorAll('#main .panel .sec em')].map(e=>e.textContent.trim()).join()")
-    check("ショット分析は3つのまとまり（SHOTS・TEE SHOT・CLUB）、弱点は別のタブ", ttl == "SHOTS,TEE SHOT,CLUB" and pg.evaluate("[...document.querySelectorAll('.stat-tabs button')].map(b=>b.textContent.replace(/[A-Z]/g,'')).join()") == "スコア,ショット,パット,弱点")
-    C(pg, "[data-act=stat-tab][data-v=weak]"); pg.wait_for_timeout(300)
-    check("弱点タブ: 外しやすい方向・苦手なクラブ・3パット・OB・ペナ・バンカーが出る", pg.evaluate("document.querySelectorAll('.wk').length") >= 4)
+    check("ショット分析は4つのまとまり（SHOTS・TEE SHOT・CLUB・弱点分析）、分析のタブは3つ（スコア・ショット・パット）", ttl == "SHOTS,TEE SHOT,CLUB,WEAK POINTS" and pg.evaluate("[...document.querySelectorAll('.stat-tabs button')].map(b=>b.textContent.replace(/[A-Z]/g,'')).join()") == "スコア,ショット,パット")
+    check("弱点分析: 外しやすい方向・苦手なクラブ・3パット・OB・ペナ・バンカーが出る", pg.evaluate("document.querySelectorAll('.wk').length") >= 4)
     pg.context.close()
 
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす

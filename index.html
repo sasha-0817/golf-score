@@ -214,7 +214,7 @@ select.ph{color:var(--muted)}
 .hc2 .live b small{font-size:13px;margin-left:2px;opacity:.85;font-weight:600}
 
 /* v26: stats tabs */
-.stat-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 14px;position:sticky;top:0;z-index:5;background:var(--bg);padding:6px 0}
+.stat-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:0 0 14px;position:sticky;top:0;z-index:5;background:var(--bg);padding:6px 0}
 .stat-tabs button{height:50px;border-radius:14px;border:1px solid var(--line);background:var(--paper);color:var(--muted);font:700 14px var(--f-body);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer}
 .stat-tabs button em{font-style:normal;font:700 9px var(--f-num);letter-spacing:.16em;opacity:.8}
 .stat-tabs button[aria-selected="true"]{background:linear-gradient(135deg,#1E3A8A,#2F7DE1);color:#fff;border-color:transparent;box-shadow:0 8px 18px -10px #2F7DE1}
@@ -2081,7 +2081,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-01-1200";
+const BUILD = "2026-11-01-1500";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2649,15 +2649,16 @@ function touchedP(d,who,i){ const h=d.holes[i]; if(d.editing) return true; if(wh
 function flickTip(){ return `<div class="ftip" data-act="ftip-ok" role="dialog" aria-label="入力のしかた"><div class="ftip-card" data-stop="1">
   <b class="ftip-t">入力方法</b>
   <button class="ftip-x" data-act="ftip-ok" aria-label="閉じる"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button>
-  <svg viewBox="0 0 300 190" width="100%" aria-hidden="true">
+  <svg viewBox="0 0 300 275" width="100%" aria-hidden="true">
     <g class="ft-pop"><rect x="22" y="8" width="256" height="54" rx="12" fill="var(--rec-surface)" stroke="var(--rec-line)" stroke-width="2"/>
       <rect class="ft-hl" x="28" y="13" width="48" height="44" rx="9" fill="#F2B01E"/>
       ${[1,2,3,4,5].map((n,i)=>`<text class="ft-n n${i}" x="${52+i*50}" y="44" text-anchor="middle">${n}</text>`).join("")}</g>
     <rect x="22" y="112" width="100" height="58" rx="12" fill="var(--rec-bg)" stroke="var(--rec-line)" stroke-width="2" stroke-dasharray="6 5"/>
     <text x="72" y="148" text-anchor="middle" class="ft-lab">入力</text>
-    <g class="ft-finger"><g transform="translate(46 112)"><circle cx="24" cy="8" r="11" fill="none" stroke="#F2B01E" stroke-width="3" opacity=".8"/><circle cx="24" cy="8" r="19" fill="none" stroke="#F2B01E" stroke-width="2" opacity=".4"/>
-      <path d="M16 44V14a8 8 0 0 1 16 0v18c0-3 3-5 7-4.500s6 3 6 6c0-3 3-5 7-4.500s6 3 6 6c0-2.500 3-4.500 6.500-4s5.500 3 5.500 6.500V56c0 11-8 19-19 19H38c-9 0-15-4-20-11L6 50c-2-3-1-6 2-7.500s6-1 8 3z" fill="#fff" stroke="#0B1411" stroke-width="2.6" stroke-linejoin="round"/>
-      <path d="M45 34v12M57 34v12M33 34v10" stroke="#0B1411" stroke-opacity=".35" stroke-width="2" stroke-linecap="round"/></g></g>
+    <g class="ft-finger"><g transform="translate(28 128) scale(.86)">
+      <path d="M38 12H4M17 -1L4 12l13 13M66 12H100M87 -1l13 13-13 13" fill="none" stroke="#F2B01E" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M42 90V20a10 10 0 0 1 20 0V58c0-8 6-13 13-13s13 5 13 13c0-6 6-10 12-10s12 4 12 10v52c0 20-10 32-24 38H58c-8-4-22-20-34-40L12 84c-4-7 2-13 9-10s16 12 21 16z" fill="#fff" stroke="#0B1411" stroke-width="5.500" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M62 62v22M76 58v24M90 56v22" stroke="#0B1411" stroke-width="5.500" stroke-linecap="round"/></g></g>
   </svg></div></div>`; }
 function viewRecordDraft(d){
   const h = d.holes[state.hole];
@@ -3005,7 +3006,7 @@ function viewStats(){
   if(state.fCourse!=="all" && !cs.some(c=>c.id===state.fCourse)) state.fCourse="all"; // 消したコースで絞り込んだままにしない
   const rs = filteredRounds();
   const s = computeStats(rs);
-  let ST = state.statTab || (state.statTab = LS.get("sc.statTab","score")); if(!["score","shot","putt","weak"].includes(ST)) ST = state.statTab = "score";
+  let ST = state.statTab || (state.statTab = LS.get("sc.statTab","score")); if(!["score","shot","putt"].includes(ST)) ST = state.statTab = "score";   // 2026-11-01: 弱点タブは作ったが、3つに戻した（弱点分析はショットの一番下）
   const gauge = (label,v,sub,tone) => { const C=2*Math.PI*30, p=v==null?0:Math.min(v,100)/100;
     return `<div class="gauge"><svg viewBox="0 0 74 74" aria-hidden="true"><circle class="trk" cx="37" cy="37" r="30"/><circle class="val" cx="37" cy="37" r="30" stroke="var(${tone})" stroke-dasharray="${(C*p).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 37 37)"/></svg><div class="gv">${v==null?"—":fmtPct(v)}${v==null?"":"<small>%</small>"}</div><div class="gl">${label}</div><div class="gs">${sub}</div></div>`; };
   const hbar = (label,v,sub,bad) => `<div class="hb"><div class="hb-top"><span>${label}</span><b>${v==null?"—":fmtPct(v)}<small>${v==null?"":"%"}</small></b></div><div class="hb-trk"><i style="width:${v==null?0:Math.min(100,v)}%;background:${bad?"var(--q-bogey)":"var(--q-birdie)"}"></i></div><div class="hb-sub">${sub}</div></div>`;
@@ -3022,7 +3023,7 @@ function viewStats(){
     <div class="field"><label for="f-range">期間</label><select id="f-range">${[["1","直近1ラウンド"],["3","直近3ラウンド"],["5","直近5ラウンド"],["10","直近10ラウンド"],["all","全ラウンド"]].map(([v,t])=>`<option value="${v}" ${v===state.fRange?"selected":""}>${t}</option>`).join("")}</select></div>
   </div></div>`}
   ${!rs.length?`<div class="panel empty"><strong>条件に合うラウンドがありません</strong>フィルターを変えてみてください。</div>`:`
-  <div class="stat-tabs" role="tablist">${[["score","SCORE","スコア"],["shot","SHOT","ショット"],["putt","PUTT","パット"],["weak","WEAK","弱点"]].map(([k,e,j])=>`<button role="tab" data-act="stat-tab" data-v="${k}" aria-selected="${ST===k}"><em>${e}</em>${j}</button>`).join("")}</div>
+  <div class="stat-tabs" role="tablist">${[["score","SCORE","スコア"],["shot","SHOT","ショット"],["putt","PUTT","パット"]].map(([k,e,j])=>`<button role="tab" data-act="stat-tab" data-v="${k}" aria-selected="${ST===k}"><em>${e}</em>${j}</button>`).join("")}</div>
   ${ST==="score"?`
   <div class="hero-stat">
     <div class="who">${esc(state.fPlayer).toUpperCase()} ・ AVG SCORE</div>
@@ -3050,8 +3051,8 @@ function viewStats(){
     <div class="map-sub">パー3（グリーン）</div>${greenMap(s)}
     ${s.teeN?`<div class="map-sub">パー4・5（フェアウェイ）</div>${dirHeat("fw", s.teeC, s.teeN)}<p class="muted" style="font-size:14px;text-align:center;margin:8px 0 0">${s.teeN}回の記録・フェアウェイキープ率 <b>${fmtPct(s.fwRate)}%</b></p>`:""}</div>`}
   ${clubPanel(rs)}
+  ${weakPanel(rs,s)}
 `:""}
-  ${ST==="weak"?weakPanel(rs,s):""}
   ${ST==="putt"&&!s.puttHoles?`<div class="panel"><div class="sec"><em>PUTTING</em><span>パット</span></div><p class="muted" style="font-size:13px;margin:0">この期間はパット数を記録したラウンドがありません。歯車 → 記録する項目 →「パット数」をONにすると、ここにパットの分析が出ます。</p></div>`:""}
   ${ST==="putt"&&s.puttHoles?`
   <div class="panel"><div class="sec"><em>PUTTING</em><span>パット</span></div><div class="putts">
