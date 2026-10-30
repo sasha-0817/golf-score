@@ -551,7 +551,7 @@ with sync_playwright() as pw:
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": [], "sc.fields": ALL}, offline=True)
     start_preset(pg, "firtree")
     hm = pg.evaluate("dirHeat('p3',{on:3,left:2,right:0,long:0,miss:5},10)")
-    check("分析の方向: 花道はなく、5つの丸（オーバー・左・オン・右・ショート）で一番多いミスに金の輪、グリーンの図つき", "花道" not in hm and hm.count('class="bb ') == 5 and 'worst' in hm and "<ellipse" in hm)
+    check("分析の方向: 花道はなく、ミスの4つの丸（オーバー・左・右・ショート）で一番多いミスに金の輪。オンはグリーンの上に文字だけ", "花道" not in hm and hm.count('class="bb ') == 4 and 'on-lab' in hm and 'worst' in hm and "<ellipse" in hm)
     check("花道のあともエラーなし", not errs)
     pg.context.close()
 
@@ -745,8 +745,9 @@ with sync_playwright() as pw:
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.tab": "\"stats\"", "sc.statTab": "\"shot\""}, offline=True)
     C(pg, "[data-act=demo-on]"); pg.wait_for_timeout(500)
     ttl = pg.evaluate("[...document.querySelectorAll('#main .panel .sec em')].map(e=>e.textContent.trim()).join()")
-    check("ショット分析は4つのまとまり（SHOTS・TEE SHOT・CLUB・弱点分析）", ttl == "SHOTS,TEE SHOT,CLUB,WEAK POINTS")
-    check("弱点分析: 外しやすい方向・苦手なクラブ・OB・ペナ・バンカーが出る", pg.evaluate("document.querySelectorAll('.wk').length") == 4)
+    check("ショット分析は3つのまとまり（SHOTS・TEE SHOT・CLUB）、弱点は別のタブ", ttl == "SHOTS,TEE SHOT,CLUB" and pg.evaluate("[...document.querySelectorAll('.stat-tabs button')].map(b=>b.textContent.replace(/[A-Z]/g,'')).join()") == "スコア,ショット,パット,弱点")
+    C(pg, "[data-act=stat-tab][data-v=weak]"); pg.wait_for_timeout(300)
+    check("弱点タブ: 外しやすい方向・苦手なクラブ・3パット・OB・ペナ・バンカーが出る", pg.evaluate("document.querySelectorAll('.wk').length") >= 4)
     pg.context.close()
 
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
