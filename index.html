@@ -2093,7 +2093,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-01-2100";
+const BUILD = "2026-11-02-0900";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2666,7 +2666,7 @@ function flickTip(){ return `<div class="ftip" data-act="ftip-ok" role="dialog" 
       ${[1,2,3,4,5].map((n,i)=>`<text class="ft-n n${i}" x="${52+i*50}" y="44" text-anchor="middle">${n}</text>`).join("")}</g>
     <rect x="22" y="112" width="100" height="58" rx="12" fill="#fff" stroke="#9DB8AA" stroke-width="2" stroke-dasharray="6 5"/>
     <text x="72" y="148" text-anchor="middle" class="ft-lab">入力</text>
-    <g class="ft-finger"><g transform="translate(27 139) scale(1.15)"><path d="M31 70V10a8 8 0 0 1 16 0v25c2-3 12-5 16 8v13M63 41c3-5 14-5 16 6v13M79 46c3-4 15-4 15 7v24c0 18-9 28-12 37M31 70L22 56C17 50 10 49 6 54c-2 3-1 5 1 8l19 31c4 7 12 11 15 15v6M47 35v19" fill="none" stroke="#0B1411" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></g></g>
+    <g class="ft-finger"><g transform="translate(27 139) scale(1.15)"><path d="M31 70V10a8 8 0 0 1 16 0V35C49 32 59 31 63 43C66 38 77 38 79 47C82 43 94 43 94 54V77C94 95 85 105 82 114L41 114V108C38 104 30 100 26 93L7 62C5 59 4 57 6 54C10 49 17 50 22 56Z" fill="#fff"/><path d="M31 70V10a8 8 0 0 1 16 0v25c2-3 12-5 16 8v13M63 41c3-5 14-5 16 6v13M79 46c3-4 15-4 15 7v24c0 18-9 28-12 37M31 70L22 56C17 50 10 49 6 54c-2 3-1 5 1 8l19 31c4 7 12 11 15 15v6M47 35v19" fill="none" stroke="#0B1411" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></g></g>
   </svg></div></div></div>`; }
 function viewRecordDraft(d){
   const h = d.holes[state.hole];
