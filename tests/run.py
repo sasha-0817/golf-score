@@ -528,9 +528,9 @@ with sync_playwright() as pw:
     check("履歴: 自分のラウンドだけ・プレーヤーの切りかえなし", pg.evaluate("document.querySelectorAll('.who-pick').length===0 && document.querySelectorAll('[data-act=toggle-round]').length===2"))
     C(pg, "nav.tabs [data-tab=stats]"); C(pg, "[data-act=stat-tab][data-v=shot]"); pg.wait_for_timeout(300)
     check("分析: プレーヤーの切りかえなし", pg.evaluate("document.querySelectorAll('.who-pick').length===0"))
-    st = pg.evaluate("""(()=>{ const f=k=>document.querySelector('.dmap .bb[data-k="'+k+'"]'); const L=f('left'), O=f('long');
-      return {same: L.querySelector('circle').getAttribute('r')===O.querySelector('circle').getAttribute('r'), worst: L.classList.contains('worst') && O.classList.contains('worst')}; })()""")
-    check("分析の方向（グリーンの上の丸）: 同じ割合のミスは同じ大きさ・金の輪も両方", st["same"] and st["worst"])
+    st = pg.evaluate("""(()=>{ const f=k=>document.querySelector('.heat.p3 .ht[data-k="'+k+'"]'); const L=f('left'), O=f('long');
+      return {same: L.getAttribute('style')===O.getAttribute('style'), worst: L.classList.contains('worst') && O.classList.contains('worst'), ctr: !f('on').getAttribute('style')}; })()""")
+    check("分析の方向（十字）: 同じ割合のミスは同じ赤、真ん中（オン）は色なし", st["same"] and st["worst"] and st["ctr"])
     check("分析: 狙い通りの枠は出さない", pg.query_selector(".aim-box") is None)
     check("分析: 一番多いミスが同率なら両方書く", "左・オーバー" in pg.inner_text("body"))
     C(pg, "[data-act=demo-on]"); C(pg, "nav.tabs [data-tab=history]")
@@ -551,7 +551,7 @@ with sync_playwright() as pw:
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": [], "sc.fields": ALL}, offline=True)
     start_preset(pg, "firtree")
     hm = pg.evaluate("dirHeat('p3',{on:3,left:2,right:0,long:0,miss:5},10)")
-    check("分析の方向: 花道はなく、ミスの4つの丸（オーバー・左・右・ショート）で一番多いミスに金の輪。オンはグリーンの上に文字だけ", "花道" not in hm and hm.count('class="bb ') == 4 and 'on-lab' in hm and 'worst' in hm and "<ellipse" in hm)
+    check("分析の方向: 花道はなく、十字の5マス（オーバー・左・オン・右・ショート）。オンは色なしで、ミスだけ赤の濃さ", "花道" not in hm and hm.count('class="ht ') == 5 and 'ctr' in hm and 'worst' in hm)
     check("花道のあともエラーなし", not errs)
     pg.context.close()
 
@@ -745,8 +745,7 @@ with sync_playwright() as pw:
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.tab": "\"stats\"", "sc.statTab": "\"shot\""}, offline=True)
     C(pg, "[data-act=demo-on]"); pg.wait_for_timeout(500)
     ttl = pg.evaluate("[...document.querySelectorAll('#main .panel .sec em')].map(e=>e.textContent.trim()).join()")
-    check("ショット分析は4つのまとまり（SHOTS・TEE SHOT・CLUB・弱点分析）、分析のタブは3つ（スコア・ショット・パット）", ttl == "SHOTS,TEE SHOT,CLUB,WEAK POINTS" and pg.evaluate("[...document.querySelectorAll('.stat-tabs button')].map(b=>b.textContent.replace(/[A-Z]/g,'')).join()") == "スコア,ショット,パット")
-    check("弱点分析: 外しやすい方向・苦手なクラブ・3パット・OB・ペナ・バンカーが出る", pg.evaluate("document.querySelectorAll('.wk').length") >= 4)
+    check("ショット分析は3つのまとまり（SHOTS・TEE SHOT・CLUB）、弱点分析はない、分析のタブは3つ", ttl == "SHOTS,TEE SHOT,CLUB" and pg.query_selector(".wk") is None and pg.evaluate("[...document.querySelectorAll('.stat-tabs button')].map(b=>b.textContent.replace(/[A-Z]/g,'')).join()") == "スコア,ショット,パット")
     pg.context.close()
 
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
