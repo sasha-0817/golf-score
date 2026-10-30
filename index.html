@@ -1895,6 +1895,7 @@ body[data-tab=stats] #main :is(.gs,.cs-note,.muted){line-height:1.45}
 .cdt td button{height:33px}
 .ftip{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px}
 .ftip-card{position:relative;background:var(--rec-surface);color:var(--rec-fg);border-radius:20px;padding:34px 18px 16px;max-width:340px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.ftip-t{position:absolute;top:14px;left:18px;font-size:16px}
 .ftip-x{position:absolute;top:8px;right:8px;width:40px;height:40px;border:0;border-radius:50%;background:var(--rec-bg);color:var(--rec-fg);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .ft-n{font:700 22px var(--f-num);fill:var(--rec-fg)}.ft-lab{font:700 16px var(--f-body);fill:var(--rec-muted)}
 .ft-finger,.ft-hl{transform-box:fill-box}
@@ -2080,7 +2081,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-01-0900";
+const BUILD = "2026-11-01-1200";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2646,6 +2647,7 @@ function touchedS(d,who,i){ const h=d.holes[i]; if(d.editing) return true; if(wh
 function touchedP(d,who,i){ const h=d.holes[i]; if(d.editing) return true; if(who===0) return h.pT!==undefined ? !!h.pT : !!h.entered; const m=d.mates[who-1]; return m.pt ? !!m.pt[i] : !!h.entered; }
 /* 初めて詳細入力を開いたときだけ出す、フリックの使いかた */
 function flickTip(){ return `<div class="ftip" data-act="ftip-ok" role="dialog" aria-label="入力のしかた"><div class="ftip-card" data-stop="1">
+  <b class="ftip-t">入力方法</b>
   <button class="ftip-x" data-act="ftip-ok" aria-label="閉じる"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button>
   <svg viewBox="0 0 300 190" width="100%" aria-hidden="true">
     <g class="ft-pop"><rect x="22" y="8" width="256" height="54" rx="12" fill="var(--rec-surface)" stroke="var(--rec-line)" stroke-width="2"/>
@@ -2653,7 +2655,9 @@ function flickTip(){ return `<div class="ftip" data-act="ftip-ok" role="dialog" 
       ${[1,2,3,4,5].map((n,i)=>`<text class="ft-n n${i}" x="${52+i*50}" y="44" text-anchor="middle">${n}</text>`).join("")}</g>
     <rect x="22" y="112" width="100" height="58" rx="12" fill="var(--rec-bg)" stroke="var(--rec-line)" stroke-width="2" stroke-dasharray="6 5"/>
     <text x="72" y="148" text-anchor="middle" class="ft-lab">入力</text>
-    <g class="ft-finger"><g transform="translate(56 118)"><path d="M16 4c-3 0-5 2-5 5v22l-4-4c-2-2-5-2-7 0s-2 4 0 6l12 16c3 4 6 6 11 6h8c8 0 13-5 13-13V28c0-3-2-5-5-5-1 0-2 0-3 1-1-2-3-3-5-3-1 0-3 1-4 2-1-2-3-3-5-3-1 0-2 0-3 1V9c0-3-2-5-5-5z" fill="#fff" stroke="#0B1411" stroke-width="2.4" stroke-linejoin="round"/></g></g>
+    <g class="ft-finger"><g transform="translate(46 112)"><circle cx="24" cy="8" r="11" fill="none" stroke="#F2B01E" stroke-width="3" opacity=".8"/><circle cx="24" cy="8" r="19" fill="none" stroke="#F2B01E" stroke-width="2" opacity=".4"/>
+      <path d="M16 44V14a8 8 0 0 1 16 0v18c0-3 3-5 7-4.500s6 3 6 6c0-3 3-5 7-4.500s6 3 6 6c0-2.500 3-4.500 6.500-4s5.500 3 5.500 6.500V56c0 11-8 19-19 19H38c-9 0-15-4-20-11L6 50c-2-3-1-6 2-7.500s6-1 8 3z" fill="#fff" stroke="#0B1411" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M45 34v12M57 34v12M33 34v10" stroke="#0B1411" stroke-opacity=".35" stroke-width="2" stroke-linecap="round"/></g></g>
   </svg></div></div>`; }
 function viewRecordDraft(d){
   const h = d.holes[state.hole];
