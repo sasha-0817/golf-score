@@ -723,7 +723,7 @@ with sync_playwright() as pw:
     check("スコアカード: ゲームの行は「ポイント」（ニアピンでも）", "ポイント" in pg.inner_text(".cd-game tr.gr .ft") or "ポイント" in pg.inner_text(".cd-game"))
     check("スコアカード: 4文字の名前も「…」にならない", pg.evaluate("[...document.querySelectorAll('.cdt thead th.nm')].filter(e=>e.textContent.trim()).every(e=>e.scrollWidth<=e.clientWidth)"))
     check("スコアカード: ダボなどの記号の枠が上下の行にはみ出さない（外側の輪まで含めて行の高さに収まる）", pg.evaluate("(()=>{const td=document.querySelector('.cdt tbody td.c-s'); const m=document.createElement('span'); m.className='mk3 m-double'; td.appendChild(m); const r=m.getBoundingClientRect(), cs=getComputedStyle(m), ring=parseFloat(cs.outlineWidth)+parseFloat(cs.outlineOffset); m.remove(); return r.height+ring*2+2 <= td.getBoundingClientRect().height-4})()"))
-    check("スコアカード: サブタイトルに「◯人」は出さない", "人" not in pg.inner_text(".rec-who span"))
+    check("スコアカード: 左上はコース名だけ（日付・「スコアカード」・人数の行は出さない）", pg.query_selector(".rec-who span") is None and pg.query_selector(".rec-who b") is not None)
     check("スコアカード: H・PAR の下に空きの行はない（2行ぶち抜き）", pg.evaluate("document.querySelectorAll('.cdt thead th[rowspan]').length") == 2)
     C(pg, "[data-act=open-rules][data-v=nearpin]")
     check("スコアカード入力中もゲームのルールを見られる", pg.query_selector(".rp") is not None)
@@ -740,6 +740,13 @@ with sync_playwright() as pw:
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": ["はなこ", "じろう", "さぶろう"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"teamsum\""}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
     check("スコアカード（チーム戦）: 1・2人目はA（紺）、3・4人目はB（金）の列の色で囲う", pg.evaluate("[document.querySelectorAll('.cdt thead th.nm.tA').length, document.querySelectorAll('.cdt thead th.nm.tB').length, document.querySelectorAll('.cdt tbody td.tA').length>0, document.querySelectorAll('.cdt tbody td.tB').length>0].join()") == "2,2,true,true")
+    pg.context.close()
+
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.tab": "\"stats\"", "sc.statTab": "\"shot\""}, offline=True)
+    C(pg, "[data-act=demo-on]"); pg.wait_for_timeout(500)
+    ttl = pg.evaluate("[...document.querySelectorAll('#main .panel .sec em')].map(e=>e.textContent.trim()).join()")
+    check("ショット分析は4つのまとまり（SHOTS・TEE SHOT・CLUB・弱点分析）", ttl == "SHOTS,TEE SHOT,CLUB,WEAK POINTS")
+    check("弱点分析: 外しやすい方向・苦手なクラブ・OB・ペナ・バンカーが出る", pg.evaluate("document.querySelectorAll('.wk').length") == 4)
     pg.context.close()
 
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす

@@ -1959,6 +1959,12 @@ body[data-tab=stats] #main :is(.gs,.cs-note,.muted){line-height:1.45}
 .cd.wg .cdt:not(.cdg) tfoot td{height:40px}
 .cd.wg .cdt tfoot tr.gin td{height:44px}.cd.wg .cdt .gin-c .fc{height:34px}
 .cd.wg .cdt tfoot tr.skr td{height:36px}
+.wk{display:grid;grid-template-columns:112px 1fr;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
+.wk:first-of-type{border-top:0}
+.wk-t{font-size:14px;font-weight:700;color:var(--muted)}
+.wk-b p{margin:0 0 4px;font-size:15px;line-height:1.45}.wk-b p:last-child{margin-bottom:0}
+.wk-b small{font-size:13px;color:var(--muted);margin-left:4px}
+.wk-b b{font-weight:700}.wk-b b.bad{color:var(--q-triple)}
 </style>
 
 </head>
@@ -2066,7 +2072,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-10-31-0900";
+const BUILD = "2026-10-31-1500";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2847,7 +2853,7 @@ function viewCard(cd){
   const gh = cdHole(cd), gb = 0;
   const padSpB = b => nPad?`<td class="pad" style="bottom:${b}px" colspan="${nPad*pw}"></td>`:"";
   const inputRow = (isOlympic(cd.game)||cd.game==="nearpin") ? `<tr class="gin"><td colspan="2" class="ft" style="bottom:${gb}px">${gh+1}H<small class="blk">${isOlympic(cd.game)?"メダル":"ニアピン"}</small></td>${cd.players.map((p,i)=>{
-      let c; if(isOlympic(cd.game)){ const v=(((cd.medals||{})[gh])||[])[i]||0; c=`<div class="fc fm ${v?"set":""}" role="button" tabindex="0" data-k="m" data-i="${i}" aria-label="${esc(p.name)}の${gh+1}Hのメダル。押したまま左右に動かして離すと変わります">${v?medalSVG(v,26):"<span>—</span>"}</div>`; }
+      let c; if(isOlympic(cd.game)){ const v=(((cd.medals||{})[gh])||[])[i]||0; c=`<div class="fc fm ${v?"set":""}" role="button" tabindex="0" data-k="m" data-i="${i}" aria-label="${esc(p.name)}の${gh+1}Hのメダル。押したまま左右に動かして離すと変わります">${v?medalSVG(v,22):"<span>—</span>"}</div>`; }
       else if(cd.holes[gh].par!==3) c=`<span class="na">—</span>`;
       else { const on=(cd.pins||{})[gh]===i; c=`<button class="fc fn ${on?"set":""}" data-act="cd-pin" data-i="${i}" aria-pressed="${on}" aria-label="${esc(p.name)}がニアピン">${PINFLAG(on)}</button>`; }
       return `<td class="c-s gin-c" colspan="${cwOf(i)}" style="bottom:${gb}px">${c}</td>`; }).join("")}${padSpB(gb)}</tr>` : "";
@@ -2858,7 +2864,7 @@ function viewCard(cd){
   return `<div class="cd ${(inputRow||skinRow||gameRow)?"wg":""}">
     <div class="rec-top">
       <button class="icon-btn" data-act="ask-discard" aria-label="記録を閉じる">${ICON.x}</button>
-      <div class="rec-who"><b>${esc(cd.courseName)}</b><span>${esc(cd.date.slice(5).replace("-","/"))}・スコアカード</span></div>
+      <div class="rec-who"><b>${esc(cd.courseName)}</b></div>
       ${cd.game?`<button class="cd-pt cd-rule" data-act="open-rules" data-v="${cd.game}">ルール</button>`:""}<button class="cd-pt" data-act="cd-putts" aria-pressed="${pOn}">パット${pOn?"あり":"なし"}</button>
     </div>
     ${two?`<div class="cd-tabs" role="group" aria-label="前半・後半">${["OUT 1–9","IN 10–"+N].map((l,k)=>`<button data-act="cd-half" data-v="${k}" aria-pressed="${half===k}">${l}</button>`).join("")}</div>`:""}
@@ -3026,15 +3032,13 @@ function viewStats(){
     ${!s.puttHoles?"":gauge("ボギーオン率", s.bon, `${s.puttHoles}H中 ${s.bonN}回`, "--c-bon")}
     ${!s.puttHoles?"":gauge("リカバリー率", s.scramble, `パーオン逃し<br>${s.scrambleN}Hのうち<br>パー以内`, "--accent2")}
     ${!(s.bunkerN||fields().bunker)?"":gauge("サンドセーブ率", s.sandSave, `バンカー<br>${s.bunkerN}Hのうち<br>パー以内`, "--c5")}
-    ${s.bunkerN||fields().bunker?gauge("バンカー率", s.bunkerRate, `${s.holes}H中 ${s.bunkerN}回`, "--warn"):""}
-    ${s.troubleN||fields().ob||fields().pen?gauge("OB・ペナ率", pct(s.troubleN,s.holes), `${s.holes}H中 ${s.troubleN}回`, "--under"):""}
-  </div></div>
-  ${s.puttHoles?`  <div class="panel"><div class="sec"><em>TREND</em><span>パーオン率・ボギーオン率の推移</span></div><div class="chartbox"><canvas id="ch-on" aria-label="パーオン率とボギーオン率の推移"></canvas></div><p class="muted cs-note">各ラウンドまでの直近5ラウンドの平均。</p></div>`:""}
+  </div>
+  ${s.puttHoles?`<div class="map-sub" style="margin-top:14px">パーオン率・ボギーオン率の推移</div><div class="chartbox"><canvas id="ch-on" aria-label="パーオン率とボギーオン率の推移"></canvas></div><p class="muted cs-note">各ラウンドまでの直近5ラウンドの平均。</p>`:""}</div>
   ${!(s.dirN||s.teeN||fields().shot)?"":`<div class="panel"><div class="sec"><em>TEE SHOT</em><span>ティーショットの行き先</span></div>
     <div class="map-sub">パー3（グリーン）</div>${greenMap(s)}
     ${s.teeN?`<div class="map-sub">パー4・5（フェアウェイ）</div>${dirHeat("fw", s.teeC, s.teeN)}<p class="muted" style="font-size:14px;text-align:center;margin:8px 0 0">${s.teeN}回の記録・フェアウェイキープ率 <b>${fmtPct(s.fwRate)}%</b></p>`:""}</div>`}
   ${clubPanel(rs)}
-  ${troublePanel(rs)}
+  ${weakPanel(rs,s)}
 `:""}
   ${ST==="putt"&&!s.puttHoles?`<div class="panel"><div class="sec"><em>PUTTING</em><span>パット</span></div><p class="muted" style="font-size:13px;margin:0">この期間はパット数を記録したラウンドがありません。歯車 → 記録する項目 →「パット数」をONにすると、ここにパットの分析が出ます。</p></div>`:""}
   ${ST==="putt"&&s.puttHoles?`
@@ -3080,6 +3084,26 @@ function troublePanel(rs){
   return `<div class="panel"><div class="sec"><em>TROUBLE</em><span>OB・ペナ率ワースト</span></div>
     ${L.length ? `<ol class="tr-rank">${L.map((x,i)=>`<li><span class="rk">${i+1}</span><b>${esc(x.c)}</b><span class="cs-bar"><i style="width:${Math.max(4,x.r)}%"></i></span><span class="tp">${fmtPct(x.r)}%</span><small>${x.n}回中${x.t}回</small></li>`).join("")}</ol>`
       : `<p class="muted" style="font-size:13px;margin:0">まだOB・1ペナの記録はありません。</p>`}</div>`;
+}
+/* 弱点分析: ショットの数字から、直したい順に「外しやすい方向」「苦手なクラブ」「OB・ペナが多いクラブ」「バンカー」を文章で */
+function weakPanel(rs, s){
+  const items=[]; const top=(o,keys)=>{ let k=null,v=0; keys.forEach(x=>{ if((o[x]||0)>v){ v=o[x]; k=x; } }); return k?[k,v]:null; };
+  const L3={left:"左",right:"右",long:"オーバー",miss:"ショート"}, L4={rl:"左",rr:"右",miss:"ショート"};
+  const dl=[]; const t3=s.dirN>=5?top(s.dirs,["left","right","long","miss"]):null, t4=s.teeN>=5?top(s.teeC,["rl","rr","miss"]):null;
+  if(t3) dl.push(`<p>パー3は<b class="bad">${L3[t3[0]]}</b>に外しやすい<small>${fmtPct(pct(t3[1],s.dirN))}%</small></p>`);
+  if(t4) dl.push(`<p>パー4・5は<b class="bad">${L4[t4[0]]}</b>に外しやすい<small>${fmtPct(pct(t4[1],s.teeN))}%</small></p>`);
+  if(dl.length) items.push(["外しやすい方向",dl.join("")]);
+  const cw=(kind,name,unit)=>{ const m={}; rs.forEach(r=>r.holes.forEach(h=>{ if(!h.club) return; if(kind==="p3"?(h.par!==3||!puttsOn(r)):(h.par<4||!h.tee)) return; const x=m[h.club]||(m[h.club]={n:0,ok:0}); x.n++; if(kind==="p3"?(h.strokes-h.putts<=h.par-2):(h.tee==="fw")) x.ok++; }));
+    const L=Object.keys(m).filter(c=>m[c].n>=3).map(c=>({c,n:m[c].n,r:m[c].ok/m[c].n*100})); if(L.length<2) return "";
+    const w=L.reduce((a,x)=>x.r<a.r?x:a), tn=L.reduce((a,x)=>a+m[x.c].n,0), to=L.reduce((a,x)=>a+m[x.c].ok,0), avg=to/tn*100;
+    return `<p>${name}は<b class="bad">${esc(w.c)}</b>の${unit}が低い<small>${fmtPct(w.r)}%（平均−${Math.round(avg-w.r)}）</small></p>`; };
+  const c1=cw("p3","パー3","パーオン"), c2=cw("p4","パー4・5","フェアウェイ"); if(c1||c2) items.push(["苦手なクラブ",c1+c2]);
+  const tm={}; rs.forEach(r=>r.holes.forEach(h=>{ if(!h.club) return; const x=tm[h.club]||(tm[h.club]={n:0,t:0}); x.n++; if(h.ob||h.pen) x.t++; }));
+  const tw=Object.keys(tm).filter(c=>tm[c].t>0).map(c=>({c,n:tm[c].n,t:tm[c].t,r:tm[c].t/tm[c].n*100})).sort((a,b)=>b.r-a.r||b.t-a.t)[0];
+  if(s.troubleN>0) items.push(["OB・ペナ",`<p>全体の率<small>${fmtPct(pct(s.troubleN,s.holes))}%（${s.holes}H中${s.troubleN}回）</small></p>${tw?`<p>多いクラブは<b class="bad">${esc(tw.c)}</b><small>${fmtPct(tw.r)}%（${tw.n}回中${tw.t}回）</small></p>`:""}`]);
+  if(s.bunkerN>0) items.push(["バンカー",`<p>バンカーに入る率<small>${fmtPct(s.bunkerRate)}%（${s.holes}H中${s.bunkerN}回）</small></p>${s.sandSave!=null?`<p>入ったあとパー以内<b class="${s.sandSave<40?"bad":""}">${fmtPct(s.sandSave)}%</b></p>`:""}`]);
+  return `<div class="panel"><div class="sec"><em>WEAK POINTS</em><span>弱点分析</span></div>
+    ${items.length?items.map(([t,b])=>`<div class="wk"><span class="wk-t">${t}</span><div class="wk-b">${b}</div></div>`).join(""):`<p class="muted" style="font-size:14px;margin:0">方向・クラブ・OB・バンカーを記録すると、直したいところがここに出ます。</p>`}</div>`;
 }
 function clubPanel(rs){
   const t3 = clubTable(rs,"p3"), t4 = clubTable(rs,"p4");
