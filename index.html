@@ -1986,6 +1986,12 @@ body[data-tab=stats] #main .heat .ht span{font-size:16px}
 .cd.wg .cdt .gin-c .fc{height:40px}
 .cdt tfoot td.ft small{font:700 20px var(--f-num);color:var(--rec-muted)}
 .cdt tfoot td.ft small.blk{font:700 15px var(--f-body)}
+/* ショットのリングは2列×2段（4つなので） */
+.gauges{grid-template-columns:repeat(2,1fr);gap:18px 10px}
+.gauge svg{width:96px;height:96px}
+.gauge .gv{height:96px;font-size:28px}.gauge .gv small{font-size:14px}
+body[data-tab=stats] #main .gauge .gl{font-size:16px}
+body[data-tab=stats] #main .gauge .gs{font-size:14px}
 </style>
 
 </head>
@@ -2093,7 +2099,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-02-0900";
+const BUILD = "2026-11-02-1200";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
