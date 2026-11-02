@@ -2099,7 +2099,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-02-1200";
+const BUILD = "2026-11-02-1500";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2258,7 +2258,7 @@ function computeStats(rs){
   const missGir = ph.filter(h=>h.strokes-h.putts > h.par-2);
   const scramble = missGir.filter(h=>h.strokes<=h.par);
   const bunker = holes.filter(h=>h.bunker);
-  const sandSave = bunker.filter(h=>h.strokes<=h.par);
+  const sandSave = bunker.filter(h=>h.strokes<=h.par), sandBogey = bunker.filter(h=>h.strokes<=h.par+1);
   const ob = holes.filter(h=>h.ob);
   const pen = holes.filter(h=>h.pen);
   const teeH = holes.filter(h=>h.par>=4 && h.tee); const teeC = {fw:0,rl:0,rr:0,miss:0}; teeH.forEach(h=>{ if(teeC[h.tee]!=null) teeC[h.tee]++; });
@@ -2283,7 +2283,7 @@ function computeStats(rs){
     gir: pct(gir.length,pn), bon: pct(bon.length,pn), girN: gir.length, bonN: bon.length,
     one: pct(putt[1],pn), three: pct(putt[3],pn),
     scramble: pct(scramble.length, missGir.length), scrambleN: missGir.length,
-    bunkerRate: pct(bunker.length,n), sandSave: pct(sandSave.length,bunker.length), bunkerN: bunker.length,
+    bunkerRate: pct(bunker.length,n), sandSave: pct(sandSave.length,bunker.length), sandBogey: pct(sandBogey.length,bunker.length), sandBogeyN: sandBogey.length, bunkerN: bunker.length,
     obRate: pct(ob.length,n), obN: ob.length,
     penRate: pct(pen.length,n), penN: pen.length,
     troubleN: holes.filter(h=>h.ob||h.pen).length,
@@ -3058,7 +3058,7 @@ function viewStats(){
     ${!s.puttHoles?"":gauge("パーオン率", s.gir, `${s.puttHoles}H中 ${s.girN}回`, "--c-gir")}
     ${!s.puttHoles?"":gauge("ボギーオン率", s.bon, `${s.puttHoles}H中 ${s.bonN}回`, "--c-bon")}
     ${!s.puttHoles?"":gauge("リカバリー率", s.scramble, `パーオン逃し<br>${s.scrambleN}Hのうち<br>パー以内`, "--accent2")}
-    ${!(s.bunkerN||fields().bunker)?"":gauge("サンドセーブ率", s.sandSave, `バンカー<br>${s.bunkerN}Hのうち<br>パー以内`, "--c5")}
+    ${!(s.bunkerN||fields().bunker)?"":gauge("サンドボギーセーブ率", s.sandBogey, `バンカー<br>${s.bunkerN}Hのうち<br>ボギー以内`, "--c5")}
   </div>
   ${s.puttHoles?`<div class="map-sub" style="margin-top:14px">パーオン率・ボギーオン率の推移</div><div class="chartbox"><canvas id="ch-on" aria-label="パーオン率とボギーオン率の推移"></canvas></div><p class="muted cs-note">各ラウンドまでの直近5ラウンドの平均。</p>`:""}</div>
   ${!(s.dirN||s.teeN||fields().shot)?"":`<div class="panel"><div class="sec"><em>TEE SHOT</em><span>ティーショットの行き先</span></div>
