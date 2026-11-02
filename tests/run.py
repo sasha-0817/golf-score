@@ -170,12 +170,12 @@ with sync_playwright() as pw:
     # 4. 入力の上限・下限、中断・再開・破棄、読み込み直しで同じホール
     pg, errs = open_page(b, {"sc.fields": ALL, "sc.player": "\"たろう\""})
     start_preset(pg, "firtree")
-    flick(pg, "s", 0, 9)
-    check("打数の上限10（フリックの右端）", pg.evaluate("state.draft.holes[0].strokes") == 10)
     flick(pg, "s", 0, 0)
     check("打数の下限1・パットは打数-1まで", pg.evaluate("[state.draft.holes[0].strokes,state.draft.holes[0].putts]") == [1, 0])
     flick(pg, "p", 0, 6)
     check("パットを増やすと打数も増える（パットは打数-1まで）", pg.evaluate("[state.draft.holes[0].strokes,state.draft.holes[0].putts]") == [7, 6])
+    flick(pg, "s", 0, 9)
+    check("打数は10まで選べる（フリックの右端。さらに「10+」で11以上）", pg.evaluate("state.draft.holes[0].strokes") == 10)
     for _ in range(4): tap_un(pg); C(pg, "[data-act=next]")
     pg.reload(); pg.wait_for_timeout(900)
     check("読み込み直しても同じホール（5番）", (pg.text_content(".hno") or "").startswith("5"))
@@ -764,6 +764,19 @@ with sync_playwright() as pw:
     C(pg, "[data-act=close-result]"); C(pg, "nav.tabs [data-tab=record]"); pg.wait_for_timeout(300)
     check("保存したあとの記録タブ: 前回の同伴者・コース・ゲームがそのまま入っていて、「始める」だけで続けられる", pg.evaluate("document.querySelector('#r-mate0').value") == "はなこ" and pg.evaluate("document.querySelector('#r-course').value") == "c1" and pg.evaluate("state.game") == "skins" and pg.query_selector("[data-act=start]") is not None)
     check("リザルトに専用の「もう1周」ボタンはない", pg.query_selector("[data-act=next-round]") is None)
+    pg.context.close()
+
+    # 19l. 10打以上も入れられる（「10+」を動かすたびに+1・押すだけなら今のまま）
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.fields": ALL}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    flick(pg, "s", 0, 9); h10 = pg.evaluate("state.draft.holes[0].strokes")
+    r = pg.locator('.fc[data-k="s"][data-i="0"]').first.bounding_box(); x, y = r["x"] + r["width"] / 2, r["y"] + r["height"] / 2
+    pg.mouse.move(x, y); pg.mouse.down(); pg.wait_for_timeout(30); pg.mouse.move(x + 40, y, steps=3); pg.mouse.up(); pg.wait_for_timeout(80)
+    h11 = pg.evaluate("state.draft.holes[0].strokes")
+    pg.mouse.click(x, y); pg.wait_for_timeout(80)
+    h11b = pg.evaluate("state.draft.holes[0].strokes")
+    pg.mouse.move(x, y); pg.mouse.down(); pg.wait_for_timeout(30); pg.mouse.move(x - 30, y, steps=2); pg.mouse.move(x - 60, y, steps=3); pg.wait_for_timeout(50); pg.mouse.up(); pg.wait_for_timeout(80)
+    check("10打以上: 10 → 「10+」を右へ動かすと11 → 押すだけなら11のまま → 左へ動かすと選んだ数字に戻る", (h10, h11, h11b, pg.evaluate("state.draft.holes[0].strokes")) == (10, 11, 11, 7))
     pg.context.close()
 
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす

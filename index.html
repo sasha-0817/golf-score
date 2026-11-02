@@ -2100,7 +2100,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-05-1200";
+const BUILD = "2026-11-06-0900";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3640,9 +3640,10 @@ if(state.draft){ const i=state.draft.holes.findIndex(x=>!sOf(x)); state.hole = i
     if(kind==="d") return { type:"cross", par };
     if(kind==="o"){ const F2=fields(), ob=evs(h,"ob").length>0, pn=evs(h,"pen").length>0, vals=F2.ob&&F2.pen?[0,1,2]:F2.ob?[0,1]:[0,2]; return { type:"row", vals, def:Math.max(0,vals.indexOf(ob?1:pn?2:0)), cw:52, min:30, par }; }
     if(kind==="b") return { type:"row", vals:[0,1], def:h.bunker?1:0, cw:52, min:30, par };
-    return { type:"row", vals:[1,2,3,4,5,6,7,8,9,10], def:Math.min(9,par-1), cw:32, min:20, par };
+    { const cur = who ? ((d.mates[who-1]||{s:[]}).s[X.hole]) : h.strokes;   // 10打以上: いちばん右の「10+」を動かして選ぶたびに1打ずつ増える
+      return { type:"row", vals:[1,2,3,4,5,6,7,8,9,10], def:cur>=10?9:Math.min(9,par-1), cw:32, min:20, par, cur }; }
   }
-  const cellHTML=(kind,v,par)=>kind==="m"?(v?medalSVG(v,29):"—"):kind==="c"?esc(v):kind==="o"?["なし","OB","ペナ"][v]:kind==="b"?["なし","あり"][v]:v;
+  const cellHTML=(kind,v,par)=>kind==="m"?(v?medalSVG(v,29):"—"):kind==="c"?esc(v):kind==="o"?["なし","OB","ペナ"][v]:kind==="b"?["なし","あり"][v]:(kind==="s"&&v===10?"10+":v);
   const cellTone=(kind,v,par)=>kind==="s"?"t-"+toneS(v,par):kind==="p"?"t-"+toneP(v):"nt";
   function build(){
     const c=st.cfg, W=document.documentElement.clientWidth;
@@ -3670,7 +3671,7 @@ if(state.draft){ const i=state.draft.holes.findIndex(x=>!sOf(x)); state.hole = i
     const kind=c.dataset.k, cf=cfg(kind); st={x:e.clientX,y:e.clientY,kind,who:+c.dataset.i,id:e.pointerId,el:c,cfg:cf,idx:cf.type==="row"?cf.def:"C"}; c.classList.add("down"); build();
   });
   document.addEventListener("pointermove",e=>{ if(!st||e.pointerId!==st.id) return;
-    const c=st.cfg, dx=e.clientX-st.x, dy=e.clientY-st.y;
+    const c=st.cfg, dx=e.clientX-st.x, dy=e.clientY-st.y; if(Math.abs(dx)>8||Math.abs(dy)>8) st.moved=true;
     if(c.type==="cross"){ const k=Math.hypot(dx,dy)<22?"C":Math.abs(dx)>Math.abs(dy)?(dx<0?"L":"R"):(dy<0?"U":"D"); if(k!==st.idx) mark(k); return; }
     if(c.abs){ if(!st.moved && Math.abs(dx)<10 && Math.abs(dy)<10) return; st.moved=true; // 少し動くまでは、今のクラブのまま
       const i=Math.max(0,Math.min(c.vals.length-1,Math.floor((e.clientX-(st.left+4))/st.step))); if(i!==st.idx) mark(i); return; }
@@ -3679,12 +3680,13 @@ if(state.draft){ const i=state.draft.holes.findIndex(x=>!sOf(x)); state.hole = i
     const i=Math.max(0,Math.min(c.vals.length-1,c.def+Math.round(dx/st.step))); if(i!==st.idx) mark(i); });
   function end(e,commit){
     if(!st||e.pointerId!==st.id) return;
-    const c=st.cfg, kind=st.kind, who=st.who, idx=st.idx; st.el.classList.remove("down"); if(pop) pop.remove(); pop=null; st=null;
+    const c=st.cfg, kind=st.kind, who=st.who, idx=st.idx, moved=!!st.moved; st.el.classList.remove("down"); if(pop) pop.remove(); pop=null; st=null;
     if(!commit) return;
     const X1=fctx(); if(X1&&X1.card){ if(kind==="m"){ const cd=X1.d, hh=X1.hole, PP=cd.players.length, v=c.vals[idx]; cd.medals=cd.medals||{}; const arr=(cd.medals[hh]||Array(PP).fill(0)).slice();
         if(v>0) arr.forEach((x,k)=>{ if(x===v) arr[k]=0; }); arr[who]=v; cd.medals[hh]=arr; saveCDraft(); render(); } return; }
     const d=state.draft; if(!d) return; const h=d.holes[state.hole];
-    if(kind==="s"||kind==="p"){ const v=c.vals[idx];
+    if(kind==="s"||kind==="p"){ let v=c.vals[idx];
+      if(kind==="s" && v===10 && c.cur>=10) v = moved ? Math.min(15,c.cur+1) : c.cur;   // 10打以上のときは「10+」へ動かすたびに+1（押すだけなら今のまま）
       const hs=state.hole, mt=who?d.mates[who-1]:null; if(mt){ mt.p=mt.p||d.holes.map(()=>2); mt.t=mt.t||[]; mt.pt=mt.pt||[]; }
       if(kind==="s"){ if(who===0){ h.strokes=v; h.sT=true; if(h.putts>h.strokes-1) h.putts=Math.max(0,h.strokes-1); h.entered=true; state.tap="sv"+v; } else { mt.s[hs]=v; mt.t[hs]=true; if(mt.p[hs]>v-1) mt.p[hs]=Math.max(0,v-1); } }
       else { if(who===0){ h.putts=v; h.pT=true; if(h.strokes<h.putts+1){ h.strokes=Math.min(15,h.putts+1); } h.sT=true; h.entered=true; state.tap="pv"+v; } else { mt.p[hs]=v; mt.pt[hs]=true; if(mt.s[hs]<v+1) mt.s[hs]=Math.min(15,v+1); mt.t[hs]=true; } } }
