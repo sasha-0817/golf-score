@@ -1992,6 +1992,9 @@ body[data-tab=stats] #main .heat .ht span{font-size:16px}
 .gauge .gv{height:96px;font-size:28px}.gauge .gv small{font-size:14px}
 body[data-tab=stats] #main .gauge .gl{font-size:16px}
 body[data-tab=stats] #main .gauge .gs{font-size:14px}
+:root{--dh0:hsl(356 80% 95%);--dh1:hsl(356 68% 77%);--dh2:hsl(356 56% 57%);--dht:#fff}   /* 方向のマスの赤（色相356°固定。薄い側もオレンジに寄らない） */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--dh0:hsl(356 28% 22%);--dh1:hsl(356 42% 42%);--dh2:hsl(356 68% 68%);--dht:#2A0A10}}
+:root[data-theme="dark"]{--dh0:hsl(356 28% 22%);--dh1:hsl(356 42% 42%);--dh2:hsl(356 68% 68%);--dht:#2A0A10}
 </style>
 
 </head>
@@ -2099,7 +2102,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-02-1500";
+const BUILD = "2026-11-03-0900";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3211,7 +3214,7 @@ function dirHeat(kind, c, n){
   const tiles = par3 ? [["long","オーバー","u"],["left","左","l"],["on","オン","c"],["right","右","r"],["miss","ショート","d"]] : [["rl","左","l"],["fw","真ん中","c"],["rr","右","r"],["miss","ショート","d"]];
   const get=k=>c[k]||0, top=Math.max(0,...tiles.filter(t=>t[0]!==good).map(t=>get(t[0]))), mx=Math.max(1,top);
   return `<div class="heat ${kind}">${tiles.map(([k,l,pos])=>{ const v=get(k), pc=pct(v,n), isG=k===good, x=v?Math.round(10+v/mx*78):0, worst=!isG&&top>0&&v===top;
-    const st = isG ? "" : `background:color-mix(in srgb,#D9483B ${x}%,var(--paper));color:${x>52?"#fff":"var(--fg)"}`;
+    const t = v/mx, st = isG ? "" : `background:${!v?"var(--dh0)":t<=.5?`color-mix(in srgb,var(--dh1) ${Math.round(t*200)}%,var(--dh0))`:`color-mix(in srgb,var(--dh2) ${Math.round((t-.5)*200)}%,var(--dh1))`};color:${t>.55?"var(--dht)":"var(--fg)"}`;
     return `<div class="ht ht-${pos} ${worst?"worst":""} ${isG?"ctr":""}" data-k="${k}" style="${st}"><span>${l}</span><b>${Math.round(pc)}<i>%</i></b></div>`; }).join("")}</div>`; }
 function greenMap(s){
   if(!s.dirN) return `<p class="muted" style="font-size:13px">まだ記録がありません。記録画面でグリーンのどこに行ったかを選ぶとここに出ます。</p>`;
