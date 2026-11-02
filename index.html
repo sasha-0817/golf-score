@@ -2055,7 +2055,6 @@ function pickableCourses(){
 }
 const favs = () => LS.get("sc.favs", []);
 function courseGreens(c){ if(!c || !c.holes || !c.holes.some(h=>h.yards2)) return null; const g=c.holes[0].gn; return Array.isArray(g)&&g.length===2 ? g : ["A","B"]; }
-const TEES = { fw:"フェアウェイ", rl:"左", rr:"右", miss:"ショート" };
 const CLUBS = ["1W","3W","5W","UT","5I","6I","7I","8I","9I","PW","AW","SW"];
 const CLUB_GROUPS = [
   ["ドライバー", ["1W"]],
@@ -2409,12 +2408,6 @@ function groupCard(g){
 }
 const after = {};
 
-/* ----- 記録 ----- */
-/* ラウンド開始のコース欄: 1つの枠。タップすると「コースを選ぶ」画面が開く */
-function myCourses(all){
-  const F=favs(), last=LS.get("sc.lastCourse",""), played=new Set(state.rounds.map(r=>r.courseId));
-  return all.filter(c=>F.includes(c.id) || played.has(c.id) || c.id===last).sort((a,b)=>(F.includes(b.id)-F.includes(a.id)) || (b.id===last)-(a.id===last) || a.name.localeCompare(b.name,"ja"));
-}
 function coursePickField(){
   const all = pickableCourses();
   const F = favs(), favList = all.filter(c=>F.includes(c.id));
@@ -2453,7 +2446,6 @@ function coursePickSheet(){
     <button data-act="close-pick">閉じる</button></div></div>`;
 }
 function viewRecord(){
-  const cs = state.courses;
   const d = state.draft;
   if(state.cdraft){ const cd=state.cdraft; if(!cd.paused) return viewCard(cd);
     const n=cd.holes.filter((x,i)=>cd.players.some(p=>p.s[i]!=null)).length;
@@ -2501,162 +2493,13 @@ const ICON = {
   back:'<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>',
   flag:'<svg viewBox="0 0 14 18" aria-hidden="true"><line x1="2" y1="1" x2="2" y2="17" stroke="#fff" stroke-width="1.6"/><path d="M3 1.5 L13 4.5 L3 7.5Z" fill="#F0BE3A"/></svg>'
 };
-const TERMS = d => d<=-3?"ALBA":d===-2?"EAGLE":d===-1?"BIRDIE":d===0?"PAR":d===1?"BOGEY":d===2?"DOUBLE":d===3?"TRIPLE":"+"+d;
 const TERM = d => d<=-3?"ALBATROSS":d===-2?"EAGLE":d===-1?"BIRDIE":d===0?"PAR":d===1?"BOGEY":d===2?"DOUBLE":d===3?"TRIPLE":"+"+d;
 const TONEH = h => h.strokes===1 ? "hio" : TONE(h.strokes-h.par);
 const TONE = d => d<=-2?"eagle":d===-1?"birdie":d===0?"par":d===1?"bogey":d===2?"double":"triple";
-const BALL_POS = { on:{left:"calc(50% + 16px)",top:"calc(50% + 4px)"}, left:{left:"calc(19% + 9px)",top:"calc(50% - 7px)"}, right:{left:"calc(81% - 23px)",top:"calc(50% - 7px)"}, long:{left:"calc(67% + 8px)",top:"14px"}, short:{left:"calc(67% + 8px)",top:"calc(100% - 28px)"} };
-const AR = { long:'<svg viewBox="0 0 12 12"><path d="M6 10V2M2.5 5.5L6 2l3.5 3.5"/></svg>', short:'<svg viewBox="0 0 12 12"><path d="M6 2v8M2.5 6.5L6 10l3.5-3.5"/></svg>', left:'<svg viewBox="0 0 12 12"><path d="M10 6H2M5.5 2.5L2 6l3.5 3.5"/></svg>', right:'<svg viewBox="0 0 12 12"><path d="M2 6h8M6.5 2.5L10 6l-3.5 3.5"/></svg>' };
 
-/* アプローチ: 上から見たグリーン。エリアをタップすると球が飛んでいく */
-/* 分析の絵: ミスの多さの塗り。べた塗りではなく、うすい赤＋赤い縁、一番多いところは斜線と濃い縁で目立たせる */
-function heatShape(shape, heat, worst){
-  const st = worst ? `fill:color-mix(in srgb,#E5484D 16%,var(--paper));stroke:#E5484D;stroke-width:2`
-    : `fill:color-mix(in srgb,#E5484D ${Math.round(heat*14)}%,var(--paper));stroke:color-mix(in srgb,#E5484D ${Math.round(20+heat*45)}%,var(--line));stroke-width:1.2`;
-  const base = shape.replace('class="az-bg"', `class="az-bg" style="${st}"`);
-  return worst ? base + shape.replace('class="az-bg"', 'class="az-hatch" fill="url(#hatchS)" pointer-events="none"') : base;
-}
-const HATCH = `<pattern id="hatchS" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2.4" height="8" fill="#E5484D" fill-opacity=".2"/></pattern>`;
-/* 分析の絵の%は整数（左右の細い枠にも同じ大きさで収まるように）。%記号は小さく */
-const mapPct = v => `${v==null?"—":Math.round(v)}<tspan class="pu">%</tspan>`;
-/* グリーンの中の5つの区画（狙いと着弾）: 真ん中・奥・手前・左・右 */
-const GSUB = { c:[170,100], b:[170,66], f:[170,130], l:[114,98], r:[226,98] };
-const GSUB_L = { c:"真ん中", b:"奥", f:"手前", l:"左", r:"右", short:"花道" };
-const FCOL = { l:[121,92], c:[170,92], r:[219,92] }; // フェアウェイの左・真ん中・右（着弾のボールの位置）
-const FCOL_L = { l:"左", c:"真ん中", r:"右" };
-const aimMarkSVG = p => p ? `<g class="aim-mark" pointer-events="none" transform="translate(${p[0]} ${p[1]})"><circle r="11" fill="rgba(47,125,225,.2)" stroke="#fff" stroke-width="4"/><circle r="11" fill="none" stroke="#2F7DE1" stroke-width="2.4"/><circle r="2.6" fill="#2F7DE1"/><path d="M0 -17V-8M0 8V17M-17 0H-8M8 0H17" stroke="#fff" stroke-width="4.4" stroke-linecap="round"/><path d="M0 -17V-8M0 8V17M-17 0H-8M8 0H17" stroke="#2F7DE1" stroke-width="2.2" stroke-linecap="round"/></g>` : "";
-function approachSVG(dir, tap, stat, o={}){
-  // stat が渡されたら分析用（読み取り専用・割合表示）。o = { on: グリーンの区画（着弾）, aim: 狙いの区画 }
-  const Z = { on:[218,106], long:[236,26], short:[238,172], left:[46,62], right:[294,62], miss:[214,208] };
-  const sel = k => !stat && dir===k;
-  const pctOf = k => stat ? pct(stat.dirs[k], stat.dirN) : null;
-  // 花道は悪い結果ではないのでミスに数えない（赤くしない、2026-10-26）
-  const maxMiss = stat ? Math.max(1, ...["long","left","right","miss"].map(k=>stat.dirs[k]||0)) : 1;
-  const topMiss = stat ? Math.max(0, ...["long","left","right","miss"].map(k=>stat.dirs[k]||0)) : 0; // 同じ数のミスは同じ濃さ（同率1位は両方とも一番多い扱い）
-  const zone = (k, shape, lx, ly, label) => {
-    if(stat){ const v=pctOf(k), w=k!=="short"&&topMiss>0&&(stat.dirs[k]||0)===topMiss;
-      return `<g class="az-s">${k==="short" ? shape.replace('class="az-bg"','class="az-bg az-safe"') : heatShape(shape, (stat.dirs[k]||0)/maxMiss, w)}
-        ${k==="miss"||k==="short"?`<text x="${lx}" y="${ly}" class="az-t">${label}<tspan dx="8" class="az-p ${w?"worst":""}">${mapPct(v)}</tspan></text>`:`<text x="${lx}" y="${ly-12}" class="az-t">${label}</text><text x="${lx}" y="${ly+10}" class="az-p ${w?"worst":""} ${k==="left"||k==="right"?"side":""}">${mapPct(v)}</text>`}</g>`; }
-    return `<g class="az ${sel(k)?"on-sel":""}" role="button" tabindex="0" data-act="dir" data-v="${k}" aria-pressed="${sel(k)}" aria-label="${label}">${shape}<text x="${lx}" y="${ly}" class="az-t">${label}</text></g>`; };
-  const b = !stat && dir && (dir==="on" && GSUB[o.on] ? GSUB[o.on] : Z[dir]);
-  const sx=170, sy=222;
-  const cy = Math.min(sy,b?b[1]:sy) - (dir==="short"?70:dir==="long"?12:40);
-  const tpath = b ? `M${sx} ${sy} Q ${(sx+(b?b[0]:0))/2-28} ${cy} ${b[0]} ${b[1]}` : ""; // 少し左に膨らませる（真っすぐだと線がボールと重なる）
-  const tracer = b ? `<g class="tr ${tap?"anim":""}">
-      <path class="tr-shadow" d="M${sx+6} ${sy} L${b[0]+5} ${b[1]+3}" pathLength="1" filter="url(#soft)"/>
-      <path class="tr-glow" d="${tpath}" pathLength="1" filter="url(#trGlow)"/>
-      <path class="tr-core" d="${tpath}" pathLength="1" stroke="url(#trGrad)"/>
-      <path class="tr-hi" d="${tpath}" pathLength="1"/></g>` : "";
-  // 光は左上から: 影はすべて同じ向き (28,10) に落ちる
-  const SH = "rgba(0,0,0,.22)";
-  const ball = b ? `<g class="ballg ${tap?"drop":""}"><ellipse cx="${b[0]+3.5}" cy="${b[1]+5}" rx="7.5" ry="4.8" fill="rgba(0,0,0,.26)" filter="url(#soft)" transform="rotate(15 ${b[0]+3.5} ${b[1]+5})"/><image href="ball.png" x="${b[0]-7.5}" y="${b[1]-7.5}" width="15" height="15"/></g>` : "";
-  const greenAttrs = stat ? `class="az-s"` : `class="g-deco ${sel("on")&&!GSUB[o.on]?"on-old":""}"`;
-  const GT = { b:"M170 98 L66 40 L274 40Z", f:"M170 98 L66 156 L274 156Z", l:"M170 98 L66 40 L66 156Z", r:"M170 98 L274 40 L274 156Z" };
-  const subSel = k => !stat && dir==="on" && o.on===k;
-  const greenSubs = stat ? "" : `<g clip-path="url(#gClip)">${["b","f","l","r"].map(k=>`<path class="gsub ${subSel(k)?"sel":""}" d="${GT[k]}" data-act="dir" data-v="on" data-p="${k}" role="button" aria-pressed="${subSel(k)}" aria-label="グリーンの${GSUB_L[k]}"/>`).join("")}
-      <g class="gsub-lines" pointer-events="none">${[[1,1],[1,-1],[-1,1],[-1,-1]].map(([a,c])=>`<line x1="${170+a*22.7}" y1="${98+c*12.7}" x2="${170+a*104}" y2="${98+c*58}"/>`).join("")}</g></g>
-    <ellipse class="gsub gsub-c ${subSel("c")?"sel":""}" cx="170" cy="98" rx="32" ry="18" data-act="dir" data-v="on" data-p="c" role="button" aria-pressed="${subSel("c")}" aria-label="グリーンの真ん中"/>`;
-  const onLabel = stat ? `<text x="150" y="104" class="az-t on-t">オン</text><text x="150" y="128" class="on-p">${mapPct(pctOf("on"))}</text>` : `<text x="148" y="122" class="az-t on-t">オン</text>`;
-  return `<svg class="approach" viewBox="0 0 340 222" preserveAspectRatio="xMidYMid meet" role="${stat?"img":"group"}" aria-label="グリーンを狙った1球目">
-    <defs>
-      <radialGradient id="gGreen${stat?"S":""}" cx="45%" cy="40%" r="70%"><stop offset="0" stop-color="#5BE6A8"/><stop offset=".7" stop-color="#14A866"/><stop offset="1" stop-color="#0B8A52"/></radialGradient>
-      <pattern id="mow${stat?"S":""}" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><rect width="8" height="16" fill="rgba(255,255,255,.07)"/></pattern>
-      <filter id="trGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.4"/></filter>
-      <linearGradient id="trGrad" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FF8A00"/><stop offset="1" stop-color="#FFE066"/></linearGradient>
-      ${stat?HATCH:`<clipPath id="gClip"><ellipse cx="170" cy="98" rx="84" ry="48"/></clipPath>`}<filter id="soft${stat?"S":""}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation=".7"/></filter>
-      <filter id="gShadow${stat?"S":""}" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="6" dy="6" stdDeviation="6" flood-color="#083C26" flood-opacity=".3"/></filter>
-    </defs>
-    <rect class="az-rough" x="0" y="0" width="340" height="222" rx="18"/>
-    ${zone("long", `<path class="az-bg" d="M70 4 H270 Q286 4 286 20 V36 Q240 46 170 48 Q100 46 54 36 V20 Q54 4 70 4Z"/>`, 170, stat?24:30, "オーバー")}
-    ${zone("miss", stat ? `<path class="az-bg" d="M54 160 Q100 150 170 148 Q240 150 286 160 V204 Q286 218 270 218 H70 Q54 218 54 204Z"/>` : `<path class="az-bg" d="M54 192 H286 V204 Q286 218 270 218 H70 Q54 218 54 204Z"/>`, 170, stat?188:206, "ショート")}
-    ${stat?"":zone("short", `<path class="az-bg" d="M54 160 Q100 150 170 148 Q240 150 286 160 V188 H54Z"/>`, 170, 174, "花道")}
-    ${zone("left", `<path class="az-bg" d="M4 22 Q4 6 20 6 H40 Q60 40 64 98 Q60 156 40 190 H20 Q4 190 4 174Z"/>`, 30, 100, "左")}
-    ${zone("right", `<path class="az-bg" d="M336 22 Q336 6 320 6 H300 Q280 40 276 98 Q280 156 300 190 H320 Q336 190 336 174Z"/>`, 310, 100, "右")}
-    <ellipse cx="96" cy="150" rx="24" ry="9" class="sand"/><ellipse cx="252" cy="58" rx="20" ry="8" class="sand"/>
-    <g ${greenAttrs}>
-      <ellipse cx="170" cy="98" rx="94" ry="56" class="fringe"/>
-      <ellipse cx="170" cy="98" rx="84" ry="48" fill="url(#gGreen${stat?"S":""})" filter="url(#gShadow${stat?"S":""})"/>
-      <ellipse cx="170" cy="98" rx="84" ry="48" fill="url(#mow${stat?"S":""})"/>
-      <ellipse cx="170" cy="98" rx="84" ry="48" class="g-ring"/>
-      <g filter="url(#soft${stat?"S":""})"><path d="M196 84 L236 98" stroke="${SH}" stroke-width="3" stroke-linecap="round"/>
-      <path d="M236 99 L252 96 L222 91.5Z" fill="${SH}"/></g>
-      <ellipse cx="196" cy="84" rx="6" ry="2.6" fill="rgba(0,0,0,.45)"/>
-      <line x1="196" y1="84" x2="196" y2="40" stroke="#fff" stroke-width="2"/>
-      <path d="M197 41 L219 48 L197 55Z" fill="#E11D2E"/>
-      ${onLabel}
-    </g>
-    ${greenSubs}
-    ${aimMarkSVG(!stat && (o.aim==="short" ? Z.short : GSUB[o.aim]))}
-    ${tracer}${ball}
-  </svg>`;
-}
-/* ティーショット: 上から見たホール。手前がティー、奥にグリーン。光は左上から（影は右下） */
-function fairwaySVG(tee, tap, stat, o={}){
-  // まっすぐなフェアウェイ（2026-10-26、狙いと着弾のために S字から変更）。フェアウェイは左・真ん中・右の3列。o = { on: 列（着弾）, aim: 狙いの列 }
-  const Z = { fw:[170,92], rl:[59,150], rr:[281,150], miss:[150,200] };
-  const id = stat?"S":"";
-  const sel = k => !stat && tee===k;
-  const maxMiss = stat ? Math.max(1, ...["rl","rr","miss"].map(k=>stat.teeC[k]||0)) : 1;
-  const topMiss = stat ? Math.max(0, ...["rl","rr","miss"].map(k=>stat.teeC[k]||0)) : 0;
-  const zone = (k, shape, lx, ly, label, extra="") => {
-    if(stat){ const v=pct(stat.teeC[k]||0, stat.teeN), w=k!=="fw"&&topMiss>0&&(stat.teeC[k]||0)===topMiss;
-      const sh = k==="fw" ? shape : heatShape(shape, (stat.teeC[k]||0)/maxMiss, w);
-      if(k==="miss") return `<g class="az-s ${extra}">${sh}<text x="${lx}" y="${ly}" class="az-t">${label}<tspan dx="8" class="az-p ${w?"worst":""}">${mapPct(v)}</tspan></text></g>`;
-      return `<g class="az-s ${extra}">${sh}<text x="${lx}" y="${ly-13}" class="az-t ${k==="fw"?"on-t":""}">${label}</text><text x="${lx}" y="${ly+10}" class="${k==="fw"?"on-p":"az-p"} ${w?"worst":""}">${mapPct(v)}</text></g>`; }
-    return `<g class="az ${extra} ${sel(k)?"on-sel":""}" role="button" tabindex="0" data-act="tee" data-v="${k}" aria-pressed="${sel(k)}" aria-label="${label}">${shape}<text x="${lx}" y="${ly}" class="az-t ${k==="fw"?"on-t":""}">${label}</text></g>`; };
-  const b = !stat && tee && (tee==="fw" && FCOL[o.on] ? FCOL[o.on] : Z[tee]);
-  const sx=170, sy=224;
-  const cy = Math.min(sy, b?b[1]:sy) - (tee==="miss"?36:46);
-  const cx2 = (sx+(b?b[0]:sx))/2 - 30; // 少し左に膨らませる（真ん中に飛んだとき線がボールと重ならないように）
-  const ex = b ? b[0]-(b[0]-cx2)*0.12 : 0, ey = b ? b[1]-(b[1]-cy)*0.12 : 0; // 弾道はボールの手前で止める
-  const tpath = b ? `M${sx} ${sy} Q ${cx2} ${cy} ${ex.toFixed(1)} ${ey.toFixed(1)}` : "";
-  const tracer = b ? `<g class="tr ${tap?"anim":""}"><path class="tr-shadow" d="M${sx+6} ${sy} L${b[0]+5} ${b[1]+3}" pathLength="1" filter="url(#soft${id})"/><path class="tr-glow" d="${tpath}" pathLength="1" filter="url(#trGlow${id})"/><path class="tr-core" d="${tpath}" pathLength="1" stroke="url(#trGrad${id})"/><path class="tr-hi" d="${tpath}" pathLength="1"/></g>` : "";
-  const ball = b ? `<g class="ballg ${tap?"drop":""}"><ellipse cx="${b[0]+3.5}" cy="${b[1]+5}" rx="7.5" ry="4.8" fill="rgba(0,0,0,.26)" filter="url(#soft${id})" transform="rotate(15 ${b[0]+3.5} ${b[1]+5})"/><image href="ball.png" x="${b[0]-7.5}" y="${b[1]-7.5}" width="15" height="15"/></g>` : "";
-  const FX=94, FW=152, FY=40, FH=140; // フェアウェイの四角（押しやすいよう広く・奥行きも長く）
-  const fwShape = `<rect x="${FX-4}" y="${FY-4}" width="${FW+8}" height="${FH+8}" rx="20" fill="#86D9A2"/>
-      <rect x="${FX}" y="${FY}" width="${FW}" height="${FH}" rx="16" fill="url(#gFw${id})" filter="url(#fwShadow${id})"/><rect x="${FX}" y="${FY}" width="${FW}" height="${FH}" rx="16" fill="url(#fwMow${id})"/><rect x="${FX}" y="${FY}" width="${FW}" height="${FH}" rx="16" class="g-ring"/>`;
-  const colW = FW/3, colSel = k => !stat && tee==="fw" && o.on===k;
-  const cols = stat ? "" : `<g clip-path="url(#fwClip)">${["l","c","r"].map((k,i)=>`<rect class="gsub ${colSel(k)?"sel":""}" x="${FX+i*colW}" y="${FY}" width="${colW}" height="${FH}" data-act="tee" data-v="fw" data-p="${k}" role="button" aria-pressed="${colSel(k)}" aria-label="フェアウェイの${FCOL_L[k]}"/>`).join("")}</g>
-      <g class="gsub-lines" pointer-events="none"><line x1="${FX+colW}" y1="${FY+6}" x2="${FX+colW}" y2="${FY+FH-6}"/><line x1="${FX+2*colW}" y1="${FY+6}" x2="${FX+2*colW}" y2="${FY+FH-6}"/></g>`;
-  const deco = `<g pointer-events="none">
-        <ellipse cx="170" cy="21" rx="30" ry="12" fill="#86D9A2"/>
-        <ellipse cx="170" cy="21" rx="25.5" ry="9" fill="url(#gGr${id})" filter="url(#fwShadow${id})"/>
-        <path d="M136 21 C132 26 136 32 142 32 C147 32 147 27 143 25 C141 23 139 19 136 21Z" class="sand"/>
-        <ellipse cx="203" cy="12" rx="7" ry="3.4" transform="rotate(12 203 12)" class="sand"/>
-        <g filter="url(#soft${id})"><path d="M176 21 L188 25" stroke="rgba(0,0,0,.24)" stroke-width="1.6" stroke-linecap="round"/><path d="M188 25 L196 24 L183 22Z" fill="rgba(0,0,0,.2)"/></g>
-        <ellipse cx="176" cy="21" rx="2.4" ry="1.1" fill="rgba(0,0,0,.45)"/>
-        <line x1="176" y1="21" x2="176" y2="4" stroke="#fff" stroke-width="1.5"/><path d="M177 4.5 L188 8 L177 11.5Z" fill="#E11D2E"/></g>`;
-  return `<svg class="approach fairway" viewBox="0 0 340 222" preserveAspectRatio="xMidYMid meet" role="${stat?"img":"group"}" aria-label="ティーショットの行き先">
-    <defs>
-      <linearGradient id="gFw${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#46C77B"/><stop offset="1" stop-color="#1F9E57"/></linearGradient>
-      <pattern id="fwMow${id}" width="22" height="22" patternUnits="userSpaceOnUse" patternTransform="rotate(-38)"><rect width="22" height="11" fill="rgba(255,255,255,.11)"/></pattern>
-      <radialGradient id="gGr${id}" cx="40%" cy="35%" r="75%"><stop offset="0" stop-color="#6BEDB4"/><stop offset="1" stop-color="#22B672"/></radialGradient>
-      <filter id="trGlow${id}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.4"/></filter>
-      <linearGradient id="trGrad${id}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FF8A00"/><stop offset="1" stop-color="#FFE066"/></linearGradient>
-      ${stat?HATCH:`<clipPath id="fwClip"><rect x="${FX}" y="${FY}" width="${FW}" height="${FH}" rx="16"/></clipPath>`}<filter id="soft${id}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation=".7"/></filter>
-      <filter id="fwShadow${id}" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="3" dy="3" stdDeviation="3" flood-color="#0B3A1E" flood-opacity=".28"/></filter>
-    </defs>
-    <rect class="az-rough" x="0" y="0" width="340" height="222" rx="18"/>
-    ${zone("rl", `<path class="az-bg" d="M18 62 Q18 48 32 48 H74 Q86 48 86 60 V166 Q86 178 74 178 H32 Q18 178 18 164Z"/>`, 52, stat?122:118, "左")}
-    ${zone("rr", `<path class="az-bg" d="M322 62 Q322 48 308 48 H266 Q254 48 254 60 V166 Q254 178 266 178 H308 Q322 178 322 164Z"/>`, 288, stat?122:118, "右")}
-    ${deco}
-    ${stat ? zone("fw", fwShape, 170, 122, "フェアウェイ", "az-green") : `<g class="g-deco">${fwShape}<text x="170" y="150" class="az-t on-t">フェアウェイ</text></g>${cols}`}
-    ${zone("miss", `<path class="az-bg" d="M18 186 H322 V202 Q322 216 308 216 H32 Q18 216 18 202Z"/>`, 170, 201, "ショート")}
-    ${aimMarkSVG(!stat && FCOL[o.aim])}
-    ${tracer}${ball}
-  </svg>`;
-}
 /* 狙いと着弾: ① 狙いをタップ → ② 着弾をタップ。両方入ったら「狙い 奥 ↺」で狙いを選び直せる */
 /* 狙いと着弾: 「狙い」「着弾」の2つのボタンでどちらを入れるか選ぶ（狙いを入れると自動で着弾へ） */
 function aimModeOf(h){ if(!fields().aim) return "land"; const p=state.aimPick; return p && p.hole===state.hole ? p.v : (h.aim ? "land" : "aim"); }
-function aimRow(h, isLong){
-  const landed = isLong ? h.tee : h.dir, L = isLong ? FCOL_L : GSUB_L, mode = aimModeOf(h);
-  // 図を小さくしないよう、見出しの行に収まる短い札にする（着弾は区画の名前だけ）
-  const landL = !landed ? "" : isLong ? (landed==="fw" ? (FCOL_L[h.teeOn]||"FW") : landed==="miss" ? "ショート" : TEES[landed]+"ラフ") : (landed==="on" ? (GSUB_L[h.dirOn]||"オン") : DIRS[landed]);
-  return `<div class="aim-seg" role="group" aria-label="狙いか着弾か">
-    <button class="as-aim ${mode==="aim"?"on":""}" data-act="aim-mode" data-v="aim" aria-pressed="${mode==="aim"}"><i class="as-dot"></i>狙い${h.aim?` <b>${L[h.aim]||""}</b>`:""}</button>
-    <button class="as-land ${mode==="land"?"on":""}" data-act="aim-mode" data-v="land" aria-pressed="${mode==="land"}"><i class="as-dot"></i>着弾${landed?` <b>${landL}</b>`:""}</button></div>`;
-}
 /* 同じコース・同じホールの過去の記録から、ひとことアドバイス */
 const TERMJ = d => d<=-2?"イーグル以上":d===-1?"バーディ":d===0?"パー":d===1?"ボギー":d===2?"ダボ":"トリプル以上";
 function holeAdvice(d, i){
@@ -2700,30 +2543,12 @@ function viewRecordDraft(d){
     const best = others.reduce((a,r)=> roundTotals(r).diff < roundTotals(a).diff ? r : a);
     let mine=0, theirs=0; d.holes.forEach((x,i)=>{ if(touchedS(d,0,i) && best.holes[i]){ mine += x.strokes-x.par; theirs += best.holes[i].strokes-best.holes[i].par; } });
     return mine < theirs; })();
-  const onIn = h.strokes - h.putts;
   const advice = fields().advice ? holeAdvice(d, state.hole) : "";
-  const hint = onIn<=h.par-2 ? "パーオン" : onIn<=h.par-1 ? "ボギーオン" : (h.putts===0 ? "チップイン" : "");
-  const sBtn = v => { const isMax=v===8; const val = isMax && h.strokes>8 ? h.strokes : v; const pressed = isMax ? h.strokes>=8 : h.strokes===v; const dd=val-h.par;
-    return `<button data-act="sv" data-v="${v}" class="t-${val===1?"hio":TONE(dd)} ${state.tap==="sv"+v?"pop":""}" aria-pressed="${pressed}" aria-label="${val}打">${isMax&&h.strokes<=8?"8+":val}<small>${val===1?"HIO":TERM(dd)}</small></button>`; };
-  const pBtn = v => { const t = v<=1?"under":v===2?"worse":"bogey"; return `<button data-act="pv" data-v="${v}" class="t-${v<=1?"birdie":v===2?"par":v===3?"bogey":"double"} ${state.tap==="pv"+v?"pop":""}" aria-pressed="${h.putts===v}" aria-label="${v}パット">${v===5?"5+":v}</button>`; };
-  const gp = (k,cls,txt) => `<button class="${cls}" data-act="dir" data-v="${k}" aria-pressed="${h.dir===k}">${AR[k]||""}${txt}</button>`;
   const totLabel = done.length ? `${tot.score}<small>(${toPar(tot.diff)})</small>` : "—";
   const dotCls = x => { if(!sOf(x)) return ""; return "r-"+TONEH(x); };
-  const ball = h.dir && BALL_POS[h.dir] ? `<span class="ball" style="left:${BALL_POS[h.dir].left};top:${BALL_POS[h.dir].top}"></span>` : "";
   const slide = state.slide ? (state.slide==="l"?"slide-l":"slide-r") : ""; state.slide = null;
   queueMicrotask(()=>{ state.tap = null; });
   const F = fields();
-  const isLong = h.par>=4;
-  const _ring = `<div class="ring" aria-label="${done.length}/${N}ホール入力済み"><svg viewBox="0 0 46 46"><defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0E9F62"/><stop offset="1" stop-color="#13A9C2"/></linearGradient></defs><circle class="trk" cx="23" cy="23" r="19"/><circle class="val" cx="23" cy="23" r="19" stroke-dasharray="${(2*Math.PI*19*done.length/N).toFixed(1)} 200"/></svg><b>${done.length}<small>/${N}</small></b></div>`;
-  const chip = (act,v,label,on) => `<button class="chip2" data-act="${act}" data-v="${v}" aria-pressed="${on}">${label}</button>`;
-  // OB・1ペナ: ティーショット（1打目）のOB・1ペナだけを記録する。タップでON/OFF（クラブはティーショットのクラブで数える）
-  const tbBtn = (k,cls,label) => { const e=evs(h,k), cl=e.filter(Boolean);
-    return `<button class="${cls}" data-act="tb" data-k="${k}" aria-pressed="${e.length>0}">${label}</button>`; };
-  const troubles = [
-    F.ob ? tbBtn("ob","ob","OB") : "",
-    F.pen ? tbBtn("pen","pn","1ペナ") : "",
-    F.bunker ? `<button class="bk" data-act="tog" data-k="bunker" aria-pressed="${!!h.bunker}">バンカー</button>` : "",
-  ].filter(Boolean);
   const multi=(d.mates||[]).length>0; // 同伴者がいるとき: 自分だけの記録（ティーショット・OBなど）を緑の囲みに入れる
   // ---- 入力（2026-10-27）: 表にして、横に並べる。打数・パット・メダル・クラブ・方向は「マスを押したまま動かして離す」フリック ----
   const PN=(d.mates||[]).length+1, pNames=[d.player,...(d.mates||[]).map(m=>m.name)];
@@ -2733,7 +2558,6 @@ function viewRecordDraft(d){
   const sk = d.game==="skins" ? skinsCalc(pRows, nG, !!d.carry) : null;   // 今のホールまで数える（入力したらすぐポイントが動く）
   const gt = d.game && d.game!=="skins" ? gameTags(d.game, pRows, d.holes.map(x=>x.par), nG, N, {medals:d.medals, pins:d.pins, hole:state.hole}) : null;
   const ptag = i => sk ? `<span class="skc ${sk.won[i]?"":"z"}">${coinSVG(12)}${sk.won[i]}</span>` : gt ? gt[i] : "";
-  const totTxt = i => { let a=0,b2=0; for(let k=0;k<=state.hole;k++){ a+= i ? d.mates[i-1].s[k] : d.holes[k].strokes; b2+=d.holes[k].par; } return `計 ${a}(${toPar(a-b2)})`; }; // 今のホールまでの合計
   const parsAll=d.holes.map(x=>x.par);
   const ptVal = i => isOlympic(d.game) ? olympicCalc(d.medals,PN).pts[i] : d.game==="nearpin" ? pinCalc(d.pins,PN,parsAll).won[i] : d.game==="skins" ? sk.won[i] : d.game==="nassau" ? nassauCalc(pRows,nG,N).pts[i] : d.game==="stable" ? stableCalc(pRows,parsAll,nG).pts[i] : null;
   const ptCell = i => { if(d.game==="ghost") return `<div class="pt">${i===0&&ghost?`<b class="gd ${ghostDiff<0?"up":ghostDiff>0?"dn":"z"}">${ghostDiff>0?"+":ghostDiff<0?"−":"±"}${Math.abs(ghostDiff)}<i>打</i></b>`:""}</div>`; const n=ptVal(i); return n==null ? `<div class="pt">${ptag(i)}</div>` : d.game==="skins" ? `<div class="pt"><span class="skp">${coinSVG(26)}<b class="${n?"":"z"}">${n}</b></span></div>` : `<div class="pt"><b class="${n?"":"z"}">${n}</b></div>`; };
@@ -2897,7 +2721,6 @@ function viewCard(cd){
       else { const on=(cd.pins||{})[gh]===i; c=`<button class="fc fn ${on?"set":""}" data-act="cd-pin" data-i="${i}" aria-pressed="${on}" aria-label="${esc(p.name)}がニアピン">${PINFLAG(on)}</button>`; }
       return `<td class="c-s gin-c" colspan="${cwOf(i)}" style="bottom:${gb}px">${c}</td>`; }).join("")}${padSpB(gb)}</tr>` : "";
   const done=cd.players.every(p=>p.s.every(x=>x!=null)); // 打数が全部入ったら保存ボタンを出す（パットの抜けは押したときに案内）
-  const plSel = sel && cd.players[sel.i];
   const key=(v,lab,dis)=>`<button data-act="cd-key" data-v="${v}" ${dis?"disabled":""} aria-label="${lab}">${lab}</button>`;
   const ks = sel ? sel.k : "s";
   return `<div class="cd ${(inputRow||skinRow||gameRow)?"wg":""}">
@@ -2927,24 +2750,6 @@ function viewCard(cd){
 function cardAfter(){ const c=$(".cdt td.sel"), box=$(".cd-scroll"); if(!c||!box) return;
   const cb=c.getBoundingClientRect(), bb=box.getBoundingClientRect(), head=(box.querySelector("thead")||{}).offsetHeight||0, foot=(box.querySelector("tfoot")||{}).offsetHeight||0;
   if(cb.top<bb.top+head) box.scrollTop-= (bb.top+head-cb.top); else if(cb.bottom>bb.bottom-foot) box.scrollTop+= (cb.bottom-(bb.bottom-foot)); }
-/* 同伴者がいるとき: 人ごとの縦の列（名前・数字・∧・∨）。自分は 打数とパットの2列（楽天GORAのスコア入力のような形） */
-function playerCols(d, h, F){
-  const nm=[d.player,...d.mates.map(m=>m.name)], upto=state.hole;
-  const mk=v=>`<b class="mk3 m-${v===1?"hio":TONE(v-h.par)}">${v}</b>`;
-  const sk = d.game==="skins" ? skinsCalc([d.holes.map(x=>x.strokes), ...d.mates.map(m=>m.s)], state.hole, !!d.carry) : null; // このホールの前までのコイン
-  const tpRaw=sc=>{ let s=0,p=0; for(let i=0;i<=upto;i++){ s+=sc(i); p+=d.holes[i].par; } const x=s-p; return `<span class="tp ${x<0?"u":x>0?"o":""}">${s}<small>(${toPar(x)})</small></span>`; }; // 今のホールまでの合計打数と対パー
-  const gt = d.game && d.game!=="skins" ? gameTags(d.game, [d.holes.map(x=>x.strokes), ...d.mates.map(m=>m.s)], d.holes.map(x=>x.par), state.hole, d.holes.length, {medals:d.medals, pins:d.pins, hole:state.hole}) : null;
-  let col=0; const tp=sc=>{ const k=col++; return `<span class="ph-l">${tpRaw(sc)}${sk?`<span class="skc ${sk.won[k]?"":"z"}">${coinSVG(12)}${sk.won[k]}</span>`:""}${gt?gt[k]:""}</span>`; };
-  const step=(up,dn,label)=>`<div class="pstep"><button ${up} aria-label="${label}を1つ増やす">${ICON.up}</button><button ${dn} aria-label="${label}を1つ減らす">${ICON.down}</button></div>`;
-  const cell=(lab,val,up,dn,aria)=>`<div class="pcell">${lab?`<em>${lab}</em>`:""}<div class="pv">${val}</div>${step(up,dn,aria)}</div>`;
-  const me=`<div class="pcol me ${F.putts?"two":""}"><div class="ph"><b>${esc(d.player)}</b>${tp(i=>d.holes[i].strokes)}</div><div class="pcells">
-    ${cell(F.putts?"打数":"", mk(h.strokes), `data-act="st" data-d="1" ${h.strokes>=15?"disabled":""}`, `data-act="st" data-d="-1" ${h.strokes<=1?"disabled":""}`, "打数")}
-    ${F.putts?cell("パット", `<b class="pt p${Math.min(h.putts,4)}">${h.putts}</b>`, `data-act="pt" data-d="1" ${h.putts>=9?"disabled":""}`, `data-act="pt" data-d="-1" ${h.putts<=0?"disabled":""}`, "パット"):""}</div></div>`;
-  const mates=d.mates.map((m,k)=>{ const v=m.s[state.hole];
-    return `<div class="pcol mate"><div class="ph"><b>${esc(dupLabel(nm,k+1))}</b>${tp(i=>m.s[i])}</div><div class="pcells">
-      ${cell(F.putts?"打数":"", `<button class="pc-tap" data-act="mt-open" data-i="${k}" aria-label="${esc(m.name)}の打数を数字で入力">${mk(v)}</button>`, `data-act="mt" data-i="${k}" data-d="1" ${v>=15?"disabled":""}`, `data-act="mt" data-i="${k}" data-d="-1" ${v<=1?"disabled":""}`, esc(m.name)+"の打数")}</div></div>`; }).join("");
-  return `<div class="pboard">${me}${mates}</div>`;
-}
 /* くわしく記録の途中でも見られるスコアカード（自分＋同伴者、今のホールまで） */
 function liveCard(){
   const d=state.draft; if(!d) return "";
@@ -3035,11 +2840,6 @@ function viewStats(){
   let ST = state.statTab || (state.statTab = LS.get("sc.statTab","score")); if(!["score","shot","putt"].includes(ST)) ST = state.statTab = "score";   // 2026-11-01: 弱点タブは作ったが、3つに戻した（弱点分析はショットの一番下）
   const gauge = (label,v,sub,tone) => { const C=2*Math.PI*30, p=v==null?0:Math.min(v,100)/100;
     return `<div class="gauge"><svg viewBox="0 0 74 74" aria-hidden="true"><circle class="trk" cx="37" cy="37" r="30"/><circle class="val" cx="37" cy="37" r="30" stroke="var(${tone})" stroke-dasharray="${(C*p).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 37 37)"/></svg><div class="gv">${v==null?"—":fmtPct(v)}${v==null?"":"<small>%</small>"}</div><div class="gl">${label}</div><div class="gs">${sub}</div></div>`; };
-  const hbar = (label,v,sub,bad) => `<div class="hb"><div class="hb-top"><span>${label}</span><b>${v==null?"—":fmtPct(v)}<small>${v==null?"":"%"}</small></b></div><div class="hb-trk"><i style="width:${v==null?0:Math.min(100,v)}%;background:${bad?"var(--q-bogey)":"var(--q-birdie)"}"></i></div><div class="hb-sub">${sub}</div></div>`;
-  const stack = (title, segs, total) => { const t=segs.reduce((a,x)=>a+x.n,0)||1;
-    return `<div class="stk"><div class="stk-t">${title}</div><div class="stk-bar">${segs.map(x=>`<i style="width:${(x.n/t*100).toFixed(2)}%;background:var(${x.tone})" title="${x.label}">${x.n/t>=.12?`<span>${Math.round(x.n/t*100)}%</span>`:""}</i>`).join("")}</div>
-      <div class="stk-lg">${segs.map(x=>`<span><i style="background:var(${x.tone})"></i>${x.label} <b>${fmtPct(pct(x.n,t))}%</b></span>`).join("")}</div></div>`; };
-  const kpi = (k,v,unit,d) => `<div class="kpi"><div class="k">${k}</div><div class="v">${v}${unit?`<small>${unit}</small>`:""}</div>${d?`<div class="d">${d}</div>`:""}</div>`;
   const fx = v => v==null? "—" : v.toFixed(1);
   return `${demoBand}
   ${state.oneRound&&rs[0]?(()=>{ const r=rs[0], [y,m,d]=r.date.split("-"); return `<div class="one-band"><div><small>このラウンドだけの分析</small><b>${+m}/${+d} ${esc(r.courseName)}</b></div><button class="btn small" data-act="one-off">全体に戻る</button></div>`; })():`
@@ -3111,46 +2911,11 @@ function clubTable(rs, kind){
       return `<tr><td class="tg">${c===best?`<span class="ctag good">得意</span>`:c===worst?`<span class="ctag bad">苦手</span>`:""}</td><td><b>${esc(c)}</b></td><td>${x.n}</td><td><span class="rt"><span class="cs-bar"><i style="width:${r}%"></i></span><span class="rv">${fmtPct(r)}%</span></span></td><td>${mk?ML[mk]:"—"}</td></tr>`; }).join("")}
     </table>`;
 }
-/* OB・ペナが多いクラブ: そのクラブを選んだホールのうち OB か 1ペナ があった割合のワースト3 */
-function troublePanel(rs){
-  // OB・1ペナはティーショットだけを記録するので、ティーショットのクラブごとに「何回中何回」が正確に出せる
-  const m = {};
-  rs.forEach(r=>r.holes.forEach(h=>{ if(!h.club) return; const x=m[h.club]||(m[h.club]={n:0,t:0}); x.n++; if(h.ob||h.pen) x.t++; }));
-  if(!Object.keys(m).length) return "";
-  const L = Object.keys(m).filter(c=>m[c].t>0).map(c=>({c, n:m[c].n, t:m[c].t, r:m[c].t/m[c].n*100}))
-    .sort((a,b)=>b.r-a.r || b.t-a.t).slice(0,3);
-  return `<div class="panel"><div class="sec"><em>TROUBLE</em><span>OB・ペナ率ワースト</span></div>
-    ${L.length ? `<ol class="tr-rank">${L.map((x,i)=>`<li><span class="rk">${i+1}</span><b>${esc(x.c)}</b><span class="cs-bar"><i style="width:${Math.max(4,x.r)}%"></i></span><span class="tp">${fmtPct(x.r)}%</span><small>${x.n}回中${x.t}回</small></li>`).join("")}</ol>`
-      : `<p class="muted" style="font-size:13px;margin:0">まだOB・1ペナの記録はありません。</p>`}</div>`;
-}
 function clubPanel(rs){
   const t3 = clubTable(rs,"p3"), t4 = clubTable(rs,"p4");
   if(!t3 && !t4) return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別</span></div><p class="muted" style="font-size:13px;margin:0">記録する項目で「使用クラブ」をONにすると、クラブごとのパーオン率・フェアウェイキープ率や得意・苦手がここに出ます。</p></div>`;
   return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別</span></div>${t3}${t4}
     <p class="muted cs-note">ティーショットに使ったクラブ別。得意・苦手は3回以上打ったクラブで比べています。</p></div>`;
-}
-/* ホール別: そのコースの各ホールの平均・パー以内の割合・多いミス */
-function holePanel(rs){
-  const cnt={}; rs.forEach(r=>{ cnt[r.courseId]=(cnt[r.courseId]||0)+1; });
-  const cid = state.fCourse!=="all" ? state.fCourse : Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];
-  const c = courses().find(x=>x.id===cid); const rr = rs.filter(r=>r.courseId===cid);
-  if(!rr.length) return `<div class="panel empty"><strong>記録がありません</strong></div>`;
-  const n = Math.max(...rr.map(r=>r.holes.length));
-  const ML = {left:"左",right:"右",long:"オーバー",short:"花道",miss:"ショート",rl:"左",rr:"右"};
-  const H = Array.from({length:n},(_,i)=>{ const hs=rr.map(r=>r.holes[i]).filter(Boolean); if(!hs.length) return null;
-    const par=hs[0].par, avg=hs.reduce((a,h)=>a+h.strokes,0)/hs.length, miss={};
-    hs.forEach(h=>{ const d = par>=4 ? (h.tee&&h.tee!=="fw"?h.tee:null) : (h.dir&&h.dir!=="on"?h.dir:null); if(d) miss[d]=(miss[d]||0)+1; });
-    const mk=Object.keys(miss).sort((a,b)=>miss[b]-miss[a])[0];
-    return { i, par, yards: c && c.holes[i] ? c.holes[i].yards : null, n:hs.length, avg, diff:avg-par, po: hs.filter(h=>h.strokes<=h.par).length/hs.length*100, gir: hs.filter(h=>h.strokes-h.putts<=h.par-2).length/hs.length*100, mk: mk && miss[mk]>=2 ? ML[mk] : null }; }).filter(Boolean);
-  const sorted = H.slice().sort((a,b)=>b.diff-a.diff);
-  const worst = sorted.slice(0,Math.min(3,H.length)).filter(h=>h.diff>0), best = sorted.slice().reverse().slice(0,2);
-  const tone = d => d<=-0.5?"birdie":d<0.35?"par":d<1.2?"bogey":d<2.2?"double":"triple";
-  return `<div class="panel"><div class="sec"><em>BY HOLE</em><span>${esc(c?c.name:rr[0].courseName)}</span></div>
-    ${state.fCourse==="all"?`<p class="muted" style="font-size:12px;margin:-6px 0 10px">いちばん回っているコースを表示中（上のコースで切りかえ）・${rr.length}ラウンド</p>`:`<p class="muted" style="font-size:12px;margin:-6px 0 10px">${rr.length}ラウンド</p>`}
-    <div class="cs-tags">${worst.map(h=>`<span class="bad">苦手 <b>${h.i+1}H</b> ${toPar(Math.round(h.diff*10)/10)}</span>`).join("")}${best.map(h=>`<span class="good">得意 <b>${h.i+1}H</b> ${toPar(Math.round(h.diff*10)/10)}</span>`).join("")}</div>
-    <table class="cs-tbl hole-tbl"><tr><th>H</th><th>PAR</th><th>平均</th><th>パー以内</th><th>多いミス</th></tr>
-    ${H.map(h=>`<tr><td><b>${h.i+1}</b>${h.yards?`<small>${h.yards}y</small>`:""}</td><td>${h.par}</td><td><span class="hv t-${tone(h.diff)}">${h.avg.toFixed(1)}</span><small>${toPar(Math.round(h.diff*10)/10)}</small></td><td><span class="cs-bar"><i style="width:${h.po}%"></i></span>${fmtPct(h.po)}%</td><td>${h.mk||"—"}</td></tr>`).join("")}
-    </table><p class="muted cs-note">多いミスは同じ方向に2回以上外したときに出します（パー3はグリーン、パー4以上はティーショット）。</p></div>`;
 }
 /* 割合は横棒の一覧で（引き出し線つきのドーナツはごちゃつくので 2026-10-26 にやめた）。0回の項目は出さない。回数は出さない */
 function barsPanel(title, segs, headVal, headUnit, headLbl, headTones){
@@ -3160,62 +2925,6 @@ function barsPanel(title, segs, headVal, headUnit, headLbl, headTones){
     : `<div class="bk-head"><b>${headVal}<small>${headUnit}</small></b><span>${headLbl}</span></div>` + shown.map((x,i)=>{ const v=LB[i];
       return `<div class="bk-row"><span>${x.label}</span><div class="bk-trk"><i style="width:${Math.max(1.5,v).toFixed(1)}%;background:var(${x.tone})"></i></div><b>${v}<small>%</small></b></div>`; }).join("");
   return `<div class="panel bk"><div class="sec"><em>BREAKDOWN</em><span>${title}</span></div>${body}</div>`;
-}
-function donutPanel(title, id, segs, total, centerVal, centerLbl){
-  return `<div class="panel"><div class="sec"><em>BREAKDOWN</em><span>${title}</span></div>${donutSVG(segs, total, centerVal, centerLbl, title)}</div>`;
-}
-/* ドーナツ: 各部分から引き出し線でラベルを直接つける */
-function donutSVG(segs, total, centerVal, centerLbl, title){
-  const W=360, H=270, cx=180, cy=150, R=74, r=54, t=segs.reduce((a,x)=>a+x.n,0);
-  if(!t) return `<p class="muted" style="font-size:13px">まだ記録がありません。</p>`;
-  const P=(ang,rad)=>[cx+rad*Math.cos(ang), cy+rad*Math.sin(ang)];
-  const gap = segs.length>1 ? .025 : 0;
-  let a0=-Math.PI/2; const arcs=[], labels=[]; // 12時から時計回りに、良い結果から
-  segs.forEach(x=>{ const sw=x.n/t*Math.PI*2, a1=a0+sw, s0=a0+gap/2, s1=a1-gap/2, big=(s1-s0)>Math.PI?1:0, col=`var(${x.tone})`;
-    if(segs.length===1) arcs.push(`<circle cx="${cx}" cy="${cy}" r="${(R+r)/2}" fill="none" stroke="${col}" stroke-width="${R-r}"/>`);
-    else { const [x1,y1]=P(s0,R),[x2,y2]=P(s1,R),[x3,y3]=P(s1,r),[x4,y4]=P(s0,r);
-      arcs.push(`<path d="M${x1.toFixed(2)} ${y1.toFixed(2)} A${R} ${R} 0 ${big} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} L${x3.toFixed(2)} ${y3.toFixed(2)} A${r} ${r} 0 ${big} 0 ${x4.toFixed(2)} ${y4.toFixed(2)}Z" fill="${col}"/>`); }
-    const m=(a0+a1)/2, [ex,ey]=P(m,R+12), [sx,sy]=P(m,R+2);
-    labels.push({ x, m, sx, sy, ex, ey, y:ey, right: Math.cos(m)>=0, pct: pct(x.n,t) }); // 割合は描いた部分の合計で（パット未記録のホールが混ざってもずれない）
-    a0=a1; });
-  // 同じ側のラベルが重ならないように上下にずらす
-  // 上に余白を取り、小さい部分が上に固まってもラベルを上下に広げて並べる（下にだけ押し下げると線が輪の上を横切った）
-  const GAP=32, TOP=16, BOT=H-14;
-  [true,false].forEach(side=>{ const L=labels.filter(l=>l.right===side).sort((p,q)=>p.y-q.y);
-    for(let it=0; it<80; it++){ let moved=false;
-      for(let i=0;i+1<L.length;i++){ const d=L[i+1].y-L[i].y; if(d<GAP){ const k=(GAP-d)/2; L[i].y-=k; L[i+1].y+=k; moved=true; } }
-      L.forEach(l=>{ l.y=Math.min(BOT,Math.max(TOP,l.y)); }); if(!moved) break; }
-    for(let i=1;i<L.length;i++) L[i].y=Math.max(L[i].y, L[i-1].y+GAP);
-    for(let i=L.length-2;i>=0;i--) L[i].y=Math.min(L[i].y, L[i+1].y-GAP); });
-  const lines = labels.map(l=>{ const hx = l.right ? cx+R+20 : cx-R-20, tx = l.right ? hx+4 : hx-4, an = l.right?"start":"end", col=`var(${l.x.tone})`;
-    return `<g><circle cx="${l.sx.toFixed(1)}" cy="${l.sy.toFixed(1)}" r="1.8" fill="${col}"/><path d="M${l.sx.toFixed(1)} ${l.sy.toFixed(1)} L${l.ex.toFixed(1)} ${l.y.toFixed(1)} L${hx} ${l.y.toFixed(1)}" fill="none" stroke="${col}" stroke-width="1.2"/>
-      <text x="${tx}" y="${(l.y-6).toFixed(1)}" text-anchor="${an}" class="dl-name">${l.x.label}</text><text x="${tx}" y="${(l.y+10).toFixed(1)}" text-anchor="${an}" class="dl-pct">${fmtPct(l.pct)}<tspan>%</tspan></text></g>`; }).join("");
-  return `<svg class="dsvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${title}：${labels.map(l=>l.x.label+" "+fmtPct(l.pct)+"%").join("、")}">${arcs.join("")}${lines}
-    <text x="${cx}" y="${cy+4}" class="dc-v">${String(centerVal).replace(/<small>%<\/small>/,'<tspan class="dc-u">%</tspan>')}</text><text x="${cx}" y="${cy+21}" class="dc-l">${centerLbl}</text></svg>`;
-}
-/* 狙いと着弾の分析: 狙い通り率と、外れたときの向き（狙いを記録したホールだけ） */
-const AIMXY = { c:[0,0], b:[0,1], f:[0,-1], l:[-1,0], r:[1,0], short:[0,-2] };
-const LANDXY = { left:[-2,0], right:[2,0], long:[0,2], short:[0,-2] };
-function aimStats(rs, kind){
-  let n=0, hit=0; const c={right:0,left:0,long:0,short:0,miss:0}, X={l:-1,c:0,r:1};
-  rs.forEach(r=>r.holes.forEach(h=>{ if(!h.aim) return;
-    if(kind==="p3"){ if(h.par>=4 || !h.dir || !AIMXY[h.aim]) return;
-      if(h.dir==="miss"){ n++; c.miss++; return; }
-      const L = h.dir==="on" ? AIMXY[h.dirOn] : LANDXY[h.dir]; if(!L) return; n++;
-      const A=AIMXY[h.aim], dx=L[0]-A[0], dy=L[1]-A[1];
-      if(!dx && !dy){ hit++; return; } if(dx>0) c.right++; if(dx<0) c.left++; if(dy>0) c.long++; if(dy<0) c.short++; }
-    else { if(h.par<4 || !h.tee || X[h.aim]==null) return;
-      if(h.tee==="miss"){ n++; c.miss++; return; }
-      const lx = h.tee==="fw" ? X[h.teeOn] : h.tee==="rl" ? -2 : 2; if(lx==null) return; n++;
-      const dx = lx - X[h.aim]; if(!dx){ hit++; return; } if(dx>0) c.right++; else c.left++; } }));
-  return {n, hit, c};
-}
-function aimBox(rs, kind){
-  const a=aimStats(rs, kind); if(!a.n) return "";
-  const L={right:"右へ", left:"左へ", long:"奥へ", short:"手前へ", miss:"ショート"};
-  const ks=Object.keys(a.c).filter(k=>a.c[k]>0).sort((x,y)=>a.c[y]-a.c[x]);
-  return `<div class="aim-box"><div class="aim-hit"><span>狙い通り</span><b>${fmtPct(pct(a.hit,a.n))}<small>%</small></b><em>${a.n}回中${a.hit}回</em></div>
-    ${ks.length?`<div class="aim-miss"><span>外れた向き</span>${ks.map((k,i)=>`<i class="${i===0?"top":""}">${L[k]} ${Math.round(pct(a.c[k],a.n))}%</i>`).join("")}</div>`:""}</div>`;
 }
 /* ティーショットの行き先: 記録画面のフリックと同じ形のヒートマップ（ミスが多いほど濃い赤。同じ数は同じ濃さ） */
 function dirHeat(kind, c, n){
@@ -3238,11 +2947,9 @@ after.stats = () => {
   ["f-course","f-range"].forEach(id=>{ const el=$("#"+id); if(el) el.onchange=()=>{ if(id==="f-player"){state.fPlayer=el.value; LS.set("sc.fPlayer",el.value);} if(id==="f-course") state.fCourse=el.value; if(id==="f-range") state.fRange=el.value; state.trendSel=null; render(); }; });
   if(!window.Chart) return;
   const fg=cssv("--fg"), muted=cssv("--muted"), line=cssv("--line"), paper=cssv("--paper");
-  const pal=["--c1","--c2","--c3","--c4","--c5","--c6"].map(cssv);
   Chart.defaults.color=muted; Chart.defaults.borderColor=line;
   Chart.defaults.font.family=cssv("--f-body"); Chart.defaults.font.size=12;
   const rs = filteredRounds();
-  const s = computeStats(rs);
   const seen={}; const circ="①②③④⑤⑥⑦⑧⑨";
   const byDay={}; rs.forEach(r=>{ byDay[r.date]=(byDay[r.date]||0)+1; });
   const lbl = rs.map(r=>{ const [y,m,d]=(r.date||"").split("-"); seen[r.date]=(seen[r.date]||0)+1; return `${+m}/${+d}` + (byDay[r.date]>1 ? circ[seen[r.date]-1]||"" : ""); });
@@ -3270,7 +2977,6 @@ after.stats = () => {
   const scoreZone = i => { const per = tot[i].diff / rs[i].holes.length; return per<=0 ? "par" : per<=1 ? "bogey" : "double"; };
   const puttZone = i => { const per = tot[i].putts / rs[i].holes.length; return per<=2 ? "par" : per<=2.5 ? "bogey" : "double"; };
   const zoneColor = z => cssv("--q-"+z);
-  const zoneFill = zf => c => zoneColor(zf(c.dataIndex));
   const tip = { filter: it => it.dataIndex < rs.length, displayColors:false, callbacks:{ title: items => { const r=rs[items[0].dataIndex]; if(!r) return ""; const [y,m,d]=r.date.split("-"); return `${+m}/${+d}  ${r.courseName}（${r.holes.length}H）`; }, label: () => [] } };
   // 2つの推移グラフを連動: タップした棒以外を薄くする
   const SCORE_C="#22A06B", PUTT_C="#22A06B", SHOT_C="#A8DCC1", PUTTS_C="#1B7F55";
@@ -3457,10 +3163,6 @@ async function shareFiles(files){
   for(const f of files){ const a=document.createElement("a"); a.href=URL.createObjectURL(f); a.download=f.name; document.body.appendChild(a); a.click(); a.remove(); await new Promise(r=>setTimeout(r,250)); }
   toast(files.length>1?`${files.length}枚の画像を保存しました`:"画像を保存しました");
 }
-/* 同伴者の打数: 画面には出さず、「次のホールへ」「保存」を押したときに大きな数字キーで聞く（入力済みのホールは聞かない） */
-function askMates(then){ const d=state.draft; if(!d || d.editing || !(d.mates||[]).length) return false;
-  d.mdone = d.mdone || []; if(d.mdone[state.hole]) return false;
-  state.mateThen=then; state.mateI=0; state.sheet="mate"; render(); return true; }
 function mateDone(){ const d=state.draft; if(d){ d.mdone=d.mdone||[]; d.mdone[state.hole]=true; saveDraft(); }
   const then=state.mateThen; state.sheet=null; state.mateI=null; state.mateThen=null; render();
   if(then){ const btn=$(`.rec-bar [data-act=${then}]`); if(btn) btn.click(); } }
@@ -3572,7 +3274,6 @@ const MEDAL_LOOK={ // 縁・中・刻む数字の色（円形。色で見分け�
   3:{r0:"#FFFFFF",r1:"#6A778A",d0:"#FAFCFE",d1:"#A3B1C2",n:"#2F3A4B",k:10,a:1.05},
   2:{r0:"#FFDDBD",r1:"#74340E",d0:"#F8BE86",d1:"#AE5A1C",n:"#4B1F05",k:8,a:0.95},
   1:{r0:"#E6ECF3",r1:"#27313E",d0:"#B4BFCD",d1:"#4E5A6C",n:"#10161E",k:6,a:0.85} };
-function sealPath(cx,cy,R,A,N){ let d=""; for(let i=0;i<=96;i++){ const t=i/96*Math.PI*2, r=R+A*Math.cos(N*t); d+=(i?"L":"M")+(cx+r*Math.cos(t)).toFixed(2)+" "+(cy+r*Math.sin(t)).toFixed(2); } return d+"Z"; }
 function medalSVG(v, sz=16, pos=null, crop=false){ const m=MEDALS[v]; if(!m) return "";   // crop=true: リボンの上を切って低くする（メダルは同じ大きさ。スコアカードの小さなマス用）
   const L=MEDAL_LOOK[v];
   const g = v===5 ? `<defs><linearGradient id="gmA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F3FDFF"/><stop offset="1" stop-color="#B8EAFB"/></linearGradient><linearGradient id="gmB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A5E6FA"/><stop offset="1" stop-color="#3FB1DE"/></linearGradient><linearGradient id="gmC" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6FD0F0"/><stop offset="1" stop-color="#1E8DC0"/></linearGradient></defs><g transform="translate(0 5)"><path d="M13 2h10l3 8H10z" fill="url(#gmA)"/><path d="M9 2h4l-3 8H2z" fill="#9BE3F8"/><path d="M23 2h4l7 8h-8z" fill="#5CC3E8"/><path d="M2 10h8l8 20z" fill="#3AA5D2"/><path d="M10 10h16l-8 20z" fill="url(#gmB)"/><path d="M26 10h8L18 30z" fill="url(#gmC)"/><path d="M9 2h18l7 8-16 20L2 10z" fill="none" stroke="${m.d}" stroke-width="1.5" stroke-linejoin="round"/><path d="M2 10h32M10 10l8 20 8-20M13 2l-3 8M23 2l3 8" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width=".8" stroke-linejoin="round"/><path d="M11 4.500l2.500-.6" stroke="#fff" stroke-width="1.600" stroke-linecap="round"/><circle cx="8.200" cy="7.200" r="1" fill="#fff"/><text x="18" y="21.400" text-anchor="middle" font-family="Barlow Condensed,sans-serif" font-weight="700" font-size="13.5" fill="#0B4F6C" stroke="#fff" stroke-width="1.200" paint-order="stroke">5</text></g>`
@@ -3795,7 +3496,6 @@ document.addEventListener("click", async ev => {
       const t2=$(".stat-tabs"); if(t2) window.scrollBy(0, t2.getBoundingClientRect().top-y0); break; } // タブの位置を動かさない
     case "one-round": state.oneRound=b.dataset.id; state.trendSel=null; state.tab="stats"; LS.set("sc.tab","stats"); render(); window.scrollTo(0,0); break;
     case "one-off": { const id=state.oneRound; state.oneRound=null; state.trendSel=null; render(); window.scrollTo(0,0); break; }
-    case "pick-player": state.trendSel=null; state.fPlayer=b.dataset.v; LS.set("sc.fPlayer",state.fPlayer); render(); break;
     case "demo-on": state.demo=true; render(); break;
     case "demo-off": state.demo=false; render(); break;
     case "start": {
@@ -3828,37 +3528,8 @@ document.addEventListener("click", async ev => {
       state.hole=0; saveDraft(); render(); break;
     }
     case "hole": mark_entered(); state.slide = +b.dataset.i>state.hole?"l":"r"; state.hole=+b.dataset.i; saveDraft(); render(); break;
-    case "sv": { const v=+b.dataset.v, big=+b.dataset.big||0; h.strokes = (big && v===big && h.strokes>=big) ? Math.min(15,h.strokes+1) : v; if(h.putts>h.strokes-1) h.putts=Math.max(0,h.strokes-1); h.entered=true; saveDraft(); render(); break; }
-    case "pv": h.putts = (b.dataset.big==="1" && h.putts>=4) ? Math.min(9,h.putts+1) : +b.dataset.v; if(h.strokes<h.putts+1) h.strokes=h.putts+1; h.entered=true; saveDraft(); render(); break;
-    case "st": h.strokes=Math.max(1,Math.min(15,h.strokes+ +b.dataset.d)); if(h.putts>h.strokes-1) h.putts=Math.max(0,h.strokes-1); h.entered=true; state.tap="st"; saveDraft(); render(); break;
-    case "pt": h.putts=Math.max(0,Math.min(9,h.putts+ +b.dataset.d)); if(h.strokes<h.putts+1) h.strokes=Math.min(15,h.putts+1); h.entered=true; state.tap="pt"; saveDraft(); render(); break;
-    case "dir": case "tee": {
-      const v=b.dataset.v, sub=b.dataset.p||null, isT=a==="tee", onV=isT?"fw":"on", subK=isT?"teeOn":"dirOn";
-      if(aimModeOf(h)==="aim"){ // 「狙い」を選んでいるとき（狙いはグリーン／フェアウェイの中、パー3は花道も）
-        const okAim = (v===onV && sub) || (!isT && v==="short");
-        if(!okAim){ toast(isT?"狙いはフェアウェイの中を選んでください":"狙いはグリーンか花道を選んでください"); break; }
-        const nv = sub || v; h.aim = h.aim===nv ? null : nv; h.entered=true; state.tap=null;
-        if(h.aim) state.aimPick={hole:state.hole, v:"land"}; saveDraft(); render(); break; }
-      const same = h[a]===v && (h[subK]||null)===(v===onV?sub:null);
-      if(same){ h[a]=null; h[subK]=null; } else { h[a]=v; h[subK]= v===onV ? sub : null; }
-      h.entered=true; state.tap=a; saveDraft(); render(); askClub(h[a]); break; }
-    case "open-card": state.sheet="card"; render(); break;
-    case "obpen": { const ob=evs(h,"ob").length>0, pn=evs(h,"pen").length>0; // なし → OB → 1ペナ → なし（OBだけ・1ペナだけがONのときは、それだけを切りかえ）
-      const F2=fields(); let nob=false, npn=false;
-      if(!ob&&!pn){ if(F2.ob) nob=true; else npn=true; } else if(ob){ if(F2.pen) npn=true; }
-      h.ob=nob; h.pen=npn; delete h.obC; delete h.penC; h.entered=true; saveDraft(); render(); break; }
-    case "mts": { const m=d.mates[+b.dataset.i]; if(!m) break; const v=+b.dataset.v, big=+b.dataset.big||0;
-      m.s[state.hole] = (big&&v===big&&m.s[state.hole]>=big) ? Math.min(15,m.s[state.hole]+1) : v; saveDraft(); render(); break; }
-    case "medal-c": { const hh=state.hole, i=+b.dataset.i, PP=1+(d.mates||[]).length; d.medals=d.medals||{}; const arr=(d.medals[hh]||Array(PP).fill(0)).slice();
-      const ORDER=[0,5,4,3,2,1], taken=new Set(arr.filter((x,k)=>k!==i&&x>0)), at=ORDER.indexOf(arr[i]); // 押すたびに ダイヤ→金→銀→銅→鉄→なし。ほかの人がもう持っているメダルは飛ばす
-      let nx=0; for(let t=1;t<=ORDER.length;t++){ const c=ORDER[(at+t)%ORDER.length]; if(c===0||!taken.has(c)){ nx=c; break; } } arr[i]=nx; d.medals[hh]=arr; saveDraft(); render(); break; }
-    case "medal-q": { const hh=state.hole, i=(state.pc&&state.pc.hole===hh?state.pc.i:0), v=+b.dataset.v; d.medals=d.medals||{}; const PP=1+(d.mates||[]).length;
-      const arr=(d.medals[hh]||Array(PP).fill(0)).slice(), on=arr[i]===v; arr.forEach((x,k)=>{ if(x===v) arr[k]=0; }); arr[i]=on?0:v; d.medals[hh]=arr; saveDraft(); render(); break; }
+     case "open-card": state.sheet="card"; render(); break;
     case "pin-q": { const hh=state.hole, i=+b.dataset.i; d.pins=d.pins||{}; if(d.pins[hh]===i) delete d.pins[hh]; else d.pins[hh]=i; saveDraft(); render(); break; }
-    case "aim-mode": state.aimPick={hole:state.hole, v:b.dataset.v}; render(); break;
-    case "aim-reset": h.aim=null; if(state.draft.holes[state.hole]){ const isLong=h.par>=4; if(isLong){ h.tee=null; h.teeOn=null; } else { h.dir=null; h.dirOn=null; } } clearTimeout(clubTimer); saveDraft(); render(); break;
-    case "tog": h[b.dataset.k]=!h[b.dataset.k]; h.entered=true; saveDraft();
-      render(); break;
     case "prev": mark_entered(); state.slide="r"; state.hole--; saveDraft(); render(); break;
     case "next": mark_entered(); state.slide="l"; state.hole++; saveDraft(); render(); window.scrollTo({top:0}); break;
     case "finish": {
@@ -3883,7 +3554,6 @@ document.addEventListener("click", async ev => {
       if(!gameFits(k,cnt)){ toast(`${GAMES[k].name}は${GAMES[k].n.replace("のみ","")}で遊ぶゲームです`); break; }
       if(k==="ghost" && !ghostFor(state.pick,(state.sp||LS.get("sc.player","")).trim())){ toast("このコースの過去の記録がないので、ゴーストはまだ選べません"); break; }
       state.game=k; LS.set("sc.game",state.game); state.sheet=null; state.rulesOpen=null; render(); break; }   // 選んだら自動で戻る
-    case "medal-open": LS.set("sc.medalTip", true); state.medalHole = b.dataset.h!=null ? +b.dataset.h : state.hole; state.sheet="medal"; render(); break;
     case "medal-close": state.sheet=null; render(); break;
     case "migrate": { if(state.migrating || !CF_URL) break; state.migrating=true; render();
       try{ const res=await fetch(CF_URL.replace(/\/$/,"")+"/api", { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"import", courses:state.courses, rounds:state.rounds}) });
@@ -3891,7 +3561,6 @@ document.addEventListener("click", async ev => {
         if(!window.__noNav) setTimeout(()=>{ location.href=CF_URL; }, 900); }
       catch(e){ toast("送れませんでした。電波の良い場所でもう一度お試しください"); }
       state.migrating=false; render(); break; }
-    case "pin-open": state.pinHole = b.dataset.h!=null ? +b.dataset.h : state.hole; state.sheet="pin"; render(); break;
     case "pin-close": state.sheet=null; render(); break;
     case "pin-set": { const ctx = (state.cdraft && !state.cdraft.paused) ? state.cdraft : state.draft; if(!ctx) break;
       const i=+b.dataset.i; ctx.pins=ctx.pins||{}; if(i<0 || ctx.pins[state.pinHole]===i) delete ctx.pins[state.pinHole]; else ctx.pins[state.pinHole]=i;
@@ -3903,7 +3572,6 @@ document.addEventListener("click", async ev => {
     case "open-rules": state.rulesOpen=b.dataset.v; render(); break;
     case "close-rules": state.rulesOpen=null; render(); break;
     case "set-carry": state.skinCarry=b.dataset.v==="1"; LS.set("sc.skinCarry",state.skinCarry); render(); break;
-    case "game-help": state.gameHelp=!state.gameHelp; render(); break;
     case "close-game": state.sheet=null; state.rulesOpen=null; render(); break;
     case "im": state.im=b.dataset.v; LS.set("sc.inputMode",state.im); render(); break;
     case "cd-cell": { const cd=state.cdraft; cd.sel={h:+b.dataset.h, i:+b.dataset.i, k:b.dataset.k}; saveCDraft(); render(); break; }
@@ -3924,11 +3592,6 @@ document.addEventListener("click", async ev => {
     case "open-pick": state.sheet="pick"; state.pickPref=undefined; render(); break;
     case "close-pick": state.sheet=null; state.pickAdd=false; render(); break;
     case "fav": { const F=favs(), id=b.dataset.id; LS.set("sc.favs", F.includes(id)?F.filter(x=>x!==id):[...F,id]); render(); break; }
-    case "add-preset": {
-      const pc = PRESET_COURSES.find(x=>x.key===b.dataset.k); if(!pc) break;
-      const c = { id:uid(), name:pc.name, presetKey:pc.key, holes:pc.holes.map((x,i)=>i?{...x}:{...x, pref:pc.pref, area:pc.area}), createdAt:Date.now() };
-      try{ await store.saveCourse(c); toast(`${pc.name}を追加しました`); }catch(e){ writeErr(e); } break;
-    }
     case "open-fields": state.sheet="fields"; render(); break;
     case "close-sheet": { const h0=state.draft&&state.draft.holes[state.hole]; if(h0) h0.clubAuto=false; state.sheet=null; state.clubFor=null; saveDraft(); render(); break; }
     case "club": {
@@ -3946,12 +3609,7 @@ document.addEventListener("click", async ev => {
       render(); break; }
     case "mt-ok": mateDone(); break;
     case "mt-close": state.sheet=null; state.mateI=null; state.mateThen=null; render(); break;
-    case "mt": { const m=d.mates[+b.dataset.i]; m.s[state.hole]=Math.max(1,Math.min(15,m.s[state.hole]+ +b.dataset.d)); saveDraft(); render(); break; }
-    case "tb": { const k=b.dataset.k; h[k]=!evs(h,k).length; delete h[k+"C"]; h.entered=true; saveDraft(); render(); break; }
-    case "open-club": openClubSheet(); render(); break;
-    case "club-quick": h.club = h.club===b.dataset.v ? null : b.dataset.v; h.entered=true; saveDraft(); render(); break;
     case "set-g": { const ni=+b.dataset.g; if((h.gi||0)===ni) break; d.holes.forEach(x=>{ if(x.ys && x.ys[ni]){ x.gi=ni; x.yards=x.ys[ni]; } }); saveDraft(); render(); toast(`全ホールを${d.gn[ni]}のヤードにしました`); break; }
-    case "swap-g": { const ni=1-(h.gi||0); d.holes.forEach((x,i)=>{ if(i>=state.hole && x.ys && x.ys[ni]){ x.gi=ni; x.yards=x.ys[ni]; } }); saveDraft(); render(); toast(`${d.gn[ni]}にしました（このホールから先）`); break; }
     case "open-clubs": state.clubBack=state.sheet; state.clubEdit=myClubs(); state.sheet="clubs"; render(); break;
     case "close-clubs": { const l=(state.clubEdit||[]).map(x=>String(x).trim()).filter(Boolean); setClubs(l.length?l:CLUBS); state.clubCustom=null; state.clubEdit=null; state.sheet=state.clubBack||null; state.clubBack=null; render(); break; }
     case "club-out": state.clubEdit=state.clubEdit.filter(x=>x!==b.dataset.v); setClubs(state.clubEdit); render(); break;
