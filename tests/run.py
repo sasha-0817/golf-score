@@ -764,6 +764,13 @@ with sync_playwright() as pw:
     check("リザルトに「もう1周」ボタンが出る", pg.query_selector("[data-act=next-round]") is not None)
     C(pg, "[data-act=next-round]"); pg.wait_for_timeout(600)
     check("もう1周: 同じコース・同じ同伴者・同じゲームで新しい記録が始まる（1H目・未入力）", pg.evaluate("!!state.draft && state.draft.courseId==='c1' && state.draft.mates.map(m=>m.name).join()==='はなこ' && state.draft.game==='skins' && state.hole===0 && state.draft.holes.every(h=>!h.sT)") and pg.evaluate("state.draft.id") != pg.evaluate("state.rounds[0].id"))
+    pg.context.close()
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"skins\"", "sc.fields": ALL}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300); walk(pg); C(pg, "[data-act=finish]"); pg.wait_for_timeout(900)
+    C(pg, "[data-act=next-round-change]"); pg.wait_for_timeout(400)
+    check("「ゲームを変えてもう1周」: ゲーム選択が開き、同じコース・同伴者が入っている（まだ始まらない）", pg.query_selector(".game-sheet") is not None and pg.evaluate("!state.draft") and pg.evaluate("document.querySelector('#r-mate0').value") == "はなこ")
+    C(pg, "[data-act=pick-game][data-v=nassau]"); C(pg, "[data-act=start]"); pg.wait_for_timeout(400)
+    check("ゲームを選んで始めると、変えたゲームで同じコース・同伴者の記録が始まる", pg.evaluate("!!state.draft && state.draft.game==='nassau' && state.draft.courseId==='c1' && state.draft.mates[0].name==='はなこ'"))
     check("もう1周: 前のラウンドは残っている・エラーなし", pg.evaluate("state.rounds.length + pending.length") >= 1 and not errs)
     pg.context.close()
 

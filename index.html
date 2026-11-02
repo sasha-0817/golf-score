@@ -1996,6 +1996,7 @@ body[data-tab=stats] #main .gauge .gs{font-size:14px}
 body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .rc-actions .rc-next{background:linear-gradient(120deg,#F2B01E,#FFD25A);color:#2B1D00;border:0}
 .rc-actions .rc-next small{font-size:13px;font-weight:700;opacity:.75}
+.rc-actions .rc-chg{background:none;border:0;color:#fff;text-decoration:underline;font-size:15px;font-weight:700;padding:6px;box-shadow:none}
 </style>
 
 </head>
@@ -2102,7 +2103,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-04-1500";
+const BUILD = "2026-11-05-0900";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2377,6 +2378,7 @@ function resultOverlay(r){
     <div class="rc-actions"><button class="rc-save" data-act="save-card">画像を保存・送る</button></div>
     ${(state.resultGroup||[]).length>1?`<button class="rc-all" data-act="save-all">全員分をまとめて保存（${state.resultGroup.length+1}枚）</button>`:""}
     <div class="rc-actions rc-sub"><button class="rc-next" data-act="next-round">もう1周</button></div>
+    <div class="rc-actions rc-sub rc-link"><button class="rc-chg" data-act="next-round-change">ゲームを変えてもう1周 ›</button></div>
     <div class="rc-actions rc-sub">${state.resultAll&&(state.resultGroup||[]).length>1?"":`<button class="rc-back" data-act="back-to-input">スコア入力に戻る</button>`}<button class="rc-close" data-act="close-result">閉じる</button></div>
   </div></div>`;
 }
@@ -3447,11 +3449,12 @@ document.addEventListener("click", async ev => {
       state.draft={...JSON.parse(JSON.stringify(r)), editing:true}; state.draft.holes.forEach(x=>{ x.entered=true; x.sT=true; x.pT=true; });
       state.hole=r.holes.length-1; state.tab="record"; LS.set("sc.tab","record"); saveDraft(); render(); break;
     }
-    case "next-round": { // もう1周: 同じ人・コース・メンバー・ゲームで、次のラウンドを始める
+    case "next-round": case "next-round-change": { // もう1周: 同じ人・コース・メンバー・ゲームで、次のラウンドを始める（「ゲームを変えて」はゲーム選択を開く）
       const rs = state.resultGroup && state.resultGroup.length ? state.resultGroup : (state.result?[state.result]:[]); if(!rs.length) break;
       const names = rs.slice(1).map(r=>r.player); LS.set("sc.mates",[0,1,2].map(i=>names[i]||"")); LS.set("sc.player",rs[0].player); LS.set("sc.lastCourse",rs[0].courseId);
       state.mates=null; state.pick=rs[0].courseId; state.sp=null; state.sd=null;
       state.result=null; state.resultGroup=null; state.resultAll=false; state.resultGame=null; state.resultGhost=null; state.tab="record"; LS.set("sc.tab","record"); render(); window.scrollTo({top:0});
+      if(b.dataset.act==="next-round-change"){ state.mates=names.concat(["","",""]).slice(0,3); state.sheet="game"; render(); break; }
       setTimeout(()=>{ const st=$("[data-act=start]"); if(st) st.click(); },0); break; }
     case "close-result": state.result=null; state.resultGroup=null; state.resultAll=false; state.resultGame=null; render(); break;
     case "toggle-round": state.openRound = state.openRound===b.dataset.id ? null : b.dataset.id; state.confirm=null; render(); break;
