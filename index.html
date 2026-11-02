@@ -2107,7 +2107,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-03-1200";
+const BUILD = "2026-11-03-1500";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2892,7 +2892,7 @@ function viewCard(cd){
   const gh = cdHole(cd), gb = 0;
   const padSpB = b => nPad?`<td class="pad" style="bottom:${b}px" colspan="${nPad*pw}"></td>`:"";
   const inputRow = (isOlympic(cd.game)||cd.game==="nearpin") ? `<tr class="gin"><td colspan="2" class="ft" style="bottom:${gb}px">${gh+1}H<small class="blk">${isOlympic(cd.game)?"メダル":"ニアピン"}</small></td>${cd.players.map((p,i)=>{
-      let c; if(isOlympic(cd.game)){ const v=(((cd.medals||{})[gh])||[])[i]||0; c=`<div class="fc fm ${v?"set":""}" role="button" tabindex="0" data-k="m" data-i="${i}" aria-label="${esc(p.name)}の${gh+1}Hのメダル。押したまま左右に動かして離すと変わります">${v?medalSVG(v,28,null,true):"<span>—</span>"}</div>`; }
+      let c; if(isOlympic(cd.game)){ const v=(((cd.medals||{})[gh])||[])[i]||0; c=`<div class="fc fm ${v?"set":""}" role="button" tabindex="0" data-k="m" data-i="${i}" aria-label="${esc(p.name)}の${gh+1}Hのメダル。押したまま左右に動かして離すと変わります">${v?medalSVG(v,28):"<span>—</span>"}</div>`; }
       else if(cd.holes[gh].par!==3) c=`<span class="na">—</span>`;
       else { const on=(cd.pins||{})[gh]===i; c=`<button class="fc fn ${on?"set":""}" data-act="cd-pin" data-i="${i}" aria-pressed="${on}" aria-label="${esc(p.name)}がニアピン">${PINFLAG(on)}</button>`; }
       return `<td class="c-s gin-c" colspan="${cwOf(i)}" style="bottom:${gb}px">${c}</td>`; }).join("")}${padSpB(gb)}</tr>` : "";
@@ -3586,7 +3586,7 @@ function medalSVG(v, sz=16, pos=null, crop=false){ const m=MEDALS[v]; if(!m) ret
       <text x="18" y="33" text-anchor="middle" font-family="Barlow Condensed,sans-serif" font-weight="700" font-size="13.5" fill="#fff" fill-opacity=".7" transform="translate(.4 .5)">${v}</text>
       <text x="18" y="33" text-anchor="middle" font-family="Barlow Condensed,sans-serif" font-weight="700" font-size="13.5" fill="${L.n}">${v}</text>
       <path d="M9.6 24a9.6 9.6 0 0 1 6.6-4.4" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.4" stroke-linecap="round"/>`;
-  const vb = crop ? (v===5?"0 6 36 30":"0 11 36 29") : "0 0 36 40", vh = crop ? (v===5?30:29) : 40;
+  const vb = crop ? (v===5?"0 6 36 30":"0 11 36 30") : "0 0 36 41", vh = crop ? 30 : 41;   // 円の縁（線の太さ）が下にはみ出して欠けていたので、下に余白を足した
   return pos ? `<svg x="${pos.x}" y="${pos.y}" width="${sz}" height="${(sz*vh/36).toFixed(1)}" viewBox="${vb}">${g}</svg>` : `<svg class="medal" viewBox="${vb}" width="${sz}" height="${(sz*vh/36).toFixed(1)}" aria-hidden="true">${g}</svg>`; }
 function olympicCalc(medals, P){ const pts=Array(P).fill(0), cnt=Array.from({length:P},()=>[0,0,0,0,0,0]);
   Object.values(medals||{}).forEach(arr=>(arr||[]).forEach((v,i)=>{ if(v>0 && i<P){ pts[i]+=v; cnt[i][v]++; } })); return {pts, cnt}; }

@@ -597,7 +597,7 @@ with sync_playwright() as pw:
     check("メダル: 同じメダルは1人だけ（金は後の人へ移る）", pg.evaluate("JSON.stringify(state.draft.medals[0])") == "[0,4,0,0]")
     flick(pg, "m", 3, 5); check("メダル: ダイヤ（5）", D()["medals"]["0"][3] == 5)
     check("メダルのマスは図だけ（文字なし）で、ポイントは数字だけ", pg.evaluate("[...document.querySelectorAll('.fc.fm')].every(e=>[...e.childNodes].every(n=>n.nodeType!==3||!n.textContent.trim()||n.textContent.trim()==='—')&&![...e.children].some(c=>c.tagName==='SPAN'&&c.textContent.trim()&&c.textContent.trim()!=='—'))") and "pt" not in pg.inner_text(".scoreblock") and pg.evaluate("[...document.querySelectorAll('.frow .pt b')].map(e=>e.textContent).join()") == "0,4,0,5")
-    check("メダルは円形でリボンつき（ギザギザなし）", "<circle" in pg.evaluate("document.querySelector('.fc.fm.set svg').innerHTML") and pg.evaluate("document.querySelector('.fc.fm.set svg').querySelectorAll('path').length") <= 5 and pg.evaluate("document.querySelector('.fc.fm.set svg').getAttribute('viewBox')") == "0 0 36 40")
+    check("メダルは円形でリボンつき（ギザギザなし）", "<circle" in pg.evaluate("document.querySelector('.fc.fm.set svg').innerHTML") and pg.evaluate("document.querySelector('.fc.fm.set svg').querySelectorAll('path').length") <= 5 and pg.evaluate("document.querySelector('.fc.fm.set svg').getAttribute('viewBox')") == "0 0 36 41")
     check("ダイヤのメダルにも数字の5が入る", pg.evaluate("document.querySelectorAll('.fc.fm')[3].querySelector('svg text')&&document.querySelectorAll('.fc.fm')[3].querySelector('svg text').textContent") == "5")
     C(pg, "[data-act=open-fields]")
     check("OB・1ペナは1つの設定（入力するかしないか）", pg.query_selector("#fld-pen") is None and "OB・1ペナ" in pg.inner_text(".fields-sheet"))
