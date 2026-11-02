@@ -786,6 +786,18 @@ with sync_playwright() as pw:
     check("入力ずみの打数・パットを押すだけでは変わらない（打数6・パット3のまま）", pg.evaluate("[state.draft.holes[0].strokes,state.draft.holes[0].putts]") == [6, 3])
     pg.context.close()
 
+    # 19n. 同伴者・ほかの人のマスも、その人の今の値から始まる（自分の値ではない）／メダルもその人の今のメダルから
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "じろう"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"olympic\"", "sc.fields": ALL}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    flick(pg, "s", 0, 7); flick(pg, "s", 1, 2); flick(pg, "s", 2, 5); flick(pg, "m", 0, 4)
+    def starts(k, i):
+        r = pg.locator(f'.fc[data-k="{k}"][data-i="{i}"]').first.bounding_box(); x, y = r["x"] + r["width"] / 2, r["y"] + r["height"] / 2
+        pg.mouse.move(x, y); pg.mouse.down(); pg.wait_for_timeout(50)
+        v = pg.evaluate("(()=>{const c=[...document.querySelectorAll('.fpop .fpc')],e=c.find(e=>e.classList.contains('on')); return e? (e.dataset.v||e.textContent.trim()):null})()"); pg.mouse.up(); pg.wait_for_timeout(60); return v
+    check("打数の選択肢は、押したマスの人の今の数字から始まる（自分8・はなこ3・じろう6）", [starts("s", 0), starts("s", 1), starts("s", 2)] == ["8", "3", "6"])
+    check("メダルの選択肢は、その人の今のメダルから始まる（自分=金4、ほかは なし0）", [starts("m", 0), starts("m", 1)] == ["4", "0"])
+    pg.context.close()
+
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
     import subprocess, time
     PORT = 8791

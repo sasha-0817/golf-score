@@ -2100,7 +2100,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-06-1500";
+const BUILD = "2026-11-06-2100";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3668,7 +3668,7 @@ if(state.draft){ const i=state.draft.holes.findIndex(x=>!sOf(x)); state.hole = i
   document.addEventListener("pointerdown",e=>{
     const c=e.target.closest&&e.target.closest(".fc"); const X0=fctx(); if(!c||!c.dataset.k||st||!X0||(X0.card&&c.dataset.k!=="m")) return; e.preventDefault();
     try{ c.setPointerCapture(e.pointerId); }catch(_){}
-    const kind=c.dataset.k, cf=cfg(kind); st={x:e.clientX,y:e.clientY,kind,who:+c.dataset.i,id:e.pointerId,el:c,cfg:cf,idx:cf.type==="row"?cf.def:"C"}; c.classList.add("down"); build();
+    const kind=c.dataset.k, cf=cfg(kind,+c.dataset.i); st={x:e.clientX,y:e.clientY,kind,who:+c.dataset.i,id:e.pointerId,el:c,cfg:cf,idx:cf.type==="row"?cf.def:"C"}; c.classList.add("down"); build();
   });
   document.addEventListener("pointermove",e=>{ if(!st||e.pointerId!==st.id) return;
     const c=st.cfg, dx=e.clientX-st.x, dy=e.clientY-st.y; if(Math.abs(dx)>8||Math.abs(dy)>8) st.moved=true;
