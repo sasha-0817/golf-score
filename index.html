@@ -1995,6 +1995,11 @@ body[data-tab=stats] #main .gauge .gs{font-size:14px}
 :root{--dh0:hsl(356 80% 95%);--dh1:hsl(356 68% 77%);--dh2:hsl(356 56% 57%);--dht:#fff}   /* 方向のマスの赤（色相356°固定。薄い側もオレンジに寄らない） */
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--dh0:hsl(356 28% 22%);--dh1:hsl(356 42% 42%);--dh2:hsl(356 68% 68%);--dht:#2A0A10}}
 :root[data-theme="dark"]{--dh0:hsl(356 28% 22%);--dh1:hsl(356 42% 42%);--dh2:hsl(356 68% 68%);--dht:#2A0A10}
+.heat{max-width:250px;gap:6px}
+.heat .ht{min-height:64px;border-radius:11px}
+.heat .ht span{font-size:14px}
+.heat .ht b{font:700 26px/1.1 var(--f-num);margin-top:2px}.heat .ht b i{font-size:14px}
+body[data-tab=stats] #main .heat .ht span{font-size:14px}
 </style>
 
 </head>
@@ -2102,7 +2107,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-03-0900";
+const BUILD = "2026-11-03-1200";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2241,7 +2246,11 @@ const sum = (a,f=x=>x) => a.reduce((s,x)=>s+f(x),0);
 const pct = (n,d) => d ? Math.round(n/d*1000)/10 : null;
 /* パットを記録していないラウンド（パットOFFで保存 → シートでは空欄＝全ホール0）は、パーオン・パット系の計算から外す */
 const puttsOn = r => r.holes.some(h=>h.putts>0);
-const fmtPct = v => v==null ? "—" : (v%1===0? v.toFixed(0): v.toFixed(1));
+const fmtPct = v => v==null ? "—" : String(Math.round(v));   // 割合は整数で出す（2026-11-03）
+/* 合計が100になる整数の割合（最大剰余法）。0でない項目は最低1にする */
+function lrm(counts){ const t=counts.reduce((a,b)=>a+b,0); if(!t) return counts.map(()=>0); const raw=counts.map(c=>c/t*100), fl=raw.map(Math.floor); let rest=100-fl.reduce((a,b)=>a+b,0);
+  raw.map((r,i)=>[r-fl[i],i]).sort((a,b)=>b[0]-a[0]).forEach(([_,i])=>{ if(rest>0){ fl[i]++; rest--; } });
+  counts.forEach((c,i)=>{ if(c>0 && fl[i]===0){ fl[i]=1; const m=fl.indexOf(Math.max(...fl)); fl[m]--; } }); return fl; }
 const toPar = n => n===0 ? "±0" : (n>0? "+"+n : String(n));
 function roundTotals(r){ const s=sum(r.holes,h=>h.strokes), p=sum(r.holes,h=>h.par), pt=sum(r.holes,h=>h.putts); return {score:s, par:p, putts:pt, diff:s-p}; }
 /* 分析・履歴は自分（開始画面の名前）だけを出す。サンプルデータは たろう */
@@ -3052,7 +3061,7 @@ function viewStats(){
       return `<div class="rr"><div class="rd"><small>${+m}/${+d}</small><b>${t.score}<i>(${toPar(t.diff)})</i></b></div><div class="rh">${r.holes.map(h=>`<span class="mk4 m-${TONEH(h)}" title="${h.strokes}"></span>`).join("")}</div></div>`; }).join("")}</div>
     <div class="mk-legend"><span><i class="mk4 m-eagle"></i>−2</span><span><i class="mk4 m-birdie"></i>−1</span><span><i class="mk4 m-par"></i>±0</span><span><i class="mk4 m-bogey"></i>+1</span><span><i class="mk4 m-double"></i>+2</span><span><i class="mk4 m-triple"></i>+3以上</span></div></div>
   ${state.oneRound?"":`<div class="panel"><div class="sec"><em>TREND</em><span>スコアの推移</span></div><div class="tbox"><div class="tbox-ax"><canvas id="ch-score-ax" aria-hidden="true"></canvas></div><div class="tbox-sc"><div class="tbox-in"><canvas id="ch-score" aria-label="スコア推移"></canvas></div></div><div class="tbox-ref"><canvas id="ch-score-ref" aria-hidden="true"></canvas></div></div></div>`}
-  ${barsPanel("スコアの内訳",DIST_SEGS(s),fmtPct(s.parOrBetter),"%","パー以内")}
+  ${barsPanel("スコアの内訳",DIST_SEGS(s),fmtPct(s.parOrBetter),"%","パー以内",["--q-hio","--q-eagle","--q-birdie","--q-par"])}
 
 `:""}
   ${ST==="shot"?`
@@ -3144,11 +3153,12 @@ function holePanel(rs){
     </table><p class="muted cs-note">多いミスは同じ方向に2回以上外したときに出します（パー3はグリーン、パー4以上はティーショット）。</p></div>`;
 }
 /* 割合は横棒の一覧で（引き出し線つきのドーナツはごちゃつくので 2026-10-26 にやめた）。0回の項目は出さない。回数は出さない */
-function barsPanel(title, segs, headVal, headUnit, headLbl){
-  const t = segs.reduce((a,x)=>a+x.n,0);
+function barsPanel(title, segs, headVal, headUnit, headLbl, headTones){
+  const t = segs.reduce((a,x)=>a+x.n,0), LB = lrm(segs.filter(x=>x.n>0).map(x=>x.n)), shown = segs.filter(x=>x.n>0);
+  if(headTones) headVal = shown.reduce((a,x,i)=>a+(headTones.includes(x.tone)?LB[i]:0),0);
   const body = !t ? `<p class="muted" style="font-size:13px">まだ記録がありません。</p>`
-    : `<div class="bk-head"><b>${headVal}<small>${headUnit}</small></b><span>${headLbl}</span></div>` + segs.filter(x=>x.n>0).map(x=>{ const v=pct(x.n,t);
-      return `<div class="bk-row"><span>${x.label}</span><div class="bk-trk"><i style="width:${Math.max(1.5,v).toFixed(1)}%;background:var(${x.tone})"></i></div><b>${fmtPct(v)}<small>%</small></b></div>`; }).join("");
+    : `<div class="bk-head"><b>${headVal}<small>${headUnit}</small></b><span>${headLbl}</span></div>` + shown.map((x,i)=>{ const v=LB[i];
+      return `<div class="bk-row"><span>${x.label}</span><div class="bk-trk"><i style="width:${Math.max(1.5,v).toFixed(1)}%;background:var(${x.tone})"></i></div><b>${v}<small>%</small></b></div>`; }).join("");
   return `<div class="panel bk"><div class="sec"><em>BREAKDOWN</em><span>${title}</span></div>${body}</div>`;
 }
 function donutPanel(title, id, segs, total, centerVal, centerLbl){
@@ -3212,10 +3222,10 @@ function dirHeat(kind, c, n){
   /* ティーショットの行き先: 十字の4マス。真ん中（オン）は色なし、上下左右（ミス）だけ多いほど濃い赤 */
   const par3 = kind==="p3", good = par3?"on":"fw";
   const tiles = par3 ? [["long","オーバー","u"],["left","左","l"],["on","オン","c"],["right","右","r"],["miss","ショート","d"]] : [["rl","左","l"],["fw","真ん中","c"],["rr","右","r"],["miss","ショート","d"]];
-  const get=k=>c[k]||0, top=Math.max(0,...tiles.filter(t=>t[0]!==good).map(t=>get(t[0]))), mx=Math.max(1,top);
-  return `<div class="heat ${kind}">${tiles.map(([k,l,pos])=>{ const v=get(k), pc=pct(v,n), isG=k===good, x=v?Math.round(10+v/mx*78):0, worst=!isG&&top>0&&v===top;
+  const get=k=>c[k]||0, top=Math.max(0,...tiles.filter(t=>t[0]!==good).map(t=>get(t[0]))), mx=Math.max(1,top), LR=lrm(tiles.map(t=>get(t[0])));
+  return `<div class="heat ${kind}">${tiles.map(([k,l,pos],ti)=>{ const v=get(k), isG=k===good, worst=!isG&&top>0&&v===top;
     const t = v/mx, st = isG ? "" : `background:${!v?"var(--dh0)":t<=.5?`color-mix(in srgb,var(--dh1) ${Math.round(t*200)}%,var(--dh0))`:`color-mix(in srgb,var(--dh2) ${Math.round((t-.5)*200)}%,var(--dh1))`};color:${t>.55?"var(--dht)":"var(--fg)"}`;
-    return `<div class="ht ht-${pos} ${worst?"worst":""} ${isG?"ctr":""}" data-k="${k}" style="${st}"><span>${l}</span><b>${Math.round(pc)}<i>%</i></b></div>`; }).join("")}</div>`; }
+    return `<div class="ht ht-${pos} ${worst?"worst":""} ${isG?"ctr":""}" data-k="${k}" style="${st}"><span>${l}</span><b>${LR[ti]}<i>%</i></b></div>`; }).join("")}</div>`; }
 function greenMap(s){
   if(!s.dirN) return `<p class="muted" style="font-size:13px">まだ記録がありません。記録画面でグリーンのどこに行ったかを選ぶとここに出ます。</p>`;
   const miss = s.dirN - s.dirs.on;

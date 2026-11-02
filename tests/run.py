@@ -748,6 +748,16 @@ with sync_playwright() as pw:
     check("ショット分析は3つのまとまり（SHOTS・TEE SHOT・CLUB）、弱点分析はない、分析のタブは3つ", ttl == "SHOTS,TEE SHOT,CLUB" and pg.query_selector(".wk") is None and pg.evaluate("[...document.querySelectorAll('.stat-tabs button')].map(b=>b.textContent.replace(/[A-Z]/g,'')).join()") == "スコア,ショット,パット")
     pg.context.close()
 
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.tab": "\"stats\"", "sc.statTab": "\"shot\""}, offline=True)
+    C(pg, "[data-act=demo-on]"); pg.wait_for_timeout(500)
+    sm = lambda sel: pg.evaluate("s=>[...document.querySelectorAll(s)].map(e=>parseInt(e.textContent)).reduce((a,b)=>a+b,0)", sel)
+    check("方向の十字の割合は整数で、5マスの合計が100になる（パー3）／4マスの合計が100（パー4・5）", sm(".heat.p3 .ht b") == 100 and sm(".heat.fw .ht b") == 100)
+    check("方向の十字は横幅がコンパクト（260px以下）", pg.evaluate("document.querySelector('.heat').getBoundingClientRect().width") <= 260)
+    check("割合に小数点は出さない（リング・クラブ別など）", pg.evaluate("!/\\d\\.\\d+\\s*%/.test(document.querySelector('#main').innerText)"))
+    C(pg, "[data-act=stat-tab][data-v=score]"); pg.wait_for_timeout(300)
+    check("スコアの内訳の割合は整数で、合計が100になる", sm(".bk .bk-row b") == 100)
+    pg.context.close()
+
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
     import subprocess, time
     PORT = 8791
