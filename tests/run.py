@@ -758,20 +758,12 @@ with sync_playwright() as pw:
     check("スコアの内訳の割合は整数で、合計が100になる", sm(".bk .bk-row b") == 100)
     pg.context.close()
 
-    # 19k. もう1周: 同じ人・コース・メンバー・ゲームで次のラウンドを始める
+    # 19k. 保存したあと、スタート画面には前回の同伴者・コース・ゲームが残っている（専用の「もう1周」ボタンは作らない）
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"skins\"", "sc.fields": ALL}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300); walk(pg); C(pg, "[data-act=finish]"); pg.wait_for_timeout(900)
-    check("リザルトに「もう1周」ボタンが出る", pg.query_selector("[data-act=next-round]") is not None)
-    C(pg, "[data-act=next-round]"); pg.wait_for_timeout(600)
-    check("もう1周: 同じコース・同じ同伴者・同じゲームで新しい記録が始まる（1H目・未入力）", pg.evaluate("!!state.draft && state.draft.courseId==='c1' && state.draft.mates.map(m=>m.name).join()==='はなこ' && state.draft.game==='skins' && state.hole===0 && state.draft.holes.every(h=>!h.sT)") and pg.evaluate("state.draft.id") != pg.evaluate("state.rounds[0].id"))
-    pg.context.close()
-    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"skins\"", "sc.fields": ALL}, offline=True)
-    C(pg, "[data-act=start]"); pg.wait_for_timeout(300); walk(pg); C(pg, "[data-act=finish]"); pg.wait_for_timeout(900)
-    C(pg, "[data-act=next-round-change]"); pg.wait_for_timeout(400)
-    check("「ゲームを変えてもう1周」: ゲーム選択が開き、同じコース・同伴者が入っている（まだ始まらない）", pg.query_selector(".game-sheet") is not None and pg.evaluate("!state.draft") and pg.evaluate("document.querySelector('#r-mate0').value") == "はなこ")
-    C(pg, "[data-act=pick-game][data-v=nassau]"); C(pg, "[data-act=start]"); pg.wait_for_timeout(400)
-    check("ゲームを選んで始めると、変えたゲームで同じコース・同伴者の記録が始まる", pg.evaluate("!!state.draft && state.draft.game==='nassau' && state.draft.courseId==='c1' && state.draft.mates[0].name==='はなこ'"))
-    check("もう1周: 前のラウンドは残っている・エラーなし", pg.evaluate("state.rounds.length + pending.length") >= 1 and not errs)
+    C(pg, "[data-act=close-result]"); C(pg, "nav.tabs [data-tab=record]"); pg.wait_for_timeout(300)
+    check("保存したあとの記録タブ: 前回の同伴者・コース・ゲームがそのまま入っていて、「始める」だけで続けられる", pg.evaluate("document.querySelector('#r-mate0').value") == "はなこ" and pg.evaluate("document.querySelector('#r-course').value") == "c1" and pg.evaluate("state.game") == "skins" and pg.query_selector("[data-act=start]") is not None)
+    check("リザルトに専用の「もう1周」ボタンはない", pg.query_selector("[data-act=next-round]") is None)
     pg.context.close()
 
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
