@@ -758,6 +758,15 @@ with sync_playwright() as pw:
     check("スコアの内訳の割合は整数で、合計が100になる", sm(".bk .bk-row b") == 100)
     pg.context.close()
 
+    # 19k. もう1周: 同じ人・コース・メンバー・ゲームで次のラウンドを始める
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"skins\"", "sc.fields": ALL}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300); walk(pg); C(pg, "[data-act=finish]"); pg.wait_for_timeout(900)
+    check("リザルトに「もう1周」ボタンが出る", pg.query_selector("[data-act=next-round]") is not None)
+    C(pg, "[data-act=next-round]"); pg.wait_for_timeout(600)
+    check("もう1周: 同じコース・同じ同伴者・同じゲームで新しい記録が始まる（1H目・未入力）", pg.evaluate("!!state.draft && state.draft.courseId==='c1' && state.draft.mates.map(m=>m.name).join()==='はなこ' && state.draft.game==='skins' && state.hole===0 && state.draft.holes.every(h=>!h.sT)") and pg.evaluate("state.draft.id") != pg.evaluate("state.rounds[0].id"))
+    check("もう1周: 前のラウンドは残っている・エラーなし", pg.evaluate("state.rounds.length + pending.length") >= 1 and not errs)
+    pg.context.close()
+
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
     import subprocess, time
     PORT = 8791
