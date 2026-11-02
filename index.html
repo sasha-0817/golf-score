@@ -2100,7 +2100,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-06-0900";
+const BUILD = "2026-11-06-1500";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3632,7 +3632,7 @@ if(state.draft){ const i=state.draft.holes.findIndex(x=>!sOf(x)); state.hole = i
   // 入力の相手: くわしく記録の下書き、またはスコアカード入力の下書き（こちらはメダルだけ）
   function fctx(){ if(state.draft) return {d:state.draft, hole:state.hole, card:false}; const cd=state.cdraft; return cd&&!cd.paused ? {d:cd, hole:cdHole(cd), card:true} : null; }
   function cfg(kind,who){ const X=fctx(), d=X.d, h=d.holes[X.hole], par=h.par; const medalOf0=()=>((((d.medals||{})[X.hole])||[])[who||0])||0;
-    if(kind==="p") return { type:"row", vals:[0,1,2,3,4,5,6], def:2, cw:36, min:20, par };
+    if(kind==="p") return { type:"row", prop:true, vals:[0,1,2,3,4,5,6], def:(!X.card && touchedP(d,0,X.hole)) ? Math.max(0,Math.min(6,h.putts)) : 2, cw:40, min:40, par };
     if(kind==="m"){ const PP=X.card?d.players.length:1+(d.mates||[]).length, vals=[0,...[1,2,3,4].filter(v=>v>4-PP),5];   // 人数が少ないときは下のメダルから外す（3人=鉄なし、2人=鉄・銅なし）
       return { type:"row", prop:true, vals, def:Math.max(0,vals.indexOf(medalOf0())), cw:36, min:36, par }; }   // メダル: 今の値（なし）から右へ行くほど高得点。画面の端までの距離に合わせて指の動きを割り当てる
     if(kind==="c"){ const cl=myClubs(); let def=cl.indexOf(h.club); if(def<0) def=cl.indexOf(lastClub(d,state.hole)); if(def<0) def=cl.indexOf("7I"); if(def<0) def=Math.floor(cl.length/2);
@@ -3640,10 +3640,10 @@ if(state.draft){ const i=state.draft.holes.findIndex(x=>!sOf(x)); state.hole = i
     if(kind==="d") return { type:"cross", par };
     if(kind==="o"){ const F2=fields(), ob=evs(h,"ob").length>0, pn=evs(h,"pen").length>0, vals=F2.ob&&F2.pen?[0,1,2]:F2.ob?[0,1]:[0,2]; return { type:"row", vals, def:Math.max(0,vals.indexOf(ob?1:pn?2:0)), cw:52, min:30, par }; }
     if(kind==="b") return { type:"row", vals:[0,1], def:h.bunker?1:0, cw:52, min:30, par };
-    { const cur = who ? ((d.mates[who-1]||{s:[]}).s[X.hole]) : h.strokes;   // 10打以上: いちばん右の「10+」を動かして選ぶたびに1打ずつ増える
-      return { type:"row", vals:[1,2,3,4,5,6,7,8,9,10], def:cur>=10?9:Math.min(9,par-1), cw:32, min:20, par, cur }; }
+    { const cur = who ? (d.mates[who-1]||{s:[]}).s[X.hole] : h.strokes, tch = !X.card && touchedS(d,who||0,X.hole);   // 入力ずみなら今の数字から（押すだけで変わらない）。未入力ならパーから
+      return { type:"row", prop:true, vals:[1,2,3,4,5,6,7,8,9,10], def:tch ? Math.max(0,Math.min(9,cur-1)) : Math.min(9,par-1), cw:34, min:34, par }; }   // 打数は10まで（ショートコースなので）。選択肢の幅はいつも同じ（指の動きを画面の端までの距離に割り当てる）
   }
-  const cellHTML=(kind,v,par)=>kind==="m"?(v?medalSVG(v,29):"—"):kind==="c"?esc(v):kind==="o"?["なし","OB","ペナ"][v]:kind==="b"?["なし","あり"][v]:(kind==="s"&&v===10?"10+":v);
+  const cellHTML=(kind,v,par)=>kind==="m"?(v?medalSVG(v,29):"—"):kind==="c"?esc(v):kind==="o"?["なし","OB","ペナ"][v]:kind==="b"?["なし","あり"][v]:v;
   const cellTone=(kind,v,par)=>kind==="s"?"t-"+toneS(v,par):kind==="p"?"t-"+toneP(v):"nt";
   function build(){
     const c=st.cfg, W=document.documentElement.clientWidth;
@@ -3676,7 +3676,7 @@ if(state.draft){ const i=state.draft.holes.findIndex(x=>!sOf(x)); state.hole = i
     if(c.abs){ if(!st.moved && Math.abs(dx)<10 && Math.abs(dy)<10) return; st.moved=true; // 少し動くまでは、今のクラブのまま
       const i=Math.max(0,Math.min(c.vals.length-1,Math.floor((e.clientX-(st.left+4))/st.step))); if(i!==st.idx) mark(i); return; }
     if(c.prop){ const W=document.documentElement.clientWidth, rs=c.vals.length-1-c.def, ls=c.def, k=dx>=0?(rs?Math.min(c.cw,(W-10-st.x)/rs):1):(ls?Math.min(c.cw,(st.x-10)/ls):1);
-      const i=Math.max(0,Math.min(c.vals.length-1,c.def+Math.round(dx/Math.max(14,k)))); if(i!==st.idx) mark(i); return; }
+      const i=Math.max(0,Math.min(c.vals.length-1,c.def+Math.round(dx/Math.max(8,k)))); if(i!==st.idx) mark(i); return; }
     const i=Math.max(0,Math.min(c.vals.length-1,c.def+Math.round(dx/st.step))); if(i!==st.idx) mark(i); });
   function end(e,commit){
     if(!st||e.pointerId!==st.id) return;
@@ -3685,8 +3685,7 @@ if(state.draft){ const i=state.draft.holes.findIndex(x=>!sOf(x)); state.hole = i
     const X1=fctx(); if(X1&&X1.card){ if(kind==="m"){ const cd=X1.d, hh=X1.hole, PP=cd.players.length, v=c.vals[idx]; cd.medals=cd.medals||{}; const arr=(cd.medals[hh]||Array(PP).fill(0)).slice();
         if(v>0) arr.forEach((x,k)=>{ if(x===v) arr[k]=0; }); arr[who]=v; cd.medals[hh]=arr; saveCDraft(); render(); } return; }
     const d=state.draft; if(!d) return; const h=d.holes[state.hole];
-    if(kind==="s"||kind==="p"){ let v=c.vals[idx];
-      if(kind==="s" && v===10 && c.cur>=10) v = moved ? Math.min(15,c.cur+1) : c.cur;   // 10打以上のときは「10+」へ動かすたびに+1（押すだけなら今のまま）
+    if(kind==="s"||kind==="p"){ const v=c.vals[idx];
       const hs=state.hole, mt=who?d.mates[who-1]:null; if(mt){ mt.p=mt.p||d.holes.map(()=>2); mt.t=mt.t||[]; mt.pt=mt.pt||[]; }
       if(kind==="s"){ if(who===0){ h.strokes=v; h.sT=true; if(h.putts>h.strokes-1) h.putts=Math.max(0,h.strokes-1); h.entered=true; state.tap="sv"+v; } else { mt.s[hs]=v; mt.t[hs]=true; if(mt.p[hs]>v-1) mt.p[hs]=Math.max(0,v-1); } }
       else { if(who===0){ h.putts=v; h.pT=true; if(h.strokes<h.putts+1){ h.strokes=Math.min(15,h.putts+1); } h.sT=true; h.entered=true; state.tap="pv"+v; } else { mt.p[hs]=v; mt.pt[hs]=true; if(mt.s[hs]<v+1) mt.s[hs]=Math.min(15,v+1); mt.t[hs]=true; } } }

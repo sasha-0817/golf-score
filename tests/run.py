@@ -69,14 +69,14 @@ def flick(pg, k, i, tgt):
     if k == "d":
         dx, dy = {"C": (0, 0), "L": (-50, 0), "R": (50, 0), "U": (0, -50), "D": (0, 50)}[tgt]
         pg.mouse.move(x + dx / 2, y + dy / 2, steps=2); pg.mouse.move(x + dx, y + dy, steps=2)
-    elif k in ("m", "c"):
+    elif k in ("m", "c", "s", "p"):
         pg.mouse.move(x + 6, y, steps=2)
         if k == "m": tgt = pg.evaluate("v=>[...document.querySelectorAll('.fpop .fpc')].findIndex(e=>e.dataset.v===String(v))", tgt)   # メダルは「点数」で指定する
         n = pg.evaluate("document.querySelectorAll('.fpop .fpc').length"); de = pg.evaluate("[...document.querySelectorAll('.fpop .fpc')].findIndex(e=>e.classList.contains('on'))")
         rs, ls = n - 1 - de, de
-        cap = 36 if k == "m" else 44
+        cap = {"m": 36, "c": 44, "s": 34, "p": 40}[k]
         st = min(cap, (375 - 10 - x) / rs) if tgt > de and rs else (min(cap, (x - 10) / ls) if ls else cap)
-        pg.mouse.move(x + (tgt - de) * max(14, st), y, steps=3)
+        pg.mouse.move(x + (tgt - de) * max(8, st), y, steps=3)
     else:
         pg.mouse.move(x + 12, y, steps=2)
         c = pg.evaluate("t=>{const e=document.querySelector('.fpop .fpc[data-k=\"'+t+'\"]'); if(!e) return null; const q=e.getBoundingClientRect(); return q.x+q.width/2}", str(tgt))
@@ -766,17 +766,24 @@ with sync_playwright() as pw:
     check("リザルトに専用の「もう1周」ボタンはない", pg.query_selector("[data-act=next-round]") is None)
     pg.context.close()
 
-    # 19l. 10打以上も入れられる（「10+」を動かすたびに+1・押すだけなら今のまま）
+    # 19l. 打数のフリックの選択肢は、入力したあとも同じ幅（狭くならない）
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.fields": ALL}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
-    flick(pg, "s", 0, 9); h10 = pg.evaluate("state.draft.holes[0].strokes")
-    r = pg.locator('.fc[data-k="s"][data-i="0"]').first.bounding_box(); x, y = r["x"] + r["width"] / 2, r["y"] + r["height"] / 2
-    pg.mouse.move(x, y); pg.mouse.down(); pg.wait_for_timeout(30); pg.mouse.move(x + 40, y, steps=3); pg.mouse.up(); pg.wait_for_timeout(80)
-    h11 = pg.evaluate("state.draft.holes[0].strokes")
-    pg.mouse.click(x, y); pg.wait_for_timeout(80)
-    h11b = pg.evaluate("state.draft.holes[0].strokes")
-    pg.mouse.move(x, y); pg.mouse.down(); pg.wait_for_timeout(30); pg.mouse.move(x - 30, y, steps=2); pg.mouse.move(x - 60, y, steps=3); pg.wait_for_timeout(50); pg.mouse.up(); pg.wait_for_timeout(80)
-    check("10打以上: 10 → 「10+」を右へ動かすと11 → 押すだけなら11のまま → 左へ動かすと選んだ数字に戻る", (h10, h11, h11b, pg.evaluate("state.draft.holes[0].strokes")) == (10, 11, 11, 7))
+    def popw(k, i):
+        r = pg.locator(f'.fc[data-k="{k}"][data-i="{i}"]').first.bounding_box(); x, y = r["x"] + r["width"] / 2, r["y"] + r["height"] / 2
+        pg.mouse.move(x, y); pg.mouse.down(); pg.wait_for_timeout(30); pg.mouse.move(x + 6, y); pg.wait_for_timeout(40)
+        w = pg.evaluate("document.querySelector('.fpop .fpc').getBoundingClientRect().width"); pg.mouse.up(); pg.wait_for_timeout(60); return w
+    w0 = popw("s", 0); flick(pg, "s", 0, 8); w1 = popw("s", 0); flick(pg, "s", 0, 9); w2 = popw("s", 0)
+    check("打数のフリックは、入力したあとも選択肢の幅が同じ（狭くならない）", abs(w0 - w1) < 1 and abs(w0 - w2) < 1 and w0 >= 30)
+    pg.context.close()
+
+    # 19m. 入力ずみのマスを押すだけでは、数字が変わらない（未入力のときだけ、パーが入る）
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.fields": ALL}, offline=True)
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    flick(pg, "s", 0, 5); flick(pg, "p", 0, 3)
+    for k in ("s", "p"):
+        r = pg.locator(f'.fc[data-k="{k}"][data-i="0"]').first.bounding_box(); pg.mouse.click(r["x"] + r["width"] / 2, r["y"] + r["height"] / 2); pg.wait_for_timeout(80)
+    check("入力ずみの打数・パットを押すだけでは変わらない（打数6・パット3のまま）", pg.evaluate("[state.draft.holes[0].strokes,state.draft.holes[0].putts]") == [6, 3])
     pg.context.close()
 
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
