@@ -2104,7 +2104,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-06-2310";
+const BUILD = "2026-11-06-2320";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2941,7 +2941,8 @@ after.stats = () => {
     lines.forEach(L=>{ const py=y.getPixelForValue(L.v); if(py<a.top-1||py>a.bottom+1) return;
       ctx.strokeStyle=L.color; ctx.lineWidth=L.w||2.5; ctx.setLineDash([]); ctx.beginPath();
       if(L.vs){ const x=chart.scales.x, hw=(x.getPixelForValue(1)-x.getPixelForValue(0))/2; let prev=null;   // ラウンドごとに基準が違うとき（9Hと18Hが混ざる）は階段状に引く
-        L.vs.forEach((v,i)=>{ const yy=y.getPixelForValue(v), x0=x.getPixelForValue(i)-hw, x1=x.getPixelForValue(i)+hw; if(prev==null) ctx.moveTo(x0,yy); else ctx.lineTo(x0,yy); ctx.lineTo(x1,yy); prev=yy; }); }
+        L.vs.forEach((v,i)=>{ const yy=y.getPixelForValue(v), x0=i===0?a.left:x.getPixelForValue(i)-hw, x1=i===L.vs.length-1?a.right:x.getPixelForValue(i)+hw;   // 両端は横いっぱいまで伸ばす（ラウンドが少なくても線が短くならない）
+          if(prev==null) ctx.moveTo(x0,yy); else ctx.lineTo(x0,yy); ctx.lineTo(x1,yy); prev=yy; }); }
       else { ctx.moveTo(a.left,py); ctx.lineTo(a.right,py); }
       ctx.stroke();
       if(L.label){ ctx.font="700 12px "+cssv("--f-num"); ctx.fillStyle=L.color; ctx.textAlign="right"; ctx.textBaseline="bottom"; ctx.fillText(L.label,a.right-2,py-3); } });
