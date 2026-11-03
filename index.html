@@ -2104,7 +2104,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-06-2320";
+const BUILD = "2026-11-07-0010";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2472,7 +2472,7 @@ function viewRecord(){
         <div class="field"><label for="r-player">あなたの名前</label><input id="r-player" list="plist" value="${esc(state.sp!=null?state.sp:last)}" placeholder="名前"><datalist id="plist">${pl.map(p=>`<option value="${esc(p)}">`).join("")}</datalist></div>
         <div class="field" style="flex:0 0 150px"><label for="r-date">日付</label><input id="r-date" type="date" value="${state.sd||today()}"></div>
       </div>
-      ${`<div class="field"><div class="lab-row"><label>一緒に回る人</label><button class="game-btn ${state.game?"on":""}" data-act="open-game">${state.game?coinSVG(14)+GAMES[state.game].name:"ゲーム：なし"}<i>›</i></button></div><div class="mates">${[0,1,2].map(i=>`<span class="mate-in"><input id="r-mate${i}" list="plist" value="${esc((state.mates||LS.get("sc.mates",[]))[i]||"")}" placeholder="${i+2}人目" aria-label="${i+2}人目の名前"><button data-act="mate-clear" data-i="${i}" aria-label="${i+2}人目を消す">×</button></span>`).join("")}</div></div>`}
+      ${`<div class="field"><div class="lab-row"><label>一緒に回る人</label><button class="game-btn ${state.game?"on":""}" data-act="open-game">${state.game?gameMini(state.game)+GAMES[state.game].name:"ゲーム：なし"}<i>›</i></button></div><div class="mates">${[0,1,2].map(i=>`<span class="mate-in"><input id="r-mate${i}" list="plist" value="${esc((state.mates||LS.get("sc.mates",[]))[i]||"")}" placeholder="${i+2}人目" aria-label="${i+2}人目の名前"><button data-act="mate-clear" data-i="${i}" aria-label="${i+2}人目を消す">×</button></span>`).join("")}</div></div>`}
       ${coursePickField()}
       <div class="field" id="r-gwrap" hidden><label for="r-green">今日のグリーン</label><select id="r-green"></select></div>
       <div class="err" id="r-err"></div>
@@ -3202,6 +3202,8 @@ const GAME_ILL = {
   teamsum: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${[[0,"#1F3A68","#fff"],[30,"#F2B01E","#1F3A68"]].map(([x,c,f])=>`<rect x="${x+1}" y="9" width="25" height="26" rx="6" fill="${c}"/>${[x+6.5,x+20.5].map(cx=>`<circle cx="${cx}" cy="17.5" r="2.6" fill="${f}"/><path d="M${cx-3.6} 27.5c0-3.4 1.6-5.6 3.6-5.6s3.6 2.2 3.6 5.6z" fill="${f}"/>`).join("")}<path d="M${x+11.2} 22h4.6M${x+13.5} 19.7v4.6" stroke="${f}" stroke-width="1.8" stroke-linecap="round"/>`).join("")}</svg></span>`,
   team: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${[[9,"#1F3A68"],[19,"#1F3A68"],[37,"#F2B01E"],[47,"#F2B01E"]].map(([x,c],i)=>`<circle cx="${x}" cy="${i%2?17:13}" r="5.5" fill="${c}"/><path d="M${x-8} ${i%2?36:33}c0-6 3.6-10 8-10s8 4 8 10z" fill="${c}"/>`).join("")}<rect x="0" y="38" width="27" height="4" rx="2" fill="#1F3A68"/><rect x="29" y="38" width="27" height="4" rx="2" fill="#F2B01E"/></svg></span>`,
 };
+/* ボタン用の小さいアイコン: ゲームのイラストをそのまま縮める（スキンズだけコイン） */
+const gameMini = k => { if(k==="skins") return coinSVG(16); const h=GAME_ILL[k]?GAME_ILL[k]():""; const m=h.match(/<svg[\s\S]*<\/svg>/); return m ? m[0].replace('width="56" height="44"','width="24" height="19" class="gm-mini"') : ""; };
 /* スキンズ: 各ホールにコイン1枚。一番少ない打数が1人だけならその人が（持ち越し分も合わせて）獲得、同点なら次のホールへ持ち越し */
 function skinsCalc(rows, n, carryOn=true){
   const won=rows.map(()=>0), log=[]; let carry=0;
