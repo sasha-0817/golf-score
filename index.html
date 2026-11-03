@@ -2104,7 +2104,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-06-2300";
+const BUILD = "2026-11-06-2310";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2985,14 +2985,15 @@ after.stats = () => {
   const scrollBox = (id, o, refs, fmt) => {
     const cv=$("#"+id); if(!cv) return null;
     const inner=cv.parentElement; inner.style.width = (wide*100)+"%";
-    o.scales.x.ticks.maxTicksLimit = Math.round(6*wide);
+    o.scales.x.ticks.maxTicksLimit = Math.round(6*wide); o.layout = { padding:{ top:8 } }; o.scales.y.ticks.stepSize = 5;
     const yb = o.scales.y; const tf = yb.ticks.callback || (v=>v);
-    o.scales.y = { ...yb, title:{display:false}, ticks:{ ...yb.ticks, display:false }, border:{display:false}, afterFit:s=>{ s.width=0; } };
+    o.scales.y = { ...yb, title:{display:false}, ticks:{ ...yb.ticks, display:false }, border:{display:false}, afterFit:s=>{ s.width=0; s.paddingTop=0; s.paddingBottom=0; } };
+    o.scales.x = { ...o.scales.x, afterFit:s=>{ s.height=30; } };   // 左の目盛りの列・右の線の数字の列と、棒の領域の上下をそろえる
     const axisChart = (el, right) => el && charts.push(new Chart(el, { type:"bar", data:{ labels:["9/1"], datasets:[{ data:[null] }] },
-      options:{ maintainAspectRatio:false, events:[], animation:false, plugins:{ legend:{display:false}, tooltip:{enabled:false} },
-        scales:{ x:{ ticks:{ color:"rgba(0,0,0,0)", maxRotation:0 }, grid:{display:false}, border:{display:false} },
-          y:{ min:yb.min, max:yb.max, grid:{display:false}, border:{display:false}, afterFit:s=>{ s.width= right?2:40; },
-            ticks:{ display:!right, precision:0, callback: v => tf(v) } } } },
+      options:{ maintainAspectRatio:false, layout:{padding:{top:8}}, events:[], animation:false, plugins:{ legend:{display:false}, tooltip:{enabled:false} },
+        scales:{ x:{ ticks:{ color:"rgba(0,0,0,0)", maxRotation:0 }, grid:{display:false}, border:{display:false}, afterFit:s=>{ s.height=30; } },
+          y:{ min:yb.min, max:yb.max, grid:{display:false}, border:{display:false}, afterFit:s=>{ s.width= right?2:40; s.paddingTop=0; s.paddingBottom=0; },
+            ticks:{ display:!right, precision:0, stepSize:yb.ticks.stepSize, callback: v => tf(v) } } } },
       plugins: right ? [{ id:"refLbl", afterDraw(ch){ const {ctx, scales:{y}, chartArea:a} = ch; ctx.save(); ctx.font="700 13px "+cssv("--f-num"); ctx.textAlign="left"; ctx.textBaseline="middle";
         refs.forEach(r=>{ const py=y.getPixelForValue(r.v); if(py<a.top-1||py>a.bottom+1) return; ctx.fillStyle=r.color; ctx.fillText(r.label, 4, py); }); ctx.restore(); } }] : [] }));
     axisChart($("#"+id+"-ax"), false); axisChart($("#"+id+"-ref"), true);
