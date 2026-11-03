@@ -1922,7 +1922,7 @@ body[data-tab=stats] #main :is(.gs,.cs-note,.muted){line-height:1.45}
 
 
 @media (prefers-color-scheme:dark){}
-.rule-btn svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;width:26px;height:26px}
+.icon-btn.rule-btn{width:auto;height:46px;flex:0 0 auto;padding:0 14px;border-radius:999px;font:inherit;font-size:14px;font-weight:700;white-space:nowrap;color:var(--rec-muted)}
 .cd-rule{margin-right:6px}
 /* ---- 2026-10-31: スコアカード入力の整え（記号の重なり・文字・メダルの切れ・チームの色） ---- */
 .cdt col.h{width:26px}.cdt col.par{width:30px}.cdt.wp col.p{width:42px}
@@ -2104,7 +2104,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-07-0010";
+const BUILD = "2026-11-07-0040";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2591,7 +2591,7 @@ function viewRecordDraft(d){
     <div class="rec-top">
       <button class="icon-btn" data-act="ask-discard" aria-label="記録を閉じる">${ICON.x}</button>
       <div class="rec-who"><b>${esc(d.player)}${(d.mates||[]).length?`<small> ほか${d.mates.length}人</small>`:""}</b><span>${esc(d.courseName)}・${esc(d.date.slice(5).replace("-","/"))}${d.editing?"・編集中":""}</span></div>
-      ${d.game?`<button class="icon-btn rule-btn" data-act="open-rules" data-v="${d.game}" aria-label="ゲームのルール"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.3a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.8M12 17.2v.1"/></svg></button>`:""}
+      ${d.game?`<button class="icon-btn rule-btn" data-act="open-rules" data-v="${d.game}" aria-label="ゲームのルール">ルール</button>`:""}
       <button class="icon-btn card-btn" data-act="open-card" aria-label="スコアカードを見る"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16M15 4v16"/></svg></button>
       <button class="icon-btn gear-btn" data-act="open-fields" aria-label="記録する項目の設定">${ICON.gear}</button>
     </div>
@@ -3203,7 +3203,7 @@ const GAME_ILL = {
   team: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${[[9,"#1F3A68"],[19,"#1F3A68"],[37,"#F2B01E"],[47,"#F2B01E"]].map(([x,c],i)=>`<circle cx="${x}" cy="${i%2?17:13}" r="5.5" fill="${c}"/><path d="M${x-8} ${i%2?36:33}c0-6 3.6-10 8-10s8 4 8 10z" fill="${c}"/>`).join("")}<rect x="0" y="38" width="27" height="4" rx="2" fill="#1F3A68"/><rect x="29" y="38" width="27" height="4" rx="2" fill="#F2B01E"/></svg></span>`,
 };
 /* ボタン用の小さいアイコン: ゲームのイラストをそのまま縮める（スキンズだけコイン） */
-const gameMini = k => { if(k==="skins") return coinSVG(16); const h=GAME_ILL[k]?GAME_ILL[k]():""; const m=h.match(/<svg[\s\S]*<\/svg>/); return m ? m[0].replace('width="56" height="44"','width="24" height="19" class="gm-mini"') : ""; };
+const gameMini = (k, w=24) => { if(k==="skins") return coinSVG(Math.round(w*.68)); const h=GAME_ILL[k]?GAME_ILL[k]():""; const m=h.match(/<svg[\s\S]*<\/svg>/); return m ? m[0].replace('width="56" height="44"',`width="${w}" height="${Math.round(w*44/56)}" class="gm-mini"`) : ""; };
 /* スキンズ: 各ホールにコイン1枚。一番少ない打数が1人だけならその人が（持ち越し分も合わせて）獲得、同点なら次のホールへ持ち越し */
 function skinsCalc(rows, n, carryOn=true){
   const won=rows.map(()=>0), log=[]; let carry=0;
