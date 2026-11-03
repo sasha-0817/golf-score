@@ -2104,7 +2104,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-06-2200";
+const BUILD = "2026-11-06-2300";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2937,16 +2937,20 @@ after.stats = () => {
   // 基準線: 横いっぱいに引く太めの線（パー・ボギー・ダボ）
   const holesN = (()=>{ const c={}; rs.forEach(r=>{ c[r.holes.length]=(c[r.holes.length]||0)+1; }); return +Object.keys(c).sort((x,y)=>c[y]-c[x])[0] || 9; })();
   const useTotal = trendTotalOn(), parSums = tot.map(t=>t.par), sameP = parSums.length>0 && parSums.every(x=>x===parSums[0]);
-  const parN = oneCourse ? (courses().find(c=>c.id===state.fCourse)?.holes.reduce((a,h)=>a+h.par,0) ?? roundTotals(rs[0]).par) : (sameP?parSums[0]:0);   // 打数で見るとき、パーの合計がそろっていれば基準線を出す
   const refLines = (lines) => ({ id:"refLines", afterDatasetsDraw(chart){ const {ctx, chartArea:a, scales:{y}} = chart; ctx.save();
     lines.forEach(L=>{ const py=y.getPixelForValue(L.v); if(py<a.top-1||py>a.bottom+1) return;
-      ctx.strokeStyle=L.color; ctx.lineWidth=L.w||2.5; ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(a.left,py); ctx.lineTo(a.right,py); ctx.stroke();
+      ctx.strokeStyle=L.color; ctx.lineWidth=L.w||2.5; ctx.setLineDash([]); ctx.beginPath();
+      if(L.vs){ const x=chart.scales.x, hw=(x.getPixelForValue(1)-x.getPixelForValue(0))/2; let prev=null;   // ラウンドごとに基準が違うとき（9Hと18Hが混ざる）は階段状に引く
+        L.vs.forEach((v,i)=>{ const yy=y.getPixelForValue(v), x0=x.getPixelForValue(i)-hw, x1=x.getPixelForValue(i)+hw; if(prev==null) ctx.moveTo(x0,yy); else ctx.lineTo(x0,yy); ctx.lineTo(x1,yy); prev=yy; }); }
+      else { ctx.moveTo(a.left,py); ctx.lineTo(a.right,py); }
+      ctx.stroke();
       if(L.label){ ctx.font="700 12px "+cssv("--f-num"); ctx.fillStyle=L.color; ctx.textAlign="right"; ctx.textBaseline="bottom"; ctx.fillText(L.label,a.right-2,py-3); } });
     ctx.restore(); } });
-  const scoreLines = useTotal ? (parN ? [
-    { v: parN, label: `${parN}`, color: cssv("--q-par") },
-    { v: parN+holesN, label: `${parN+holesN}`, color: cssv("--q-bogey") },
-    { v: parN+2*holesN, label: `${parN+2*holesN}`, color: cssv("--q-double") }
+  const hN = rs.map(r=>r.holes.length), parRef = (tot.find((t,k)=>hN[k]===holesN)||tot[0]||{par:0}).par;
+  const scoreLines = useTotal ? ((oneCourse || sameP) ? [
+    { v: parRef, label: `${parRef}`, color: cssv("--q-par"), vs: tot.map(t=>t.par) },
+    { v: parRef+holesN, label: `${parRef+holesN}`, color: cssv("--q-bogey"), vs: tot.map((t,k)=>t.par+hN[k]) },
+    { v: parRef+2*holesN, label: `${parRef+2*holesN}`, color: cssv("--q-double"), vs: tot.map((t,k)=>t.par+2*hN[k]) }
   ] : []) : [
     { v: 0, label: "±0", color: cssv("--q-par") },
     { v: holesN, label: `+${holesN}`, color: cssv("--q-bogey") },
@@ -2974,7 +2978,7 @@ after.stats = () => {
   if(state.trendSel!=null && state.trendSel>=rs.length) state.trendSel=null;
   const opts = (yTitle, yFmt, lo, hi) => ({ maintainAspectRatio:false, events:["click"], plugins:{ legend:{display:false}, tooltip:tip },
     scales:{ x:{ ticks:{ maxRotation:0, autoSkip:true, autoSkipPadding:14, maxTicksLimit:6 }, grid:{display:false} }, y:{ title:{display:true,text:yTitle}, ticks:{ precision:0, callback: yFmt || (v=>v) }, suggestedMin:lo, suggestedMax:hi, grid:{ color: cssv("--soft") } } } });
-  const o1 = opts(useTotal?"打数":"対パー", useTotal?null:(v=>toPar(v))); { const base0 = useTotal ? (parN || Math.min(...vals)+2) : 0; o1.scales.y.min = Math.floor(Math.min(base0-2, ...vals)/5)*5; o1.scales.y.max = Math.ceil(Math.max(base0+5, ...vals.map(v=>v+2))/5)*5; } // 上は自分のスコアに合わせる（上手い人は +18 まで要らない）
+  const o1 = opts(useTotal?"打数":"対パー", useTotal?null:(v=>toPar(v))); { const base0 = useTotal ? (parRef || Math.min(...vals)+2) : 0; o1.scales.y.min = Math.floor(Math.min(base0-2, ...vals)/5)*5; o1.scales.y.max = Math.ceil(Math.max(base0+5, ...vals.map(v=>v+2))/5)*5; } // 上は自分のスコアに合わせる（上手い人は +18 まで要らない）
   /* 推移の棒は15ラウンド分の幅で見せ、それより前は横にスクロール（最初は最新が見える右端）。
      縦の目盛りと基準線の数字は左の固定の列に描く（棒に数字が重ならないように） */
   const VIS = 15, wide = Math.max(1, SLOTS/VIS);
@@ -2996,14 +3000,14 @@ after.stats = () => {
   };
   const scoreRefs = scrollBox("ch-score", o1, scoreLines);
   if($("#ch-score")) charts.push(scoreChart = new Chart($("#ch-score"), { type:"bar", data:{ labels, datasets:[
-    { label:"スコア", data: pad(vals), _c: SCORE_C, backgroundColor: labels.map((_,i)=>fade(SCORE_C,i)), borderColor: rs.map((r,i)=>zoneColor(scoreZone(i))), borderWidth:0, borderSkipped:"start", borderRadius:5, maxBarThickness:16, base: useTotal ? undefined : 0 }
+    { label:"スコア", data: pad(vals), _c: SCORE_C, backgroundColor: labels.map((_,i)=>fade(SCORE_C,i)), borderColor: rs.map((r,i)=>zoneColor(scoreZone(i))), borderWidth:0, borderSkipped:"start", borderRadius:0, maxBarThickness:16, base: useTotal ? undefined : 0 }
   ]}, options:o1, plugins:[refLines(scoreRefs||scoreLines)] }));
   const pVals = tot.map((t,i)=>puttsOn(rs[i])?t.putts:null);
   const o2 = opts("パット", null); { const pv=pVals.filter(v=>v!=null); o2.scales.y.min = Math.min(holesN+1, ...pv); o2.scales.y.max = Math.max(holesN*2+6, ...pv); }
   const puttLines = [{ v:2*holesN, label:`${2*holesN}`, color: cssv("--q-par") }];
   const puttRefs = scrollBox("ch-putt", o2, puttLines);
   if($("#ch-putt")) charts.push(puttChart = new Chart($("#ch-putt"), { type:"bar", data:{ labels, datasets:[
-    { label:"パット", data: pad(pVals), _c: PUTT_C, backgroundColor: labels.map((_,i)=>fade(PUTT_C,i)), borderColor: rs.map((r,i)=>zoneColor(puttZone(i))), borderWidth:0, borderSkipped:"start", borderRadius:5, maxBarThickness:16 }
+    { label:"パット", data: pad(pVals), _c: PUTT_C, backgroundColor: labels.map((_,i)=>fade(PUTT_C,i)), borderColor: rs.map((r,i)=>zoneColor(puttZone(i))), borderWidth:0, borderSkipped:"start", borderRadius:0, maxBarThickness:16 }
   ]}, options:o2, plugins:[refLines(puttRefs||puttLines)] }));
   document.querySelectorAll(".tbox-sc").forEach(sc=>{ sc.scrollLeft = sc.scrollWidth; }); // 最新が見える右端から
   if(scoreChart) scoreChart.options.onClick = onTap(scoreChart); if(puttChart) puttChart.options.onClick = onTap(puttChart);
