@@ -2104,7 +2104,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-07-0100";
+const BUILD = "2026-11-07-0110";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3203,7 +3203,7 @@ const GAME_ILL = {
   team: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${[[9,"#1F3A68"],[19,"#1F3A68"],[37,"#F2B01E"],[47,"#F2B01E"]].map(([x,c],i)=>`<circle cx="${x}" cy="${i%2?17:13}" r="5.5" fill="${c}"/><path d="M${x-8} ${i%2?36:33}c0-6 3.6-10 8-10s8 4 8 10z" fill="${c}"/>`).join("")}<rect x="0" y="38" width="27" height="4" rx="2" fill="#1F3A68"/><rect x="29" y="38" width="27" height="4" rx="2" fill="#F2B01E"/></svg></span>`,
 };
 /* ボタン用の小さいアイコン: ゲームのイラストをそのまま縮める（スキンズだけコイン） */
-const gameMini = (k, w=24) => { if(k==="skins") return coinSVG(Math.round(w*.68)); const h=GAME_ILL[k]?GAME_ILL[k]():""; const m=h.match(/<svg[\s\S]*<\/svg>/); return m ? m[0].replace('width="56" height="44"',`width="${w}" height="${Math.round(w*44/56)}" class="gm-mini"`) : ""; };
+const gameMini = (k, w=24) => { if(k==="skins"){ const c=Math.round(w*.5), h=Math.round(w*.68), st=(l,t)=>`style="position:absolute;left:${l}px;top:${t}px"`; return `<span class="gm-mini" style="position:relative;display:inline-block;width:${w}px;height:${h}px;flex:none">${[[0,h-c-1],[Math.round((w-c)/2),0],[w-c,h-c-1]].map(([l,t])=>`<span ${st(l,t)}>${coinSVG(c)}</span>`).join("")}</span>`; } const h=GAME_ILL[k]?GAME_ILL[k]():""; const m=h.match(/<svg[\s\S]*<\/svg>/); return m ? m[0].replace('width="56" height="44"',`width="${w}" height="${Math.round(w*44/56)}" class="gm-mini"`) : ""; };
 /* スキンズ: 各ホールにコイン1枚。一番少ない打数が1人だけならその人が（持ち越し分も合わせて）獲得、同点なら次のホールへ持ち越し */
 function skinsCalc(rows, n, carryOn=true){
   const won=rows.map(()=>0), log=[]; let carry=0;
