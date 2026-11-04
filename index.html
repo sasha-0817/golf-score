@@ -1997,6 +1997,7 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .seg2{margin-left:auto;display:inline-flex;gap:2px;background:var(--soft);border-radius:999px;padding:3px}
 .seg2 button{border:0;background:none;color:var(--muted);font:700 14px var(--f-body);padding:4px 12px;border-radius:999px;cursor:pointer}
 .seg2 button[aria-pressed="true"]{background:var(--paper);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.game-btn .gm-mini{vertical-align:middle;line-height:0}.game-btn .gm-mini>span{line-height:0}.game-btn .gm-mini .coin{display:block;vertical-align:baseline}
 </style>
 
 </head>
@@ -2104,7 +2105,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-07-0110";
+const BUILD = "2026-11-07-0120";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
