@@ -1999,7 +1999,7 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .seg2 button[aria-pressed="true"]{background:var(--paper);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.15)}
 .game-btn .gm-mini{vertical-align:middle;line-height:0}.game-btn .gm-mini>span{line-height:0}.game-btn .gm-mini .coin{display:block;vertical-align:baseline}
 .cd-game tr.gho small.gh{font:700 12px var(--f-body);opacity:.8}.cd-game tr.gho b{font:700 22px var(--f-num)}.cd-game tr.skr b.gd{font:700 22px/1 var(--f-num)}.cd-game tr.skr b.gd.up{color:#14935C}.cd-game tr.skr b.gd.dn{color:var(--q-double)}.cd-game tr.skr b.gd i{font:700 13px var(--f-body);font-style:normal;margin-left:2px}
-.cdt .gcol{opacity:.9}.cdt th.gcol{color:#8A6A10}.cdt td.gcol{background:color-mix(in srgb,#F2B01E 10%,transparent)}
+.cdt th.gcol{color:var(--rec-muted)}.cdt td.gcol{background:color-mix(in srgb,var(--rec-muted) 10%,transparent)}.cdt td.gcol .mk3{opacity:.8}.cd-game tr.gho td.c-s{background:var(--rec-raise)!important;color:inherit!important}.cd-game tr.gho td.ft{color:var(--rec-muted)!important}.cd-game tr.gho b.gd.up{color:#14935C!important}.cd-game tr.gho b.gd.dn{color:var(--q-double)!important}.cd-game tr.gho b.gd.z{color:var(--rec-muted)!important}
 </style>
 
 </head>
@@ -2107,7 +2107,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-07-0210";
+const BUILD = "2026-11-07-0230";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2703,7 +2703,7 @@ function viewCard(cd){
   const tv = i => String(gtc&&gtc[i]||"").replace(/<[^>]+>/g,"").replace(/^[AB]\s*/,"").replace(/[勝打]|pt$/g,"");   // チーム戦は A/B の文字や単位を出さない
   const gameRow = gtc ? `<tr class="skr gr"><td colspan="2" class="ft">ポイント</td>${isTeamG ? [0,2].map(i=>`<td class="c-s tm tm${i?"B":"A"}" colspan="${cwOf(i)+cwOf(i+1)}">${esc(tv(i))}</td>`).join("") : gtc.map((t,i)=>`<td class="c-s" colspan="${cwOf(i)}">${t}</td>`).join("")}${padSp}</tr>` : "";
   const gRest = Array.from({length:cd.players.length-1}).map((_,k)=>`<td class="c-s" colspan="${cwOf(k+1)}"></td>`).join("")+padSp;
-  const ghostRows = cd.game==="ghost" && gBest ? `<tr class="skr gr"><td colspan="2" class="ft">ポイント</td><td class="c-s" colspan="${cwOf(0)}">${cd.players[0].s.some(x=>x!=null)?`<b class="gd ${gDiff<0?"up":gDiff>0?"dn":"z"}">${gDiff>0?"+":gDiff<0?"−":"±"}${Math.abs(gDiff)}<i>打</i></b>`:"—"}</td>${gRest}</tr>` : "";
+  const ghostRows = cd.game==="ghost" && gBest ? `<tr class="skr gr gho"><td colspan="2" class="ft">ポイント</td><td class="c-s" colspan="${cwOf(0)}">${cd.players[0].s.some(x=>x!=null)?`<b class="gd ${gDiff<0?"up":gDiff>0?"dn":"z"}">${gDiff>0?"+":gDiff<0?"−":"±"}${Math.abs(gDiff)}<i>打</i></b>`:"—"}</td>${gRest}</tr>` : "";
   const skinRow = skc ? `<tr class="skr"><td colspan="2" class="ft">ポイント${cd.carry?`<small class="blk">次${skc.pot}枚</small>`:""}</td>${cd.players.map((p,i)=>`<td class="c-s" colspan="${cwOf(i)}"><span class="skp">${coinSVG(24)}<b>${skc.won[i]}</b></span></td>`).join("")}${padSp}</tr>` : "";
   const colg=`<colgroup><col class="h"><col class="par">${cd.players.map((p,i)=>`<col class="s">${cdP(i)?`<col class="p">`:""}`).join("")}${gCol}${padCols}</colgroup>`;
   // 計の下に、人ごとのゲーム入力（オリンピック=メダルをフリック、ニアピン=旗をタップ）。見ているホールの分
