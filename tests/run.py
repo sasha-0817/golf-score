@@ -642,7 +642,7 @@ with sync_playwright() as pw:
     # ゴースト × スコアカード入力: ゴーストの打数（見ているホール）とここまでの差が出る
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": [], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"ghost\"", "sc.rounds": g1, "sc.fields": ALL}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
-    check("ゴースト（スコアカード）: ゴーストの行にベスト27と、見ているホールのゴーストの打数（3）が出る", pg.query_selector(".cd-game tr.gho") is not None and "27" in pg.inner_text(".cd-game tr.gho") and "3" in pg.inner_text(".cd-game tr.gho td.c-s"))
+    check("ゴースト（スコアカード）: 2人目の位置に「ゴースト」の列があり、全ホールのゴーストの打数が縦に入る（27打）", "ゴースト" in pg.inner_text(".cdt thead") and pg.evaluate("[...document.querySelectorAll('.cd-scroll tbody td.gcol')].length") == 9 and "27" in pg.inner_text(".cd-scroll tfoot td.gcol"))
     C(pg, '[data-act=cd-key][data-v="4"]'); C(pg, '[data-act=cd-key][data-v="2"]')
     check("ゴースト（スコアカード）: ポイントはゴーストより1打多い＝＋1打（赤）", "+1" in pg.inner_text(".cd-game") and pg.query_selector(".cd-game b.gd.dn") is not None)
     check("ゴースト（スコアカード）: エラーなし", not errs); pg.context.close()
