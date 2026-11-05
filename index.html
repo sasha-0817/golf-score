@@ -2000,6 +2000,7 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .game-btn .gm-mini{vertical-align:middle;line-height:0}.game-btn .gm-mini>span{line-height:0}.game-btn .gm-mini .coin{display:block;vertical-align:baseline}
 .cd-game tr.gho small.gh{font:700 12px var(--f-body);opacity:.8}.cd-game tr.gho b{font:700 22px var(--f-num)}.cd-game tr.skr b.gd{font:700 22px/1 var(--f-num)}.cd-game tr.skr b.gd.up{color:#14935C}.cd-game tr.skr b.gd.dn{color:var(--q-double)}.cd-game tr.skr b.gd i{font:700 13px var(--f-body);font-style:normal;margin-left:2px}
 .cdt th.gcol{color:var(--rec-muted)}.cdt td.gcol{background:color-mix(in srgb,var(--rec-muted) 10%,transparent)}.cdt td.gcol .mk3{opacity:.8}.cd-game tr.gho td.c-s{background:var(--rec-raise)!important;color:inherit!important}.cd-game tr.gho td.ft{color:var(--rec-muted)!important}.cd-game tr.gho b.gd.up{color:#14935C!important}.cd-game tr.gho b.gd.dn{color:var(--q-double)!important}.cd-game tr.gho b.gd.z{color:var(--rec-muted)!important}
+.navrow{display:flex;gap:10px;margin-top:16px}.navrow .btn{flex:1 1 0;height:50px}#c-err:not(:empty){margin-top:10px}
 </style>
 
 </head>
@@ -2107,7 +2108,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-07-0230";
+const BUILD = "2026-11-07-0240";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
