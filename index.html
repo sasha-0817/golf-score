@@ -2001,6 +2001,7 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .cd-game tr.gho small.gh{font:700 12px var(--f-body);opacity:.8}.cd-game tr.gho b{font:700 22px var(--f-num)}.cd-game tr.skr b.gd{font:700 22px/1 var(--f-num)}.cd-game tr.skr b.gd.up{color:#14935C}.cd-game tr.skr b.gd.dn{color:var(--q-double)}.cd-game tr.skr b.gd i{font:700 13px var(--f-body);font-style:normal;margin-left:2px}
 .cdt th.gcol{color:var(--rec-muted)}.cdt td.gcol{background:color-mix(in srgb,var(--rec-muted) 10%,transparent)}.cdt td.gcol .mk3{opacity:.8}.cd-game tr.gho td.c-s{background:var(--rec-raise)!important;color:inherit!important}.cd-game tr.gho td.ft{color:var(--rec-muted)!important}.cd-game tr.gho b.gd.up{color:#14935C!important}.cd-game tr.gho b.gd.dn{color:var(--q-double)!important}.cd-game tr.gho b.gd.z{color:var(--rec-muted)!important}
 .navrow{display:flex;gap:10px;margin-top:16px}.navrow .btn{flex:1 1 0;height:50px}#c-err:not(:empty){margin-top:10px}
+.np-field label small{font-weight:400;margin-left:4px;color:var(--muted)}.npseg{display:flex;gap:6px}.npseg button{flex:1 1 0;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--paper);font:inherit;font-weight:700;color:var(--muted)}.npseg button[aria-pressed=true]{background:var(--fg);color:var(--paper);border-color:var(--fg)}.np-field{margin-bottom:12px}.row.gnames{flex-wrap:wrap}
 </style>
 
 </head>
@@ -2055,7 +2056,10 @@ function pickableCourses(){
   return list.sort((a,b)=>a.name.localeCompare(b.name,"ja"));
 }
 const favs = () => LS.get("sc.favs", []);
-function courseGreens(c){ if(!c || !c.holes || !c.holes.some(h=>h.yards2)) return null; const g=c.holes[0].gn; return Array.isArray(g)&&g.length===2 ? g : ["A","B"]; }
+/* ヤードのパターン（グリーンやティーが2〜4つ）: 1つ目は hole.yards、2〜4つ目は yards2・yards3・yards4、名前は holes[0].gn */
+const YK = ["yards","yards2","yards3","yards4"], GN_DEF = ["MG","SG","C","D"];
+const gnFull = g => GN_DEF.map((d,i)=> (Array.isArray(g) && g[i]) || d);
+function courseGreens(c){ if(!c || !c.holes) return null; let n=1; for(let k=1;k<4;k++) if(c.holes.some(h=>h[YK[k]])) n=k+1; if(n<2) return null; const g=Array.isArray(c.holes[0].gn)?c.holes[0].gn:[]; return Array.from({length:n},(_,i)=>g[i]||["A","B","C","D"][i]); }
 const CLUBS = ["1W","3W","5W","UT","5I","6I","7I","8I","9I","PW","AW","SW"];
 const CLUB_GROUPS = [
   ["ドライバー", ["1W"]],
@@ -2108,7 +2112,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-07-0240";
+const BUILD = "2026-11-08-0100";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2602,7 +2606,7 @@ function viewRecordDraft(d){
     <div class="dots ${N>9?"two":""}">${d.holes.map((x,i)=>`<button data-act="hole" data-i="${i}" class="${dotCls(x)} ${i===state.hole?"cur":""}" aria-label="${i+1}番ホール${x.entered?" "+x.strokes+"打":""}">${i+1}H</button>`).join("")}</div>
     <div class="hole-card hc2 ${slide} ${celebrate?"flash":""}">${confetti}
       <div class="hc-l"><span class="lbl">HOLE</span><div class="hno">${state.hole+1}<small>/${N}</small></div></div>
-      <div class="hc-m"><div class="par"><span>PAR</span>${h.par}</div>${d.gn && h.ys && h.ys[0] && h.ys[1] ? `<div class="gsw" role="group" aria-label="グリーン">${d.gn.map((n,i)=>`<button data-act="set-g" data-g="${i}" aria-pressed="${(h.gi||0)===i}">${esc(n)}</button>`).join("")}</div><div class="yd">${h.yards} YDS</div>` : h.yards?`<div class="yd">${h.yards} YDS</div>`:""}
+      <div class="hc-m"><div class="par"><span>PAR</span>${h.par}</div>${d.gn && h.ys && h.ys.filter(Boolean).length>1 ? `<div class="gsw" role="group" aria-label="グリーン">${d.gn.map((n,i)=>`<button data-act="set-g" data-g="${i}" aria-pressed="${(h.gi||0)===i}">${esc(n)}</button>`).join("")}</div><div class="yd">${h.yards} YDS</div>` : h.yards?`<div class="yd">${h.yards} YDS</div>`:""}
         <div class="badges">${meS?`<span class="badge ${hio?"hio":"b-"+TONE(diff)} ${/^s[vt]/.test(state.tap||"")?"pop":""}"><i></i>${hio?"HOLE IN ONE":TERM(diff)}</span>`:`<span class="badge b-none"><i></i>未入力</span>`}${bestPace&&fields().pace?`<span class="pace2">BEST PACE</span>`:""}${d.game==="skins"&&d.carry?(()=>{ const sk=skinsCalc([d.holes.map(x=>x.strokes), ...(d.mates||[]).map(m=>m.s)], state.hole, true); return `<span class="pot" title="このホールのコイン">${coinSVG(13)}×${sk.pot}</span>`; })():""}</div></div>
       <div class="live"><div><span>TOTAL</span><b>${totLabel}</b></div></div>
       ${advice?`<div class="advice">${advice}</div>`:""}
@@ -3108,12 +3112,12 @@ function viewCourses(){
         <div class="field" style="flex:0 1 150px"><label for="c-pref">都道府県</label><select id="c-pref"><option value="">選ぶ</option>${PREFS.map(p=>`<option ${p===e.pref?"selected":""}>${p}</option>`).join("")}</select></div>
         <div class="field"><label for="c-area">市町村</label><input id="c-area" value="${esc(e.area||"")}" placeholder="例：宮崎市"></div>
       </div>
-      <label class="two-g"><input type="checkbox" id="c-two" ${e.two?"checked":""}><span>グリーンが2つある（ヤードを2つ入れる）</span></label>
-      ${e.two?`<div class="row gnames"><div class="field"><label for="c-g0">1つ目の名前</label><input id="c-g0" maxlength="6" value="${esc(e.gn[0])}"></div><div class="field"><label for="c-g1">2つ目の名前</label><input id="c-g1" maxlength="6" value="${esc(e.gn[1])}"></div></div>`:""}
+      <div class="field np-field"><label>ヤードのパターン<small>（グリーンやティーが複数あるとき）</small></label><div class="npseg" role="group" aria-label="ヤードのパターン数">${[1,2,3,4].map(n=>`<button data-act="set-np" data-n="${n}" aria-pressed="${(e.np||1)===n}">${n===1?"なし":n+"つ"}</button>`).join("")}</div></div>
+      ${(e.np||1)>1?`<div class="row gnames">${Array.from({length:e.np},(_,k)=>`<div class="field"><label for="c-g${k}">${k+1}つ目の名前</label><input id="c-g${k}" maxlength="6" value="${esc(e.gn[k])}"></div>`).join("")}</div>`:""}
       <div class="par-grid">${e.holes.map((h,i)=>`<div class="par-cell"><div class="h">${i+1}H</div>
         <div class="pars">${[3,4,5].map(p=>`<button data-act="setpar" data-i="${i}" data-p="${p}" aria-pressed="${h.par===p}">${p}</button>`).join("")}</div>
-        <input type="number" inputmode="numeric" id="yd-${i}" data-yd="${i}" value="${h.yards||""}" placeholder="${e.two?esc(e.gn[0])+" ヤード":"ヤード"}" aria-label="${i+1}番ホールのヤード">
-        ${e.two?`<input type="number" inputmode="numeric" data-yd2="${i}" value="${h.yards2||""}" placeholder="${esc(e.gn[1])} ヤード" aria-label="${i+1}番ホールの${esc(e.gn[1])}のヤード">`:""}</div>`).join("")}</div>
+        <input type="number" inputmode="numeric" id="yd-${i}" data-yd="${i}" value="${h.yards||""}" placeholder="${(e.np||1)>1?esc(e.gn[0])+" ヤード":"ヤード"}" aria-label="${i+1}番ホールのヤード">
+        ${Array.from({length:(e.np||1)-1},(_,j)=>`<input type="number" inputmode="numeric" data-ydk="${i},${j+1}" value="${h[YK[j+1]]||""}" placeholder="${esc(e.gn[j+1])} ヤード" aria-label="${i+1}番ホールの${esc(e.gn[j+1])}のヤード">`).join("")}</div>`).join("")}</div>
       <div class="err" id="c-err"></div>
       <div class="navrow"><button class="btn" data-act="cancel-course">キャンセル</button><button class="btn primary" data-act="save-course">保存する</button></div>
       ${!e.isNew && !e.fromPreset ? (state.confirm==="delc:"+e.id ? `<div class="actions" style="margin-top:12px"><span class="muted" style="font-size:12px;align-self:center">このコースを削除しますか？（過去の記録は残ります）</span><button class="btn small" data-act="cancel-confirm">やめる</button><button class="btn small danger" data-act="del-course" data-id="${e.id}">削除する</button></div>` : `<button class="link-del" data-act="ask-del-course" data-id="${e.id}">このコースを削除</button>`) : ""}
@@ -3141,11 +3145,10 @@ after.courses = () => {
   const nm=$("#c-name"); nm.oninput=()=>{ e.name=nm.value; };
   $("#c-n").onchange=ev=>{ const n=+ev.target.value; while(e.holes.length<n) e.holes.push({par:3,yards:null}); e.holes.length=n; render(); };
   document.querySelectorAll("[data-yd]").forEach(inp=>inp.oninput=()=>{ const v=parseInt(inp.value,10); e.holes[+inp.dataset.yd].yards = isNaN(v)?null:v; });
-  document.querySelectorAll("[data-yd2]").forEach(inp=>inp.oninput=()=>{ const v=parseInt(inp.value,10); e.holes[+inp.dataset.yd2].yards2 = isNaN(v)?null:v; });
-  const two=$("#c-two"); if(two) two.onchange=()=>{ e.two=two.checked; render(); };
+  document.querySelectorAll("[data-ydk]").forEach(inp=>inp.oninput=()=>{ const [i,k]=inp.dataset.ydk.split(",").map(Number), v=parseInt(inp.value,10); e.holes[i][YK[k]] = isNaN(v)?null:v; });
   const cp=$("#c-pref"); if(cp) cp.onchange=()=>{ e.pref=cp.value; LS.set("sc.pref",cp.value); };
   const ca=$("#c-area"); if(ca) ca.oninput=()=>{ e.area=ca.value.trim(); };
-  [0,1].forEach(i=>{ const el=$("#c-g"+i); if(el) el.oninput=()=>{ e.gn[i]=el.value.trim()||(i?"B":"A"); }; });
+  [0,1,2,3].forEach(i=>{ const el=$("#c-g"+i); if(el) el.oninput=()=>{ e.gn[i]=el.value.trim()||GN_DEF[i]; }; });
 };
 
 /* リザルトカードを画像にする（アニメーションを止め、記号の中の数字のずれを直して写す） */
@@ -3510,7 +3513,7 @@ document.addEventListener("click", async ev => {
         state.cdraft={ id:uid(), card:true, courseId:c.id, courseName:c.name, date:dt, holes:c.holes.map(x=>({par:x.par})), players:names.map(n=>({name:n, s:Array(N).fill(null), p:Array(N).fill(null)})), sel:{h:0,i:0,k:"s"}, game: gameFits(state.game, 1+mates.length) && state.game ? state.game : null, carry: !!state.skinCarry };
         saveCDraft(); render(); break; }
       const gs=courseGreens(c), gi=gs ? (+($("#r-green")||{}).value||0) : 0;
-      state.draft={ id:uid(), player:p, courseId:c.id, courseName:c.name, date:dt, gn:gs, holes:c.holes.map(x=>({par:x.par, yards:(gi&&x.yards2)?x.yards2:(x.yards||null), ys:gs?[x.yards||null,x.yards2||null]:null, gi, strokes:x.par, putts:2, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null, entered:false, sT:false, pT:false})),
+      state.draft={ id:uid(), player:p, courseId:c.id, courseName:c.name, date:dt, gn:gs, holes:c.holes.map(x=>({par:x.par, yards:(gi&&x[YK[gi]])?x[YK[gi]]:(x.yards||null), ys:gs?gs.map((_,k)=>x[YK[k]]||null):null, gi, strokes:x.par, putts:2, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null, entered:false, sT:false, pT:false})),
         mates: mates.map(n=>({name:n, s:c.holes.map(x=>x.par), p:c.holes.map(()=>2), t:[], pt:[]})), game: gameFits(state.game, 1+mates.length) && state.game ? state.game : null, carry: !!state.skinCarry }; // 同伴者は打数だけ（パーから増減）
       state.hole=0; saveDraft(); render(); break;
     }
@@ -3574,6 +3577,7 @@ document.addEventListener("click", async ev => {
     case "close-sheet": { const h0=state.draft&&state.draft.holes[state.hole]; if(h0) h0.clubAuto=false; state.sheet=null; state.clubFor=null; saveDraft(); render(); break; }
     case "mate-clear": { const v=[0,1,2].map(j=>(($("#r-mate"+j)||{}).value||"")); v[+b.dataset.i]=""; state.mates=v; LS.set("sc.mates",v); render(); break; }
     // 同伴者の打数: 枠をタップすると大きな数字キーが出る。押すと次の人へ（最後の人で閉じる）
+    case "set-np": { const e=state.courseEdit; if(e){ e.np=+b.dataset.n; e.two=e.np>1; render(); } break; }
     case "set-g": { const ni=+b.dataset.g; if((h.gi||0)===ni) break; d.holes.forEach(x=>{ if(x.ys && x.ys[ni]){ x.gi=ni; x.yards=x.ys[ni]; } }); saveDraft(); render(); toast(`全ホールを${d.gn[ni]}のヤードにしました`); break; }
     case "open-clubs": state.clubBack=state.sheet; state.clubEdit=myClubs(); state.sheet="clubs"; render(); break;
     case "close-clubs": { const l=(state.clubEdit||[]).map(x=>String(x).trim()).filter(Boolean); setClubs(l.length?l:CLUBS); state.clubCustom=null; state.clubEdit=null; state.sheet=state.clubBack||null; state.clubBack=null; render(); break; }
@@ -3600,16 +3604,16 @@ document.addEventListener("click", async ev => {
     }
     case "new-course": state.courseEdit=newCourse(); render(); break;
     case "edit-course": { if(b.dataset.id.startsWith("preset:")){ const pc=PRESET_COURSES.find(x=>"preset:"+x.key===b.dataset.id); if(!pc) break;
-        state.courseEdit={ id:uid(), name:pc.name, presetKey:pc.key, presetId:b.dataset.id, isNew:false, fromPreset:true, pref:pc.pref, area:pc.area, two:pc.holes.some(x=>x.yards2), gn:(pc.holes[0].gn||["MG","SG"]).slice(), holes:pc.holes.map(x=>({...x})) }; render(); window.scrollTo({top:0}); break; }
-      const c=state.courses.find(x=>x.id===b.dataset.id); const g=courseGreens(c); state.courseEdit={...JSON.parse(JSON.stringify(c)), isNew:false, two:!!g, gn:g||["MG","SG"], pref:cPref(c), area:cArea(c)}; render(); break; }
+        state.courseEdit={ id:uid(), name:pc.name, presetKey:pc.key, presetId:b.dataset.id, isNew:false, fromPreset:true, pref:pc.pref, area:pc.area, two:pc.holes.some(x=>x.yards2), np:(courseGreens({holes:pc.holes})||[1]).length, gn:gnFull(pc.holes[0].gn), holes:pc.holes.map(x=>({...x})) }; render(); window.scrollTo({top:0}); break; }
+      const c=state.courses.find(x=>x.id===b.dataset.id); const g=courseGreens(c); state.courseEdit={...JSON.parse(JSON.stringify(c)), isNew:false, two:!!g, np:g?g.length:1, gn:gnFull(g), pref:cPref(c), area:cArea(c)}; render(); break; }
     case "cancel-course": state.courseEdit=null; render(); break;
     case "allpar": state.courseEdit.holes.forEach(x=>x.par=+b.dataset.p); render(); break;
     case "setpar": state.courseEdit.holes[+b.dataset.i].par=+b.dataset.p; render(); break;
     case "save-course": {
       const e=state.courseEdit;
       if(!e.name.trim()){ $("#c-err").textContent="コース名を入れてください"; return; }
-      const c={ id:e.id, name:e.name.trim(), holes:e.holes.map(x=>{ const o={par:x.par, yards:x.yards||null}; if(e.two && x.yards2) o.yards2=x.yards2; return o; }), createdAt:e.createdAt||Date.now() };
-      if(e.two && c.holes.some(x=>x.yards2)) c.holes[0].gn=[e.gn[0]||"A", e.gn[1]||"B"];
+      const c={ id:e.id, name:e.name.trim(), holes:e.holes.map(x=>{ const o={par:x.par, yards:x.yards||null}; for(let k=1;k<(e.np||1);k++) if(x[YK[k]]) o[YK[k]]=x[YK[k]]; return o; }), createdAt:e.createdAt||Date.now() };
+      if((e.np||1)>1 && c.holes.some(x=>YK.slice(1).some(k=>x[k]))) c.holes[0].gn=e.gn.slice(0,e.np).map((n,i)=>n||GN_DEF[i]);
       if(e.pref) c.holes[0].pref=e.pref; if(e.area) c.holes[0].area=e.area;
       try{ await store.saveCourse(c); if(e.presetId){ const F=favs(); if(F.includes(e.presetId)) LS.set("sc.favs",F.map(x=>x===e.presetId?c.id:x)); } state.courseEdit=null; toast("コースを保存しました"); render(); }catch(err){ writeErr(err); }
       break;
@@ -3619,7 +3623,7 @@ document.addEventListener("click", async ev => {
   }
 });
 function mark_entered(){}   // 次へ進んでも、入力していない打数・パットはそのまま未入力（勝手にパーや2パットにしない）
-function newCourse(){ return { id:uid(), name:"", isNew:true, pref:LS.get("sc.pref",""), area:"", two:false, gn:["MG","SG"], holes:Array.from({length:9},()=>({par:3,yards:null})) }; }
+function newCourse(){ return { id:uid(), name:"", isNew:true, pref:LS.get("sc.pref",""), area:"", two:false, np:1, gn:gnFull(), holes:Array.from({length:9},()=>({par:3,yards:null})) }; }
 
 /* ---------- demo data (never saved) ---------- */
 const DEMO = (() => {
