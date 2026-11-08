@@ -665,12 +665,10 @@ with sync_playwright() as pw:
     pg, errs = open_page(b, {"sc.tab": "\"courses\"", "sc.mates": []}, offline=True)
     C(pg, "[data-act=new-course]"); pg.wait_for_timeout(300)
     def pick_holes(n):
-        r = pg.locator('.fc[data-k="n"]').first.bounding_box(); x, y = r["x"] + r["width"] / 2, r["y"] + r["height"] / 2
-        pg.mouse.move(x, y); pg.mouse.down(); pg.wait_for_timeout(40); pg.mouse.move(x + 10, y - 30, steps=3); pg.wait_for_timeout(60)
-        g = pg.locator('.fpop .fpc').nth(n - 1).bounding_box()
-        pg.mouse.move(g["x"] + g["width"] / 2, g["y"] + g["height"] / 2, steps=4); pg.wait_for_timeout(60)
-        pg.mouse.up(); pg.wait_for_timeout(250)
-    check("ホール数: 6×3（18個）の表が出る", True)
+        C(pg, "[data-act=open-holes]"); pg.wait_for_timeout(150); C(pg, f'[data-act=set-holes][data-n="{n}"]'); pg.wait_for_timeout(200)
+    C(pg, "[data-act=open-holes]"); pg.wait_for_timeout(150)
+    check("ホール数: タップで開く6列×3行（18個）の表が出る", pg.evaluate("document.querySelectorAll('.hgrid button').length") == 18)
+    C(pg, "[data-act=close-holes]"); pg.wait_for_timeout(150)
     pick_holes(7)
     check("ホール数: 7ホールにできる（6・9・12・18に限らない）", pg.evaluate("state.courseEdit.holes.length") == 7 and pg.evaluate("document.querySelectorAll('.par-cell').length") == 7)
     pg.fill("#yd-6", "150"); pick_holes(3)
