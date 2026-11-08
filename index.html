@@ -2014,6 +2014,8 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .ocr-t tfoot td{font:700 17px var(--f-num);padding:8px 4px}.ocr-t tfoot td small{display:block;font:700 12px var(--f-body);margin:0}.ocr-t tfoot td.ok{color:#14935C}.ocr-t tfoot td.ng{color:#E5484D}
 .ocr-sheet button.primary-b{background:linear-gradient(135deg,#0F9D62,#12A8C4);border:0;color:#fff}
 .ocr-btn{width:100%;display:flex;align-items:center;gap:12px;margin:12px 0 2px;padding:12px 14px;border-radius:14px;border:1.5px dashed #0E9F62;background:color-mix(in srgb,#0E9F62 8%,var(--paper));color:var(--fg);font:inherit;text-align:left;cursor:pointer}.ocr-btn svg{width:30px;height:30px;flex:none;fill:none;stroke:#0E9F62;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.ocr-btn span{display:grid;gap:2px;min-width:0}.ocr-btn b{font-size:15px}.ocr-btn small{font-size:13px;color:var(--muted)}
+.fc.fnh{height:48px;background:var(--soft);color:var(--fg);border:1px solid var(--line);flex-direction:row;gap:8px}.fc.fnh b{font:700 24px/1 var(--f-num)}.fc.fnh small{color:var(--muted);margin:0;font-size:12px}.fc.fnh.down{border-color:var(--fg)}
+.fpop.fgrid .fpgrid{display:grid;background:var(--rec-surface);border:1.5px solid var(--rec-line);border-radius:14px;box-shadow:0 8px 22px rgba(0,0,0,.3);padding:4px}.fpop.fgrid .fpc{height:42px}
 </style>
 
 </head>
@@ -2124,7 +2126,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-08-0210";
+const BUILD = "2026-11-08-0300";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3141,11 +3143,11 @@ function ocrSheet(){
   return `<div class="sheet-back" data-act="ocr-close"><div class="sheet ocr-sheet" data-stop="1">${body}</div></div>`; }
 function ocrApply(){
   const o=state.ocr, e=state.courseEdit; if(!o||!o.res||!e) return; const r=o.res, N=r.holes.length;
-  if(![6,9,12,18].includes(N)){ toast(`ホール数が${N}で、6・9・12・18のどれでもありません。表の全体が写るように撮り直してください`); return; }
+  if(N<1||N>18){ toast(`ホール数が${N}になっています。表の全体が写るように撮り直してください`); return; }
   const use=o.use.map((u,k)=>u?k:-1).filter(k=>k>=0).slice(0,4);
   e.holes=r.holes.map(h=>{ const x={par:h.par||3, yards:null}; use.forEach((k,j)=>{ x[YK[j]]=h.yards[k]||null; }); return x; });
   e.np=Math.max(1,use.length); e.two=e.np>1; e.gn=gnFull(use.map(k=>o.names[k]));
-  state.ocr=null; render(); window.scrollTo({top:0}); toast("入れました。コース名を入れて、数字を見てから保存してください"); }
+  e.all=null; state.ocr=null; render(); window.scrollTo({top:0}); toast("入れました。コース名を入れて、数字を見てから保存してください"); }
 
 /* ----- コース ----- */
 function viewCourses(){
@@ -3156,7 +3158,7 @@ function viewCourses(){
       ${state.ocrReady?`<button class="ocr-btn" data-act="ocr-pick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.2l1.1-1.6A1.5 1.5 0 0 1 10 3.8h4a1.5 1.5 0 0 1 1.2.6L16.3 6h1.2A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12.5" r="3.6"/></svg><span><b>スコアカードの写真から入れる</b><small>表を撮ると、パーとヤードが入ります</small></span></button><input type="file" id="ocr-file" accept="image/*" hidden>`:""}
       <div class="row" style="margin-top:12px">
         <div class="field"><label for="c-name">コース名</label><input id="c-name" value="${esc(e.name)}" placeholder="例：〇〇パー3ゴルフ"></div>
-        <div class="field" style="flex:0 1 140px"><label for="c-n">ホール数</label><select id="c-n">${[6,9,12,18].map(n=>`<option ${n===e.holes.length?"selected":""}>${n}</option>`).join("")}</select></div>
+        <div class="field" style="flex:0 1 150px"><label>ホール数</label><div class="fc fnh" data-k="n" role="button" tabindex="0" aria-label="ホール数 ${e.holes.length}。押したまま動かして離すと変わります"><b>${e.holes.length}</b><small>押したまま動かす</small></div></div>
       </div>
       <div class="row" style="margin:12px 0 8px;justify-content:space-between;align-items:center"><span class="muted" style="font-size:13px">合計パー <b class="num" style="font-size:18px;color:var(--fg)">${sum(e.holes,h=>h.par)}</b></span>
         <span style="display:flex;gap:6px"><button class="btn small" data-act="allpar" data-p="3">全部パー3</button><button class="btn small" data-act="allpar" data-p="4">全部パー4</button></span></div>
@@ -3203,7 +3205,6 @@ after.courses = () => {
   document.querySelectorAll("[data-ocr-use]").forEach(i=>i.onchange=()=>{ if(!oc()) return; state.ocr.use[+i.dataset.ocrUse]=i.checked; render(); });
   document.querySelectorAll("[data-ocr-name]").forEach(i=>i.onchange=()=>{ if(!oc()) return; state.ocr.names[+i.dataset.ocrName]=i.value.trim()||GN_DEF[+i.dataset.ocrName]; render(); });
   const nm=$("#c-name"); nm.oninput=()=>{ e.name=nm.value; };
-  $("#c-n").onchange=ev=>{ const n=+ev.target.value; while(e.holes.length<n) e.holes.push({par:3,yards:null}); e.holes.length=n; render(); };
   document.querySelectorAll("[data-yd]").forEach(inp=>inp.oninput=()=>{ const v=parseInt(inp.value,10); e.holes[+inp.dataset.yd].yards = isNaN(v)?null:v; });
   document.querySelectorAll("[data-ydk]").forEach(inp=>inp.oninput=()=>{ const [i,k]=inp.dataset.ydk.split(",").map(Number), v=parseInt(inp.value,10); e.holes[i][YK[k]] = isNaN(v)?null:v; });
   const cp=$("#c-pref"); if(cp) cp.onchange=()=>{ e.pref=cp.value; LS.set("sc.pref",cp.value); };
@@ -3731,7 +3732,8 @@ if(state.draft){ const i=state.draft.holes.findIndex(x=>!sOf(x)); state.hole = i
   const toneS=(v,par)=>v===1?"hio":TONE(v-par), toneP=v=>v<=1?"birdie":v===2?"par":v===3?"bogey":"double";
   // 入力の相手: くわしく記録の下書き、またはスコアカード入力の下書き（こちらはメダルだけ）
   function fctx(){ if(state.draft) return {d:state.draft, hole:state.hole, card:false}; const cd=state.cdraft; return cd&&!cd.paused ? {d:cd, hole:cdHole(cd), card:true} : null; }
-  function cfg(kind,who){ const X=fctx(), d=X.d, h=d.holes[X.hole], par=h.par; const medalOf0=()=>((((d.medals||{})[X.hole])||[])[who||0])||0;
+  function cfg(kind,who){ if(kind==="n"){ const e=state.courseEdit; return { type:"grid", cols:6, vals:Array.from({length:18},(_,i)=>i+1), def:Math.max(0,Math.min(17,((e&&e.holes.length)||9)-1)) }; }
+    const X=fctx(), d=X.d, h=d.holes[X.hole], par=h.par; const medalOf0=()=>((((d.medals||{})[X.hole])||[])[who||0])||0;
     if(kind==="p") return { type:"row", prop:true, vals:[0,1,2,3,4,5,6], def:(!X.card && touchedP(d,0,X.hole)) ? Math.max(0,Math.min(6,h.putts)) : 2, cw:40, min:40, par };
     if(kind==="m"){ const PP=X.card?d.players.length:1+(d.mates||[]).length, vals=[0,...[1,2,3,4].filter(v=>v>4-PP),5];   // 人数が少ないときは下のメダルから外す（3人=鉄なし、2人=鉄・銅なし）
       return { type:"row", prop:true, vals, def:Math.max(0,vals.indexOf(medalOf0())), cw:36, min:36, par }; }   // メダル: 今の値（なし）から右へ行くほど高得点。画面の端までの距離に合わせて指の動きを割り当てる
@@ -3753,6 +3755,12 @@ if(state.draft){ const i=state.draft.holes.findIndex(x=>!sOf(x)); state.hole = i
       pop.className="fpop cross"; pop.style.left=cx+"px"; pop.style.top=cy+"px";
       pop.innerHTML=[["C",off?"真ん中":"オン",0,0],["L","左",-74,0],["R","右",74,0],["U","オーバー",0,-50],["D","ショート",0,50]].map(([k,l,x,y])=>`<div class="fpc ${k==="U"&&off?"off":""}" data-k="${k}" style="left:${x}px;top:${y}px">${l}</div>`).join("");
       document.body.appendChild(pop); st.idx="C"; mark("C"); return; }
+    if(c.type==="grid"){ const CW=46, CH=42, gw=c.cols*CW+8, rows=Math.ceil(c.vals.length/c.cols), gh=rows*CH+8;
+      const left=Math.max(8,Math.min(W-8-gw,st.x-gw/2)), top=Math.max(8,st.y-gh-26);
+      st.gl=left+4; st.gt=top+4; st.cw=CW; st.ch=CH;
+      pop.className="fpop fgrid"; pop.style.left=left+"px"; pop.style.top=top+"px";
+      pop.innerHTML=`<div class="fpgrid" style="grid-template-columns:repeat(${c.cols},${CW}px)">${c.vals.map((v,k)=>`<div class="fpc nt" data-k="${k}" style="width:${CW}px;height:${CH}px">${v}</div>`).join("")}</div>`;
+      document.body.appendChild(pop); mark(st.idx); return; }
     const n=c.vals.length, M=10; let step=c.cw, left;
     if(c.wide){ step=Math.max(c.min,Math.floor((W-24)/n)); left=8; }   // クラブ: 画面の幅いっぱいに並べ、指のいる場所の番手を選ぶ
     else if(c.prop){ left=st.x-(c.def*step+step/2)-4; left=Math.max(8,Math.min(W-8-(n*step+8),left)); }
@@ -3766,12 +3774,13 @@ if(state.draft){ const i=state.draft.holes.findIndex(x=>!sOf(x)); state.hole = i
   }
   function mark(i){ st.idx=i; pop.querySelectorAll(".fpc").forEach(e=>e.classList.toggle("on",e.dataset.k==String(i))); }
   document.addEventListener("pointerdown",e=>{
-    const c=e.target.closest&&e.target.closest(".fc"); const X0=fctx(); if(!c||!c.dataset.k||st||!X0||(X0.card&&c.dataset.k!=="m")) return; e.preventDefault();
+    const c=e.target.closest&&e.target.closest(".fc"); const X0=fctx(); const isN=!!(c&&c.dataset&&c.dataset.k==="n"&&state.courseEdit); if(!c||!c.dataset.k||st||(!isN&&(!X0||(X0.card&&c.dataset.k!=="m")))) return; e.preventDefault();
     try{ c.setPointerCapture(e.pointerId); }catch(_){}
-    const kind=c.dataset.k, cf=cfg(kind,+c.dataset.i); st={x:e.clientX,y:e.clientY,kind,who:+c.dataset.i,id:e.pointerId,el:c,cfg:cf,idx:cf.type==="row"?cf.def:"C"}; c.classList.add("down"); build();
+    const kind=c.dataset.k, cf=cfg(kind,+c.dataset.i); st={x:e.clientX,y:e.clientY,kind,who:+c.dataset.i,id:e.pointerId,el:c,cfg:cf,idx:cf.type==="row"||cf.type==="grid"?cf.def:"C"}; c.classList.add("down"); build();
   });
   document.addEventListener("pointermove",e=>{ if(!st||e.pointerId!==st.id) return;
     const c=st.cfg, dx=e.clientX-st.x, dy=e.clientY-st.y; if(Math.abs(dx)>8||Math.abs(dy)>8) st.moved=true;
+    if(c.type==="grid"){ if(!st.moved) return; const col=Math.max(0,Math.min(c.cols-1,Math.floor((e.clientX-st.gl)/st.cw))), row=Math.max(0,Math.min(Math.ceil(c.vals.length/c.cols)-1,Math.floor((e.clientY-st.gt)/st.ch))); const i=Math.min(c.vals.length-1,row*c.cols+col); if(i!==st.idx) mark(i); return; }
     if(c.type==="cross"){ const k=Math.hypot(dx,dy)<22?"C":Math.abs(dx)>Math.abs(dy)?(dx<0?"L":"R"):(dy<0?"U":"D"); if(k!==st.idx) mark(k); return; }
     if(c.abs){ if(!st.moved && Math.abs(dx)<10 && Math.abs(dy)<10) return; st.moved=true; // 少し動くまでは、今のクラブのまま
       const i=Math.max(0,Math.min(c.vals.length-1,Math.floor((e.clientX-(st.left+4))/st.step))); if(i!==st.idx) mark(i); return; }
@@ -3782,6 +3791,8 @@ if(state.draft){ const i=state.draft.holes.findIndex(x=>!sOf(x)); state.hole = i
     if(!st||e.pointerId!==st.id) return;
     const c=st.cfg, kind=st.kind, who=st.who, idx=st.idx, moved=!!st.moved; st.el.classList.remove("down"); if(pop) pop.remove(); pop=null; st=null;
     if(!commit) return;
+    if(kind==="n"){ const e2=state.courseEdit, n=c.vals[idx]; if(e2&&n!==e2.holes.length){ e2.all=e2.all||[]; e2.holes.forEach((h,i)=>{ e2.all[i]=h; });   // 減らしても、増やし直すと元の数字が戻る
+        e2.holes=Array.from({length:n},(_,i)=>e2.all[i]||(e2.all[i]={par:3,yards:null})); render(); } return; }
     const X1=fctx(); if(X1&&X1.card){ if(kind==="m"){ const cd=X1.d, hh=X1.hole, PP=cd.players.length, v=c.vals[idx]; cd.medals=cd.medals||{}; const arr=(cd.medals[hh]||Array(PP).fill(0)).slice();
         if(v>0) arr.forEach((x,k)=>{ if(x===v) arr[k]=0; }); arr[who]=v; cd.medals[hh]=arr; saveCDraft(); render(); } return; }
     const d=state.draft; if(!d) return; const h=d.holes[state.hole];

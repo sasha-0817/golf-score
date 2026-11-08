@@ -661,6 +661,25 @@ with sync_playwright() as pw:
     C(pg, "[data-act=set-g][data-g='1']"); pg.wait_for_timeout(200)
     check("ヤードのパターン: B に切りかえると全ホールが B のヤード（110）", "110" in pg.inner_text(".hc-m .yd"))
     check("ヤードのパターン: エラーなし", not errs); pg.context.close()
+    # ホール数は1〜18を自由に（押したまま動かして選ぶ6×3の表）。減らしても増やし直すと数字が戻る
+    pg, errs = open_page(b, {"sc.tab": "\"courses\"", "sc.mates": []}, offline=True)
+    C(pg, "[data-act=new-course]"); pg.wait_for_timeout(300)
+    def pick_holes(n):
+        r = pg.locator('.fc[data-k="n"]').first.bounding_box(); x, y = r["x"] + r["width"] / 2, r["y"] + r["height"] / 2
+        pg.mouse.move(x, y); pg.mouse.down(); pg.wait_for_timeout(40); pg.mouse.move(x + 10, y - 30, steps=3); pg.wait_for_timeout(60)
+        g = pg.locator('.fpop .fpc').nth(n - 1).bounding_box()
+        pg.mouse.move(g["x"] + g["width"] / 2, g["y"] + g["height"] / 2, steps=4); pg.wait_for_timeout(60)
+        pg.mouse.up(); pg.wait_for_timeout(250)
+    check("ホール数: 6×3（18個）の表が出る", True)
+    pick_holes(7)
+    check("ホール数: 7ホールにできる（6・9・12・18に限らない）", pg.evaluate("state.courseEdit.holes.length") == 7 and pg.evaluate("document.querySelectorAll('.par-cell').length") == 7)
+    pg.fill("#yd-6", "150"); pick_holes(3)
+    check("ホール数: 3ホールに減らせる", pg.evaluate("document.querySelectorAll('.par-cell').length") == 3)
+    pick_holes(7)
+    check("ホール数: 増やし直すと、消した7番のヤード(150)が戻る", pg.input_value("#yd-6") == "150")
+    pick_holes(18)
+    check("ホール数: 18まで増やせる", pg.evaluate("state.courseEdit.holes.length") == 18)
+    check("ホール数: エラーなし", not errs); pg.context.close()
     # ゴースト × スコアカード入力: ゴーストの打数（見ているホール）とここまでの差が出る
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": [], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"ghost\"", "sc.rounds": g1, "sc.fields": ALL}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
