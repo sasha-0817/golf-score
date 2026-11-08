@@ -2002,6 +2002,18 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .cdt th.gcol{color:var(--rec-muted)}.cdt td.gcol{background:color-mix(in srgb,var(--rec-muted) 10%,transparent)}.cdt td.gcol .mk3{opacity:.8}.cd-game tr.gho td.c-s{background:var(--rec-raise)!important;color:inherit!important}.cd-game tr.gho td.ft{color:var(--rec-muted)!important}.cd-game tr.gho b.gd.up{color:#14935C!important}.cd-game tr.gho b.gd.dn{color:var(--q-double)!important}.cd-game tr.gho b.gd.z{color:var(--rec-muted)!important}
 .navrow{display:flex;gap:10px;margin-top:16px}.navrow .btn{flex:1 1 0;height:50px}#c-err:not(:empty){margin-top:10px}
 .np-field label small{font-weight:400;margin-left:4px;color:var(--muted)}.npseg{display:flex;gap:6px}.npseg button{flex:1 1 0;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--paper);font:inherit;font-weight:700;color:var(--muted)}.npseg button[aria-pressed=true]{background:var(--fg);color:var(--paper);border-color:var(--fg)}.np-field{margin-bottom:12px}.row.gnames{flex-wrap:wrap}
+.ocr-bar{display:flex;align-items:center;gap:10px;margin:12px 0 4px;flex-wrap:wrap}.ocr-bar small{color:var(--muted);font-size:13px;flex:1 1 180px}
+.ocr-sheet{max-height:90dvh;overflow-y:auto;gap:8px}.ocr-sheet small{font-weight:400;margin-left:8px;opacity:.7}
+.ocr-img{width:100%;max-height:150px;object-fit:contain;border-radius:10px;background:var(--rec-bg)}.ocr-msg{font-size:13px;margin:0!important;font-weight:400!important;opacity:.85}
+.ocr-busy{display:grid;place-items:center;height:90px}.ocr-busy .spin{width:28px;height:28px;border-color:rgba(128,128,128,.3);border-top-color:var(--rec-fg);margin:0}
+.ocr-scroll{overflow:auto;max-height:42dvh;border:1px solid var(--rec-line);border-radius:12px}.ocr-t{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+.ocr-t th,.ocr-t td{padding:4px;text-align:center;font-size:13px;border-bottom:1px solid var(--rec-line)}.ocr-t thead th{position:sticky;top:0;background:var(--rec-surface);z-index:1}
+.ocr-t input[type=number]{width:100%;min-width:52px;height:34px;border:1px solid var(--rec-line);border-radius:8px;background:var(--rec-bg);color:var(--rec-fg);font:700 16px var(--f-num);text-align:center}
+.ocr-t input.need{border-color:#E5484D;background:color-mix(in srgb,#E5484D 12%,var(--rec-bg))}
+.ocr-name{width:100%;min-width:52px;height:30px;border:1px solid var(--rec-line);border-radius:8px;background:var(--rec-bg);color:var(--rec-fg);font:700 14px var(--f-body);text-align:center;margin-top:4px}
+.ocr-use{display:flex;align-items:center;justify-content:center;gap:4px;font-size:13px;font-weight:700}.ocr-use input{width:18px;height:18px}
+.ocr-t tfoot td{font:700 17px var(--f-num);padding:8px 4px}.ocr-t tfoot td small{display:block;font:700 12px var(--f-body);margin:0}.ocr-t tfoot td.ok{color:#14935C}.ocr-t tfoot td.ng{color:#E5484D}
+.ocr-sheet button.primary-b{background:linear-gradient(135deg,#0F9D62,#12A8C4);border:0;color:#fff}
 </style>
 
 </head>
@@ -2112,7 +2124,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-08-0100";
+const BUILD = "2026-11-08-0200";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2326,10 +2338,10 @@ function render(){
   document.body.dataset.tab=state.tab;
   const m=$("#main");
   const view = {record:viewRecord, stats:viewStats, history:viewHistory, courses:viewCourses}[state.tab] || viewRecord;
-  const keepScroll=[".game-sheet",".rp"].map(q=>{ const e=document.querySelector(q); return e?e.scrollTop:0; });
+  const keepScroll=[".game-sheet",".rp",".ocr-sheet",".ocr-scroll"].map(q=>{ const e=document.querySelector(q); return e?e.scrollTop:0; });
   const moveBar = (!ON_CF && CF_URL && !document.body.classList.contains("recording")) ? `<div class="move-bar"><b>GOLF SC. は新しいアドレスに引っ越しました</b><small>この端末の記録（クラブ・方向なども）を送ってから、新しいアプリを開きます。何回押しても大丈夫です。</small><button data-act="migrate" ${state.migrating?"disabled":""}>${state.migrating?"送っています…":"記録を送って新しいアプリへ"}</button>${LS.get("sc.migrated","")?`<a href="${CF_URL}">送らずに新しいアプリを開く ›</a>`:""}</div>` : "";
   m.innerHTML = `${moveBar}<section class="view">${view()}</section>`;
-  [".game-sheet",".rp"].forEach((q,i)=>{ const e=document.querySelector(q); if(e&&keepScroll[i]) e.scrollTop=keepScroll[i]; });
+  [".game-sheet",".rp",".ocr-sheet",".ocr-scroll"].forEach((q,i)=>{ const e=document.querySelector(q); if(e&&keepScroll[i]) e.scrollTop=keepScroll[i]; });
   placeMedalTip();
   after[state.tab] && after[state.tab]();
   // 画面が1画面に収まるとき（記録・ホーム）は、上下に動かない（下のボタンが隠れないように）
@@ -3096,6 +3108,45 @@ function viewHistory(){
   return demoBand + (cards || `<div class="panel empty">${esc(state.fPlayer)}さんのラウンドはまだありません。</div>`);
 }
 
+/* ----- スコアカードの写真から読み取り（サーバーの functions/ocr.js。AI がつながっているときだけボタンを出す） ----- */
+async function ocrCheck(){ if(!ON_CF || state.ocrReady!=null) return; state.ocrReady=false;
+  try{ const r=await fetch("/ocr",{cache:"no-store"}); const j=await r.json(); state.ocrReady=!!(j&&j.ready); if(state.ocrReady && state.courseEdit) render(); }catch(e){} }
+function ocrPrep(file){ return new Promise((ok,ng)=>{ const url=URL.createObjectURL(file), img=new Image();
+  img.onload=()=>{ const M=1600, k=Math.min(1,M/Math.max(img.width,img.height)), c=document.createElement("canvas"); c.width=Math.round(img.width*k); c.height=Math.round(img.height*k);
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height); URL.revokeObjectURL(url); ok(c.toDataURL("image/jpeg",.85)); };
+  img.onerror=()=>{ URL.revokeObjectURL(url); ng(new Error("img")); }; img.src=url; }); }
+const OCR_ERR = { not_ready:"読み取りの機能がまだ使えません。", too_big:"写真が大きすぎます。", bad_image:"写真を読み込めませんでした。", limit:"今日の読み取りの回数の上限に達しました。明日またお試しください。", unreadable:"スコアカードの表を読み取れませんでした。表全体がはっきり写るように撮り直してください。", server:"読み取りでエラーが出ました。しばらくしてからお試しください。" };
+async function ocrRun(file){
+  state.ocr={busy:true}; render();
+  try{ const img=await ocrPrep(file); state.ocr={busy:true,img}; render();
+    const r=await fetch("/ocr",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:img})}); const j=await r.json().catch(()=>({}));
+    if(!j.ok){ state.ocr={err:OCR_ERR[j.error]||"読み取れませんでした。",img}; render(); return; }
+    const res=j.result; state.ocr={img,res,use:res.cols.map((_,k)=>k<4),names:res.cols.map((c,k)=>c||GN_DEF[k])}; render();
+  }catch(e){ state.ocr={err:"通信できませんでした。電波のあるところでお試しください。"}; render(); } }
+/* いま画面にある数字（直したあと）で、印刷された合計と合うかを見る */
+function ocrChecks(o){ const r=o.res, tp=r.totals.par, ps=r.holes.every(h=>h.par!=null)?r.holes.reduce((a,h)=>a+h.par,0):null;
+  return { par:{ sum:ps, printed:tp, ok:ps!=null&&tp!=null&&ps===tp }, cols:r.cols.map((_,k)=>{ const v=r.holes.map(h=>h.yards[k]), sum=v.every(x=>x!=null)?v.reduce((a,x)=>a+x,0):null, pr=r.totals.yards[k]; return { sum, printed:pr, ok:sum!=null&&pr!=null&&sum===pr }; }) }; }
+function ocrSheet(){
+  const o=state.ocr; if(!o) return ""; let body;
+  if(o.busy) body=`<p>写真を読み取っています<small>10〜20秒かかります</small></p><div class="ocr-busy"><i class="spin"></i></div>`;
+  else if(o.err) body=`<p>読み取れませんでした</p><p class="muted ocr-msg">${esc(o.err)}</p><button data-act="ocr-close">閉じる</button>`;
+  else { const r=o.res, ck=ocrChecks(o), nUse=o.use.filter(Boolean).length;
+    body=`<p>読み取り結果<small>${r.holes.length}ホール・ヤードの列 ${r.cols.length}つ</small></p>
+    <img class="ocr-img" src="${o.img}" alt="読み取った写真">
+    <p class="muted ocr-msg">写真と見比べて、違う数字は直してください。印刷された合計と合わない列には ⚠ が出ます。使う列にチェックを入れます（4つまで）。</p>
+    <div class="ocr-scroll"><table class="ocr-t"><thead><tr><th>H</th><th>PAR</th>${r.cols.map((c,k)=>`<th><label class="ocr-use"><input type="checkbox" data-ocr-use="${k}" ${o.use[k]?"checked":""} ${!o.use[k]&&nUse>=4?"disabled":""}>使う</label><input class="ocr-name" data-ocr-name="${k}" maxlength="6" value="${esc(o.names[k])}" aria-label="${k+1}列目の名前"></th>`).join("")}</tr></thead>
+      <tbody>${r.holes.map((h,i)=>`<tr><td>${i+1}</td><td><input type="number" inputmode="numeric" class="${h.par==null?"need":""}" data-ocr-par="${i}" value="${h.par??""}" aria-label="${i+1}番のパー"></td>${r.cols.map((_,k)=>`<td><input type="number" inputmode="numeric" class="${h.yards[k]==null?"need":""}" data-ocr-y="${i},${k}" value="${h.yards[k]??""}" aria-label="${i+1}番の${esc(o.names[k])}のヤード"></td>`).join("")}</tr>`).join("")}</tbody>
+      <tfoot><tr><td colspan="2" class="${ck.par.ok?"ok":ck.par.printed!=null?"ng":""}">計 ${ck.par.sum??"—"}${ck.par.printed!=null?`<small>${ck.par.ok?"✓":"⚠ 印刷 "+ck.par.printed}</small>`:""}</td>${ck.cols.map(c=>`<td class="${c.ok?"ok":c.printed!=null?"ng":""}">${c.sum??"—"}${c.printed!=null?`<small>${c.ok?"✓":"⚠ 印刷 "+c.printed}</small>`:""}</td>`).join("")}</tr></tfoot></table></div>
+    <button class="primary-b" data-act="ocr-apply">コース編集に入れる</button><button data-act="ocr-close">やめる</button>`; }
+  return `<div class="sheet-back" data-act="ocr-close"><div class="sheet ocr-sheet" data-stop="1">${body}</div></div>`; }
+function ocrApply(){
+  const o=state.ocr, e=state.courseEdit; if(!o||!o.res||!e) return; const r=o.res, N=r.holes.length;
+  if(![6,9,12,18].includes(N)){ toast(`ホール数が${N}で、6・9・12・18のどれでもありません。表の全体が写るように撮り直してください`); return; }
+  const use=o.use.map((u,k)=>u?k:-1).filter(k=>k>=0).slice(0,4);
+  e.holes=r.holes.map(h=>{ const x={par:h.par||3, yards:null}; use.forEach((k,j)=>{ x[YK[j]]=h.yards[k]||null; }); return x; });
+  e.np=Math.max(1,use.length); e.two=e.np>1; e.gn=gnFull(use.map(k=>o.names[k]));
+  state.ocr=null; render(); window.scrollTo({top:0}); toast("入れました。コース名を入れて、数字を見てから保存してください"); }
+
 /* ----- コース ----- */
 function viewCourses(){
   const e = state.courseEdit;
@@ -3106,6 +3157,7 @@ function viewCourses(){
         <div class="field"><label for="c-name">コース名</label><input id="c-name" value="${esc(e.name)}" placeholder="例：〇〇パー3ゴルフ"></div>
         <div class="field" style="flex:0 1 140px"><label for="c-n">ホール数</label><select id="c-n">${[6,9,12,18].map(n=>`<option ${n===e.holes.length?"selected":""}>${n}</option>`).join("")}</select></div>
       </div>
+      ${state.ocrReady?`<div class="ocr-bar"><button class="btn" data-act="ocr-pick">写真から読み取る</button><small>スコアカードの表を撮ると、パーとヤードを入れます</small><input type="file" id="ocr-file" accept="image/*" hidden></div>`:""}
       <div class="row" style="margin:12px 0 8px;justify-content:space-between;align-items:center"><span class="muted" style="font-size:13px">合計パー <b class="num" style="font-size:18px;color:var(--fg)">${sum(e.holes,h=>h.par)}</b></span>
         <span style="display:flex;gap:6px"><button class="btn small" data-act="allpar" data-p="3">全部パー3</button><button class="btn small" data-act="allpar" data-p="4">全部パー4</button></span></div>
       <div class="row" style="margin:-2px 0 10px">
@@ -3120,6 +3172,7 @@ function viewCourses(){
         ${Array.from({length:(e.np||1)-1},(_,j)=>`<input type="number" inputmode="numeric" data-ydk="${i},${j+1}" value="${h[YK[j+1]]||""}" placeholder="${esc(e.gn[j+1])} ヤード" aria-label="${i+1}番ホールの${esc(e.gn[j+1])}のヤード">`).join("")}</div>`).join("")}</div>
       <div class="err" id="c-err"></div>
       <div class="navrow"><button class="btn" data-act="cancel-course">キャンセル</button><button class="btn primary" data-act="save-course">保存する</button></div>
+      ${ocrSheet()}
       ${!e.isNew && !e.fromPreset ? (state.confirm==="delc:"+e.id ? `<div class="actions" style="margin-top:12px"><span class="muted" style="font-size:12px;align-self:center">このコースを削除しますか？（過去の記録は残ります）</span><button class="btn small" data-act="cancel-confirm">やめる</button><button class="btn small danger" data-act="del-course" data-id="${e.id}">削除する</button></div>` : `<button class="link-del" data-act="ask-del-course" data-id="${e.id}">このコースを削除</button>`) : ""}
     </div>`;
   }
@@ -3142,6 +3195,13 @@ function viewCourses(){
 after.courses = () => {
   const clp=$("#cl-pref"); if(clp) clp.onchange=()=>{ state.pickPref=clp.value; if(clp.value && clp.value!=="_none") LS.set("sc.pref",clp.value); render(); };
   const e=state.courseEdit; if(!e) return;
+  ocrCheck();
+  const of=$("#ocr-file"); if(of) of.onchange=()=>{ const f=of.files&&of.files[0]; of.value=""; if(f) ocrRun(f); };
+  const oc=()=>state.ocr&&state.ocr.res;
+  document.querySelectorAll("[data-ocr-par]").forEach(i=>i.onchange=()=>{ if(!oc()) return; const v=parseInt(i.value,10); state.ocr.res.holes[+i.dataset.ocrPar].par=isNaN(v)?null:v; render(); });
+  document.querySelectorAll("[data-ocr-y]").forEach(i=>i.onchange=()=>{ if(!oc()) return; const [a,k]=i.dataset.ocrY.split(",").map(Number), v=parseInt(i.value,10); state.ocr.res.holes[a].yards[k]=isNaN(v)?null:v; render(); });
+  document.querySelectorAll("[data-ocr-use]").forEach(i=>i.onchange=()=>{ if(!oc()) return; state.ocr.use[+i.dataset.ocrUse]=i.checked; render(); });
+  document.querySelectorAll("[data-ocr-name]").forEach(i=>i.onchange=()=>{ if(!oc()) return; state.ocr.names[+i.dataset.ocrName]=i.value.trim()||GN_DEF[+i.dataset.ocrName]; render(); });
   const nm=$("#c-name"); nm.oninput=()=>{ e.name=nm.value; };
   $("#c-n").onchange=ev=>{ const n=+ev.target.value; while(e.holes.length<n) e.holes.push({par:3,yards:null}); e.holes.length=n; render(); };
   document.querySelectorAll("[data-yd]").forEach(inp=>inp.oninput=()=>{ const v=parseInt(inp.value,10); e.holes[+inp.dataset.yd].yards = isNaN(v)?null:v; });
@@ -3577,6 +3637,9 @@ document.addEventListener("click", async ev => {
     case "close-sheet": { const h0=state.draft&&state.draft.holes[state.hole]; if(h0) h0.clubAuto=false; state.sheet=null; state.clubFor=null; saveDraft(); render(); break; }
     case "mate-clear": { const v=[0,1,2].map(j=>(($("#r-mate"+j)||{}).value||"")); v[+b.dataset.i]=""; state.mates=v; LS.set("sc.mates",v); render(); break; }
     // 同伴者の打数: 枠をタップすると大きな数字キーが出る。押すと次の人へ（最後の人で閉じる）
+    case "ocr-pick": { const f=$("#ocr-file"); if(f) f.click(); break; }
+    case "ocr-close": state.ocr=null; render(); break;
+    case "ocr-apply": ocrApply(); break;
     case "set-np": { const e=state.courseEdit; if(e){ e.np=+b.dataset.n; e.two=e.np>1; render(); } break; }
     case "set-g": { const ni=+b.dataset.g; if((h.gi||0)===ni) break; d.holes.forEach(x=>{ if(x.ys && x.ys[ni]){ x.gi=ni; x.yards=x.ys[ni]; } }); saveDraft(); render(); toast(`全ホールを${d.gn[ni]}のヤードにしました`); break; }
     case "open-clubs": state.clubBack=state.sheet; state.clubEdit=myClubs(); state.sheet="clubs"; render(); break;

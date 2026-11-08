@@ -856,6 +856,21 @@ with sync_playwright() as pw:
         rid = pg.evaluate("state.rounds[0].id")
         pg.evaluate(f"fetch('/api',{{method:'POST',body:JSON.stringify({{action:'deleteRound',id:'{rid}'}})}})"); pg.wait_for_timeout(200)
         check("Web版: 削除できる", len(pg.evaluate("fetch('/api').then(r=>r.json())")["rounds"]) == 0)
+        # 写真からコースを読み取る（偽のAI: 1つ目は数字を1つ読み違え、2つ目は正しい。合計が合う方が選ばれる）
+        import base64
+        png = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==")
+        check("写真読み取り: サーバーにAIがつながっていれば ready", pg.evaluate("fetch('/ocr').then(r=>r.json())")["ready"] is True)
+        C(pg, "nav.tabs [data-tab=courses]"); C(pg, "[data-act=new-course]"); pg.wait_for_timeout(900)
+        check("写真読み取り: コース登録に「写真から読み取る」ボタンが出る", pg.query_selector("[data-act=ocr-pick]") is not None)
+        pg.set_input_files("#ocr-file", {"name": "card.png", "mimeType": "image/png", "buffer": png}); pg.wait_for_selector(".ocr-t", timeout=8000)
+        check("写真読み取り: 列の名前 L・R と9ホール分が出る", pg.evaluate("[...document.querySelectorAll('.ocr-name')].map(e=>e.value).join()") == "L,R" and pg.evaluate("document.querySelectorAll('.ocr-t tbody tr').length") == 9)
+        check("写真読み取り: 合計の合うほうの答えが選ばれ、パーと2列とも ✓", pg.evaluate("document.querySelectorAll('.ocr-t tfoot td.ok').length") == 3 and pg.evaluate("document.querySelector('[data-ocr-y=\"2,0\"]').value") == "117")
+        pg.fill("[data-ocr-y='2,0']", "177"); pg.press("[data-ocr-y='2,0']", "Tab"); pg.wait_for_timeout(300)
+        check("写真読み取り: 数字を直して合計が合わなくなると ⚠ が出る", pg.evaluate("document.querySelectorAll('.ocr-t tfoot td.ng').length") == 1 and "⚠" in pg.inner_text(".ocr-t tfoot"))
+        pg.fill("[data-ocr-y='2,0']", "117"); pg.press("[data-ocr-y='2,0']", "Tab"); pg.wait_for_timeout(300)
+        C(pg, "[data-act=ocr-apply]"); pg.wait_for_timeout(300)
+        check("写真読み取り: 取り込むとコース編集に9ホール・パターン2つ(L,R)・ヤードが入る", pg.evaluate("(()=>{const e=state.courseEdit; return e.holes.length===9 && e.np===2 && e.gn[0]==='L' && e.gn[1]==='R' && e.holes[0].yards===97 && e.holes[0].yards2===95 && e.holes[8].par===3})()") and pg.query_selector(".ocr-sheet") is None)
+        check("写真読み取り: エラーなし", not errs)
         check("Web版: エラーなし", not errs)
         ctx.close()
         # 古いアプリ（github.io）から引っ越し: 端末に残っていたクラブなども一緒に送る
