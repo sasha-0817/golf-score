@@ -87,10 +87,12 @@ async function underLimit(db) {
 }
 
 export async function onRequestOptions() { return new Response(null, { status: 204, headers: CORS }); }
-export async function onRequestGet({ env }) { return json({ ok: true, ready: !!(env && env.AI) }); }
+// Workers AI の接続だけを本物とみなす（同じ名前で別の種類（D1など）をつないでしまっても、ボタンを出さない）
+const hasAI = (env) => !!(env && env.AI && typeof env.AI.run === "function");
+export async function onRequestGet({ env }) { return json({ ok: true, ready: hasAI(env) }); }
 export async function onRequestPost({ request, env }) {
   try {
-    if (!env || !env.AI) return json({ ok: false, error: "not_ready" }, 503);
+    if (!hasAI(env)) return json({ ok: false, error: "not_ready" }, 503);
     const text = await request.text();
     if (text.length > MAX_BYTES * 1.4) return json({ ok: false, error: "too_big" }, 413);
     let body; try { body = JSON.parse(text); } catch { return json({ ok: false, error: "bad_request" }, 400); }
