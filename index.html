@@ -2002,7 +2002,6 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .cdt th.gcol{color:var(--rec-muted)}.cdt td.gcol{background:color-mix(in srgb,var(--rec-muted) 10%,transparent)}.cdt td.gcol .mk3{opacity:.8}.cd-game tr.gho td.c-s{background:var(--rec-raise)!important;color:inherit!important}.cd-game tr.gho td.ft{color:var(--rec-muted)!important}.cd-game tr.gho b.gd.up{color:#14935C!important}.cd-game tr.gho b.gd.dn{color:var(--q-double)!important}.cd-game tr.gho b.gd.z{color:var(--rec-muted)!important}
 .navrow{display:flex;gap:10px;margin-top:16px}.navrow .btn{flex:1 1 0;height:50px}#c-err:not(:empty){margin-top:10px}
 .np-field label small{font-weight:400;margin-left:4px;color:var(--muted)}.npseg{display:flex;gap:6px}.npseg button{flex:1 1 0;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--paper);font:inherit;font-weight:700;color:var(--muted)}.npseg button[aria-pressed=true]{background:var(--fg);color:var(--paper);border-color:var(--fg)}.np-field{margin-bottom:12px}.row.gnames{flex-wrap:wrap}
-.ocr-bar{display:flex;align-items:center;gap:10px;margin:12px 0 4px;flex-wrap:wrap}.ocr-bar small{color:var(--muted);font-size:13px;flex:1 1 180px}
 .ocr-sheet{max-height:90dvh;overflow-y:auto;gap:8px}.ocr-sheet small{font-weight:400;margin-left:8px;opacity:.7}
 .ocr-img{width:100%;max-height:150px;object-fit:contain;border-radius:10px;background:var(--rec-bg)}.ocr-msg{font-size:13px;margin:0!important;font-weight:400!important;opacity:.85}
 .ocr-busy{display:grid;place-items:center;height:90px}.ocr-busy .spin{width:28px;height:28px;border-color:rgba(128,128,128,.3);border-top-color:var(--rec-fg);margin:0}
@@ -2014,6 +2013,7 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .ocr-use{display:flex;align-items:center;justify-content:center;gap:4px;font-size:13px;font-weight:700}.ocr-use input{width:18px;height:18px}
 .ocr-t tfoot td{font:700 17px var(--f-num);padding:8px 4px}.ocr-t tfoot td small{display:block;font:700 12px var(--f-body);margin:0}.ocr-t tfoot td.ok{color:#14935C}.ocr-t tfoot td.ng{color:#E5484D}
 .ocr-sheet button.primary-b{background:linear-gradient(135deg,#0F9D62,#12A8C4);border:0;color:#fff}
+.ocr-btn{width:100%;display:flex;align-items:center;gap:12px;margin:12px 0 2px;padding:12px 14px;border-radius:14px;border:1.5px dashed #0E9F62;background:color-mix(in srgb,#0E9F62 8%,var(--paper));color:var(--fg);font:inherit;text-align:left;cursor:pointer}.ocr-btn svg{width:30px;height:30px;flex:none;fill:none;stroke:#0E9F62;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.ocr-btn span{display:grid;gap:2px;min-width:0}.ocr-btn b{font-size:15px}.ocr-btn small{font-size:13px;color:var(--muted)}
 </style>
 
 </head>
@@ -2124,7 +2124,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-08-0200";
+const BUILD = "2026-11-08-0210";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3153,11 +3153,11 @@ function viewCourses(){
   if(e){
     return `<div class="panel">
       <h2>${e.isNew?"コースを登録":"コースを編集"}</h2>
+      ${state.ocrReady?`<button class="ocr-btn" data-act="ocr-pick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.2l1.1-1.6A1.5 1.5 0 0 1 10 3.8h4a1.5 1.5 0 0 1 1.2.6L16.3 6h1.2A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12.5" r="3.6"/></svg><span><b>スコアカードの写真から入れる</b><small>表を撮ると、パーとヤードが入ります</small></span></button><input type="file" id="ocr-file" accept="image/*" hidden>`:""}
       <div class="row" style="margin-top:12px">
         <div class="field"><label for="c-name">コース名</label><input id="c-name" value="${esc(e.name)}" placeholder="例：〇〇パー3ゴルフ"></div>
         <div class="field" style="flex:0 1 140px"><label for="c-n">ホール数</label><select id="c-n">${[6,9,12,18].map(n=>`<option ${n===e.holes.length?"selected":""}>${n}</option>`).join("")}</select></div>
       </div>
-      ${state.ocrReady?`<div class="ocr-bar"><button class="btn" data-act="ocr-pick">写真から読み取る</button><small>スコアカードの表を撮ると、パーとヤードを入れます</small><input type="file" id="ocr-file" accept="image/*" hidden></div>`:""}
       <div class="row" style="margin:12px 0 8px;justify-content:space-between;align-items:center"><span class="muted" style="font-size:13px">合計パー <b class="num" style="font-size:18px;color:var(--fg)">${sum(e.holes,h=>h.par)}</b></span>
         <span style="display:flex;gap:6px"><button class="btn small" data-act="allpar" data-p="3">全部パー3</button><button class="btn small" data-act="allpar" data-p="4">全部パー4</button></span></div>
       <div class="row" style="margin:-2px 0 10px">
