@@ -710,6 +710,25 @@ with sync_playwright() as pw:
     rs = pg.evaluate("state.rounds.slice(-2)")
     check("途中で終わる（スコアカード）: 2人分とも1ホールだけで保存される（nos=[1]）", len(rs) == 2 and all(len(r["holes"]) == 1 and r.get("nos") == [1] for r in rs))
     check("途中で終わる（スコアカード）: エラーなし", not errs); pg.context.close()
+    # 平均・BEST・推移は、全ホールを回ったラウンドだけ。ホール数が混ざるときは「1ホールあたりの対パー」で、打数への切りかえは出ない
+    def rnd(i, course, n, par, strokes, nos=None):
+        r = {"id": f"r{i}", "player": "たろう", "courseId": course, "courseName": course, "date": f"2026-10-{10+i:02d}", "createdAt": i,
+             "holes": [{"par": par, "strokes": strokes, "putts": 2} for _ in range(n)]}
+        if nos: r["nos"] = nos
+        return r
+    rs1 = [rnd(1, "A", 9, 3, 4), rnd(2, "A", 9, 3, 4), rnd(3, "A", 3, 3, 6, [1, 2, 3])]   # 9ホール×2（各+9）と、途中で終わった3ホール（各+9）
+    pg, errs = open_page(b, {"sc.rounds": rs1, "sc.player": "\"たろう\"", "sc.tab": "\"stats\""}, offline=True)
+    pg.wait_for_timeout(500)
+    check("平均: 全ホールを回ったラウンドだけで、対パーだけを出す（+9.0、打数は出さない）", pg.inner_text(".hero-stat .big").strip() == "+9.0" and "27" not in pg.inner_text(".hero-stat .main"))
+    check("推移: 「途中で終わった1回は含めていません」と出る", "途中で終わった1回は含めていません" in pg.inner_text(".note-partial"))
+    check("推移: 回ったホール数がそろっていれば、打数／対パーの切りかえが出る", pg.query_selector("[data-act=trend-mode]") is not None)
+    check("平均: エラーなし", not errs); pg.context.close()
+    rs2 = [rnd(1, "A", 9, 3, 4), rnd(2, "B", 18, 3, 4), rnd(3, "B", 18, 3, 3)]   # 9H(+9) と 18H(+18)・18H(±0) が混ざる → 1ホールあたり +1.0, +1.0, 0.0 の平均
+    pg, errs = open_page(b, {"sc.rounds": rs2, "sc.player": "\"たろう\"", "sc.tab": "\"stats\""}, offline=True)
+    pg.wait_for_timeout(500)
+    check("平均: ホール数が混ざると「1ホールあたりの対パー」（+0.7 /ホール）で出す", "+0.7" in pg.inner_text(".hero-stat .big") and "ホール" in pg.inner_text(".hero-stat .big"))
+    check("推移: ホール数が混ざると、打数／対パーの切りかえは出ない", pg.query_selector("[data-act=trend-mode]") is None)
+    check("平均（混在）: エラーなし", not errs); pg.context.close()
     # ゴースト × スコアカード入力: ゴーストの打数（見ているホール）とここまでの差が出る
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": [], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"ghost\"", "sc.rounds": g1, "sc.fields": ALL}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)

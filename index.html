@@ -2019,6 +2019,7 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .cdt tfoot tr.gin td.ft small.blk,.cdt tfoot tr.gin td.ft small{display:block;white-space:nowrap;font-size:13px;letter-spacing:-.04em;word-break:keep-all;overflow:visible}
 .ocr-rep{margin:0;padding:10px 12px;border-radius:12px;border:1.5px solid #0E9F62;background:color-mix(in srgb,#0E9F62 10%,var(--rec-bg));font-size:14px;line-height:1.4}
 .sheet button.early-b{background:linear-gradient(135deg,#0F9D62,#12A8C4);border:0;color:#fff}
+.note-partial{margin:8px 2px 0;font-size:13px;text-align:center}
 </style>
 
 </head>
@@ -2133,7 +2134,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-09-0400";
+const BUILD = "2026-11-09-0500";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2278,6 +2279,7 @@ function lrm(counts){ const t=counts.reduce((a,b)=>a+b,0); if(!t) return counts.
   raw.map((r,i)=>[r-fl[i],i]).sort((a,b)=>b[0]-a[0]).forEach(([_,i])=>{ if(rest>0){ fl[i]++; rest--; } });
   counts.forEach((c,i)=>{ if(c>0 && fl[i]===0){ fl[i]=1; const m=fl.indexOf(Math.max(...fl)); fl[m]--; } }); return fl; }
 const toPar = n => n===0 ? "±0" : (n>0? "+"+n : String(n));
+const dpar = v => { const t=Math.abs(v).toFixed(1); return t==="0.0" ? "±0.0" : (v>0?"+":"−")+t; };   // 小数1けたの対パー（平均など）
 const earlyBtn = (act, n, N, editing) => (!editing && n>0 && n<N) ? `<button class="early-b" data-act="${act}">ここまで（${n}ホール）を保存して終わる</button>` : "";
 /* 途中で終わったラウンド（ここまでを保存）は、回ったホールだけを holes に入れ、ホール番号を nos に残す（例: 6番から回ったら [1,2,6,7,8,9]） */
 const holeNo = (r,i) => r && r.nos ? r.nos[i] : i+1;
@@ -2310,14 +2312,18 @@ function computeStats(rs){
   holes.forEach(h=>{ const k=h.dir==="short"?"miss":h.dir; if(k && dirs[k]!=null){ dirs[k]++; dirN++; } });   // 花道は「ショート」に合わせて数える（分析の絵からは花道をなくした）
   const dist = {hio:0,eagle:0,birdie:0,par:0,bogey:0,double:0,triple:0};
   holes.forEach(h=>{ const d=h.strokes-h.par; if(h.strokes===1)dist.hio++; else if(d<=-2)dist.eagle++; else if(d===-1)dist.birdie++; else if(d===0)dist.par++; else if(d===1)dist.bogey++; else if(d===2)dist.double++; else dist.triple++; });
-  const tots = rs.map(roundTotals);
+  // 平均・BEST は、全ホールを回ったラウンドだけで出す（途中で終わったラウンドは、ホール単位の分析にだけ入れる）。1ラウンドだけの分析では、そのラウンドを使う
+  const full = state.oneRound ? rs : rs.filter(r=>!r.nos), tots = full.map(roundTotals);
+  const lens = new Set(full.map(r=>r.holes.length)), sameLen = lens.size<=1;
+  const perHole = full.map((r,i)=>tots[i].diff/r.holes.length);
   const byPar = {};
   holes.forEach(h=>{ (byPar[h.par] ||= []).push(h.strokes); });
   return {
-    rounds: rs.length, holes: n,
+    rounds: rs.length, holes: n, nPartial: rs.length-full.length, sameLen,
     avgScore: tots.length? sum(tots,t=>t.score)/tots.length : null,
-    avgDiff: tots.length? sum(tots,t=>t.diff)/tots.length : null,
-    best: tots.length? Math.min(...tots.map(t=>t.diff)) : null,
+    avgDiff: tots.length? (sameLen ? sum(tots,t=>t.diff)/tots.length : sum(perHole,x=>x)/perHole.length) : null,   // ホール数が混ざるときは「1ホールあたりの対パー」（重みなし）
+    best: tots.length? (sameLen ? Math.min(...tots.map(t=>t.diff)) : Math.min(...perHole)) : null,
+    lastDiff: tots.length? (sameLen ? tots[tots.length-1].diff : perHole[perHole.length-1]) : null,
     avgPuttsRound: (()=>{ const pr=rs.filter(puttsOn); return pr.length? sum(pr.map(roundTotals),t=>t.putts)/pr.length : null; })(),
     puttsPerHole: pn? sum(ph,h=>h.putts)/pn : null, puttHoles: pn,
     puttsPerGir: gir.length? sum(gir,h=>h.putts)/gir.length : null,
@@ -2838,7 +2844,9 @@ const PUTT_SEGS = s => [["チップイン",0,"--q-eagle"],["1パット",1,"--q-b
   .map(([label,k,tone])=>({label, n:s.putt[k], tone})).filter(x=>x.n>0);
 const DIST_SEGS = s => [["ホールインワン","hio","--q-hio"],["イーグル","eagle","--q-eagle"],["バーディ","birdie","--q-birdie"],["パー","par","--q-par"],["ボギー","bogey","--q-bogey"],["ダブルボギー","double","--q-double"],["トリプル以上","triple","--q-triple"]]
   .map(([label,k,tone])=>({label, n:s.dist[k], tone})).filter(x=>x.n>0);
-const trendTotalOn = () => state.trendTotal ?? (state.fCourse!=="all");
+const trendFull = () => filteredRounds().filter(r=>!r.nos);
+const trendSameLen = () => new Set(trendFull().map(r=>r.holes.length)).size<=1;
+const trendTotalOn = () => trendSameLen() && (state.trendTotal ?? (state.fCourse!=="all"));   // 打数への切りかえは、回ったホール数がそろっているときだけ
 function filteredRounds(){
   let rs = rounds().slice().sort(byDate);
   if(state.oneRound){ const r=rs.find(x=>x.id===state.oneRound); if(r) return [r]; state.oneRound=null; }
@@ -2875,14 +2883,14 @@ function viewStats(){
   ${ST==="score"?`
   <div class="hero-stat">
     <div class="who">${esc(state.fPlayer).toUpperCase()} ・ AVG SCORE</div>
-    <div class="main"><div class="big">${fx(s.avgScore)}<span class="tp">(${s.avgDiff==null?"—":(s.avgDiff>0?"+":s.avgDiff<0?"":"±")+s.avgDiff.toFixed(1)})</span></div>
+    <div class="main"><div class="big">${s.avgDiff==null?"—":dpar(s.avgDiff)}${s.avgDiff!=null&&!s.sameLen?`<span class="tp">/ホール</span>`:""}</div>
     </div>
-    <div class="row"><div><span>BEST</span><b>${toPar(s.best)}</b></div><div><span>前回</span><b>${toPar(roundTotals(rs[rs.length-1]).diff)}</b></div><div><span>ROUNDS</span><b>${s.rounds}</b></div>${s.dist.hio?`<div><span>HIO</span><b>${s.dist.hio}</b></div>`:`<div><span>HOLES</span><b>${s.holes}</b></div>`}</div>
+    <div class="row"><div><span>BEST</span><b>${s.best==null?"—":s.sameLen?toPar(s.best):dpar(s.best)}</b></div><div><span>前回</span><b>${s.lastDiff==null?"—":s.sameLen?toPar(s.lastDiff):dpar(s.lastDiff)}</b></div><div><span>ROUNDS</span><b>${s.rounds}</b></div>${s.dist.hio?`<div><span>HIO</span><b>${s.dist.hio}</b></div>`:`<div><span>HOLES</span><b>${s.holes}</b></div>`}</div>
   </div>
   <div class="panel"><div class="sec"><em>RECENT</em><span>直近3ラウンド</span></div><div class="recent">${rs.slice(-3).reverse().map(r=>{ const t=roundTotals(r); const [y,m,d]=r.date.split("-");
       return `<div class="rr"><div class="rd"><small>${+m}/${+d}</small><b>${t.score}<i>(${toPar(t.diff)})</i></b></div><div class="rh">${r.holes.map(h=>`<span class="mk4 m-${TONEH(h)}" title="${h.strokes}"></span>`).join("")}</div></div>`; }).join("")}</div>
     <div class="mk-legend"><span><i class="mk4 m-eagle"></i>−2</span><span><i class="mk4 m-birdie"></i>−1</span><span><i class="mk4 m-par"></i>±0</span><span><i class="mk4 m-bogey"></i>+1</span><span><i class="mk4 m-double"></i>+2</span><span><i class="mk4 m-triple"></i>+3以上</span></div></div>
-  ${state.oneRound?"":`<div class="panel"><div class="sec"><em>TREND</em><span>スコアの推移</span><div class="seg2" role="group" aria-label="表示">${[["diff","対パー"],["total","打数"]].map(([k,l])=>`<button data-act="trend-mode" data-v="${k}" aria-pressed="${(k==="total")===trendTotalOn()}">${l}</button>`).join("")}</div></div><div class="tbox"><div class="tbox-ax"><canvas id="ch-score-ax" aria-hidden="true"></canvas></div><div class="tbox-sc"><div class="tbox-in"><canvas id="ch-score" aria-label="スコア推移"></canvas></div></div><div class="tbox-ref"><canvas id="ch-score-ref" aria-hidden="true"></canvas></div></div></div>`}
+  ${state.oneRound?"":`<div class="panel"><div class="sec"><em>TREND</em><span>スコアの推移</span>${trendSameLen()?`<div class="seg2" role="group" aria-label="表示">${[["diff","対パー"],["total","打数"]].map(([k,l])=>`<button data-act="trend-mode" data-v="${k}" aria-pressed="${(k==="total")===trendTotalOn()}">${l}</button>`).join("")}</div>`:""}</div><div class="tbox"><div class="tbox-ax"><canvas id="ch-score-ax" aria-hidden="true"></canvas></div><div class="tbox-sc"><div class="tbox-in"><canvas id="ch-score" aria-label="スコア推移"></canvas></div></div><div class="tbox-ref"><canvas id="ch-score-ref" aria-hidden="true"></canvas></div></div>${s.nPartial?`<p class="muted note-partial">途中で終わった${s.nPartial}回は含めていません</p>`:""}</div>`}
   ${barsPanel("スコアの内訳",DIST_SEGS(s),fmtPct(s.parOrBetter),"%","パー以内",["--q-hio","--q-eagle","--q-birdie","--q-par"])}
 
 `:""}
@@ -2971,7 +2979,7 @@ after.stats = () => {
   const fg=cssv("--fg"), muted=cssv("--muted"), line=cssv("--line"), paper=cssv("--paper");
   Chart.defaults.color=muted; Chart.defaults.borderColor=line;
   Chart.defaults.font.family=cssv("--f-body"); Chart.defaults.font.size=12;
-  const rs = filteredRounds();
+  const rs = trendFull(), perH = !trendSameLen();   // 推移は全ホールを回ったラウンドだけ。ホール数が混ざるときは「1ホールあたりの対パー」
   const seen={}; const circ="①②③④⑤⑥⑦⑧⑨";
   const byDay={}; rs.forEach(r=>{ byDay[r.date]=(byDay[r.date]||0)+1; });
   const lbl = rs.map(r=>{ const [y,m,d]=(r.date||"").split("-"); seen[r.date]=(seen[r.date]||0)+1; return `${+m}/${+d}` + (byDay[r.date]>1 ? circ[seen[r.date]-1]||"" : ""); });
@@ -3001,10 +3009,10 @@ after.stats = () => {
     { v: parRef+2*holesN, label: `${parRef+2*holesN}`, color: cssv("--q-double"), vs: tot.map((t,k)=>t.par+2*hN[k]) }
   ] : []) : [
     { v: 0, label: "±0", color: cssv("--q-par") },
-    { v: holesN, label: `+${holesN}`, color: cssv("--q-bogey") },
-    { v: 2*holesN, label: `+${2*holesN}`, color: cssv("--q-double") }
+    { v: perH?1:holesN, label: `+${perH?1:holesN}`, color: cssv("--q-bogey") },
+    { v: perH?2:2*holesN, label: `+${perH?2:2*holesN}`, color: cssv("--q-double") }
   ];
-  const vals = rs.map((r,i)=> useTotal ? tot[i].score : tot[i].diff);
+  const vals = rs.map((r,i)=> useTotal ? tot[i].score : perH ? tot[i].diff/rs[i].holes.length : tot[i].diff);
   // 棒の色: そのラウンドがどの基準線の内側か（パー以内=青 / ボギー以内=オレンジ / それ以上=赤）
   const scoreZone = i => { const per = tot[i].diff / rs[i].holes.length; return per<=0 ? "par" : per<=1 ? "bogey" : "double"; };
   const puttZone = i => { const per = tot[i].putts / rs[i].holes.length; return per<=2 ? "par" : per<=2.5 ? "bogey" : "double"; };
@@ -3026,7 +3034,7 @@ after.stats = () => {
   if(state.trendSel!=null && state.trendSel>=rs.length) state.trendSel=null;
   const opts = (yTitle, yFmt, lo, hi) => ({ maintainAspectRatio:false, events:["click"], plugins:{ legend:{display:false}, tooltip:tip },
     scales:{ x:{ ticks:{ maxRotation:0, autoSkip:true, autoSkipPadding:14, maxTicksLimit:6 }, grid:{display:false} }, y:{ title:{display:true,text:yTitle}, ticks:{ precision:0, callback: yFmt || (v=>v) }, suggestedMin:lo, suggestedMax:hi, grid:{ color: cssv("--soft") } } } });
-  const o1 = opts(useTotal?"打数":"対パー", useTotal?null:(v=>toPar(v))); { const base0 = useTotal ? (parRef || Math.min(...vals)+2) : 0; o1.scales.y.min = Math.floor(Math.min(base0-2, ...vals)/5)*5; o1.scales.y.max = Math.ceil(Math.max(base0+5, ...vals.map(v=>v+2))/5)*5; } // 上は自分のスコアに合わせる（上手い人は +18 まで要らない）
+  const o1 = opts(useTotal?"打数":perH?"対パー/ホール":"対パー", useTotal?null:(v=>toPar(v))); if(perH){ o1.scales.y.min=Math.floor(Math.min(-1,...vals)); o1.scales.y.max=Math.ceil(Math.max(2,...vals)+.3); } else { const base0 = useTotal ? (parRef || Math.min(...vals)+2) : 0; o1.scales.y.min = Math.floor(Math.min(base0-2, ...vals)/5)*5; o1.scales.y.max = Math.ceil(Math.max(base0+5, ...vals.map(v=>v+2))/5)*5; } // 上は自分のスコアに合わせる（上手い人は +18 まで要らない）
   /* 推移の棒は15ラウンド分の幅で見せ、それより前は横にスクロール（最初は最新が見える右端）。
      縦の目盛りと基準線の数字は左の固定の列に描く（棒に数字が重ならないように） */
   const VIS = 15, wide = Math.max(1, SLOTS/VIS);
