@@ -678,6 +678,16 @@ with sync_playwright() as pw:
     pick_holes(18)
     check("ホール数: 18まで増やせる", pg.evaluate("state.courseEdit.holes.length") == 18)
     check("ホール数: エラーなし", not errs); pg.context.close()
+    # 用意済みコース: 大野川ゴルフコース（大分市・6ホール・パー21、MG 1364Y / SG 1287Y。公式サイトの表と合計が一致）
+    pg, errs = open_page(b, {"sc.fields": ALL, "sc.player": "\"たろう\"", "sc.pref": "\"大分県\""}, offline=True)
+    start_preset(pg, "oonogawa")
+    check("大野川ゴルフコース: 6ホール・パー21・MG 1364Y・SG 1287Y（公式の表と一致）", pg.evaluate("state.draft.holes.length") == 6 and pg.evaluate("state.draft.holes.reduce((a,h)=>a+h.par,0)") == 21 and pg.evaluate("state.draft.holes.reduce((a,h)=>a+h.ys[0],0)") == 1364 and pg.evaluate("state.draft.holes.reduce((a,h)=>a+h.ys[1],0)") == 1287 and pg.evaluate("JSON.stringify(state.draft.gn)") == '["MG","SG"]')
+    check("大野川ゴルフコース: エラーなし", not errs); pg.context.close()
+    # 用意済みコース: 直川カントリー倶楽部（佐伯市・9ホールを2周する形で18ホール、パー58。OUT 1288Y・IN 1361Y）
+    pg, errs = open_page(b, {"sc.fields": ALL, "sc.player": "\"たろう\"", "sc.pref": "\"大分県\""}, offline=True)
+    start_preset(pg, "naokawa")
+    check("直川カントリー倶楽部: 18ホール・パー58・OUT 1288Y・IN 1361Y（公式の表と一致）", pg.evaluate("state.draft.holes.length") == 18 and pg.evaluate("state.draft.holes.reduce((a,h)=>a+h.par,0)") == 58 and pg.evaluate("state.draft.holes.slice(0,9).reduce((a,h)=>a+h.yards,0)") == 1288 and pg.evaluate("state.draft.holes.slice(9).reduce((a,h)=>a+h.yards,0)") == 1361)
+    check("直川カントリー倶楽部: エラーなし", not errs); pg.context.close()
     # ゴースト × スコアカード入力: ゴーストの打数（見ているホール）とここまでの差が出る
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": [], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"ghost\"", "sc.rounds": g1, "sc.fields": ALL}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)

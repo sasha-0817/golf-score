@@ -2057,6 +2057,10 @@ const PRESET_COURSES = [
   { key:"ooyodogawa", name:"大淀川ゴルフ場", pref:"宮崎県", area:"宮崎市", holes:[100,90,110,130,125,120,70,90,80].map(y=>({par:3, yards:y})) },
   { key:"hyuga-seaside", name:"日向シーサイドゴルフクラブ", pref:"宮崎県", area:"日向市", // 公式サイトのホール図より（MG / SG）
     holes:[[152,125],[92,78],[154,132],[218,188],[148,121],[93,73],[138,110],[94,104],[160,142]].map(([m,s2],i)=>({par:3, yards:m, yards2:s2, ...(i?{}:{gn:["MG","SG"]})})) },
+  { key:"oonogawa", name:"大野川ゴルフコース", pref:"大分県", area:"大分市", // 公式サイト（oonogawa-gc.com）のコース案内より。6ホール・パー21、MG 1364Y / SG 1287Y（合計が公式の表と一致）
+    holes:[[3,142,120],[4,295,255],[4,246,250],[4,268,285],[3,202,160],[3,211,217]].map(([p,m,s2],i)=>({par:p, yards:m, yards2:s2, ...(i?{}:{gn:["MG","SG"]})})) },
+  { key:"naokawa", name:"直川カントリー倶楽部", pref:"大分県", area:"佐伯市", // 公式サイトのコース紹介より。9ホールを2周する形で、2周目はティーの位置が変わりヤードが違う（1番161Y→10番170Y）ので18ホールとして登録。OUT 1288Y・IN 1361Y・各パー29（公式の表の計と一致）
+    holes:[[3,161],[4,223],[3,68],[3,108],[3,122],[3,116],[4,304],[3,142],[3,44],[3,170],[4,236],[3,79],[3,108],[3,135],[3,128],[4,304],[3,157],[3,44]].map(([p,y])=>({par:p, yards:y})) },
   { key:"firtree", name:"ファーツリーカントリークラブ", pref:"宮崎県", area:"延岡市", holes:[[3,76],[3,102],[3,88],[4,284],[3,109],[3,84],[4,366],[3,55],[3,160]].map(([p,y])=>({par:p, yards:y})) },
 ];
 /* グリーンが2つあるコース（例 MG / SG）: 2つ目のヤードは hole.yards2、名前は holes[0].gn に入れる（シートの列を増やさないため） */
@@ -2128,7 +2132,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-09-0210";
+const BUILD = "2026-11-09-0310";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
