@@ -949,6 +949,17 @@ with sync_playwright() as pw:
         check("写真読み取り: 取り込むとコースは9ホール（18ではない）", pg.evaluate("state.courseEdit.holes.length") == 9)
         C(pg, "[data-act=open-holes]"); pg.wait_for_timeout(150); C(pg, "[data-act=set-holes][data-n='18']"); pg.wait_for_timeout(250)
         check("写真読み取り: あとでホール数を18にすると、後半（10番〜）のヤードも入っている", pg.evaluate("state.courseEdit.holes.length") == 18 and pg.evaluate("state.courseEdit.holes[9].yards") == 97 and pg.evaluate("state.courseEdit.holes[9].yards2") == 95)
+        # 確認用のプレビュー（本番以外のアドレス）は、同じデータベースでも別の表を使う → 本番のデータに混ざらない
+        import urllib.request, json as _json
+        def call(host, body=None):
+            rq = urllib.request.Request(f"http://127.0.0.1:{PORT}/api", data=(_json.dumps(body).encode() if body else None), headers={"Host": host, "Content-Type": "text/plain"}, method="POST" if body else "GET")
+            return _json.loads(urllib.request.urlopen(rq).read())
+        PREV = "preview.golf-score-bd6.pages.dev"
+        call(PREV, {"action": "saveRound", "round": {"id": "prev-r1", "player": "後輩", "courseId": "c", "courseName": "C", "date": "2026-11-09", "createdAt": 1, "holes": [{"par": 3, "strokes": 3, "putts": 2}]}})
+        call(PREV, {"action": "saveCourse", "course": {"id": "prev-c1", "name": "プレビューのコース", "holes": [{"par": 3}]}})
+        prod = call("golf-score-bd6.pages.dev"); prev = call(PREV)
+        check("プレビュー: 試したラウンド・コースは、プレビューのほうにだけ入る", any(r["id"] == "prev-r1" for r in prev["rounds"]) and any(c["id"] == "prev-c1" for c in prev["courses"]))
+        check("プレビュー: 本番のアドレスから見えるデータには、プレビューで試したものが混ざらない", not any(r["id"] == "prev-r1" for r in prod["rounds"]) and not any(c["id"] == "prev-c1" for c in prod["courses"]))
         check("写真読み取り: エラーなし", not errs)
         check("Web版: エラーなし", not errs)
         ctx.close()

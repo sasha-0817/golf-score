@@ -14,14 +14,23 @@ const CORS = {
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), { status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", ...CORS } });
 
-let ready = false;
-async function setup(db) {
-  if (ready) return;
+/* 本番のアドレス以外（確認用のプレビューなど）では、同じデータベースの中でも別の表（p_courses / p_rounds）を使う。
+   プレビューで試したデータが、本番のコース・ラウンドに混ざらないようにするため（プレビューに本番と同じ D1 をつないでしまっても安全）。 */
+const PROD_HOST = "golf-score-bd6.pages.dev";
+const tablesFor = (request) => {
+  const h = new URL(request.url).hostname;
+  const prod = h === PROD_HOST || h === "localhost" || h === "127.0.0.1";
+  return prod ? { c: "courses", r: "rounds" } : { c: "p_courses", r: "p_rounds" };
+};
+
+const ready = {};
+async function setup(db, T) {
+  if (ready[T.c]) return;
   await db.batch([
-    db.prepare("CREATE TABLE IF NOT EXISTS courses (id TEXT PRIMARY KEY, data TEXT NOT NULL, updatedAt INTEGER)"),
-    db.prepare("CREATE TABLE IF NOT EXISTS rounds (id TEXT PRIMARY KEY, data TEXT NOT NULL, createdAt INTEGER, updatedAt INTEGER)"),
+    db.prepare(`CREATE TABLE IF NOT EXISTS ${T.c} (id TEXT PRIMARY KEY, data TEXT NOT NULL, updatedAt INTEGER)`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS ${T.r} (id TEXT PRIMARY KEY, data TEXT NOT NULL, createdAt INTEGER, updatedAt INTEGER)`),
   ]);
-  ready = true;
+  ready[T.c] = true;
 }
 
 const okId = (id) => typeof id === "string" && id.length > 0 && id.length <= 80;
@@ -43,12 +52,13 @@ export async function onRequestOptions() {
   return new Response(null, { status: 204, headers: CORS });
 }
 
-export async function onRequestGet({ env }) {
+export async function onRequestGet({ request, env }) {
   try {
-    await setup(env.DB);
+    const T = tablesFor(request);
+    await setup(env.DB, T);
     const [c, r] = await env.DB.batch([
-      env.DB.prepare("SELECT data FROM courses"),
-      env.DB.prepare("SELECT data FROM rounds ORDER BY createdAt"),
+      env.DB.prepare(`SELECT data FROM ${T.c}`),
+      env.DB.prepare(`SELECT data FROM ${T.r} ORDER BY createdAt`),
     ]);
     return json({ ok: true, version: VERSION, courses: c.results.map((x) => JSON.parse(x.data)), rounds: r.results.map((x) => JSON.parse(x.data)) });
   } catch (e) {
@@ -60,23 +70,24 @@ export async function onRequestPost({ request, env }) {
   let body;
   try { body = JSON.parse(await request.text()); } catch (e) { return json({ ok: false, error: "bad json" }, 400); }
   try {
-    await setup(env.DB);
+    const T = tablesFor(request);
+    await setup(env.DB, T);
     const db = env.DB, now = Date.now();
-    const putCourse = (c) => db.prepare("INSERT INTO courses (id, data, updatedAt) VALUES (?1, ?2, ?3) ON CONFLICT(id) DO UPDATE SET data=?2, updatedAt=?3").bind(c.id, JSON.stringify(c), now);
-    const putRound = (r) => db.prepare("INSERT INTO rounds (id, data, createdAt, updatedAt) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(id) DO UPDATE SET data=?2, updatedAt=?4").bind(r.id, JSON.stringify(r), r.createdAt || now, now);
+    const putCourse = (c) => db.prepare(`INSERT INTO ${T.c} (id, data, updatedAt) VALUES (?1, ?2, ?3) ON CONFLICT(id) DO UPDATE SET data=?2, updatedAt=?3`).bind(c.id, JSON.stringify(c), now);
+    const putRound = (r) => db.prepare(`INSERT INTO ${T.r} (id, data, createdAt, updatedAt) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(id) DO UPDATE SET data=?2, updatedAt=?4`).bind(r.id, JSON.stringify(r), r.createdAt || now, now);
     switch (body.action) {
       case "saveCourse":
         if (!body.course || !okId(body.course.id)) return json({ ok: false, error: "bad course" }, 400);
         await putCourse(body.course).run(); break;
       case "deleteCourse":
         if (!okId(body.id)) return json({ ok: false, error: "bad id" }, 400);
-        await db.prepare("DELETE FROM courses WHERE id=?1").bind(body.id).run(); break;
+        await db.prepare(`DELETE FROM ${T.c} WHERE id=?1`).bind(body.id).run(); break;
       case "saveRound":
         if (!body.round || !okId(body.round.id)) return json({ ok: false, error: "bad round" }, 400);
         await putRound(body.round).run(); break;
       case "deleteRound":
         if (!okId(body.id)) return json({ ok: false, error: "bad id" }, 400);
-        await db.prepare("DELETE FROM rounds WHERE id=?1").bind(body.id).run(); break;
+        await db.prepare(`DELETE FROM ${T.r} WHERE id=?1`).bind(body.id).run(); break;
       case "import": {
         // 引っ越し: 今までのスプレッドシート（＋端末に残っていたクラブなど）を丸ごと入れる。同じIDは空いている項目だけ埋める
         const courses = (body.courses || []).filter((c) => c && okId(c.id));
@@ -84,7 +95,7 @@ export async function onRequestPost({ request, env }) {
         const have = {};
         for (let i = 0; i < rounds.length; i += 50) {
           const ids = rounds.slice(i, i + 50).map((r) => r.id);
-          const q = await db.prepare(`SELECT id, data FROM rounds WHERE id IN (${ids.map(() => "?").join(",")})`).bind(...ids).all();
+          const q = await db.prepare(`SELECT id, data FROM ${T.r} WHERE id IN (${ids.map(() => "?").join(",")})`).bind(...ids).all();
           q.results.forEach((x) => (have[x.id] = JSON.parse(x.data)));
         }
         const stmts = [...courses.map(putCourse), ...rounds.map((r) => putRound(mergeRound(have[r.id], r)))];
