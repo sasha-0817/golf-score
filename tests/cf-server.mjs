@@ -15,7 +15,7 @@ const ocr = await import(pathToFileURL(join(ROOT, "functions", "ocr.js")).href);
 
 // 写真読み取りのテスト用の偽のAI: 1つ目のモデルは数字を1つ読み間違え、2つ目は正しく読む（合計が合う方が選ばれるかを確かめる）
 const L = [97, 65, 117, 68, 101, 65, 85, 92, 103], R = [95, 63, 123, 66, 118, 60, 76, 110, 120];
-const answer = (bad) => JSON.stringify({ yard_columns: ["L", "R"], holes: L.map((l, i) => ({ hole: i + 1, par: 3, yards: [bad && i === 2 ? 177 : l, R[i]] })), totals: { par: 27, yards: [793, 831] } });
+const answer = (bad) => JSON.stringify({ yard_columns: ["L", "R"], holes: L.map((l, i) => ({ hole: i + 1, par: 3, yards: [bad && i === 2 ? 177 : l, R[i]] })), totals: { par: 27, yards: [793, 800] }, subtotals: { first: [448, 465], second: [345, 366] } });
 const AI = { async run(model) { return { response: model.includes("llama") ? answer(true) : "```json\n" + answer(false) + "\n```" }; } };
 
 const sql = new DatabaseSync(":memory:");

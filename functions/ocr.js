@@ -21,10 +21,11 @@ IGNORE: handwriting, pencil marks, circles, player names, player score columns, 
 Some cards print the front half (OUT) and the back half (IN) side by side or one above the other: list every hole in order (1, 2, 3, ...).
 Some cards have several yard columns (for example A/B/C, L/R, MG/SG, or colored tees): report every yard column, left to right.
 Return ONLY one JSON object, no explanation:
-{"yard_columns":["A","B","C"],"holes":[{"hole":1,"par":3,"yards":[104,104,104]}],"totals":{"par":36,"yards":[1027,1044,1042]}}
+{"yard_columns":["A","B","C"],"holes":[{"hole":1,"par":3,"yards":[104,104,104]}],"totals":{"par":36,"yards":[1027,1044,1042]},"subtotals":{"first":[521,530,529],"second":[506,514,513]}}
 - "yard_columns": the printed headings of the yard columns (A, B, C, L, R, MG, SG...). If there is only one column or no heading, use ["1"].
 - "yards" has exactly one number per yard column, in the same order. Use null for a number you cannot read.
 - "totals": the printed TOTAL row (par total, and the yard total of each column). Use null if not printed. Use the all-holes total, not the OUT or IN subtotal.
+- "subtotals": the printed OUT (front half) and IN (back half) subtotal rows, one number per yard column each. Use null if not printed.
 Do not invent numbers.`;
 
 /* AI の答えから JSON を取り出して、形を整える（読めなければ null） */
@@ -48,7 +49,9 @@ export function parseAnswer(raw) {
     return { hole: i + 1, par: num(h.par, 3, 5), yards: names.map((_, k) => num(ys[k], 15, 700)) };
   });
   const tot = obj.totals || {};
-  const totals = { par: num(tot.par, 6, 100), yards: names.map((_, k) => (Array.isArray(tot.yards) ? num(tot.yards[k], 100, 9999) : null)) };
+  const sub = obj.subtotals || {};
+  const arr = (a) => names.map((_, k) => (Array.isArray(a) ? num(a[k], 50, 9999) : null));
+  const totals = { par: num(tot.par, 6, 100), yards: names.map((_, k) => (Array.isArray(tot.yards) ? num(tot.yards[k], 100, 9999) : null)), first: arr(sub.first), second: arr(sub.second) };
   return { cols: names, holes, totals };
 }
 
@@ -58,7 +61,11 @@ export function checkResult(r) {
     const vals = r.holes.map((h) => h.yards[k]);
     const sum = vals.every((v) => v != null) ? vals.reduce((a, v) => a + v, 0) : null;
     const printed = r.totals.yards[k];
-    return { col: name, sum, printed, ok: sum != null && printed != null && sum === printed };
+    const total = sum != null && printed != null && sum === printed;
+    // 印刷された合計を読み違えることがあるので、前半・後半の計（OUT・IN）が両方合っていれば、それでも合っているとみなす
+    const h = Math.ceil(vals.length / 2), a = vals.slice(0, h), b = vals.slice(h), f = r.totals.first[k], s2 = r.totals.second[k];
+    const halves = vals.length >= 2 && f != null && s2 != null && a.every((v) => v != null) && b.every((v) => v != null) && a.reduce((x, v) => x + v, 0) === f && b.reduce((x, v) => x + v, 0) === s2;
+    return { col: name, sum, printed, ok: total || halves, viaHalves: !total && halves };
   });
   const parSum = r.holes.every((h) => h.par != null) ? r.holes.reduce((a, h) => a + h.par, 0) : null;
   const parOk = parSum != null && r.totals.par != null && parSum === r.totals.par;

@@ -2016,6 +2016,7 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .ocr-btn{width:100%;display:flex;align-items:center;gap:12px;margin:12px 0 2px;padding:12px 14px;border-radius:14px;border:1.5px dashed #0E9F62;background:color-mix(in srgb,#0E9F62 8%,var(--paper));color:var(--fg);font:inherit;text-align:left;cursor:pointer}.ocr-btn svg{width:30px;height:30px;flex:none;fill:none;stroke:#0E9F62;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.ocr-btn span{display:grid;gap:2px;min-width:0}.ocr-btn b{font-size:15px}.ocr-btn small{font-size:13px;color:var(--muted)}
 .fnh{width:100%;height:48px;border-radius:12px;border:1px solid var(--line);background:var(--soft);color:var(--fg);display:flex;align-items:center;justify-content:center;gap:8px;font:inherit;cursor:pointer}.fnh b{font:700 24px/1 var(--f-num)}.fnh small{color:var(--muted);font-size:13px}
 .hgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.holes-sheet .hgrid button{height:54px;font:700 22px var(--f-num)}.holes-sheet .hgrid button[aria-pressed=true]{background:var(--rec-fg);color:var(--rec-bg);border-color:var(--rec-fg)}
+.cdt tfoot tr.gin td.ft small.blk,.cdt tfoot tr.gin td.ft small{display:block;white-space:nowrap;font-size:13px;letter-spacing:-.04em;word-break:keep-all;overflow:visible}
 </style>
 
 </head>
@@ -2126,7 +2127,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-08-0310";
+const BUILD = "2026-11-09-0110";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3127,7 +3128,11 @@ async function ocrRun(file){
   }catch(e){ state.ocr={err:"通信できませんでした。電波のあるところでお試しください。"}; render(); } }
 /* いま画面にある数字（直したあと）で、印刷された合計と合うかを見る */
 function ocrChecks(o){ const r=o.res, tp=r.totals.par, ps=r.holes.every(h=>h.par!=null)?r.holes.reduce((a,h)=>a+h.par,0):null;
-  return { par:{ sum:ps, printed:tp, ok:ps!=null&&tp!=null&&ps===tp }, cols:r.cols.map((_,k)=>{ const v=r.holes.map(h=>h.yards[k]), sum=v.every(x=>x!=null)?v.reduce((a,x)=>a+x,0):null, pr=r.totals.yards[k]; return { sum, printed:pr, ok:sum!=null&&pr!=null&&sum===pr }; }) }; }
+  return { par:{ sum:ps, printed:tp, ok:ps!=null&&tp!=null&&ps===tp }, cols:r.cols.map((_,k)=>{ const v=r.holes.map(h=>h.yards[k]), sum=v.every(x=>x!=null)?v.reduce((a,x)=>a+x,0):null, pr=r.totals.yards[k], total=sum!=null&&pr!=null&&sum===pr;
+      // 印刷の合計を読み違えることがあるので、前半・後半の計（OUT・IN）が両方合っていれば合っているとみなす
+      const h=Math.ceil(v.length/2), a=v.slice(0,h), b=v.slice(h), f=(r.totals.first||[])[k], s2=(r.totals.second||[])[k];
+      const halves=v.length>=2&&f!=null&&s2!=null&&a.every(x=>x!=null)&&b.every(x=>x!=null)&&a.reduce((x,y)=>x+y,0)===f&&b.reduce((x,y)=>x+y,0)===s2;
+      return { sum, printed:pr, ok:total||halves, viaHalves:!total&&halves }; }) }; }
 function ocrSheet(){
   const o=state.ocr; if(!o) return ""; let body;
   if(o.busy) body=`<p>写真を読み取っています<small>10〜20秒かかります</small></p><div class="ocr-busy"><i class="spin"></i></div>`;
@@ -3138,7 +3143,7 @@ function ocrSheet(){
     <p class="muted ocr-msg">写真と見比べて、違う数字は直してください。印刷された合計と合わない列には ⚠ が出ます。使う列にチェックを入れます（4つまで）。</p>
     <div class="ocr-scroll"><table class="ocr-t"><thead><tr><th>H</th><th>PAR</th>${r.cols.map((c,k)=>`<th><label class="ocr-use"><input type="checkbox" data-ocr-use="${k}" ${o.use[k]?"checked":""} ${!o.use[k]&&nUse>=4?"disabled":""}>使う</label><input class="ocr-name" data-ocr-name="${k}" maxlength="6" value="${esc(o.names[k])}" aria-label="${k+1}列目の名前"></th>`).join("")}</tr></thead>
       <tbody>${r.holes.map((h,i)=>`<tr><td>${i+1}</td><td><input type="number" inputmode="numeric" class="${h.par==null?"need":""}" data-ocr-par="${i}" value="${h.par??""}" aria-label="${i+1}番のパー"></td>${r.cols.map((_,k)=>`<td><input type="number" inputmode="numeric" class="${h.yards[k]==null?"need":""}" data-ocr-y="${i},${k}" value="${h.yards[k]??""}" aria-label="${i+1}番の${esc(o.names[k])}のヤード"></td>`).join("")}</tr>`).join("")}</tbody>
-      <tfoot><tr><td colspan="2" class="${ck.par.ok?"ok":ck.par.printed!=null?"ng":""}">計 ${ck.par.sum??"—"}${ck.par.printed!=null?`<small>${ck.par.ok?"✓":"⚠ 印刷 "+ck.par.printed}</small>`:""}</td>${ck.cols.map(c=>`<td class="${c.ok?"ok":c.printed!=null?"ng":""}">${c.sum??"—"}${c.printed!=null?`<small>${c.ok?"✓":"⚠ 印刷 "+c.printed}</small>`:""}</td>`).join("")}</tr></tfoot></table></div>
+      <tfoot><tr><td colspan="2" class="${ck.par.ok?"ok":ck.par.printed!=null?"ng":""}">計 ${ck.par.sum??"—"}${ck.par.printed!=null?`<small>${ck.par.ok?"✓":"⚠ 印刷 "+ck.par.printed}</small>`:""}</td>${ck.cols.map(c=>`<td class="${c.ok?"ok":c.printed!=null?"ng":""}">${c.sum??"—"}${c.ok?`<small>${c.viaHalves?"✓ 前半・後半":"✓"}</small>`:c.printed!=null?`<small>⚠ 印刷 ${c.printed}</small>`:""}</td>`).join("")}</tr></tfoot></table></div>
     <button class="primary-b" data-act="ocr-apply">コース編集に入れる</button><button data-act="ocr-close">やめる</button>`; }
   return `<div class="sheet-back" data-act="ocr-close"><div class="sheet ocr-sheet" data-stop="1">${body}</div></div>`; }
 /* ホール数: 押すと 6列×3行（1〜18）の数字が出て、タップで選ぶ。減らしても、増やし直すと元の数字が戻る */

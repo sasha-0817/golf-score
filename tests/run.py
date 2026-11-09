@@ -881,6 +881,7 @@ with sync_playwright() as pw:
         check("写真読み取り: コース登録に「写真から読み取る」ボタンが出る", pg.query_selector("[data-act=ocr-pick]") is not None)
         pg.set_input_files("#ocr-file", {"name": "card.png", "mimeType": "image/png", "buffer": png}); pg.wait_for_selector(".ocr-t", timeout=8000)
         check("写真読み取り: 列の名前 L・R と9ホール分が出る", pg.evaluate("[...document.querySelectorAll('.ocr-name')].map(e=>e.value).join()") == "L,R" and pg.evaluate("document.querySelectorAll('.ocr-t tbody tr').length") == 9)
+        check("写真読み取り: 印刷の合計を読み違えても（R=800）、前半・後半の計が合っていれば ✓", "前半・後半" in pg.inner_text(".ocr-t tfoot"))
         check("写真読み取り: 合計の合うほうの答えが選ばれ、パーと2列とも ✓", pg.evaluate("document.querySelectorAll('.ocr-t tfoot td.ok').length") == 3 and pg.evaluate("document.querySelector('[data-ocr-y=\"2,0\"]').value") == "117")
         pg.fill("[data-ocr-y='2,0']", "177"); pg.press("[data-ocr-y='2,0']", "Tab"); pg.wait_for_timeout(300)
         check("写真読み取り: 数字を直して合計が合わなくなると ⚠ が出る", pg.evaluate("document.querySelectorAll('.ocr-t tfoot td.ng').length") == 1 and "⚠" in pg.inner_text(".ocr-t tfoot"))
