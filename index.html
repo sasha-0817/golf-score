@@ -2018,6 +2018,7 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .hgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.holes-sheet .hgrid button{height:54px;font:700 22px var(--f-num)}.holes-sheet .hgrid button[aria-pressed=true]{background:var(--rec-fg);color:var(--rec-bg);border-color:var(--rec-fg)}
 .cdt tfoot tr.gin td.ft small.blk,.cdt tfoot tr.gin td.ft small{display:block;white-space:nowrap;font-size:13px;letter-spacing:-.04em;word-break:keep-all;overflow:visible}
 .ocr-rep{margin:0;padding:10px 12px;border-radius:12px;border:1.5px solid #0E9F62;background:color-mix(in srgb,#0E9F62 10%,var(--rec-bg));font-size:14px;line-height:1.4}
+.sheet button.early-b{background:linear-gradient(135deg,#0F9D62,#12A8C4);border:0;color:#fff}
 </style>
 
 </head>
@@ -2132,7 +2133,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-09-0310";
+const BUILD = "2026-11-09-0400";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2277,6 +2278,10 @@ function lrm(counts){ const t=counts.reduce((a,b)=>a+b,0); if(!t) return counts.
   raw.map((r,i)=>[r-fl[i],i]).sort((a,b)=>b[0]-a[0]).forEach(([_,i])=>{ if(rest>0){ fl[i]++; rest--; } });
   counts.forEach((c,i)=>{ if(c>0 && fl[i]===0){ fl[i]=1; const m=fl.indexOf(Math.max(...fl)); fl[m]--; } }); return fl; }
 const toPar = n => n===0 ? "±0" : (n>0? "+"+n : String(n));
+const earlyBtn = (act, n, N, editing) => (!editing && n>0 && n<N) ? `<button class="early-b" data-act="${act}">ここまで（${n}ホール）を保存して終わる</button>` : "";
+/* 途中で終わったラウンド（ここまでを保存）は、回ったホールだけを holes に入れ、ホール番号を nos に残す（例: 6番から回ったら [1,2,6,7,8,9]） */
+const holeNo = (r,i) => r && r.nos ? r.nos[i] : i+1;
+const holeAt = (r,i) => r.nos ? r.holes[r.nos.indexOf(i+1)] : r.holes[i];
 function roundTotals(r){ const s=sum(r.holes,h=>h.strokes), p=sum(r.holes,h=>h.par), pt=sum(r.holes,h=>h.putts); return {score:s, par:p, putts:pt, diff:s-p}; }
 /* 分析・履歴は自分（開始画面の名前）だけを出す。サンプルデータは たろう */
 function me(){ const pl=players(), n=state.demo?"たろう":LS.get("sc.player",""); return n || pl[0] || ""; }
@@ -2388,7 +2393,7 @@ function resultOverlay(r){
       <div class="rc-score"><b>${t.score}</b><span>${toPar(t.diff)}</span></div>
       <div class="rc-sc">${(()=>{ const out=[]; for(let i=0;i<r.holes.length;i+=9){ const ch=r.holes.slice(i,i+9);
         const two=r.holes.length>9, lab=two?(i===0?"OUT":"IN"):"", sub=ch.reduce((x,h)=>x+h.strokes,0), subp=ch.reduce((x,h)=>x+h.par,0);
-        out.push(`<table class="${two?"half":""}">${two?`<colgroup><col class="lab">${ch.map(()=>"<col>").join("")}<col class="sum"></colgroup>`:""}<tr class="h">${two?`<td class="lab">${lab}</td>`:""}${ch.map((h,j)=>`<td>${i+j+1}</td>`).join("")}${two?`<td class="sum">計</td>`:""}</tr><tr class="p">${two?`<td class="lab">PAR</td>`:""}${ch.map(h=>`<td>${h.par}</td>`).join("")}${two?`<td class="sum">${subp}</td>`:""}</tr><tr>${two?`<td class="lab"></td>`:""}${ch.map(h=>`<td>${mark(h)}</td>`).join("")}${two?`<td class="sum"><b>${sub}</b></td>`:""}</tr></table>`); } return out.join(""); })()}</div>
+        out.push(`<table class="${two?"half":""}">${two?`<colgroup><col class="lab">${ch.map(()=>"<col>").join("")}<col class="sum"></colgroup>`:""}<tr class="h">${two?`<td class="lab">${lab}</td>`:""}${ch.map((h,j)=>`<td>${holeNo(r,i+j)}</td>`).join("")}${two?`<td class="sum">計</td>`:""}</tr><tr class="p">${two?`<td class="lab">PAR</td>`:""}${ch.map(h=>`<td>${h.par}</td>`).join("")}${two?`<td class="sum">${subp}</td>`:""}</tr><tr>${two?`<td class="lab"></td>`:""}${ch.map(h=>`<td>${mark(h)}</td>`).join("")}${two?`<td class="sum"><b>${sub}</b></td>`:""}</tr></table>`); } return out.join(""); })()}</div>
       <div class="rc-grid">
         <div><span>BIRDIE+</span><b>${n("hio")+n("eagle")+n("birdie")}</b></div>
         <div><span>PAR</span><b>${n("par")}</b></div>
@@ -2418,7 +2423,7 @@ function groupCard(g){
   const rank=k=>1+tots.filter(t=>t.score<tots[k].score).length;
   const tables=[]; for(let i=0;i<N;i+=9){ const idx=Array.from({length:Math.min(9,N-i)},(_,j)=>i+j), lab=N>9?(i?"IN":"OUT"):"";
     tables.push(`<table class="half grp"><colgroup><col class="lab">${idx.map(()=>"<col>").join("")}<col class="sum"></colgroup>
-      <tr class="h"><td class="lab">${lab}</td>${idx.map(h=>`<td class="${isPeoria(state.resultGame)&&state.resultEx&&(state.resultEx.hidden||[]).includes(h)?"hh":""}">${h+1}</td>`).join("")}<td class="sum">計</td></tr>
+      <tr class="h"><td class="lab">${lab}</td>${idx.map(h=>`<td class="${isPeoria(state.resultGame)&&state.resultEx&&(state.resultEx.hidden||[]).includes(h)?"hh":""}">${holeNo(r0,h)}</td>`).join("")}<td class="sum">計</td></tr>
       <tr class="p"><td class="lab">PAR</td>${idx.map(h=>`<td>${r0.holes[h].par}</td>`).join("")}<td class="sum">${sum(idx,h=>r0.holes[h].par)}</td></tr>
       ${order.map(k=>`<tr><td class="lab nm">${esc(dupLabel(nm,k))}</td>${idx.map(h=>`<td>${mark(g[k].holes[h])}</td>`).join("")}<td class="sum"><b>${sum(idx,h=>g[k].holes[h].strokes)}</b></td></tr>`).join("")}</table>`); }
   return `<div class="result-card grp-card"><svg class="rc-rings" viewBox="0 0 320 280" aria-hidden="true">${Array.from({length:10},(_,k)=>`<ellipse cx="160" cy="140" rx="${16+k*16}" ry="${14+k*14}" fill="none" stroke="rgba(255,255,255,.13)" stroke-width="1"/>`).join("")}</svg><div class="rc-in">
@@ -2526,9 +2531,9 @@ const TONE = d => d<=-2?"eagle":d===-1?"birdie":d===0?"par":d===1?"bogey":d===2?
 /* 同じコース・同じホールの過去の記録から、ひとことアドバイス */
 const TERMJ = d => d<=-2?"イーグル以上":d===-1?"バーディ":d===0?"パー":d===1?"ボギー":d===2?"ダボ":"トリプル以上";
 function holeAdvice(d, i){
-  const past = state.rounds.filter(r=>r.player===d.player && r.courseId===d.courseId && r.id!==d.id && r.holes[i]).sort((a,b)=>(a.date+(a.createdAt||0)).localeCompare(b.date+(b.createdAt||0)));
+  const past = state.rounds.filter(r=>r.player===d.player && r.courseId===d.courseId && r.id!==d.id && holeAt(r,i)).sort((a,b)=>(a.date+(a.createdAt||0)).localeCompare(b.date+(b.createdAt||0)));
   if(!past.length) return "";
-  const hs = past.map(r=>r.holes[i]), last = hs[hs.length-1];
+  const hs = past.map(r=>holeAt(r,i)), last = hs[hs.length-1];
   const parts = [`前回 <b>${last.strokes}</b>（${TERMJ(last.strokes-last.par)}）`];
   if(hs.length>=2) parts.push(`平均 <b>${(hs.reduce((a,h)=>a+h.strokes,0)/hs.length).toFixed(1)}</b>`);
   const key = last.par>=4 ? "tee" : "dir", lab = last.par>=4 ? {rl:"左",rr:"右",miss:"ショート"} : {left:"左",right:"右",long:"オーバー",miss:"ショート"}; // 花道は外したことにしない
@@ -2639,7 +2644,7 @@ function viewRecordDraft(d){
       <button class="back" data-act="prev" ${state.hole===0?"disabled":""} aria-label="前のホール">${ICON.back}</button>
       ${state.hole<N-1?`<button class="go" data-act="next">${state.hole+2}番ホールへ<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>`:`<button class="go save ${state.saving?"busy":""}" data-act="finish" ${state.saving?"disabled":""}>${state.saving?`<i class="spin"></i>保存中…`:"ラウンドを保存"}</button>`}
     </div>
-    ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p><button data-act="pause">中断してホームへ（あとで続きから）</button><button class="danger" data-act="discard">${d.editing?"編集をやめる（変更は保存されません）":"記録を破棄する"}</button><button data-act="cancel-confirm">入力に戻る</button></div></div>`:""}
+    ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p>${earlyBtn("finish-early", d.holes.map((_,i)=>i).filter(i=>Array.from({length:1+(d.mates||[]).length},(_,j)=>j).every(j=>touchedS(d,j,i))).length, d.holes.length, d.editing)}<button data-act="pause">中断してホームへ（あとで続きから）</button><button class="danger" data-act="discard">${d.editing?"編集をやめる（変更は保存されません）":"記録を破棄する"}</button><button data-act="cancel-confirm">入力に戻る</button></div></div>`:""}
     ${state.sheet==="fields"?fieldsSheet():""}
     ${state.rulesOpen?rulesPop(state.rulesOpen):""}
     ${LS.get("sc.flickTip",false)?"":flickTip()}
@@ -2679,18 +2684,22 @@ function cardMissing(cd){
     if(p.some(x=>x!=null) && p.some(x=>x==null)){ const h=p.findIndex(x=>x==null); return {sel:{h,i,k:"p"}, msg:`${cd.players[i].name}のパットが${h+1}Hで抜けています（全部入れるか、全部消してください）`}; } }
   return null;
 }
-async function cardFinish(b){
+async function cardFinish(b, early){
   const cd=state.cdraft; if(!cd) return;
-  const miss=cardMissing(cd); if(miss){ cd.sel=miss.sel; if(cd.holes.length>9) cd.half=miss.sel.h<9?0:1; saveCDraft(); render(); toast(miss.msg); return; }
+  const idxC = early ? cd.holes.map((_,i)=>i).filter(i=>cd.players.every(p=>p.s[i]!=null)) : cd.holes.map((_,i)=>i);   // ここまでを保存: 全員の打数が入っているホールだけ
+  if(early && !idxC.length){ state.confirm=null; render(); toast("まだ打数が入っていません"); return; }
+  const partial = idxC.length<cd.holes.length;
+  if(early){ for(let i=0;i<cd.players.length;i++){ if(!cdP(i)) continue; const pp=idxC.map(h=>cd.players[i].p[h]); if(pp.some(x=>x!=null) && pp.some(x=>x==null)){ const h=idxC[pp.findIndex(x=>x==null)]; cd.sel={h,i,k:"p"}; if(cd.holes.length>9) cd.half=h<9?0:1; state.confirm=null; saveCDraft(); render(); toast(`${cd.players[i].name}のパットが${h+1}Hで抜けています（全部入れるか、全部消してください）`); return; } } }
+  const miss=early?null:cardMissing(cd); if(miss){ cd.sel=miss.sel; if(cd.holes.length>9) cd.half=miss.sel.h<9?0:1; saveCDraft(); render(); toast(miss.msg); return; }
   const pOn=fields().putts, now=Date.now();
-  const rs=cd.players.map((pl,k)=>{ const withP = cdP(k) && pl.p.every(x=>x!=null); // パットを書かなかった人は putts 0（＝記録なし）で送る
-    return { id:k?uid():cd.id, card:true, player:pl.name, courseId:cd.courseId, courseName:cd.courseName, date:cd.date, createdAt:now+k,
-      holes:cd.holes.map((x,i)=>({par:x.par, strokes:pl.s[i], putts:withP?pl.p[i]:0, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null})) }; });
+  const rs=cd.players.map((pl,k)=>{ const withP = cdP(k) && idxC.every(h=>pl.p[h]!=null); // パットを書かなかった人は putts 0（＝記録なし）で送る
+    return { id:k?uid():cd.id, card:true, player:pl.name, courseId:cd.courseId, courseName:cd.courseName, date:cd.date, createdAt:now+k, ...(partial?{nos:idxC.map(i=>i+1)}:{}),
+      holes:idxC.map(i=>({par:cd.holes[i].par, strokes:pl.s[i], putts:withP?pl.p[i]:0, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null})) }; });
   if(state.saving) return; state.saving=true; render();
   try{ await Promise.all(rs.map(r=>store.saveRound(r))); state.saving=false; }
   catch(e){ state.saving=false; render(); writeErr(e); return; }
   state.cdraft=null; saveCDraft(); state.confirm=null; state.tab="history"; LS.set("sc.tab","history");
-  state.fPlayer=rs[0].player; LS.set("sc.fPlayer",rs[0].player); state.openRound=rs[0].id; state.result=rs[0]; state.resultGroup=rs.length>1?rs:null; state.resultAll=rs.length>1; state.resultGame=rs.length>1?cd.game:null; state.resultCarry=!!cd.carry; state.resultEx={medals:cd.medals||{}, pins:cd.pins||{}, hidden:isPeoria(cd.game)?peoriaHidden(cd.holes.length):null}; render();
+  state.fPlayer=rs[0].player; LS.set("sc.fPlayer",rs[0].player); state.openRound=rs[0].id; state.result=rs[0]; state.resultGroup=rs.length>1?rs:null; state.resultAll=rs.length>1; state.resultGame=rs.length>1?cd.game:null; state.resultCarry=!!cd.carry; state.resultEx={medals:cd.medals||{}, pins:cd.pins||{}, hidden:isPeoria(cd.game)?peoriaHidden(idxC.length):null}; render();
 }
 function cdHole(cd){ if(cd.sel) return cd.sel.h; let i=0; while(i<cd.holes.length && cd.players.every(p=>p.s[i]!=null)) i++; return Math.min(i,cd.holes.length-1); }   // 見ているホール（選択中のマス、なければ次に入れるホール）
 function viewCard(cd){
@@ -2761,7 +2770,7 @@ function viewCard(cd){
       ${done?`<button class="cd-save ${state.saving?"busy":""}" data-act="cd-finish" ${state.saving?"disabled":""}>${state.saving?`<i class="spin"></i>保存中…`:`ラウンドを保存${cd.players.length>1?`（${cd.players.length}人分）`:""}`}</button>`:""}
     </div>
     ${state.rulesOpen?rulesPop(state.rulesOpen):""}
-    ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p><button data-act="cd-pause">中断してホームへ（あとで続きから）</button><button class="danger" data-act="cd-discard">記録を破棄する</button><button data-act="cancel-confirm">入力に戻る</button></div></div>`:""}
+    ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p>${earlyBtn("cd-finish-early", cd.holes.filter((_,i)=>cd.players.every(p=>p.s[i]!=null)).length, cd.holes.length, false)}<button data-act="cd-pause">中断してホームへ（あとで続きから）</button><button class="danger" data-act="cd-discard">記録を破棄する</button><button data-act="cancel-confirm">入力に戻る</button></div></div>`:""}
   </div>`;
 }
 function cardAfter(){ const c=$(".cdt td.sel"), box=$(".cd-scroll"); if(!c||!box) return;
@@ -2783,11 +2792,11 @@ function liveCard(){
 }
 /* 前回このホール（同じ人・同じコース）で使ったティーショットのクラブ */
 function lastClub(d, i){
-  const past = state.rounds.filter(r=>r.player===d.player && r.courseId===d.courseId && r.id!==d.id && r.holes[i] && r.holes[i].club)
+  const past = state.rounds.filter(r=>r.player===d.player && r.courseId===d.courseId && r.id!==d.id && holeAt(r,i) && holeAt(r,i).club)
     .sort((a,b)=>(a.date+(a.createdAt||0)).localeCompare(b.date+(b.createdAt||0)));
   const mem = LS.get("sc.lastClubs", {})[[d.player,d.courseId,i].join("|")];
-  return past.length ? past[past.length-1].holes[i].club : (mem || null); }
-function rememberClubs(r){ const m=LS.get("sc.lastClubs", {}); r.holes.forEach((h,i)=>{ if(h.club) m[[r.player,r.courseId,i].join("|")]=h.club; }); LS.set("sc.lastClubs", m); }
+  return past.length ? holeAt(past[past.length-1],i).club : (mem || null); }
+function rememberClubs(r){ const m=LS.get("sc.lastClubs", {}); r.holes.forEach((h,i)=>{ if(h.club) m[[r.player,r.courseId,holeNo(r,i)-1].join("|")]=h.club; }); LS.set("sc.lastClubs", m); }
 function clubsSheet(){
   const list = sortClubs(state.clubEdit || (state.clubEdit = myClubs()));
   const full = list.length>=CLUB_MAX;
@@ -3090,7 +3099,7 @@ function viewHistory(){
     const open = state.openRound===r.id;
     // グリーンの行き先はパー4・5に無いので出さない。OB・1ペナ・バンカーは、どれかあったラウンドだけ1行で出す
     const hasTr = r.holes.some(h=>h.ob||h.pen||h.bunker);
-    const chunks=[]; for(let i=0;i<r.holes.length;i+=9) chunks.push(r.holes.slice(i,i+9).map((h,j)=>({h,no:i+j+1})));
+    const chunks=[]; for(let i=0;i<r.holes.length;i+=9) chunks.push(r.holes.slice(i,i+9).map((h,j)=>({h,no:holeNo(r,i+j)})));
     const legend = `<div class="sc-legend"><span><i class="mk3 m-hio"></i>ホールインワン</span><span><i class="mk3 m-eagle"></i>イーグル</span><span><i class="mk3 m-birdie"></i>バーディ</span><span><i class="mk3 m-bogey"></i>ボギー</span><span><i class="mk3 m-double"></i>ダボ</span><span><i class="mk3 m-triple"></i>トリプル以上</span></div>`;
     const tables = chunks.map(ch=>`<div class="sc-wrap"><table class="sc">
       <tr class="hn"><th>H</th>${ch.map(x=>`<td>${x.no}</td>`).join("")}<td>計</td></tr>
@@ -3608,19 +3617,25 @@ document.addEventListener("click", async ev => {
     case "pin-q": { const hh=state.hole, i=+b.dataset.i; d.pins=d.pins||{}; if(d.pins[hh]===i) delete d.pins[hh]; else d.pins[hh]=i; saveDraft(); render(); break; }
     case "prev": mark_entered(); state.slide="r"; state.hole--; saveDraft(); render(); break;
     case "next": mark_entered(); state.slide="l"; state.hole++; saveDraft(); render(); window.scrollTo({top:0}); break;
-    case "finish": {
+    case "finish": case "finish-early": {
       if(state.saving) break;
-      if(!d.editing){ // 入力していない打数があれば、そのホールへ案内する（勝手にパーにしない）
+      const early=a==="finish-early", nP=1+(d.mates||[]).length;
+      const idxF = early ? d.holes.map((_,i)=>i).filter(i=>Array.from({length:nP},(_,j)=>j).every(j=>touchedS(d,j,i))) : d.holes.map((_,i)=>i);   // ここまでを保存: 全員の打数が入っているホールだけ
+      if(early && !idxF.length){ state.confirm=null; render(); toast("まだ打数が入っていません"); break; }
+      const partial = idxF.length<d.holes.length;
+      if(early){ const nPT=idxF.filter(i=>d.holes[i].pT===true).length; if(fields().putts && nPT && nPT<idxF.length){ const i=idxF.find(i=>d.holes[i].pT!==true); state.hole=i; state.confirm=null; saveDraft(); render(); toast(`パットが${i+1}Hで抜けています（全部入れるか、全部「入力」のままにしてください）`); break; } }
+      if(!d.editing && !early){ // 入力していない打数があれば、そのホールへ案内する（勝手にパーにしない）
         for(let i=0;i<d.holes.length;i++) for(let j=0;j<1+(d.mates||[]).length;j++) if(!touchedS(d,j,i)){ state.hole=i; saveDraft(); render(); toast(`${j?d.mates[j-1].name:d.player}の${i+1}Hの打数がまだです`); return; }
         if(fields().putts && d.holes.some(x=>x.pT===true)){ const i=d.holes.findIndex(x=>x.pT!==true); if(i>=0){ state.hole=i; saveDraft(); render(); toast(`パットが${i+1}Hで抜けています（全部入れるか、全部「入力」のままにしてください）`); return; } } }
-      const anyP = fields().putts && (d.editing || d.holes.some(x=>x.pT===true));
+      const anyP = fields().putts && (d.editing || idxF.some(i=>d.holes[i].pT===true));
       const r={ id:d.id, player:d.player, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:d.createdAt||Date.now(),
-        holes:d.holes.map(x=>({par:x.par, strokes:x.strokes, putts:anyP?x.putts:0, dir:x.dir, bunker:!!x.bunker, ob:evs(x,"ob").length>0, pen:evs(x,"pen").length>0, tee:x.tee||null, club:x.club||null, aim:x.aim||null, dirOn:x.dirOn||null, teeOn:x.teeOn||null})) };
+        ...(partial?{nos:idxF.map(i=>i+1)}:{}),
+        holes:idxF.map(i=>d.holes[i]).map(x=>({par:x.par, strokes:x.strokes, putts:anyP?x.putts:0, dir:x.dir, bunker:!!x.bunker, ob:evs(x,"ob").length>0, pen:evs(x,"pen").length>0, tee:x.tee||null, club:x.club||null, aim:x.aim||null, dirOn:x.dirOn||null, teeOn:x.teeOn||null})) };
       state.saving=true; render(); rememberClubs(r);
-      const mr=(!d.editing && Array.isArray(d.mates)) ? d.mates.map((m,k)=>({ id:uid(), card:true, player:m.name, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:r.createdAt+k+1,
-        holes:d.holes.map((x,i)=>({par:x.par, strokes:m.s[i], putts:0, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null})) })) : [];
+      const mr=(!d.editing && Array.isArray(d.mates)) ? d.mates.map((m,k)=>({ id:uid(), card:true, player:m.name, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:r.createdAt+k+1, ...(partial?{nos:idxF.map(i=>i+1)}:{}),
+        holes:idxF.map(i=>({par:d.holes[i].par, strokes:m.s[i], putts:0, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null})) })) : [];
       try{ await Promise.all([r,...mr].map(x=>store.saveRound(x))); state.saving=false;
-        state.draft=null; saveDraft(); state.tab="history"; LS.set("sc.tab","history"); state.fPlayer=r.player; state.openRound=r.id; state.result=r; state.resultGroup=mr.length?[r,...mr]:null; state.resultAll=mr.length>0; state.resultGame=mr.length?d.game:null; state.resultGhost=d.game==="ghost"?(g=>g?{best:roundTotals(g).score}:null)(ghostBest(d.player,d.courseId,d.holes.length,r.id)):null; state.resultCarry=!!d.carry; state.resultEx={medals:d.medals||{}, pins:d.pins||{}, hidden:isPeoria(d.game)?peoriaHidden(d.holes.length):null}; render(); }
+        state.draft=null; saveDraft(); state.tab="history"; LS.set("sc.tab","history"); state.fPlayer=r.player; state.openRound=r.id; state.result=r; state.resultGroup=mr.length?[r,...mr]:null; state.resultAll=mr.length>0; state.resultGame=mr.length?d.game:null; state.resultGhost=d.game==="ghost"?(g=>g?{best:roundTotals(g).score}:null)(partial?null:ghostBest(d.player,d.courseId,d.holes.length,r.id)):null; state.resultCarry=!!d.carry; state.resultEx={medals:d.medals||{}, pins:d.pins||{}, hidden:isPeoria(d.game)?peoriaHidden(idxF.length):null}; render(); }
       catch(e){ state.saving=false; render(); writeErr(e); }
       break;
     }
@@ -3651,6 +3666,7 @@ document.addEventListener("click", async ev => {
     case "cd-resume": state.cdraft.paused=false; saveCDraft(); render(); break;
     case "cd-discard": state.cdraft=null; state.confirm=null; saveCDraft(); render(); break;
     case "cd-finish": await cardFinish(b); break;
+    case "cd-finish-early": await cardFinish(b, true); break;
     case "result-pick": { const g=state.resultGroup||[]; const r=g.find(x=>x.id===b.dataset.id); if(r){ state.result=r; state.resultAll=false; state.fPlayer=r.player; state.openRound=r.id; render(); } break; }
     case "result-all": state.resultAll=true; render(); break;
     case "pick-course": state.pick=b.dataset.id; state.sheet=null; state.pickAdd=false; render(); break;
