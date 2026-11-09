@@ -719,14 +719,14 @@ with sync_playwright() as pw:
     rs1 = [rnd(1, "A", 9, 3, 4), rnd(2, "A", 9, 3, 4), rnd(3, "A", 3, 3, 6, [1, 2, 3])]   # 9ホール×2（各+9）と、途中で終わった3ホール（各+9）
     pg, errs = open_page(b, {"sc.rounds": rs1, "sc.player": "\"たろう\"", "sc.tab": "\"stats\""}, offline=True)
     pg.wait_for_timeout(500)
-    check("平均: 全ホールを回ったラウンドだけで、対パーだけを出す（+9.0、打数は出さない）", pg.inner_text(".hero-stat .big").strip() == "+9.0" and "27" not in pg.inner_text(".hero-stat .main"))
+    check("分析: 青い平均のカードは出さない（直近3ラウンドが先頭）", pg.query_selector(".hero-stat") is None and pg.query_selector(".recent") is not None)
     check("推移: 「途中で終わった1回は含めていません」と出る", "途中で終わった1回は含めていません" in pg.inner_text(".note-partial"))
     check("推移: 回ったホール数がそろっていれば、打数／対パーの切りかえが出る", pg.query_selector("[data-act=trend-mode]") is not None)
     check("平均: エラーなし", not errs); pg.context.close()
     rs2 = [rnd(1, "A", 9, 3, 4), rnd(2, "B", 18, 3, 4), rnd(3, "B", 18, 3, 3)]   # 9H(+9) と 18H(+18)・18H(±0) が混ざる → 1ホールあたり +1.0, +1.0, 0.0 の平均
     pg, errs = open_page(b, {"sc.rounds": rs2, "sc.player": "\"たろう\"", "sc.tab": "\"stats\""}, offline=True)
     pg.wait_for_timeout(500)
-    check("平均: ホール数が混ざると「1ホールあたりの対パー」（+0.7 /ホール）で出す", "+0.7" in pg.inner_text(".hero-stat .big") and "ホール" in pg.inner_text(".hero-stat .big"))
+    check("分析: ホール数が混ざっても青いカードは出ない", pg.query_selector(".hero-stat") is None)
     check("推移: ホール数が混ざると、打数／対パーの切りかえは出ない", pg.query_selector("[data-act=trend-mode]") is None)
     check("平均（混在）: エラーなし", not errs); pg.context.close()
     # ゴースト × スコアカード入力: ゴーストの打数（見ているホール）とここまでの差が出る
