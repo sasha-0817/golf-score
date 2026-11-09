@@ -677,6 +677,7 @@ with sync_playwright() as pw:
     check("ホール数: 増やし直すと、消した7番のヤード(150)が戻る", pg.input_value("#yd-6") == "150")
     pick_holes(18)
     check("ホール数: 18まで増やせる", pg.evaluate("state.courseEdit.holes.length") == 18)
+    check("コース編集: 「このコースを削除」は出ない（みんなが同じコースを使うため）", pg.query_selector("[data-act=ask-del-course]") is None and pg.query_selector(".link-del") is None)
     check("ホール数: エラーなし", not errs); pg.context.close()
     # 用意済みコース: 大野川ゴルフコース（大分市・6ホール・パー21、MG 1364Y / SG 1287Y。公式サイトの表と合計が一致）
     pg, errs = open_page(b, {"sc.fields": ALL, "sc.player": "\"たろう\"", "sc.pref": "\"大分県\""}, offline=True)
@@ -719,6 +720,7 @@ with sync_playwright() as pw:
     rs1 = [rnd(1, "A", 9, 3, 4), rnd(2, "A", 9, 3, 4), rnd(3, "A", 3, 3, 6, [1, 2, 3])]   # 9ホール×2（各+9）と、途中で終わった3ホール（各+9）
     pg, errs = open_page(b, {"sc.rounds": rs1, "sc.player": "\"たろう\"", "sc.tab": "\"stats\""}, offline=True)
     pg.wait_for_timeout(500)
+    check("分析: コースの絞り込みは記録から作る（コースの登録がなくても、記録のあるコースを選べる）", pg.evaluate("[...document.querySelectorAll('#f-course option')].some(o=>o.value==='A')"))
     check("分析: 青い平均のカードは出さない（直近3ラウンドが先頭）", pg.query_selector(".hero-stat") is None and pg.query_selector(".recent") is not None)
     check("推移: 「途中で終わった1回は含めていません」と出る", "途中で終わった1回は含めていません" in pg.inner_text(".note-partial"))
     check("推移: 回ったホール数がそろっていれば、打数／対パーの切りかえが出る", pg.query_selector("[data-act=trend-mode]") is not None)

@@ -115,7 +115,6 @@
 .cp-main{flex:1;min-height:58px;border:0;background:transparent;text-align:left;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:6px 4px;color:inherit;font:inherit;cursor:pointer}
 .panel .cp-main small{color:var(--muted)}
 .cp-go{color:var(--muted);font-size:22px;padding:0 6px 0 2px}
-.link-del{display:block;margin:14px auto 0;background:none;border:0;color:var(--q-double);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer}
 
 .add-course{width:100%;margin-top:12px;border-style:dashed}
 
@@ -2020,6 +2019,7 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .ocr-rep{margin:0;padding:10px 12px;border-radius:12px;border:1.5px solid #0E9F62;background:color-mix(in srgb,#0E9F62 10%,var(--rec-bg));font-size:14px;line-height:1.4}
 .sheet button.early-b{background:linear-gradient(135deg,#0F9D62,#12A8C4);border:0;color:#fff}
 .note-partial{margin:8px 2px 0;font-size:13px;text-align:center}
+.trend-cap{margin:6px 2px 4px;min-height:24px;font:700 14px var(--f-body);color:var(--muted);text-align:center}.trend-cap.on{color:var(--fg)}
 </style>
 
 </head>
@@ -2134,7 +2134,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-09-0510";
+const BUILD = "2026-11-09-0600";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2203,7 +2203,6 @@ async function api(action, payload){
 function cache(){ LS.set("sc.courses", state.courses); LS.set("sc.rounds", state.rounds); }
 const store = {
   async saveCourse(c){ if(hasBackend) await api("saveCourse",{course:c}); upsert(state.courses,c); cache(); render(); },
-  async delCourse(id){ if(hasBackend) await api("deleteCourse",{id}); state.courses=state.courses.filter(c=>c.id!==id); cache(); render(); },
   async saveRound(r){
     upsert(state.rounds,r); cache();
     if(hasBackend){
@@ -2863,7 +2862,7 @@ function viewStats(){
   }
   state.fPlayer = me();
   if(!all.some(r=>r.player===state.fPlayer)) return `${demoBand}<button class="demo-link" data-act="demo-on">サンプルデータ（60ラウンド）で見てみる ›</button><div class="panel empty"><strong>まだ${esc(state.fPlayer)}さんのラウンドがありません</strong>ラウンドを保存すると、ここに分析が出ます。</div>`;
-  const cs = courses().filter(c=>all.some(r=>r.courseId===c.id));
+  const cs = (()=>{ const m=new Map(); all.forEach(r=>{ if(r.courseId && !m.has(r.courseId)){ const c=courses().find(x=>x.id===r.courseId); m.set(r.courseId, (c&&c.name)||r.courseName||"（名前なし）"); } }); return [...m].map(([id,name])=>({id,name})).sort((a,b)=>a.name.localeCompare(b.name,"ja")); })();
   if(state.fCourse!=="all" && !cs.some(c=>c.id===state.fCourse)) state.fCourse="all"; // 消したコースで絞り込んだままにしない
   const rs = filteredRounds();
   const s = computeStats(rs);
@@ -2884,7 +2883,7 @@ function viewStats(){
   <div class="panel"><div class="sec"><em>RECENT</em><span>直近3ラウンド</span></div><div class="recent">${rs.slice(-3).reverse().map(r=>{ const t=roundTotals(r); const [y,m,d]=r.date.split("-");
       return `<div class="rr"><div class="rd"><small>${+m}/${+d}</small><b>${t.score}<i>(${toPar(t.diff)})</i></b></div><div class="rh">${r.holes.map(h=>`<span class="mk4 m-${TONEH(h)}" title="${h.strokes}"></span>`).join("")}</div></div>`; }).join("")}</div>
     <div class="mk-legend"><span><i class="mk4 m-eagle"></i>−2</span><span><i class="mk4 m-birdie"></i>−1</span><span><i class="mk4 m-par"></i>±0</span><span><i class="mk4 m-bogey"></i>+1</span><span><i class="mk4 m-double"></i>+2</span><span><i class="mk4 m-triple"></i>+3以上</span></div></div>
-  ${state.oneRound?"":`<div class="panel"><div class="sec"><em>TREND</em><span>スコアの推移</span>${trendSameLen()?`<div class="seg2" role="group" aria-label="表示">${[["diff","対パー"],["total","打数"]].map(([k,l])=>`<button data-act="trend-mode" data-v="${k}" aria-pressed="${(k==="total")===trendTotalOn()}">${l}</button>`).join("")}</div>`:""}</div><div class="tbox"><div class="tbox-ax"><canvas id="ch-score-ax" aria-hidden="true"></canvas></div><div class="tbox-sc"><div class="tbox-in"><canvas id="ch-score" aria-label="スコア推移"></canvas></div></div><div class="tbox-ref"><canvas id="ch-score-ref" aria-hidden="true"></canvas></div></div>${s.nPartial?`<p class="muted note-partial">途中で終わった${s.nPartial}回は含めていません</p>`:""}</div>`}
+  ${state.oneRound?"":`<div class="panel"><div class="sec"><em>TREND</em><span>スコアの推移</span>${trendSameLen()?`<div class="seg2" role="group" aria-label="表示">${[["diff","対パー"],["total","打数"]].map(([k,l])=>`<button data-act="trend-mode" data-v="${k}" aria-pressed="${(k==="total")===trendTotalOn()}">${l}</button>`).join("")}</div>`:""}</div><p class="trend-cap"></p><div class="tbox"><div class="tbox-ax"><canvas id="ch-score-ax" aria-hidden="true"></canvas></div><div class="tbox-sc"><div class="tbox-in"><canvas id="ch-score" aria-label="スコア推移"></canvas></div></div><div class="tbox-ref"><canvas id="ch-score-ref" aria-hidden="true"></canvas></div></div>${s.nPartial?`<p class="muted note-partial">途中で終わった${s.nPartial}回は含めていません</p>`:""}</div>`}
   ${barsPanel("スコアの内訳",DIST_SEGS(s),fmtPct(s.parOrBetter),"%","パー以内",["--q-hio","--q-eagle","--q-birdie","--q-par"])}
 
 `:""}
@@ -2909,7 +2908,7 @@ function viewStats(){
     <div><span class="eyebrow">パーオン時</span><span class="num">${s.puttsPerGir==null?"—":s.puttsPerGir.toFixed(2)}</span></div>
     <div><span class="eyebrow">非パーオン時</span><span class="num">${s.puttsPerMiss==null?"—":s.puttsPerMiss.toFixed(2)}</span></div>
   </div></div>
-  <div class="panel"><div class="sec"><em>TREND</em><span>パット数の推移</span></div><div class="tbox"><div class="tbox-ax"><canvas id="ch-putt-ax" aria-hidden="true"></canvas></div><div class="tbox-sc"><div class="tbox-in"><canvas id="ch-putt" aria-label="パット数推移"></canvas></div></div><div class="tbox-ref"><canvas id="ch-putt-ref" aria-hidden="true"></canvas></div></div></div>
+  <div class="panel"><div class="sec"><em>TREND</em><span>パット数の推移</span></div><p class="trend-cap"></p><div class="tbox"><div class="tbox-ax"><canvas id="ch-putt-ax" aria-hidden="true"></canvas></div><div class="tbox-sc"><div class="tbox-in"><canvas id="ch-putt" aria-label="パット数推移"></canvas></div></div><div class="tbox-ref"><canvas id="ch-putt-ref" aria-hidden="true"></canvas></div></div></div>
   ${barsPanel("パット数の割合",PUTT_SEGS(s),s.puttsPerHole==null?"—":s.puttsPerHole.toFixed(2),"","平均パット / H")}
 `:""}
   `}`;
@@ -3011,7 +3010,9 @@ after.stats = () => {
   const scoreZone = i => { const per = tot[i].diff / rs[i].holes.length; return per<=0 ? "par" : per<=1 ? "bogey" : "double"; };
   const puttZone = i => { const per = tot[i].putts / rs[i].holes.length; return per<=2 ? "par" : per<=2.5 ? "bogey" : "double"; };
   const zoneColor = z => cssv("--q-"+z);
-  const tip = { filter: it => it.dataIndex < rs.length, displayColors:false, callbacks:{ title: items => { const r=rs[items[0].dataIndex]; if(!r) return ""; const [y,m,d]=r.date.split("-"); return `${+m}/${+d}  ${r.courseName}（${r.holes.length}H）`; }, label: () => [] } };
+  const tip = { enabled:false };   // 吹き出しは画面の端で切れるので使わず、グラフの上の固定の1行（.trend-cap）に出す
+  const capText = i => { const r=rs[i]; if(!r) return ""; const [y,m,d]=r.date.split("-"); return `${+m}/${+d}  ${r.courseName}（${r.holes.length}H）`; };
+  const setCap = () => document.querySelectorAll(".trend-cap").forEach(el=>{ el.textContent = state.trendSel!=null ? capText(state.trendSel) : "棒をタップすると、日付とコースが出ます"; el.classList.toggle("on", state.trendSel!=null); });
   // 2つの推移グラフを連動: タップした棒以外を薄くする
   const SCORE_C="#22A06B", PUTT_C="#22A06B", SHOT_C="#A8DCC1", PUTTS_C="#1B7F55";
   const fade = (col, i) => state.trendSel==null || state.trendSel===i ? col : col+"38";
@@ -3021,10 +3022,9 @@ after.stats = () => {
     const i = els.length ? els[0].index : null;
     state.trendSel = (i==null || i>=rs.length || state.trendSel===i) ? null : i;
     paintTrend();
-    const other = src===scoreChart ? puttChart : scoreChart;
-    if(other){ other.tooltip.setActiveElements([], {x:0,y:0}); other.update("none"); }
-    if(state.trendSel==null){ src.tooltip.setActiveElements([], {x:0,y:0}); src.update("none"); }
+    setCap();
   };
+  window.__clearTrend = () => { if(state.trendSel==null) return; state.trendSel=null; paintTrend(); setCap(); };
   if(state.trendSel!=null && state.trendSel>=rs.length) state.trendSel=null;
   const opts = (yTitle, yFmt, lo, hi) => ({ maintainAspectRatio:false, events:["click"], plugins:{ legend:{display:false}, tooltip:tip },
     scales:{ x:{ ticks:{ maxRotation:0, autoSkip:true, autoSkipPadding:14, maxTicksLimit:6 }, grid:{display:false} }, y:{ title:{display:true,text:yTitle}, ticks:{ precision:0, callback: yFmt || (v=>v) }, suggestedMin:lo, suggestedMax:hi, grid:{ color: cssv("--soft") } } } });
@@ -3062,6 +3062,7 @@ after.stats = () => {
   ]}, options:o2, plugins:[refLines(puttRefs||puttLines)] }));
   document.querySelectorAll(".tbox-sc").forEach(sc=>{ sc.scrollLeft = sc.scrollWidth; }); // 最新が見える右端から
   if(scoreChart) scoreChart.options.onClick = onTap(scoreChart); if(puttChart) puttChart.options.onClick = onTap(puttChart);
+  setCap();
   // パーオン率・ボギーオン率の推移（1ラウンドごと）
   const perRound = rs.map(r=>{ const hs=puttsOn(r)?r.holes.filter(h=>h.strokes>0):[]; // パット未記録のラウンドは数えない
     return { g: hs.filter(h=>h.strokes-h.putts<=h.par-2).length, b: hs.filter(h=>h.strokes-h.putts<=h.par-1).length, n: hs.length }; })
@@ -3211,7 +3212,6 @@ function viewCourses(){
       <div class="navrow"><button class="btn" data-act="cancel-course">キャンセル</button><button class="btn primary" data-act="save-course">保存する</button></div>
       ${ocrSheet()}
       ${state.holesSheet?holesSheet():""}
-      ${!e.isNew && !e.fromPreset ? (state.confirm==="delc:"+e.id ? `<div class="actions" style="margin-top:12px"><span class="muted" style="font-size:12px;align-self:center">このコースを削除しますか？（過去の記録は残ります）</span><button class="btn small" data-act="cancel-confirm">やめる</button><button class="btn small danger" data-act="del-course" data-id="${e.id}">削除する</button></div>` : `<button class="link-del" data-act="ask-del-course" data-id="${e.id}">このコースを削除</button>`) : ""}
     </div>`;
   }
   const all = pickableCourses(), F = favs(), pf = curPref(all);
@@ -3539,6 +3539,7 @@ function rulesPop(k){
 }
 /* ---------- actions ---------- */
 function saveDraft(){ if(state.draft) state.draft.cur=state.hole; LS.set("sc.draft", state.draft); } // 今のホールも覚えておく（自動更新で読み直しても同じホールから）
+document.addEventListener("click", ev => { if(state.trendSel!=null && !ev.target.closest(".tbox") && window.__clearTrend) window.__clearTrend(); });   // 棒を選んだあと、グラフの外をさわったら元の濃い緑にもどす
 document.addEventListener("click", async ev => {
   const b = ev.target.closest("[data-act], nav.tabs button, [data-stop], label.fs-row");
   if(!b || b.dataset.stop || b.classList.contains("fs-row")) return;
@@ -3728,8 +3729,6 @@ document.addEventListener("click", async ev => {
       try{ await store.saveCourse(c); if(e.presetId){ const F=favs(); if(F.includes(e.presetId)) LS.set("sc.favs",F.map(x=>x===e.presetId?c.id:x)); } state.courseEdit=null; toast("コースを保存しました"); render(); }catch(err){ writeErr(err); }
       break;
     }
-    case "ask-del-course": state.confirm="delc:"+b.dataset.id; render(); break;
-    case "del-course": try{ await store.delCourse(b.dataset.id); state.confirm=null; state.courseEdit=null; LS.set("sc.favs", favs().filter(x=>x!==b.dataset.id)); toast("コースを削除しました"); render(); }catch(e){ writeErr(e); } break;
   }
 });
 function mark_entered(){}   // 次へ進んでも、入力していない打数・パットはそのまま未入力（勝手にパーや2パットにしない）
