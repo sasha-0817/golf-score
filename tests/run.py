@@ -891,13 +891,11 @@ with sync_playwright() as pw:
         # 9ホールのスコアカードを「同じ表を2つ並べて18H」にしてあるとき: 9ホールのコースとして入れられる
         mk18 = "state.ocr={img:'',names:['L','R'],use:[true,true],res:{cols:['L','R'],holes:Array.from({length:18},(_,i)=>({hole:i+1,par:3,yards:[[97,65,117,68,101,65,85,92,103][i%9],[95,63,123,66,118,60,76,110,120][i%9]]})),totals:{par:54,yards:[1586,1662],first:[793,831],second:[793,831]}}}"
         pg.evaluate(mk18); C(pg, "[data-act=set-np][data-n='1']"); pg.wait_for_timeout(300)
-        check("写真読み取り: 前半と後半が同じなら「9ホールのコースとして入れる」が出て、表は9行・合計は前半の計と合って全部 ✓", pg.query_selector("[data-ocr-half]") is not None and pg.evaluate("document.querySelectorAll('.ocr-t tbody tr').length") == 9 and pg.evaluate("document.querySelectorAll('.ocr-t tfoot td.ok').length") == 3)
+        check("写真読み取り: 前半と後半が同じなら、選ばせずに9ホールとして入る（案内の文・表は9行・合計は前半の計と合って全部 ✓）", pg.query_selector(".ocr-rep") is not None and pg.query_selector("[data-ocr-half]") is None and pg.evaluate("document.querySelectorAll('.ocr-t tbody tr').length") == 9 and pg.evaluate("document.querySelectorAll('.ocr-t tfoot td.ok').length") == 3)
         C(pg, "[data-act=ocr-apply]"); pg.wait_for_timeout(300)
-        check("写真読み取り: 9ホールで入れるとコースは9ホール（18ではない）", pg.evaluate("state.courseEdit.holes.length") == 9)
-        pg.evaluate(mk18); C(pg, "[data-act=set-np][data-n='1']"); pg.wait_for_timeout(300); pg.uncheck("[data-ocr-half]"); pg.wait_for_timeout(300)
-        check("写真読み取り: チェックを外すと18行になり、18ホールで入れられる", pg.evaluate("document.querySelectorAll('.ocr-t tbody tr').length") == 18)
-        C(pg, "[data-act=ocr-apply]"); pg.wait_for_timeout(300)
-        check("写真読み取り: 18ホールで入れるとコースは18ホール", pg.evaluate("state.courseEdit.holes.length") == 18)
+        check("写真読み取り: 取り込むとコースは9ホール（18ではない）", pg.evaluate("state.courseEdit.holes.length") == 9)
+        C(pg, "[data-act=open-holes]"); pg.wait_for_timeout(150); C(pg, "[data-act=set-holes][data-n='18']"); pg.wait_for_timeout(250)
+        check("写真読み取り: あとでホール数を18にすると、後半（10番〜）のヤードも入っている", pg.evaluate("state.courseEdit.holes.length") == 18 and pg.evaluate("state.courseEdit.holes[9].yards") == 97 and pg.evaluate("state.courseEdit.holes[9].yards2") == 95)
         check("写真読み取り: エラーなし", not errs)
         check("Web版: エラーなし", not errs)
         ctx.close()

@@ -2017,7 +2017,7 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .fnh{width:100%;height:48px;border-radius:12px;border:1px solid var(--line);background:var(--soft);color:var(--fg);display:flex;align-items:center;justify-content:center;gap:8px;font:inherit;cursor:pointer}.fnh b{font:700 24px/1 var(--f-num)}.fnh small{color:var(--muted);font-size:13px}
 .hgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.holes-sheet .hgrid button{height:54px;font:700 22px var(--f-num)}.holes-sheet .hgrid button[aria-pressed=true]{background:var(--rec-fg);color:var(--rec-bg);border-color:var(--rec-fg)}
 .cdt tfoot tr.gin td.ft small.blk,.cdt tfoot tr.gin td.ft small{display:block;white-space:nowrap;font-size:13px;letter-spacing:-.04em;word-break:keep-all;overflow:visible}
-.ocr-rep{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:12px;border:1.5px solid #0E9F62;background:color-mix(in srgb,#0E9F62 10%,var(--rec-bg));font-size:14px;line-height:1.4}.ocr-rep input{width:20px;height:20px;flex:none;margin-top:2px}
+.ocr-rep{margin:0;padding:10px 12px;border-radius:12px;border:1.5px solid #0E9F62;background:color-mix(in srgb,#0E9F62 10%,var(--rec-bg));font-size:14px;line-height:1.4}
 </style>
 
 </head>
@@ -2128,7 +2128,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-09-0200";
+const BUILD = "2026-11-09-0210";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3130,7 +3130,7 @@ async function ocrRun(file){
 /* 9ホールしかないコースのスコアカードを「同じ表を2つ並べて18H」にしてあることがある → 前半と後半が全部同じなら、9ホールのコースとして入れられる */
 function ocrRepeat(r){ const N=r.holes.length, H=N/2; if(N%2||N<6) return false;
   return r.holes.slice(0,H).every((h,i)=>{ const g=r.holes[i+H]; return h.par===g.par && h.yards.every((y,k)=>y===g.yards[k]); }); }
-const ocrHalf = o => !!(o.res && ocrRepeat(o.res) && o.half!==false);
+const ocrHalf = o => !!(o.res && ocrRepeat(o.res));   // たまたま全部同じ、ということはないので、選ばせずに9ホールにする（あとでホール数を18にすれば後半も入る）
 /* いま画面にある数字（直したあと）で、印刷された合計と合うかを見る。9ホールで入れるときは、前半の計（OUT）と見比べる */
 function ocrChecks(o){ const r=o.res, half=ocrHalf(o), H=half?r.holes.length/2:r.holes.length, hs=r.holes.slice(0,H);
   const tp=half?(r.totals.par!=null?r.totals.par/2:null):r.totals.par, ps=hs.every(h=>h.par!=null)?hs.reduce((a,h)=>a+h.par,0):null;
@@ -3148,7 +3148,7 @@ function ocrSheet(){
   else { const r=o.res, ck=ocrChecks(o), nUse=o.use.filter(Boolean).length;
     body=`<p>読み取り結果<small>${ocrHalf(o)?r.holes.length/2:r.holes.length}ホール・ヤードの列 ${r.cols.length}つ</small></p>
     <img class="ocr-img" src="${o.img}" alt="読み取った写真">
-    ${ocrRepeat(r)?`<label class="ocr-rep"><input type="checkbox" data-ocr-half ${ocrHalf(o)?"checked":""}><span>前半と後半が同じ数字です。<b>${r.holes.length/2}ホールのコースとして入れる</b></span></label>`:""}
+    ${ocrRepeat(r)?`<p class="ocr-rep">前半と後半が同じ数字なので、<b>${r.holes.length/2}ホールのコース</b>として入れます。</p>`:""}
     <p class="muted ocr-msg">写真と見比べて、違う数字は直してください。印刷された合計と合わない列には ⚠ が出ます。使う列にチェックを入れます（4つまで）。</p>
     <div class="ocr-scroll"><table class="ocr-t"><thead><tr><th>H</th><th>PAR</th>${r.cols.map((c,k)=>`<th><label class="ocr-use"><input type="checkbox" data-ocr-use="${k}" ${o.use[k]?"checked":""} ${!o.use[k]&&nUse>=4?"disabled":""}>使う</label><input class="ocr-name" data-ocr-name="${k}" maxlength="6" value="${esc(o.names[k])}" aria-label="${k+1}列目の名前"></th>`).join("")}</tr></thead>
       <tbody>${r.holes.slice(0,ocrHalf(o)?r.holes.length/2:r.holes.length).map((h,i)=>`<tr><td>${i+1}</td><td><input type="number" inputmode="numeric" class="${h.par==null?"need":""}" data-ocr-par="${i}" value="${h.par??""}" aria-label="${i+1}番のパー"></td>${r.cols.map((_,k)=>`<td><input type="number" inputmode="numeric" class="${h.yards[k]==null?"need":""}" data-ocr-y="${i},${k}" value="${h.yards[k]??""}" aria-label="${i+1}番の${esc(o.names[k])}のヤード"></td>`).join("")}</tr>`).join("")}</tbody>
@@ -3164,9 +3164,10 @@ function ocrApply(){
   const o=state.ocr, e=state.courseEdit; if(!o||!o.res||!e) return; const r=o.res, N=ocrHalf(o)?r.holes.length/2:r.holes.length;
   if(N<1||N>18){ toast(`ホール数が${N}になっています。表の全体が写るように撮り直してください`); return; }
   const use=o.use.map((u,k)=>u?k:-1).filter(k=>k>=0).slice(0,4);
-  e.holes=r.holes.slice(0,N).map(h=>{ const x={par:h.par||3, yards:null}; use.forEach((k,j)=>{ x[YK[j]]=h.yards[k]||null; }); return x; });
+  const full=r.holes.map(h=>{ const x={par:h.par||3, yards:null}; use.forEach((k,j)=>{ x[YK[j]]=h.yards[k]||null; }); return x; });   // 全ホール分を覚えておく（あとでホール数を増やすと戻る）
+  e.holes=full.slice(0,N);
   e.np=Math.max(1,use.length); e.two=e.np>1; e.gn=gnFull(use.map(k=>o.names[k]));
-  e.all=null; state.ocr=null; render(); window.scrollTo({top:0}); toast("入れました。コース名を入れて、数字を見てから保存してください"); }
+  e.all=full; state.ocr=null; render(); window.scrollTo({top:0}); toast("入れました。コース名を入れて、数字を見てから保存してください"); }
 
 /* ----- コース ----- */
 function viewCourses(){
@@ -3222,7 +3223,6 @@ after.courses = () => {
   const oc=()=>state.ocr&&state.ocr.res;
   document.querySelectorAll("[data-ocr-par]").forEach(i=>i.onchange=()=>{ if(!oc()) return; const v=parseInt(i.value,10); state.ocr.res.holes[+i.dataset.ocrPar].par=isNaN(v)?null:v; render(); });
   document.querySelectorAll("[data-ocr-y]").forEach(i=>i.onchange=()=>{ if(!oc()) return; const [a,k]=i.dataset.ocrY.split(",").map(Number), v=parseInt(i.value,10); state.ocr.res.holes[a].yards[k]=isNaN(v)?null:v; render(); });
-  document.querySelectorAll("[data-ocr-half]").forEach(i=>i.onchange=()=>{ if(!oc()) return; state.ocr.half=i.checked; render(); });
   document.querySelectorAll("[data-ocr-use]").forEach(i=>i.onchange=()=>{ if(!oc()) return; state.ocr.use[+i.dataset.ocrUse]=i.checked; render(); });
   document.querySelectorAll("[data-ocr-name]").forEach(i=>i.onchange=()=>{ if(!oc()) return; state.ocr.names[+i.dataset.ocrName]=i.value.trim()||GN_DEF[+i.dataset.ocrName]; render(); });
   const nm=$("#c-name"); nm.oninput=()=>{ e.name=nm.value; };
