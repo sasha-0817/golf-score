@@ -2020,6 +2020,7 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .sheet button.early-b{background:linear-gradient(135deg,#0F9D62,#12A8C4);border:0;color:#fff}
 .note-partial{margin:8px 2px 0;font-size:13px;text-align:center}
 .trend-cap{margin:6px 2px 4px;min-height:24px;font:700 14px var(--f-body);color:var(--muted);text-align:center}.trend-cap.on{color:var(--fg)}
+.rc-sc table .mk3.m-eagle,.rc-sc table .mk3.m-double,.rc-sc table .mk3.m-hio{width:18px;height:18px;font-size:12px;outline-width:1.5px;outline-offset:1px}
 </style>
 
 </head>
@@ -2134,7 +2135,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-09-0600";
+const BUILD = "2026-11-09-2200";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3252,6 +3253,7 @@ after.courses = () => {
 async function shotCard(card){
   const cv = await html2canvas(card,{scale:3, backgroundColor:null, useCORS:true,
     onclone: doc => { const st=doc.createElement("style"); st.textContent="*,*::before,*::after{animation:none!important;transition:none!important;opacity:1}"
+        +".result-card{border-radius:0!important;box-shadow:none!important}"
         // html2canvas は Barlow Condensed の数字を約1.7px下・少し左に描くので、記号の中の数字だけ逆向きに寄せて真ん中に見せる
         +".rc-sc .mk3,.rc-rank i{box-sizing:border-box!important;padding:0 0 3px 1.5px!important}"; doc.head.appendChild(st);
       doc.querySelectorAll(".result-card,.result-card *").forEach(el=>{ el.style.animation="none"; }); // キラキラは同じ位置のまま止めて写す
