@@ -888,6 +888,16 @@ with sync_playwright() as pw:
         pg.fill("[data-ocr-y='2,0']", "117"); pg.press("[data-ocr-y='2,0']", "Tab"); pg.wait_for_timeout(300)
         C(pg, "[data-act=ocr-apply]"); pg.wait_for_timeout(300)
         check("写真読み取り: 取り込むとコース編集に9ホール・パターン2つ(L,R)・ヤードが入る", pg.evaluate("(()=>{const e=state.courseEdit; return e.holes.length===9 && e.np===2 && e.gn[0]==='L' && e.gn[1]==='R' && e.holes[0].yards===97 && e.holes[0].yards2===95 && e.holes[8].par===3})()") and pg.query_selector(".ocr-sheet") is None)
+        # 9ホールのスコアカードを「同じ表を2つ並べて18H」にしてあるとき: 9ホールのコースとして入れられる
+        mk18 = "state.ocr={img:'',names:['L','R'],use:[true,true],res:{cols:['L','R'],holes:Array.from({length:18},(_,i)=>({hole:i+1,par:3,yards:[[97,65,117,68,101,65,85,92,103][i%9],[95,63,123,66,118,60,76,110,120][i%9]]})),totals:{par:54,yards:[1586,1662],first:[793,831],second:[793,831]}}}"
+        pg.evaluate(mk18); C(pg, "[data-act=set-np][data-n='1']"); pg.wait_for_timeout(300)
+        check("写真読み取り: 前半と後半が同じなら「9ホールのコースとして入れる」が出て、表は9行・合計は前半の計と合って全部 ✓", pg.query_selector("[data-ocr-half]") is not None and pg.evaluate("document.querySelectorAll('.ocr-t tbody tr').length") == 9 and pg.evaluate("document.querySelectorAll('.ocr-t tfoot td.ok').length") == 3)
+        C(pg, "[data-act=ocr-apply]"); pg.wait_for_timeout(300)
+        check("写真読み取り: 9ホールで入れるとコースは9ホール（18ではない）", pg.evaluate("state.courseEdit.holes.length") == 9)
+        pg.evaluate(mk18); C(pg, "[data-act=set-np][data-n='1']"); pg.wait_for_timeout(300); pg.uncheck("[data-ocr-half]"); pg.wait_for_timeout(300)
+        check("写真読み取り: チェックを外すと18行になり、18ホールで入れられる", pg.evaluate("document.querySelectorAll('.ocr-t tbody tr').length") == 18)
+        C(pg, "[data-act=ocr-apply]"); pg.wait_for_timeout(300)
+        check("写真読み取り: 18ホールで入れるとコースは18ホール", pg.evaluate("state.courseEdit.holes.length") == 18)
         check("写真読み取り: エラーなし", not errs)
         check("Web版: エラーなし", not errs)
         ctx.close()
