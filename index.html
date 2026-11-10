@@ -2074,10 +2074,12 @@ const PREFS = ["北海道","青森県","岩手県","宮城県","秋田県","山�
 const cPref = c => (c && (c.pref || (c.holes && c.holes[0] && c.holes[0].pref))) || "";
 const cArea = c => (c && (c.area || (c.holes && c.holes[0] && c.holes[0].area))) || "";
 const presetTaken = pc => state.courses.some(c=>c.presetKey===pc.key || c.name.replace(/\s/g,"").includes(pc.name.replace(/\s/g,"")));
-/* 選べるコース = 登録済み + まだ追加していない用意済みコース（id は "preset:キー"） */
+/* 用意済みコースは、ふだんは出さない（コースは各人が自分で登録する方針。写真読み取りで入れる）。動作確認用に、アドレスの最後に ?presets=1 を付けて開くと出る（?presets=0 で戻る。端末ごとに覚える。テストでは常に出す） */
+const SHOW_PRESETS = (()=>{ try{ if(/[?&]presets=1/.test(location.search)) localStorage.setItem("sc.presets","1"); if(/[?&]presets=0/.test(location.search)) localStorage.removeItem("sc.presets"); return localStorage.getItem("sc.presets")==="1"; }catch(e){ return false; } })();
+/* 選べるコース = 登録済み + （確認用のときだけ）まだ追加していない用意済みコース（id は "preset:キー"） */
 function pickableCourses(){
   const list = state.courses.map(c=>({ id:c.id, name:c.name, pref:cPref(c), area:cArea(c), holes:c.holes }));
-  PRESET_COURSES.filter(pc=>!presetTaken(pc)).forEach(pc=>list.push({ id:"preset:"+pc.key, name:pc.name, pref:pc.pref, area:pc.area, holes:pc.holes, preset:true }));
+  if(SHOW_PRESETS) PRESET_COURSES.filter(pc=>!presetTaken(pc)).forEach(pc=>list.push({ id:"preset:"+pc.key, name:pc.name, pref:pc.pref, area:pc.area, holes:pc.holes, preset:true }));
   return list.sort((a,b)=>a.name.localeCompare(b.name,"ja"));
 }
 const favs = () => LS.get("sc.favs", []);
@@ -2137,7 +2139,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-10-0900";
+const BUILD = "2026-11-10-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });

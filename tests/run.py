@@ -34,7 +34,7 @@ def check(name, cond):
     results.append((bool(cond), name)); print(("OK  " if cond else "NG  ") + name)
 
 def open_page(b, ls=None, dark=False, offline=False, repl=None):
-    ls = {"sc.flickTip": True, **(ls or {})}   # 初回のフリック案内は、ふだんのテストでは出さない
+    ls = {"sc.flickTip": True, "sc.presets": "1", **(ls or {})}   # 用意済みコースはふだんは出さないが、テストでは出す   # 初回のフリック案内は、ふだんのテストでは出さない
     src = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
     src = re.sub(r'const CF_URL = "[^"]*";', 'const CF_URL = "";', src, count=1)  # ふだんのテストは引っ越しの案内なし
     for a, z in (repl or {}).items(): src = src.replace(a, z)
@@ -42,6 +42,7 @@ def open_page(b, ls=None, dark=False, offline=False, repl=None):
               .replace("const state = {", "const state = window.state = {")
               .replace("function skinsCalc(", "window.skinsCalc=skinsCalc; function skinsCalc(")
               .replace("function courseGreens(", "window.courseGreens=courseGreens; function courseGreens(")
+              .replace("function pickableCourses(", "window.pickableCourses=pickableCourses; window.showPresets=()=>SHOW_PRESETS; function pickableCourses(")
               .replace("function greenMap(", "window.dirHeat=dirHeat; window.greenMap=greenMap; function greenMap(")
               .replace("function matchCalc(", "window.matchCalc=matchCalc; window.teamCalc=teamCalc; window.teamSumCalc=teamSumCalc; window.GAME_KEYS_ORDER=()=>GAME_KEYS.join(); window.nassauCalc=nassauCalc; window.vegasCalc=vegasCalc; window.stableCalc=stableCalc; window.peoriaCalc=peoriaCalc; window.olympicCalc=olympicCalc; window.peoriaHidden=peoriaHidden; function matchCalc(")
               .replace("async function connect(){", "window.connect=()=>connect(); async function connect(){")
@@ -679,6 +680,13 @@ with sync_playwright() as pw:
     check("ホール数: 18まで増やせる", pg.evaluate("state.courseEdit.holes.length") == 18)
     check("コース編集: 「このコースを削除」は出ない（みんなが同じコースを使うため）", pg.query_selector("[data-act=ask-del-course]") is None and pg.query_selector(".link-del") is None)
     check("ホール数: エラーなし", not errs); pg.context.close()
+    # 用意済みコースは、ふだん（sc.presets なし）は一覧に出ない。?presets=1 で出る（確認用）
+    pg, errs = open_page(b, {"sc.presets": "0", "sc.pref": "\"大分県\""})
+    check("用意済みコース: ふだんは一覧に出ない", pg.evaluate("pickableCourses().filter(c=>c.preset).length") == 0 and pg.evaluate("showPresets()") is False)
+    pg.close(); pg.context.close()
+    pg, errs = open_page(b, {"sc.pref": "\"大分県\""})
+    check("用意済みコース: 確認用に出す設定のときは一覧に出る", pg.evaluate("pickableCourses().filter(c=>c.preset).length") == 5)
+    check("用意済みコース: エラーなし", not errs); pg.context.close()
     # 用意済みコース: 大野川ゴルフコース（大分市・6ホール・パー21、MG 1364Y / SG 1287Y。公式サイトの表と合計が一致）
     pg, errs = open_page(b, {"sc.fields": ALL, "sc.player": "\"たろう\"", "sc.pref": "\"大分県\""}, offline=True)
     start_preset(pg, "oonogawa")
@@ -910,7 +918,7 @@ with sync_playwright() as pw:
         src = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
         src = (src.replace("setTimeout(checkUpdate, 1500);", "").replace("setTimeout(maybeShowA2HS, 2500);", "").replace("const state = {", "const state = window.state = {")
                   .replace("async function connect(){", "window.connect=()=>connect(); async function connect(){"))
-        src = src.replace("<body>", "<body><script>if(!sessionStorage.t){sessionStorage.t=1;localStorage.clear();localStorage.setItem('sc.player',JSON.stringify('たろう'));localStorage.setItem('sc.flickTip','true');localStorage.setItem('sc.fields',JSON.stringify(%s));}</script>" % json.dumps(ALL), 1)
+        src = src.replace("<body>", "<body><script>if(!sessionStorage.t){sessionStorage.t=1;localStorage.clear();localStorage.setItem('sc.player',JSON.stringify('たろう'));localStorage.setItem('sc.flickTip','true');localStorage.setItem('sc.presets','1');localStorage.setItem('sc.fields',JSON.stringify(%s));}</script>" % json.dumps(ALL), 1)
         open(os.path.join(ROOT, "_test_cf.html"), "w", encoding="utf-8").write(src)
         ctx = b.new_context(viewport={"width": 375, "height": 667}, service_workers="block"); pg = ctx.new_page(); errs = []
         pg.on("pageerror", lambda e: errs.append(str(e)))
