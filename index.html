@@ -2004,7 +2004,7 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .ocr-sheet{max-height:90dvh;overflow-y:auto;gap:8px}.ocr-sheet small{font-weight:400;margin-left:8px;opacity:.7}
 .ocr-img{width:100%;max-height:150px;object-fit:contain;border-radius:10px;background:var(--rec-bg)}.ocr-msg{font-size:13px;margin:0!important;font-weight:400!important;opacity:.85}
 .ocr-busy{display:grid;place-items:center;height:90px}.ocr-busy .spin{width:28px;height:28px;border-color:rgba(128,128,128,.3);border-top-color:var(--rec-fg);margin:0}
-.ocr-scroll{overflow:auto;max-height:42dvh;border:1px solid var(--rec-line);border-radius:12px}.ocr-t{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+.ocr-scroll{overflow:auto;max-height:56dvh;border:1px solid var(--rec-line);border-radius:12px}.ocr-t{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
 .ocr-t th,.ocr-t td{padding:4px;text-align:center;font-size:13px;border-bottom:1px solid var(--rec-line)}.ocr-t thead th{position:sticky;top:0;background:var(--rec-surface);z-index:1}
 .ocr-t input[type=number]{width:100%;min-width:52px;height:34px;border:1px solid var(--rec-line);border-radius:8px;background:var(--rec-bg);color:var(--rec-fg);font:700 16px var(--f-num);text-align:center}
 .ocr-t input.need{border-color:#E5484D;background:color-mix(in srgb,#E5484D 12%,var(--rec-bg))}
@@ -2021,6 +2021,8 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .note-partial{margin:8px 2px 0;font-size:13px;text-align:center}
 .trend-cap{margin:6px 2px 4px;min-height:24px;font:700 14px var(--f-body);color:var(--muted);text-align:center}.trend-cap.on{color:var(--fg)}
 .rc-sc table .mk3.m-eagle,.rc-sc table .mk3.m-double,.rc-sc table .mk3.m-hio{width:18px;height:18px;font-size:12px;outline-width:1.5px;outline-offset:1px}
+.ocr-imgbtn{align-self:flex-start;min-height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--rec-line);background:var(--rec-bg);color:var(--rec-fg);font:600 13px var(--f-body)}
+.ocr-img{max-height:30dvh}
 </style>
 
 </head>
@@ -2135,7 +2137,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-09-2200";
+const BUILD = "2026-11-10-0900";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3142,7 +3144,9 @@ async function ocrRun(file){
   try{ const img=await ocrPrep(file); state.ocr={busy:true,img}; render();
     const r=await fetch("/ocr",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:img})}); const j=await r.json().catch(()=>({}));
     if(!j.ok){ state.ocr={err:OCR_ERR[j.error]||"読み取れませんでした。",img}; render(); return; }
-    const res=j.result; state.ocr={img,res,use:res.cols.map((_,k)=>k<4),names:res.cols.map((c,k)=>c||GN_DEF[k])}; render();
+    const res=j.result; state.ocr={img,res,use:res.cols.map((_,k)=>k<4),names:res.cols.map((c,k)=>c||GN_DEF[k])};
+    if(ocrClean(state.ocr)){ ocrApply(); return; }   // 合計が全部合っていて抜けもない → 確認画面なしでそのまま入れる
+    render();
   }catch(e){ state.ocr={err:"通信できませんでした。電波のあるところでお試しください。"}; render(); } }
 /* 9ホールしかないコースのスコアカードを「同じ表を2つ並べて18H」にしてあることがある → 前半と後半が全部同じなら、9ホールのコースとして入れられる */
 function ocrRepeat(r){ const N=r.holes.length, H=N/2; if(N%2||N<6) return false;
@@ -3158,13 +3162,18 @@ function ocrChecks(o){ const r=o.res, half=ocrHalf(o), H=half?r.holes.length/2:r
       const h=Math.ceil(v.length/2), a=v.slice(0,h), b=v.slice(h), f=(r.totals.first||[])[k], s2=(r.totals.second||[])[k];
       const halves=v.length>=2&&f!=null&&s2!=null&&a.every(x=>x!=null)&&b.every(x=>x!=null)&&a.reduce((x,y)=>x+y,0)===f&&b.reduce((x,y)=>x+y,0)===s2;
       return { sum, printed:pr, ok:total||halves, viaHalves:!total&&halves }; }) }; }
+/* 確認なしで入れてよいか: 列は4つまで・ホール数1〜18・数字の抜けなし・パーも全部の列も印刷の合計と合っている */
+function ocrClean(o){ const r=o.res; if(!r||!r.cols.length||r.cols.length>4) return false;
+  const N=ocrHalf(o)?r.holes.length/2:r.holes.length; if(N<1||N>18) return false;
+  const hs=r.holes.slice(0,N); if(hs.some(h=>h.par==null||h.yards.slice(0,r.cols.length).some(y=>y==null))) return false;
+  const ck=ocrChecks(o); return ck.par.ok&&ck.cols.every(c=>c.ok); }
 function ocrSheet(){
   const o=state.ocr; if(!o) return ""; let body;
   if(o.busy) body=`<p>写真を読み取っています<small>10〜20秒かかります</small></p><div class="ocr-busy"><i class="spin"></i></div>`;
   else if(o.err) body=`<p>読み取れませんでした</p><p class="muted ocr-msg">${esc(o.err)}</p><button data-act="ocr-close">閉じる</button>`;
   else { const r=o.res, ck=ocrChecks(o), nUse=o.use.filter(Boolean).length;
     body=`<p>読み取り結果<small>${ocrHalf(o)?r.holes.length/2:r.holes.length}ホール・ヤードの列 ${r.cols.length}つ</small></p>
-    <img class="ocr-img" src="${o.img}" alt="読み取った写真">
+    <button class="ocr-imgbtn" data-act="ocr-img" aria-expanded="${!!o.showImg}">${o.showImg?"写真をとじる":"写真を見る"}</button>${o.showImg?`<img class="ocr-img" src="${o.img}" alt="読み取った写真">`:""}
     ${ocrRepeat(r)?`<p class="ocr-rep">前半と後半が同じ数字なので、<b>${r.holes.length/2}ホールのコース</b>として入れます。</p>`:""}
     <p class="muted ocr-msg">写真と見比べて、違う数字は直してください。印刷された合計と合わない列には ⚠ が出ます。使う列にチェックを入れます（4つまで）。</p>
     <div class="ocr-scroll"><table class="ocr-t"><thead><tr><th>H</th><th>PAR</th>${r.cols.map((c,k)=>`<th><label class="ocr-use"><input type="checkbox" data-ocr-use="${k}" ${o.use[k]?"checked":""} ${!o.use[k]&&nUse>=4?"disabled":""}>使う</label><input class="ocr-name" data-ocr-name="${k}" maxlength="6" value="${esc(o.names[k])}" aria-label="${k+1}列目の名前"></th>`).join("")}</tr></thead>
@@ -3690,6 +3699,7 @@ document.addEventListener("click", async ev => {
     case "ocr-pick": { const f=$("#ocr-file"); if(f) f.click(); break; }
     case "ocr-close": state.ocr=null; render(); break;
     case "ocr-apply": ocrApply(); break;
+    case "ocr-img": if(state.ocr){ state.ocr.showImg=!state.ocr.showImg; render(); } break;
     case "set-np": { const e=state.courseEdit; if(e){ e.np=+b.dataset.n; e.two=e.np>1; render(); } break; }
     case "set-g": { const ni=+b.dataset.g; if((h.gi||0)===ni) break; d.holes.forEach(x=>{ if(x.ys && x.ys[ni]){ x.gi=ni; x.yards=x.ys[ni]; } }); saveDraft(); render(); toast(`全ホールを${d.gn[ni]}のヤードにしました`); break; }
     case "open-clubs": state.clubBack=state.sheet; state.clubEdit=myClubs(); state.sheet="clubs"; render(); break;
