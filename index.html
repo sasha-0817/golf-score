@@ -2023,6 +2023,9 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .rc-sc table .mk3.m-eagle,.rc-sc table .mk3.m-double,.rc-sc table .mk3.m-hio{width:18px;height:18px;font-size:12px;outline-width:1.5px;outline-offset:1px}
 .ocr-imgbtn{align-self:flex-start;min-height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--rec-line);background:var(--rec-bg);color:var(--rec-fg);font:600 13px var(--f-body)}
 .ocr-img{max-height:30dvh}
+.sr-pe{display:grid;grid-template-columns:56px 1fr 52px;gap:6px;font-size:13px;align-items:center}
+.sr-pe b{font:700 18px var(--f-num);text-align:right}.sr-pe b.w{color:var(--q-birdie)}
+.sr-note{font-size:12px;color:var(--rec-muted);line-height:1.4}
 </style>
 
 </head>
@@ -2139,7 +2142,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-10-1000";
+const BUILD = "2026-11-11-1300";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3539,7 +3542,7 @@ function rulesPop(k){
     ex=`<div class="sr-row2"><span>チームA</span><span>たろう 5・はなこ 4</span><b class="w">9</b></div><div class="sr-row2"><span>チームB</span><span>じろう 7・さぶろう 0</span><b>7</b></div><div class="sr-sum"><b>チームAの勝ち</b></div>`; }
   if(k==="peoria"){
     list=`<li>保存したあと、<b>くじで「隠しホール」</b>を選びます（ホール数の3分の2）</li><li><b>ハンデ＝（隠しホールの合計×1.5 − パー）×0.8</b></li><li>合計−ハンデの<b>ネットが一番少ない人が優勝</b>。大たたきが隠しホールに入るほどハンデが増えます</li>`;
-    ex=`<div class="sr-row4 h"><span></span><span>合計</span><span>隠し6H</span><span>ハンデ</span><span>ネット</span></div><div class="sr-row4"><span>たろう</span><span>28</span><span>19</span><span>1.2</span><b>26.8</b></div><div class="sr-row4"><span>はなこ</span><span>36</span><span>25</span><span>8.4</span><b>27.6</b></div><div class="sr-sum">パー27のコース → <b>たろうの優勝</b>（隠しホールしだいで逆転も）</div>`; }
+    ex=`<div class="sr-pe"><span>たろう</span><span>合計 28 − ハンデ 1.2</span><b class="w">26.8</b></div><div class="sr-pe"><span>はなこ</span><span>合計 36 − ハンデ 8.4</span><b>27.6</b></div><div class="sr-note">ハンデは隠しホールの合計で決まる（たろう19打→1.2、はなこ25打→8.4）</div><div class="sr-sum">ネットが少ない <b>たろうの優勝</b></div>`; }
   if(k==="olympic"){
     list=`<li>グリーンに乗ってから<b>1パットで入れた人だけ</b>がメダルをもらえます</li><li>ピンから遠かった人から ${medalSVG(4,14)}金4点・${medalSVG(3,14)}銀3点・${medalSVG(2,14)}銅2点・${medalSVG(1,14)}鉄1点。グリーンの外から入れたら ${medalSVG(5,14)}<b>ダイヤ5点</b></li><li>人数が少ないときは、上のメダルから使います（2人なら金・銀、3人なら金・銀・銅）</li><li>毎ホール、メダルのマスを押したまま右へ動かして入力。<b>点数が一番多い人の勝ち</b></li>`;
     ex=`<div class="sr-row2"><span>はなこ</span><span>8mを1パット</span><b>${medalSVG(4,18)}</b></div><div class="sr-row2"><span>たろう</span><span>3mを1パット</span><b>${medalSVG(3,18)}</b></div><div class="sr-row2"><span>じろう</span><span>2パット</span><b class="sr-none">なし</b></div><div class="sr-sum">このホール　はなこ 4点・たろう 3点</div>`; }
