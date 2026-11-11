@@ -328,7 +328,7 @@ with sync_playwright() as pw:
     check("ゲームのカード: 名前・説明は1行で切れない、ルールと丸は縦の真ん中でそろう", r)
     C(pg, "[data-act=open-rules][data-v=peoria]"); pg.wait_for_timeout(200)
     pe = pg.evaluate("[...document.querySelectorAll('.rp .sr-pe')].map(r=>[...r.children].map(c=>[Math.round(c.getBoundingClientRect().left),c.scrollWidth<=c.clientWidth+1]))")
-    check("新ペリアの例: 2人の行の列がそろい（左端が同じ）、文字が切れない・ハンデの理由の1行がある", len(pe)==2 and [c[0] for c in pe[0]]==[c[0] for c in pe[1]] and all(c[1] for r in pe for c in r) and "ハンデは隠しホールの合計で決まる" in pg.inner_text(".rp") and "ハンデ 1.2" in pg.inner_text(".rp") and "26.8" in pg.inner_text(".rp"))
+    check("新ペリアの例: 2人の行の列がそろい（左端が同じ）、文字が切れない・ハンデの理由の1行がある", len(pe)==2 and [c[0] for c in pe[0]]==[c[0] for c in pe[1]] and all(c[1] for r in pe for c in r) and "ハンデは隠しホールの合計で決まる" in pg.inner_text(".rp") and "ハンデ 1.2" in pg.inner_text(".rp") and "25.6" in pg.inner_text(".rp") and "はなこの逆転優勝" in pg.inner_text(".rp"))
     C(pg, ".rp-x")
     C(pg, "[data-act=open-rules][data-v=olympic]")
     t = pg.inner_text(".rp")
