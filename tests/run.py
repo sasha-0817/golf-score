@@ -921,7 +921,8 @@ with sync_playwright() as pw:
     try:
         src = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
         src = (src.replace("setTimeout(checkUpdate, 1500);", "").replace("setTimeout(maybeShowA2HS, 2500);", "").replace("const state = {", "const state = window.state = {")
-                  .replace("async function connect(){", "window.connect=()=>connect(); async function connect(){"))
+                  .replace("async function connect(){", "window.connect=()=>connect(); async function connect(){")
+                  .replace("function ocrApplyRes(", "window.ocrApplyRes=ocrApplyRes; function ocrApplyRes("))
         src = src.replace("<body>", "<body><script>if(!sessionStorage.t){sessionStorage.t=1;localStorage.clear();localStorage.setItem('sc.player',JSON.stringify('たろう'));localStorage.setItem('sc.flickTip','true');localStorage.setItem('sc.presets','1');localStorage.setItem('sc.fields',JSON.stringify(%s));}</script>" % json.dumps(ALL), 1)
         open(os.path.join(ROOT, "_test_cf.html"), "w", encoding="utf-8").write(src)
         ctx = b.new_context(viewport={"width": 375, "height": 667}, service_workers="block"); pg = ctx.new_page(); errs = []
@@ -938,28 +939,27 @@ with sync_playwright() as pw:
         rid = pg.evaluate("state.rounds[0].id")
         pg.evaluate(f"fetch('/api',{{method:'POST',body:JSON.stringify({{action:'deleteRound',id:'{rid}'}})}})"); pg.wait_for_timeout(200)
         check("Web版: 削除できる", len(pg.evaluate("fetch('/api').then(r=>r.json())")["rounds"]) == 0)
-        # 写真からコースを読み取る（偽のAI: 1つ目は数字を1つ読み違え、2つ目は正しい。合計が合う方が選ばれる）
+        # 写真からコースを読み取る: 確認画面なしで、そのままコース編集に入る（偽のAI: 1つ目は3番のLを177と答え、2つ目は117と答える → 割れた数字は空欄・赤い枠）
         import base64
         png = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==")
         check("写真読み取り: サーバーにAIがつながっていれば ready", pg.evaluate("fetch('/ocr').then(r=>r.json())")["ready"] is True)
         C(pg, "nav.tabs [data-tab=courses]"); C(pg, "[data-act=new-course]"); pg.wait_for_timeout(900)
         check("写真読み取り: コース登録に「写真から読み取る」ボタンが出る", pg.query_selector("[data-act=ocr-pick]") is not None)
-        pg.set_input_files("#ocr-file", {"name": "card.png", "mimeType": "image/png", "buffer": png}); pg.wait_for_function("state.courseEdit && state.courseEdit.holes.length===9 && state.courseEdit.holes[0].yards===97", timeout=8000); pg.wait_for_timeout(300)
-        check("写真読み取り: 合計が全部合っていれば確認画面を出さず、そのままコース編集に入る（9ホール・パターン2つ(L,R)・ヤード）", pg.evaluate("(()=>{const e=state.courseEdit; return e.holes.length===9 && e.np===2 && e.gn[0]==='L' && e.gn[1]==='R' && e.holes[0].yards===97 && e.holes[0].yards2===95 && e.holes[2].yards===117 && e.holes[8].par===3})()") and pg.query_selector(".ocr-sheet") is None)
-        # 合計が合わないとき（1つ読み違えた）は確認画面を出す
-        pg.evaluate("state.ocr={img:'',names:['L','R'],use:[true,true],res:{cols:['L','R'],holes:[3,3,3,3,3,3,3,3,3].map((p,i)=>({hole:i+1,par:p,yards:[[97,65,177,68,101,65,85,92,103][i],[95,63,123,66,118,60,76,110,120][i]]})),totals:{par:27,yards:[793,831],first:[793,831],second:[0,0]}}}"); C(pg, "[data-act=set-np][data-n='2']"); pg.wait_for_timeout(300)
-        check("写真読み取り: 合計が合わない列があれば確認画面を出す（⚠）", pg.query_selector(".ocr-t") is not None and pg.evaluate("document.querySelectorAll('.ocr-t tfoot td.ng').length") == 1 and "⚠" in pg.inner_text(".ocr-t tfoot"))
-        check("写真読み取り: 確認画面に写真は出さない（スコアカードは手元にある）。「スコアカードと見比べて」と案内し、表は広く動く", pg.query_selector(".ocr-img") is None and pg.query_selector("[data-act=ocr-img]") is None and "スコアカードと見比べて" in pg.inner_text(".ocr-sheet") and pg.evaluate("document.querySelector('.ocr-scroll').getBoundingClientRect().height") >= 150)
-        pg.fill("[data-ocr-y='2,0']", "117"); pg.press("[data-ocr-y='2,0']", "Tab"); pg.wait_for_timeout(300)
-        check("写真読み取り: 直して合計が合えば ✓（前半・後半）", pg.evaluate("document.querySelectorAll('.ocr-t tfoot td.ok').length") == 3)
-        C(pg, "[data-act=ocr-apply]"); pg.wait_for_timeout(300)
-        check("写真読み取り: 確認画面から取り込んでもコース編集に入る", pg.evaluate("state.courseEdit.holes[2].yards")==117 and pg.query_selector(".ocr-sheet") is None)
-        # 9ホールのスコアカードを「同じ表を2つ並べて18H」にしてあるとき: 9ホールのコースとして入れられる
-        mk18 = "state.ocr={img:'',names:['L','R'],use:[true,true],res:{cols:['L','R'],holes:Array.from({length:18},(_,i)=>({hole:i+1,par:3,yards:[[97,65,117,68,101,65,85,92,103][i%9],[95,63,123,66,118,60,76,110,120][i%9]]})),totals:{par:54,yards:[1586,1662],first:[793,831],second:[793,831]}}}"
-        pg.evaluate(mk18); C(pg, "[data-act=set-np][data-n='1']"); pg.wait_for_timeout(300)
-        check("写真読み取り: 前半と後半が同じなら、選ばせずに9ホールとして入る（案内の文・表は9行・合計は前半の計と合って全部 ✓）", pg.query_selector(".ocr-rep") is not None and pg.query_selector("[data-ocr-half]") is None and pg.evaluate("document.querySelectorAll('.ocr-t tbody tr').length") == 9 and pg.evaluate("document.querySelectorAll('.ocr-t tfoot td.ok').length") == 3)
-        C(pg, "[data-act=ocr-apply]"); pg.wait_for_timeout(300)
-        check("写真読み取り: 取り込むとコースは9ホール（18ではない）", pg.evaluate("state.courseEdit.holes.length") == 9)
+        pg.set_input_files("#ocr-file", {"name": "card.png", "mimeType": "image/png", "buffer": png}); pg.wait_for_function("state.courseEdit && state.courseEdit.ocrNote", timeout=8000); pg.wait_for_timeout(300)
+        check("写真読み取り: 確認画面は出さず、そのままコース編集に入る（9ホール・パターン2つ(L,R)・ヤード）", pg.query_selector(".ocr-sheet") is None and pg.query_selector(".ocr-t") is None and pg.evaluate("(()=>{const e=state.courseEdit; return e.holes.length===9 && e.np===2 && e.gn[0]==='L' && e.gn[1]==='R' && e.holes[0].yards===97 && e.holes[0].yards2===95})()"))
+        check("写真読み取り: 2つのAIで答えが割れた数字（3番のL）は空欄で、赤い枠", pg.input_value("#yd-2") == "" and pg.evaluate("document.querySelector('#yd-2').classList.contains('need')") and not pg.evaluate("document.querySelector('#yd-0').classList.contains('need')"))
+        check("写真読み取り: 上に案内（「スコアカードと見比べて」・赤い枠の説明）が出る", "スコアカードと見比べて" in pg.inner_text(".ocr-note") and "赤い枠" in pg.inner_text(".ocr-note"))
+        pg.fill("#yd-2", "117")
+        check("写真読み取り: 数字を入れると赤い枠が消える", not pg.evaluate("document.querySelector('#yd-2').classList.contains('need')"))
+        # 印刷の合計と合わない列は、文章で知らせる（合っているときは何も出さない）
+        mkres = lambda tot: "ocrApplyRes({cols:['Back','Front'],holes:[[105,82],[91,74],[57,44],[70,51],[55,45],[63,48],[78,67],[89,69],[94,79]].map((y,i)=>({hole:i+1,par:3,yards:y})),totals:{par:27,yards:%s,first:[null,null],second:[null,null]}})" % tot
+        pg.evaluate(mkres("[692,559]")); pg.wait_for_timeout(300)
+        check("写真読み取り: 合計が合わない列は文章で知らせる（Back: 足すと702だが、スコアカードは692）", "Backの合計が合いません" in pg.inner_text(".ocr-note") and "足すと702" in pg.inner_text(".ocr-note") and "692" in pg.inner_text(".ocr-note") and "Front" not in pg.inner_text(".ocr-note").replace("Backの", ""))
+        pg.evaluate(mkres("[702,559]")); pg.wait_for_timeout(300)
+        check("写真読み取り: 合計が合っているときは、合計の文は出ない", "合計が合いません" not in pg.inner_text(".ocr-note"))
+        # 9ホールのスコアカードを「同じ表を2つ並べて18H」にしてあるとき: 9ホールのコースとして入れる（あとでホール数を18にすると後半も入る）
+        pg.evaluate("ocrApplyRes({cols:['L','R'],holes:Array.from({length:18},(_,i)=>({hole:i+1,par:3,yards:[[97,65,117,68,101,65,85,92,103][i%9],[95,63,123,66,118,60,76,110,120][i%9]]})),totals:{par:54,yards:[1586,1662],first:[793,831],second:[793,831]}})"); pg.wait_for_timeout(300)
+        check("写真読み取り: 前半と後半が同じなら、9ホールのコースとして入る（案内の文つき・合計の文は出ない）", pg.evaluate("state.courseEdit.holes.length") == 9 and "9ホールのコース" in pg.inner_text(".ocr-note") and "合計が合いません" not in pg.inner_text(".ocr-note"))
         C(pg, "[data-act=open-holes]"); pg.wait_for_timeout(150); C(pg, "[data-act=set-holes][data-n='18']"); pg.wait_for_timeout(250)
         check("写真読み取り: あとでホール数を18にすると、後半（10番〜）のヤードも入っている", pg.evaluate("state.courseEdit.holes.length") == 18 and pg.evaluate("state.courseEdit.holes[9].yards") == 97 and pg.evaluate("state.courseEdit.holes[9].yards2") == 95)
         # 確認用のプレビュー（本番以外のアドレス）は、同じデータベースでも別の表を使う → 本番のデータに混ざらない

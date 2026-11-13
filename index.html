@@ -2004,19 +2004,11 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .ocr-sheet{max-height:90dvh;overflow-y:auto;gap:8px}.ocr-sheet small{font-weight:400;margin-left:8px;opacity:.7}
 .ocr-msg{font-size:13px;margin:0!important;font-weight:400!important;opacity:.85}
 .ocr-busy{display:grid;place-items:center;height:90px}.ocr-busy .spin{width:28px;height:28px;border-color:rgba(128,128,128,.3);border-top-color:var(--rec-fg);margin:0}
-.ocr-scroll{overflow:auto;max-height:56dvh;border:1px solid var(--rec-line);border-radius:12px}.ocr-t{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
-.ocr-t th,.ocr-t td{padding:4px;text-align:center;font-size:13px;border-bottom:1px solid var(--rec-line)}.ocr-t thead th{position:sticky;top:0;background:var(--rec-surface);z-index:1}
-.ocr-t input[type=number]{width:100%;min-width:52px;height:34px;border:1px solid var(--rec-line);border-radius:8px;background:var(--rec-bg);color:var(--rec-fg);font:700 16px var(--f-num);text-align:center}
-.ocr-t input.need{border-color:#E5484D;background:color-mix(in srgb,#E5484D 12%,var(--rec-bg))}
-.ocr-name{width:100%;min-width:52px;height:30px;border:1px solid var(--rec-line);border-radius:8px;background:var(--rec-bg);color:var(--rec-fg);font:700 14px var(--f-body);text-align:center;margin-top:4px}
-.ocr-use{display:flex;align-items:center;justify-content:center;gap:4px;font-size:13px;font-weight:700}.ocr-use input{width:18px;height:18px}
-.ocr-t tfoot td{font:700 17px var(--f-num);padding:8px 4px}.ocr-t tfoot td small{display:block;font:700 12px var(--f-body);margin:0}.ocr-t tfoot td.ok{color:#14935C}.ocr-t tfoot td.ng{color:#E5484D}
 .ocr-sheet button.primary-b{background:linear-gradient(135deg,#0F9D62,#12A8C4);border:0;color:#fff}
 .ocr-btn{width:100%;display:flex;align-items:center;gap:12px;margin:12px 0 2px;padding:12px 14px;border-radius:14px;border:1.5px dashed #0E9F62;background:color-mix(in srgb,#0E9F62 8%,var(--paper));color:var(--fg);font:inherit;text-align:left;cursor:pointer}.ocr-btn svg{width:30px;height:30px;flex:none;fill:none;stroke:#0E9F62;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.ocr-btn span{display:grid;gap:2px;min-width:0}.ocr-btn b{font-size:15px}.ocr-btn small{font-size:13px;color:var(--muted)}
 .fnh{width:100%;height:48px;border-radius:12px;border:1px solid var(--line);background:var(--soft);color:var(--fg);display:flex;align-items:center;justify-content:center;gap:8px;font:inherit;cursor:pointer}.fnh b{font:700 24px/1 var(--f-num)}.fnh small{color:var(--muted);font-size:13px}
 .hgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.holes-sheet .hgrid button{height:54px;font:700 22px var(--f-num)}.holes-sheet .hgrid button[aria-pressed=true]{background:var(--rec-fg);color:var(--rec-bg);border-color:var(--rec-fg)}
 .cdt tfoot tr.gin td.ft small.blk,.cdt tfoot tr.gin td.ft small{display:block;white-space:nowrap;font-size:13px;letter-spacing:-.04em;word-break:keep-all;overflow:visible}
-.ocr-rep{margin:0;padding:10px 12px;border-radius:12px;border:1.5px solid #0E9F62;background:color-mix(in srgb,#0E9F62 10%,var(--rec-bg));font-size:14px;line-height:1.4}
 .sheet button.early-b{background:linear-gradient(135deg,#0F9D62,#12A8C4);border:0;color:#fff}
 .note-partial{margin:8px 2px 0;font-size:13px;text-align:center}
 .trend-cap{margin:6px 2px 4px;min-height:24px;font:700 14px var(--f-body);color:var(--muted);text-align:center}.trend-cap.on{color:var(--fg)}
@@ -2024,7 +2016,8 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .sr-pe{display:grid;grid-template-columns:56px 1fr 52px;gap:6px;font-size:13px;align-items:center}
 .sr-pe b{font:700 18px var(--f-num);text-align:right}.sr-pe b.w{color:var(--q-birdie)}
 .sr-note{font-size:12px;color:var(--rec-muted);line-height:1.4}
-.ocr-sheet{overflow:hidden}.ocr-sheet>*{flex:none}.ocr-sheet .ocr-scroll{flex:1 1 auto;min-height:150px;max-height:none}
+.ocr-sheet{overflow:hidden}.ocr-sheet>*{flex:none}.ocr-sheet .ocr-note{margin:12px 0 4px;padding:10px 12px;border-radius:12px;border:1.5px solid #0E9F62;background:color-mix(in srgb,#0E9F62 10%,var(--paper));font-size:14px;line-height:1.5}
+.par-cell input.need{border-color:#E5484D;background:color-mix(in srgb,#E5484D 12%,var(--paper))}.par-cell.need{outline:2px solid #E5484D;outline-offset:-2px;border-radius:12px}
 </style>
 
 </head>
@@ -2141,7 +2134,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-13-0100";
+const BUILD = "2026-11-13-0200";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3145,12 +3138,10 @@ function ocrPrep(file){ return new Promise((ok,ng)=>{ const url=URL.createObject
 const OCR_ERR = { not_ready:"読み取りの機能がまだ使えません。", too_big:"写真が大きすぎます。", bad_image:"写真を読み込めませんでした。", limit:"今日の読み取りの回数の上限に達しました。明日またお試しください。", unreadable:"スコアカードの表を読み取れませんでした。表全体がはっきり写るように撮り直してください。", server:"読み取りでエラーが出ました。しばらくしてからお試しください。" };
 async function ocrRun(file){
   state.ocr={busy:true}; render();
-  try{ const img=await ocrPrep(file); state.ocr={busy:true,img}; render();
+  try{ const img=await ocrPrep(file); state.ocr={busy:true}; render();
     const r=await fetch("/ocr",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:img})}); const j=await r.json().catch(()=>({}));
-    if(!j.ok){ state.ocr={err:OCR_ERR[j.error]||"読み取れませんでした。",img}; render(); return; }
-    const res=j.result; state.ocr={img,res,use:res.cols.map((_,k)=>k<4),names:res.cols.map((c,k)=>c||GN_DEF[k])};
-    if(ocrClean(state.ocr)){ ocrApply(); return; }   // 合計が全部合っていて抜けもない → 確認画面なしでそのまま入れる
-    render();
+    if(!j.ok){ state.ocr={err:OCR_ERR[j.error]||"読み取れませんでした。"}; render(); return; }
+    ocrApplyRes(j.result);
   }catch(e){ state.ocr={err:"通信できませんでした。電波のあるところでお試しください。"}; render(); } }
 /* 9ホールしかないコースのスコアカードを「同じ表を2つ並べて18H」にしてあることがある → 前半と後半が全部同じなら、9ホールのコースとして入れられる */
 function ocrRepeat(r){ const N=r.holes.length, H=N/2; if(N%2||N<6) return false;
@@ -3166,37 +3157,30 @@ function ocrChecks(o){ const r=o.res, half=ocrHalf(o), H=half?r.holes.length/2:r
       const h=Math.ceil(v.length/2), a=v.slice(0,h), b=v.slice(h), f=(r.totals.first||[])[k], s2=(r.totals.second||[])[k];
       const halves=v.length>=2&&f!=null&&s2!=null&&a.every(x=>x!=null)&&b.every(x=>x!=null)&&a.reduce((x,y)=>x+y,0)===f&&b.reduce((x,y)=>x+y,0)===s2;
       return { sum, printed:pr, ok:total||halves, viaHalves:!total&&halves }; }) }; }
-/* 確認なしで入れてよいか: 列は4つまで・ホール数1〜18・数字の抜けなし・パーも全部の列も印刷の合計と合っている */
-function ocrClean(o){ const r=o.res; if(!r||!r.cols.length||r.cols.length>4) return false;
-  const N=ocrHalf(o)?r.holes.length/2:r.holes.length; if(N<1||N>18) return false;
-  const hs=r.holes.slice(0,N); if(hs.some(h=>h.par==null||h.yards.slice(0,r.cols.length).some(y=>y==null))) return false;
-  const ck=ocrChecks(o); return ck.par.ok&&ck.cols.every(c=>c.ok); }
 function ocrSheet(){
   const o=state.ocr; if(!o) return ""; let body;
   if(o.busy) body=`<p>写真を読み取っています<small>10〜20秒かかります</small></p><div class="ocr-busy"><i class="spin"></i></div>`;
-  else if(o.err) body=`<p>読み取れませんでした</p><p class="muted ocr-msg">${esc(o.err)}</p><button data-act="ocr-close">閉じる</button>`;
-  else { const r=o.res, ck=ocrChecks(o), nUse=o.use.filter(Boolean).length;
-    body=`<p>読み取り結果<small>${ocrHalf(o)?r.holes.length/2:r.holes.length}ホール・ヤードの列 ${r.cols.length}つ</small></p>
-    ${ocrRepeat(r)?`<p class="ocr-rep">前半と後半が同じ数字なので、<b>${r.holes.length/2}ホールのコース</b>として入れます。</p>`:""}
-    <p class="muted ocr-msg">スコアカードと見比べて、違う数字は直してください。印刷された合計と合わない列には ⚠ が出ます。使う列にチェックを入れます（4つまで）。</p>
-    <div class="ocr-scroll"><table class="ocr-t"><thead><tr><th>H</th><th>PAR</th>${r.cols.map((c,k)=>`<th><label class="ocr-use"><input type="checkbox" data-ocr-use="${k}" ${o.use[k]?"checked":""} ${!o.use[k]&&nUse>=4?"disabled":""}>使う</label><input class="ocr-name" data-ocr-name="${k}" maxlength="6" value="${esc(o.names[k])}" aria-label="${k+1}列目の名前"></th>`).join("")}</tr></thead>
-      <tbody>${r.holes.slice(0,ocrHalf(o)?r.holes.length/2:r.holes.length).map((h,i)=>`<tr><td>${i+1}</td><td><input type="number" inputmode="numeric" class="${h.par==null?"need":""}" data-ocr-par="${i}" value="${h.par??""}" aria-label="${i+1}番のパー"></td>${r.cols.map((_,k)=>`<td><input type="number" inputmode="numeric" class="${h.yards[k]==null?"need":""}" data-ocr-y="${i},${k}" value="${h.yards[k]??""}" aria-label="${i+1}番の${esc(o.names[k])}のヤード"></td>`).join("")}</tr>`).join("")}</tbody>
-      <tfoot><tr><td colspan="2" class="${ck.par.ok?"ok":ck.par.printed!=null?"ng":""}">計 ${ck.par.sum??"—"}${ck.par.printed!=null?`<small>${ck.par.ok?"✓":"⚠ 印刷 "+ck.par.printed}</small>`:""}</td>${ck.cols.map(c=>`<td class="${c.ok?"ok":c.printed!=null?"ng":""}">${c.sum??"—"}${c.ok?`<small>${c.viaHalves?"✓ 前半・後半":"✓"}</small>`:c.printed!=null?`<small>⚠ 印刷 ${c.printed}</small>`:""}</td>`).join("")}</tr></tfoot></table></div>
-    <button class="primary-b" data-act="ocr-apply">コース編集に入れる</button><button data-act="ocr-close">やめる</button>`; }
-  return `<div class="sheet-back" data-act="ocr-close"><div class="sheet ocr-sheet" data-stop="1">${body}</div></div>`; }
+  else body=`<p>読み取れませんでした</p><p class="muted ocr-msg">${esc(o.err||"")}</p><button data-act="ocr-close">閉じる</button>`;
+  return `<div class="sheet-back" data-act="${o.busy?"":"ocr-close"}"><div class="sheet ocr-sheet" data-stop="1">${body}</div></div>`; }
 /* ホール数: 押すと 6列×3行（1〜18）の数字が出て、タップで選ぶ。減らしても、増やし直すと元の数字が戻る */
 function holesSheet(){ const n=state.courseEdit.holes.length;
   return `<div class="sheet-back" data-act="close-holes"><div class="sheet holes-sheet" data-stop="1"><p>ホール数</p><div class="hgrid">${Array.from({length:18},(_,i)=>`<button data-act="set-holes" data-n="${i+1}" aria-pressed="${i+1===n}">${i+1}</button>`).join("")}</div></div></div>`; }
 function setHoles(n){ const e=state.courseEdit; if(!e) return; e.all=e.all||[]; e.holes.forEach((h,i)=>{ e.all[i]=h; });
   e.holes=Array.from({length:n},(_,i)=>e.all[i]||(e.all[i]={par:3,yards:null})); state.holesSheet=false; render(); }
-function ocrApply(){
-  const o=state.ocr, e=state.courseEdit; if(!o||!o.res||!e) return; const r=o.res, N=ocrHalf(o)?r.holes.length/2:r.holes.length;
-  if(N<1||N>18){ toast(`ホール数が${N}になっています。表の全体が写るように撮り直してください`); return; }
-  const use=o.use.map((u,k)=>u?k:-1).filter(k=>k>=0).slice(0,4);
-  const full=r.holes.map(h=>{ const x={par:h.par||3, yards:null}; use.forEach((k,j)=>{ x[YK[j]]=h.yards[k]||null; }); return x; });   // 全ホール分を覚えておく（あとでホール数を増やすと戻る）
-  e.holes=full.slice(0,N);
-  e.np=Math.max(1,use.length); e.two=e.np>1; e.gn=gnFull(use.map(k=>o.names[k]));
-  e.all=full; state.ocr=null; render(); window.scrollTo({top:0}); toast("入れました。コース名を入れて、数字を見てから保存してください"); }
+/* 読み取った結果を、そのままコース編集に入れる。読めなかった数字（空欄）は赤い枠、印刷の合計と合わない列は上に文章で知らせる */
+function ocrApplyRes(res){
+  const e=state.courseEdit; if(!e) return; const o={res}, N=ocrHalf(o)?res.holes.length/2:res.holes.length;
+  if(N<1||N>18){ state.ocr={err:`ホール数が${N}になっています。表の全体が写るように撮り直してください。`}; render(); return; }
+  const use=res.cols.map((_,k)=>k).slice(0,4), names=res.cols.map((c,k)=>c||GN_DEF[k]);
+  const full=res.holes.map(h=>{ const x={par:h.par||3, yards:null, _n:{p:h.par==null, y:[]}}; use.forEach((k,j)=>{ x[YK[j]]=h.yards[k]||null; x._n.y[j]=h.yards[k]==null; }); return x; });   // 全ホール分を覚えておく（あとでホール数を増やすと戻る）
+  e.holes=full.slice(0,N); e.np=Math.max(1,use.length); e.two=e.np>1; e.gn=gnFull(use.map(k=>names[k])); e.all=full;
+  const ck=ocrChecks(o), miss=[];
+  if(ck.par.sum!=null && ck.par.printed!=null && !ck.par.ok) miss.push(`パーの合計が合いません。読み取った数字を足すと${ck.par.sum}ですが、スコアカードの合計は${ck.par.printed}です。`);
+  ck.cols.forEach((c,k)=>{ if(k<4 && c.sum!=null && c.printed!=null && !c.ok) miss.push(`${names[k]}の合計が合いません。読み取った数字を足すと${c.sum}ですが、スコアカードの合計は${c.printed}です。`); });
+  e.ocrNote={ miss, repeat:ocrRepeat(res), blanks:e.holes.some(h=>h._n.p||h._n.y.some(Boolean)) };
+  state.ocr=null; render(); window.scrollTo({top:0}); }
+const needP = h => !!(h._n && h._n.p), needY = (h,j) => !!(h._n && h._n.y[j] && !h[YK[j]]);
+const ocrNoteHTML = e => `<div class="ocr-note"><b>写真から入れました。</b>スコアカードと見比べて、違う数字は直してください。${e.ocrNote.blanks?"<br>読み取れなかった数字は、赤い枠にしてあります。":""}${e.ocrNote.repeat?"<br>前半と後半が同じ数字なので、9ホールのコースとして入れました（ホール数を18にすると、後半も入ります）。":""}${e.ocrNote.miss.map(m=>"<br>"+esc(m)).join("")}</div>`;
 
 /* ----- コース ----- */
 function viewCourses(){
@@ -3204,6 +3188,7 @@ function viewCourses(){
   if(e){
     return `<div class="panel">
       <h2>${e.isNew?"コースを登録":"コースを編集"}</h2>
+      ${e.ocrNote?ocrNoteHTML(e):""}
       ${state.ocrReady?`<button class="ocr-btn" data-act="ocr-pick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.2l1.1-1.6A1.5 1.5 0 0 1 10 3.8h4a1.5 1.5 0 0 1 1.2.6L16.3 6h1.2A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12.5" r="3.6"/></svg><span><b>スコアカードの写真から入れる</b><small>表を撮ると、パーとヤードが入ります</small></span></button><input type="file" id="ocr-file" accept="image/*" hidden>`:""}
       <div class="row" style="margin-top:12px">
         <div class="field"><label for="c-name">コース名</label><input id="c-name" value="${esc(e.name)}" placeholder="例：〇〇パー3ゴルフ"></div>
@@ -3217,10 +3202,10 @@ function viewCourses(){
       </div>
       <div class="field np-field"><label>ヤードのパターン<small>（グリーンやティーが複数あるとき）</small></label><div class="npseg" role="group" aria-label="ヤードのパターン数">${[1,2,3,4].map(n=>`<button data-act="set-np" data-n="${n}" aria-pressed="${(e.np||1)===n}">${n===1?"なし":n+"つ"}</button>`).join("")}</div></div>
       ${(e.np||1)>1?`<div class="row gnames">${Array.from({length:e.np},(_,k)=>`<div class="field"><label for="c-g${k}">${k+1}つ目の名前</label><input id="c-g${k}" maxlength="6" value="${esc(e.gn[k])}"></div>`).join("")}</div>`:""}
-      <div class="par-grid">${e.holes.map((h,i)=>`<div class="par-cell"><div class="h">${i+1}H</div>
+      <div class="par-grid">${e.holes.map((h,i)=>`<div class="par-cell ${needP(h)?"need":""}"><div class="h">${i+1}H</div>
         <div class="pars">${[3,4,5].map(p=>`<button data-act="setpar" data-i="${i}" data-p="${p}" aria-pressed="${h.par===p}">${p}</button>`).join("")}</div>
-        <input type="number" inputmode="numeric" id="yd-${i}" data-yd="${i}" value="${h.yards||""}" placeholder="${(e.np||1)>1?esc(e.gn[0])+" ヤード":"ヤード"}" aria-label="${i+1}番ホールのヤード">
-        ${Array.from({length:(e.np||1)-1},(_,j)=>`<input type="number" inputmode="numeric" data-ydk="${i},${j+1}" value="${h[YK[j+1]]||""}" placeholder="${esc(e.gn[j+1])} ヤード" aria-label="${i+1}番ホールの${esc(e.gn[j+1])}のヤード">`).join("")}</div>`).join("")}</div>
+        <input type="number" inputmode="numeric" class="${needY(h,0)?"need":""}" id="yd-${i}" data-yd="${i}" value="${h.yards||""}" placeholder="${(e.np||1)>1?esc(e.gn[0])+" ヤード":"ヤード"}" aria-label="${i+1}番ホールのヤード">
+        ${Array.from({length:(e.np||1)-1},(_,j)=>`<input type="number" inputmode="numeric" class="${needY(h,j+1)?"need":""}" data-ydk="${i},${j+1}" value="${h[YK[j+1]]||""}" placeholder="${esc(e.gn[j+1])} ヤード" aria-label="${i+1}番ホールの${esc(e.gn[j+1])}のヤード">`).join("")}</div>`).join("")}</div>
       <div class="err" id="c-err"></div>
       <div class="navrow"><button class="btn" data-act="cancel-course">キャンセル</button><button class="btn primary" data-act="save-course">保存する</button></div>
       ${ocrSheet()}
@@ -3248,14 +3233,9 @@ after.courses = () => {
   const e=state.courseEdit; if(!e) return;
   ocrCheck();
   const of=$("#ocr-file"); if(of) of.onchange=()=>{ const f=of.files&&of.files[0]; of.value=""; if(f) ocrRun(f); };
-  const oc=()=>state.ocr&&state.ocr.res;
-  document.querySelectorAll("[data-ocr-par]").forEach(i=>i.onchange=()=>{ if(!oc()) return; const v=parseInt(i.value,10); state.ocr.res.holes[+i.dataset.ocrPar].par=isNaN(v)?null:v; render(); });
-  document.querySelectorAll("[data-ocr-y]").forEach(i=>i.onchange=()=>{ if(!oc()) return; const [a,k]=i.dataset.ocrY.split(",").map(Number), v=parseInt(i.value,10); state.ocr.res.holes[a].yards[k]=isNaN(v)?null:v; render(); });
-  document.querySelectorAll("[data-ocr-use]").forEach(i=>i.onchange=()=>{ if(!oc()) return; state.ocr.use[+i.dataset.ocrUse]=i.checked; render(); });
-  document.querySelectorAll("[data-ocr-name]").forEach(i=>i.onchange=()=>{ if(!oc()) return; state.ocr.names[+i.dataset.ocrName]=i.value.trim()||GN_DEF[+i.dataset.ocrName]; render(); });
   const nm=$("#c-name"); nm.oninput=()=>{ e.name=nm.value; };
-  document.querySelectorAll("[data-yd]").forEach(inp=>inp.oninput=()=>{ const v=parseInt(inp.value,10); e.holes[+inp.dataset.yd].yards = isNaN(v)?null:v; });
-  document.querySelectorAll("[data-ydk]").forEach(inp=>inp.oninput=()=>{ const [i,k]=inp.dataset.ydk.split(",").map(Number), v=parseInt(inp.value,10); e.holes[i][YK[k]] = isNaN(v)?null:v; });
+  document.querySelectorAll("[data-yd]").forEach(inp=>inp.oninput=()=>{ const v=parseInt(inp.value,10), h=e.holes[+inp.dataset.yd]; h.yards = isNaN(v)?null:v; if(h._n&&!isNaN(v)){ h._n.y[0]=false; inp.classList.remove("need"); } });
+  document.querySelectorAll("[data-ydk]").forEach(inp=>inp.oninput=()=>{ const [i,k]=inp.dataset.ydk.split(",").map(Number), v=parseInt(inp.value,10), h=e.holes[i]; h[YK[k]] = isNaN(v)?null:v; if(h._n&&!isNaN(v)){ h._n.y[k]=false; inp.classList.remove("need"); } });
   const cp=$("#c-pref"); if(cp) cp.onchange=()=>{ e.pref=cp.value; LS.set("sc.pref",cp.value); };
   const ca=$("#c-area"); if(ca) ca.oninput=()=>{ e.area=ca.value.trim(); };
   [0,1,2,3].forEach(i=>{ const el=$("#c-g"+i); if(el) el.oninput=()=>{ e.gn[i]=el.value.trim()||GN_DEF[i]; }; });
@@ -3701,7 +3681,6 @@ document.addEventListener("click", async ev => {
     case "set-holes": setHoles(+b.dataset.n); break;
     case "ocr-pick": { const f=$("#ocr-file"); if(f) f.click(); break; }
     case "ocr-close": state.ocr=null; render(); break;
-    case "ocr-apply": ocrApply(); break;
     case "set-np": { const e=state.courseEdit; if(e){ e.np=+b.dataset.n; e.two=e.np>1; render(); } break; }
     case "set-g": { const ni=+b.dataset.g; if((h.gi||0)===ni) break; d.holes.forEach(x=>{ if(x.ys && x.ys[ni]){ x.gi=ni; x.yards=x.ys[ni]; } }); saveDraft(); render(); toast(`全ホールを${d.gn[ni]}のヤードにしました`); break; }
     case "open-clubs": state.clubBack=state.sheet; state.clubEdit=myClubs(); state.sheet="clubs"; render(); break;
@@ -3733,7 +3712,7 @@ document.addEventListener("click", async ev => {
       const c=state.courses.find(x=>x.id===b.dataset.id); const g=courseGreens(c); state.courseEdit={...JSON.parse(JSON.stringify(c)), isNew:false, two:!!g, np:g?g.length:1, gn:gnFull(g), pref:cPref(c), area:cArea(c)}; render(); break; }
     case "cancel-course": state.courseEdit=null; render(); break;
     case "allpar": state.courseEdit.holes.forEach(x=>x.par=+b.dataset.p); render(); break;
-    case "setpar": state.courseEdit.holes[+b.dataset.i].par=+b.dataset.p; render(); break;
+    case "setpar": { const hh=state.courseEdit.holes[+b.dataset.i]; hh.par=+b.dataset.p; if(hh._n) hh._n.p=false; render(); break; }
     case "save-course": {
       const e=state.courseEdit;
       if(!e.name.trim()){ $("#c-err").textContent="コース名を入れてください"; return; }

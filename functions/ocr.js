@@ -26,6 +26,7 @@ Return ONLY one JSON object, no explanation:
 - "yards" has exactly one number per yard column, in the same order. Use null for a number you cannot read.
 - "totals": the printed TOTAL row (par total, and the yard total of each column). Use null if not printed. Use the all-holes total, not the OUT or IN subtotal.
 - "subtotals": the printed OUT (front half) and IN (back half) subtotal rows, one number per yard column each. Use null if not printed.
+IMPORTANT: if any digit of a number is hidden or unclear (covered by ink, a marker, a sticker, a smudge, a fold, glare, or crossed out), use null for that whole number, even if part of it is visible. Never guess or complete a hidden digit. If a cell shows two numbers (for example "45/48"), use null.
 Do not invent numbers.`;
 
 /* AI の答えから JSON を取り出して、形を整える（読めなければ null） */
@@ -74,6 +75,20 @@ export function checkResult(r) {
   return { checks, parSum, parOk, nulls, score };
 }
 
+/* 2つのAIで、数字ごとに見比べる。答えが割れた数字は空欄にする（AIは、隠れている数字を、もっともらしく補って答えることがあるため）。
+   表の形（列の数・ホール数）が違う答えは、比べられないので使わない */
+export function mergeCells(best, others) {
+  const out = { ...best, holes: best.holes.map((h) => ({ ...h, yards: h.yards.slice() })) };
+  for (const o of others) {
+    if (o.cols.length !== best.cols.length || o.holes.length !== best.holes.length) continue;
+    out.holes.forEach((h, i) => {
+      if (h.par !== o.holes[i].par) h.par = null;
+      h.yards = h.yards.map((y, k) => (y === o.holes[i].yards[k] ? y : null));
+    });
+  }
+  return { ...out, ...checkResult(out) };
+}
+
 async function ask(AI, model, image) {
   const out = await AI.run(model, {
     messages: [{ role: "user", content: [{ type: "text", text: PROMPT }, { type: "image_url", image_url: { url: image } }] }],
@@ -108,7 +123,8 @@ export async function onRequestPost({ request, env }) {
     if (!(await underLimit(env.DB))) return json({ ok: false, error: "limit" }, 429);
     const results = (await Promise.allSettled(MODELS.map((m) => ask(env.AI, m, image)))).map((x) => (x.status === "fulfilled" ? x.value : null)).filter(Boolean);
     if (!results.length) return json({ ok: false, error: "unreadable" }, 422);
-    const best = results.reduce((a, b) => (b.score > a.score ? b : a));
+    let best = results.reduce((a, b) => (b.score > a.score ? b : a));
+    best = mergeCells(best, results.filter((x) => x !== best));
     return json({ ok: true, model: best.model, result: { cols: best.cols, holes: best.holes, totals: best.totals, checks: best.checks, parSum: best.parSum, parOk: best.parOk } });
   } catch (e) {
     return json({ ok: false, error: "server" }, 500);
