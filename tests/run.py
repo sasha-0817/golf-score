@@ -949,10 +949,7 @@ with sync_playwright() as pw:
         # 合計が合わないとき（1つ読み違えた）は確認画面を出す
         pg.evaluate("state.ocr={img:'',names:['L','R'],use:[true,true],res:{cols:['L','R'],holes:[3,3,3,3,3,3,3,3,3].map((p,i)=>({hole:i+1,par:p,yards:[[97,65,177,68,101,65,85,92,103][i],[95,63,123,66,118,60,76,110,120][i]]})),totals:{par:27,yards:[793,831],first:[793,831],second:[0,0]}}}"); C(pg, "[data-act=set-np][data-n='2']"); pg.wait_for_timeout(300)
         check("写真読み取り: 合計が合わない列があれば確認画面を出す（⚠）", pg.query_selector(".ocr-t") is not None and pg.evaluate("document.querySelectorAll('.ocr-t tfoot td.ng').length") == 1 and "⚠" in pg.inner_text(".ocr-t tfoot"))
-        check("写真読み取り: 確認画面は写真をたたんで表を広く見せる（写真を見る→開く→とじる）", pg.query_selector(".ocr-img") is None and pg.evaluate("document.querySelector('.ocr-scroll').getBoundingClientRect().height") > 0)
-        C(pg, "[data-act=ocr-img]"); pg.wait_for_timeout(200); shown = pg.query_selector(".ocr-img") is not None
-        C(pg, "[data-act=ocr-img]"); pg.wait_for_timeout(200)
-        check("写真読み取り: 「写真を見る」で写真が出て、もう一度でとじる", shown and pg.query_selector(".ocr-img") is None)
+        check("写真読み取り: 確認画面に写真は出さない（スコアカードは手元にある）。「スコアカードと見比べて」と案内し、表は広く動く", pg.query_selector(".ocr-img") is None and pg.query_selector("[data-act=ocr-img]") is None and "スコアカードと見比べて" in pg.inner_text(".ocr-sheet") and pg.evaluate("document.querySelector('.ocr-scroll').getBoundingClientRect().height") >= 150)
         pg.fill("[data-ocr-y='2,0']", "117"); pg.press("[data-ocr-y='2,0']", "Tab"); pg.wait_for_timeout(300)
         check("写真読み取り: 直して合計が合えば ✓（前半・後半）", pg.evaluate("document.querySelectorAll('.ocr-t tfoot td.ok').length") == 3)
         C(pg, "[data-act=ocr-apply]"); pg.wait_for_timeout(300)
