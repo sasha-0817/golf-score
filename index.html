@@ -2134,7 +2134,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-13-0200";
+const BUILD = "2026-11-13-0300";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3147,16 +3147,6 @@ async function ocrRun(file){
 function ocrRepeat(r){ const N=r.holes.length, H=N/2; if(N%2||N<6) return false;
   return r.holes.slice(0,H).every((h,i)=>{ const g=r.holes[i+H]; return h.par===g.par && h.yards.every((y,k)=>y===g.yards[k]); }); }
 const ocrHalf = o => !!(o.res && ocrRepeat(o.res));   // たまたま全部同じ、ということはないので、選ばせずに9ホールにする（あとでホール数を18にすれば後半も入る）
-/* いま画面にある数字（直したあと）で、印刷された合計と合うかを見る。9ホールで入れるときは、前半の計（OUT）と見比べる */
-function ocrChecks(o){ const r=o.res, half=ocrHalf(o), H=half?r.holes.length/2:r.holes.length, hs=r.holes.slice(0,H);
-  const tp=half?(r.totals.par!=null?r.totals.par/2:null):r.totals.par, ps=hs.every(h=>h.par!=null)?hs.reduce((a,h)=>a+h.par,0):null;
-  return { par:{ sum:ps, printed:tp, ok:ps!=null&&tp!=null&&ps===tp }, cols:r.cols.map((_,k)=>{ const v=hs.map(h=>h.yards[k]), sum=v.every(x=>x!=null)?v.reduce((a,x)=>a+x,0):null;
-      if(half){ const pr=(r.totals.first||[])[k]; return { sum, printed:pr, ok:sum!=null&&pr!=null&&sum===pr }; }
-      const pr=r.totals.yards[k], total=sum!=null&&pr!=null&&sum===pr;
-      // 印刷の合計を読み違えることがあるので、前半・後半の計（OUT・IN）が両方合っていれば合っているとみなす
-      const h=Math.ceil(v.length/2), a=v.slice(0,h), b=v.slice(h), f=(r.totals.first||[])[k], s2=(r.totals.second||[])[k];
-      const halves=v.length>=2&&f!=null&&s2!=null&&a.every(x=>x!=null)&&b.every(x=>x!=null)&&a.reduce((x,y)=>x+y,0)===f&&b.reduce((x,y)=>x+y,0)===s2;
-      return { sum, printed:pr, ok:total||halves, viaHalves:!total&&halves }; }) }; }
 function ocrSheet(){
   const o=state.ocr; if(!o) return ""; let body;
   if(o.busy) body=`<p>写真を読み取っています<small>10〜20秒かかります</small></p><div class="ocr-busy"><i class="spin"></i></div>`;
@@ -3167,20 +3157,25 @@ function holesSheet(){ const n=state.courseEdit.holes.length;
   return `<div class="sheet-back" data-act="close-holes"><div class="sheet holes-sheet" data-stop="1"><p>ホール数</p><div class="hgrid">${Array.from({length:18},(_,i)=>`<button data-act="set-holes" data-n="${i+1}" aria-pressed="${i+1===n}">${i+1}</button>`).join("")}</div></div></div>`; }
 function setHoles(n){ const e=state.courseEdit; if(!e) return; e.all=e.all||[]; e.holes.forEach((h,i)=>{ e.all[i]=h; });
   e.holes=Array.from({length:n},(_,i)=>e.all[i]||(e.all[i]={par:3,yards:null})); state.holesSheet=false; render(); }
-/* 読み取った結果を、そのままコース編集に入れる。読めなかった数字（空欄）は赤い枠、印刷の合計と合わない列は上に文章で知らせる */
+/* 読み取った結果を、そのままコース編集に入れる。読めなかった数字（空欄）は赤い枠にする。
+   印刷の合計は画面には出さず、裏の計算に使う: 列の中の抜けが1か所だけなら、合計から引き算で出して入れる（赤い枠のまま、確認してもらう） */
 function ocrApplyRes(res){
-  const e=state.courseEdit; if(!e) return; const o={res}, N=ocrHalf(o)?res.holes.length/2:res.holes.length;
+  const e=state.courseEdit; if(!e) return; const half=ocrHalf({res}), N=half?res.holes.length/2:res.holes.length;
   if(N<1||N>18){ state.ocr={err:`ホール数が${N}になっています。表の全体が写るように撮り直してください。`}; render(); return; }
-  const use=res.cols.map((_,k)=>k).slice(0,4), names=res.cols.map((c,k)=>c||GN_DEF[k]);
-  const full=res.holes.map(h=>{ const x={par:h.par||3, yards:null, _n:{p:h.par==null, y:[]}}; use.forEach((k,j)=>{ x[YK[j]]=h.yards[k]||null; x._n.y[j]=h.yards[k]==null; }); return x; });   // 全ホール分を覚えておく（あとでホール数を増やすと戻る）
-  e.holes=full.slice(0,N); e.np=Math.max(1,use.length); e.two=e.np>1; e.gn=gnFull(use.map(k=>names[k])); e.all=full;
-  const ck=ocrChecks(o), miss=[];
-  if(ck.par.sum!=null && ck.par.printed!=null && !ck.par.ok) miss.push(`パーの合計が合いません。読み取った数字を足すと${ck.par.sum}ですが、スコアカードの合計は${ck.par.printed}です。`);
-  ck.cols.forEach((c,k)=>{ if(k<4 && c.sum!=null && c.printed!=null && !c.ok) miss.push(`${names[k]}の合計が合いません。読み取った数字を足すと${c.sum}ですが、スコアカードの合計は${c.printed}です。`); });
-  e.ocrNote={ miss, repeat:ocrRepeat(res), blanks:e.holes.some(h=>h._n.p||h._n.y.some(Boolean)) };
+  const use=res.cols.map((_,k)=>k).slice(0,4), names=res.cols.map((c,k)=>c||GN_DEF[k]), T=res.totals||{};
+  const fillOne=(vals, lo, hi, total)=>{ const ids=[]; for(let i=lo;i<hi;i++) ids.push(i); const nulls=ids.filter(i=>vals[i]==null); if(nulls.length!==1||total==null) return;
+    const v=total-ids.reduce((a,i)=>a+(vals[i]||0),0); if(v>=15&&v<=700) vals[nulls[0]]=v; };
+  const cols=use.map(k=>{ const vals=res.holes.map(h=>h.yards[k]), was=vals.map(v=>v==null);
+    if(half) fillOne(vals,0,N,(T.first||[])[k]);
+    else { const h=Math.ceil(N/2); if(N>=2){ fillOne(vals,0,h,(T.first||[])[k]); fillOne(vals,h,N,(T.second||[])[k]); } fillOne(vals,0,N,(T.yards||[])[k]); }
+    return {vals, was}; });
+  const full=res.holes.map((h,i)=>{ const x={par:h.par||3, yards:null, _n:{p:h.par==null, y:[]}}; cols.forEach((c,j)=>{ x[YK[j]]=c.vals[i]||null; x._n.y[j]=c.was[i]; }); return x; });   // 全ホール分を覚えておく（あとでホール数を増やすと戻る）
+  e.holes=full.slice(0,N); e.np=Math.max(1,use.length); e.two=e.np>1; e.gn=gnFull(use.map(k=>names[k])); e.all=full; e.warned=false;
+  const sl=e.holes;
+  e.ocrNote={ repeat:ocrRepeat(res), blanks:sl.some(h=>h._n.p||h._n.y.some((f,j)=>f&&!h[YK[j]])), filled:sl.some(h=>h._n.y.some((f,j)=>f&&h[YK[j]])) };
   state.ocr=null; render(); window.scrollTo({top:0}); }
-const needP = h => !!(h._n && h._n.p), needY = (h,j) => !!(h._n && h._n.y[j] && !h[YK[j]]);
-const ocrNoteHTML = e => `<div class="ocr-note"><b>写真から入れました。</b>スコアカードと見比べて、違う数字は直してください。${e.ocrNote.blanks?"<br>読み取れなかった数字は、赤い枠にしてあります。":""}${e.ocrNote.repeat?"<br>前半と後半が同じ数字なので、9ホールのコースとして入れました（ホール数を18にすると、後半も入ります）。":""}${e.ocrNote.miss.map(m=>"<br>"+esc(m)).join("")}</div>`;
+const needP = h => !!(h._n && h._n.p), needY = (h,j) => !!(h._n && h._n.y[j]);
+const ocrNoteHTML = e => `<div class="ocr-note"><b>写真から入れました。</b>スコアカードと見比べて、違う数字は直してください。${e.ocrNote.blanks?"<br>読み取れなかった数字は、赤い枠にしてあります。":""}${e.ocrNote.filled?"<br>合計から計算して入れた数字も、赤い枠です。スコアカードで確かめてください。":""}${e.ocrNote.repeat?"<br>前半と後半が同じ数字なので、9ホールのコースとして入れました（ホール数を18にすると、後半も入ります）。":""}</div>`;
 
 /* ----- コース ----- */
 function viewCourses(){
@@ -3234,8 +3229,8 @@ after.courses = () => {
   ocrCheck();
   const of=$("#ocr-file"); if(of) of.onchange=()=>{ const f=of.files&&of.files[0]; of.value=""; if(f) ocrRun(f); };
   const nm=$("#c-name"); nm.oninput=()=>{ e.name=nm.value; };
-  document.querySelectorAll("[data-yd]").forEach(inp=>inp.oninput=()=>{ const v=parseInt(inp.value,10), h=e.holes[+inp.dataset.yd]; h.yards = isNaN(v)?null:v; if(h._n&&!isNaN(v)){ h._n.y[0]=false; inp.classList.remove("need"); } });
-  document.querySelectorAll("[data-ydk]").forEach(inp=>inp.oninput=()=>{ const [i,k]=inp.dataset.ydk.split(",").map(Number), v=parseInt(inp.value,10), h=e.holes[i]; h[YK[k]] = isNaN(v)?null:v; if(h._n&&!isNaN(v)){ h._n.y[k]=false; inp.classList.remove("need"); } });
+  document.querySelectorAll("[data-yd]").forEach(inp=>inp.oninput=()=>{ const v=parseInt(inp.value,10), h=e.holes[+inp.dataset.yd]; h.yards = isNaN(v)?null:v; if(h._n){ h._n.y[0]=false; inp.classList.remove("need"); } });
+  document.querySelectorAll("[data-ydk]").forEach(inp=>inp.oninput=()=>{ const [i,k]=inp.dataset.ydk.split(",").map(Number), v=parseInt(inp.value,10), h=e.holes[i]; h[YK[k]] = isNaN(v)?null:v; if(h._n){ h._n.y[k]=false; inp.classList.remove("need"); } });
   const cp=$("#c-pref"); if(cp) cp.onchange=()=>{ e.pref=cp.value; LS.set("sc.pref",cp.value); };
   const ca=$("#c-area"); if(ca) ca.oninput=()=>{ e.area=ca.value.trim(); };
   [0,1,2,3].forEach(i=>{ const el=$("#c-g"+i); if(el) el.oninput=()=>{ e.gn[i]=el.value.trim()||GN_DEF[i]; }; });
@@ -3716,6 +3711,7 @@ document.addEventListener("click", async ev => {
     case "save-course": {
       const e=state.courseEdit;
       if(!e.name.trim()){ $("#c-err").textContent="コース名を入れてください"; return; }
+      if(!e.warned && e.holes.some(h=>needP(h)||(h._n&&h._n.y.some(Boolean)))){ e.warned=true; $("#c-err").textContent="赤い枠のところを、スコアカードで確かめてください。このままでよければ、もう一度「保存する」を押してください。"; const r=document.querySelector(".par-grid .need"); if(r) r.scrollIntoView({block:"center",behavior:"smooth"}); return; }
       const c={ id:e.id, name:e.name.trim(), holes:e.holes.map(x=>{ const o={par:x.par, yards:x.yards||null}; for(let k=1;k<(e.np||1);k++) if(x[YK[k]]) o[YK[k]]=x[YK[k]]; return o; }), createdAt:e.createdAt||Date.now() };
       if((e.np||1)>1 && c.holes.some(x=>YK.slice(1).some(k=>x[k]))) c.holes[0].gn=e.gn.slice(0,e.np).map((n,i)=>n||GN_DEF[i]);
       if(e.pref) c.holes[0].pref=e.pref; if(e.area) c.holes[0].area=e.area;
