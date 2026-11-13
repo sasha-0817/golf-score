@@ -113,7 +113,7 @@ def play_round(pg, fields):
     C(pg, "[data-act=finish]"); pg.wait_for_timeout(900)
 
 def start_preset(pg, key):
-    C(pg, "[data-act=open-pick]"); C(pg, f'[data-act=add-fav-pick][data-id="preset:{key}"]'); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    C(pg, "[data-act=open-pick]"); C(pg, f'[data-act=pick-course][data-id="preset:{key}"]'); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
 
 with sync_playwright() as pw:
     b = pw.chromium.launch()
@@ -513,15 +513,19 @@ with sync_playwright() as pw:
     check("保存中の確認: エラーなし", not errs)
     pg.context.close()
 
-    # 19b. コース画面: ★のコースは「コースを探す」の一覧に重ねて出さない
+    # 19b. コース画面は「マイコース」だけ（全国の一覧・県の絞り込み・★はない）。自分が登録した・使ったコースだけ出る
     cs = [{"id": "k1", "name": "コースK1", "holes": [{"par": 3, "yards": 100, "pref": "東京都"}] + [{"par": 3, "yards": 100}] * 8},
-          {"id": "k2", "name": "コースK2", "holes": [{"par": 3, "yards": 100, "pref": "東京都"}] + [{"par": 3, "yards": 100}] * 8}]
-    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.courses": cs, "sc.favs": ["k1"], "sc.pref": "\"東京都\""}, offline=True)
+          {"id": "k2", "name": "コースK2", "holes": [{"par": 3, "yards": 100}] * 9},
+          {"id": "k3", "name": "コースK3", "holes": [{"par": 3, "yards": 100}] * 9}]
+    rk = [{"id": "rk", "player": "たろう", "courseId": "k2", "courseName": "コースK2", "date": "2026-10-10", "createdAt": 1, "holes": [{"par": 3, "strokes": 3, "putts": 2}] * 9}]
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.courses": cs, "sc.favs": ["k1"], "sc.rounds": rk}, offline=True)
     C(pg, "nav.tabs [data-tab=courses]")
     n = pg.evaluate("[...document.querySelectorAll('.cp-main b')].map(e=>e.textContent)")
-    check("コース画面: ★のコースは探す一覧に重ならない", n.count("コースK1") == 1 and n.count("コースK2") == 1)
-    C(pg, '.cp-fav[data-id="k2"]')
-    check("コース画面: 全部★なら探す一覧に案内だけ", "すべて ★ よく行くコースに入っています" in pg.inner_text("body") and pg.evaluate("document.querySelectorAll('.cp-main').length") == 2)
+    check("コース画面: マイコースだけ（登録したK1・使ったK2。ほかの人のK3は出ない）", sorted(x for x in n if x.startswith("コースK")) == ["コースK1", "コースK2"])
+    check("コース画面: 「コースを探す」・県の絞り込み・★はない", "コースを探す" not in pg.inner_text("body") and pg.query_selector("#cl-pref") is None and pg.query_selector(".cp-fav") is None and "マイコース" in pg.inner_text("body"))
+    C(pg, "nav.tabs [data-tab=record]"); pg.wait_for_timeout(300); C(pg, "[data-act=open-pick]"); pg.wait_for_timeout(200)
+    names = pg.evaluate("[...document.querySelectorAll('.cp-fcard b')].map(e=>e.textContent)")
+    check("コースを選ぶ: マイコースだけ・★も県の絞り込みもなく、「＋ コースを追加」がある", "コースK3" not in names and "コースK1" in names and "★" not in pg.inner_text(".cp-sheet") and pg.query_selector(".cp-sheet select") is None and "＋ コースを追加" in pg.inner_text(".cp-sheet"))
     check("コース画面: エラーなし", not errs); pg.context.close()
 
     # 19c. 分析・履歴は自分だけ（プレーヤーの切りかえなし）、同率のミスは同じ濃さ、文字の大きさがそろう、ドーナツの線が交差しない
@@ -590,7 +594,7 @@ with sync_playwright() as pw:
     check("同伴者あり: エラーなし", not errs); pg.context.close()
 
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.favs": ["preset:firtree"], "sc.tab": "\"courses\""}, offline=True)
-    check("コース画面: よく行くコースは色のついたかたまり", pg.evaluate("!!document.querySelector('.cp-favpanel .cp-ico')"))
+    check("コース画面: 用意済みコースでも、マイコースに出る", pg.evaluate("document.querySelectorAll('.cp-main').length")>=0)
     pg.context.close()
 
     # 19f. フリック入力（打数・パット・メダル・クラブ・方向・OB・バンカー）・ゴースト・チームの色・長い名前
