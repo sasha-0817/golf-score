@@ -1532,6 +1532,7 @@ input,select,textarea{font-size:max(16px,1em)}
 .tbox-sc{flex:1;min-width:0;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .tbox-sc::-webkit-scrollbar{display:none}
 .tbox-in{position:relative;height:100%;min-width:100%}
+.on-legend{display:flex;justify-content:center;gap:18px;margin-top:6px;font-size:14px;color:var(--muted)}.on-legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
 .tbox-ref{flex:0 0 36px;width:36px;min-width:0;overflow:hidden;position:relative}
 /* 狙いと着弾 */
 
@@ -2137,7 +2138,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-13-0400";
+const BUILD = "2026-11-13-0500";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2885,7 +2886,7 @@ function viewStats(){
     ${!s.puttHoles?"":gauge("リカバリー率", s.scramble, `パーオン逃し<br>${s.scrambleN}Hのうち<br>パー以内`, "--accent2")}
     ${!(s.bunkerN||fields().bunker)?"":gauge("サンドボギーセーブ率", s.sandBogey, `バンカー<br>${s.bunkerN}Hのうち<br>ボギー以内`, "--c5")}
   </div>
-  ${s.puttHoles?`<div class="map-sub" style="margin-top:14px">パーオン率・ボギーオン率の推移</div><div class="chartbox"><canvas id="ch-on" aria-label="パーオン率とボギーオン率の推移"></canvas></div><p class="muted cs-note">各ラウンドまでの直近5ラウンドの平均。</p>`:""}</div>
+  ${s.puttHoles?`<div class="map-sub" style="margin-top:14px">パーオン率・ボギーオン率の推移</div><div class="tbox"><div class="tbox-ax"><canvas id="ch-on-ax" aria-hidden="true"></canvas></div><div class="tbox-sc"><div class="tbox-in"><canvas id="ch-on" aria-label="パーオン率とボギーオン率の推移"></canvas></div></div></div><div class="on-legend"><span><i style="background:var(--c-gir)"></i>パーオン率</span><span><i style="background:var(--c-bon)"></i>ボギーオン率</span></div><p class="muted cs-note">各ラウンドまでの直近5ラウンドの平均。</p>`:""}</div>
   ${!(s.dirN||s.teeN||fields().shot)?"":`<div class="panel"><div class="sec"><em>TEE SHOT</em><span>ティーショットの行き先</span></div>
     <div class="map-sub">パー3（グリーン）</div>${greenMap(s)}
     ${s.teeN?`<div class="map-sub">パー4・5（フェアウェイ）</div>${dirHeat("fw", s.teeC, s.teeN)}<p class="muted" style="font-size:14px;text-align:center;margin:8px 0 0">${s.teeN}回の記録・フェアウェイキープ率 <b>${fmtPct(s.fwRate)}%</b></p>`:""}</div>`}
@@ -3025,7 +3026,7 @@ after.stats = () => {
   const scrollBox = (id, o, refs, fmt) => {
     const cv=$("#"+id); if(!cv) return null;
     const inner=cv.parentElement; inner.style.width = (wide*100)+"%";
-    o.scales.x.ticks.maxTicksLimit = Math.round(6*wide); o.layout = { padding:{ top:8 } }; { const y0=o.scales.y; if(y0.max>y0.min){ const st=[1,2,5,10].find(k=>(y0.max-y0.min)/k<=8)||10; y0.ticks.stepSize=st; y0.min=Math.floor(y0.min/st)*st; y0.max=Math.ceil(y0.max/st)*st; } }   // 目盛りは数字が読み取れる細かさ（高さに入る8個まで）。端は刻みの倍数にそろえる
+    o.scales.x.ticks.maxTicksLimit = Math.round(6*wide); o.layout = { padding:{ top:8 } }; { const y0=o.scales.y; if(y0.max>y0.min){ const st=[1,2,5,10,20].find(k=>(y0.max-y0.min)/k<=8)||20; y0.ticks.stepSize=st; y0.min=Math.floor(y0.min/st)*st; y0.max=Math.ceil(y0.max/st)*st; } }   // 目盛りは数字が読み取れる細かさ（高さに入る8個まで）。端は刻みの倍数にそろえる
     const yb = o.scales.y; const tf = yb.ticks.callback || (v=>v);
     o.scales.y = { ...yb, title:{display:false}, ticks:{ ...yb.ticks, display:false }, border:{display:false}, afterFit:s=>{ s.width=0; s.paddingTop=0; s.paddingBottom=0; } };
     o.scales.x = { ...o.scales.x, afterFit:s=>{ s.height=30; } };   // 左の目盛りの列・右の線の数字の列と、棒の領域の上下をそろえる
@@ -3060,10 +3061,12 @@ after.stats = () => {
     .map((_,i,a)=>{ const w=a.slice(Math.max(0,i-4),i+1), N=w.reduce((t,x)=>t+x.n,0); if(!N) return {gir:null,bon:null}; // パットの記録がない区間は線を描かない（0%に見せない）
       return { gir: Math.round(w.reduce((t,x)=>t+x.g,0)/N*100), bon: Math.round(w.reduce((t,x)=>t+x.b,0)/N*100) }; });
   const oOn = opts("%", v=>v+"%"); oOn.scales.y.min=0; oOn.scales.y.max=100; oOn.events=["click"];
-  oOn.plugins.legend={display:true, position:"bottom", labels:{boxWidth:14, boxHeight:3, usePointStyle:false}};
+  oOn.plugins.legend={display:false};   // 凡例は、スクロールしない下の固定の行（.on-legend）
+  scrollBox("ch-on", oOn, []);   // スコア・パットの推移と同じ: 15ラウンド分の幅で見せ、それより前は横にスクロール
   oOn.plugins.tooltip = { ...tip, displayColors:true, callbacks:{ ...tip.callbacks, label: c => ` ${c.dataset.label} ${c.raw}%` } };
   const lineDs = (label,key,col) => ({ type:"line", label, data: pad(perRound.map(x=>x[key])), borderColor:col, backgroundColor:col, borderWidth:2.5, pointRadius: rs.length>12?0:3, pointHitRadius:10, pointHoverRadius:5, tension:.35, spanGaps:false, fill:false });
   if($("#ch-on")) charts.push(new Chart($("#ch-on"), { type:"line", data:{ labels, datasets:[ lineDs("パーオン率","gir",cssv("--c-gir")), lineDs("ボギーオン率","bon",cssv("--c-bon")) ]}, options:oOn }));
+  document.querySelectorAll(".tbox-sc").forEach(sc=>{ sc.scrollLeft = sc.scrollWidth; });
   if($("#ch-hole")){
     const c = courses().find(x=>x.id===state.fCourse);
     const n = c ? c.holes.length : Math.max(...rs.map(r=>r.holes.length));

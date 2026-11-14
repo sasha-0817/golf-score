@@ -580,7 +580,8 @@ with sync_playwright() as pw:
     pg.context.close()
     for tab in ("score", "shot", "putt"):
         pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.tab": "\"stats\"", "sc.statTab": f"\"{tab}\""}, offline=True)
-        C(pg, "[data-act=demo-on]"); pg.wait_for_timeout(500); small += pg.evaluate(JPSMALL); pg.context.close()
+        C(pg, "[data-act=demo-on]"); pg.wait_for_timeout(500); small += pg.evaluate(JPSMALL)
+        pg.context.close()
     if small: print("  小さい文字:", small[:8])
     check("日本語の文字は13px以上（記録・設定・分析）", not small)
 
