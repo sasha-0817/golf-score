@@ -918,6 +918,18 @@ with sync_playwright() as pw:
     check("メダルの選択肢は、その人の今のメダルから始まる（自分=金4、ほかは なし0）", [starts("m", 0), starts("m", 1)] == ["4", "0"])
     pg.context.close()
 
+    # 19o. 機内モードにしたら「同期済み」のままにしない
+    pg, errs = open_page(b, {"sc.player": "\"たろう\""})
+    pg.wait_for_timeout(300)
+    t0 = pg.inner_text("#sync")
+    pg.evaluate("Object.defineProperty(navigator,'onLine',{get:()=>false,configurable:true}); window.dispatchEvent(new Event('offline'))"); pg.wait_for_timeout(100)
+    t1 = pg.inner_text("#sync")
+    pg.evaluate("connect()"); pg.wait_for_timeout(200)
+    t2 = pg.inner_text("#sync")
+    if "同期済み" not in t0: print("  t0:", t0)
+    check("機内モードにすると「同期済み」から「オフライン」になる（開き直しても）", "同期済み" in t0 and "オフライン" in t1 and "オフライン" in t2 and not errs)
+    pg.context.close()
+
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
     import subprocess, time
     PORT = 8791

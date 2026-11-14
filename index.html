@@ -2138,7 +2138,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-13-0500";
+const BUILD = "2026-11-14-1900";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2247,7 +2247,10 @@ let loading = false;
 async function connect(){
   state.courses = LS.get("sc.courses", []); state.rounds = LS.get("sc.rounds", []);
   if(!hasBackend){ state.mode="local"; render(); return; }
-  if(loading) return; loading = true;
+  if(loading) return;
+  // 機内モードなど電波がないときは、つなぎに行かずすぐ「オフライン」にする（前は最後に成功した「同期済み」のままだった）
+  if(navigator.onLine===false){ state.mode="offline"; pendingCourses.forEach(c=>upsert(state.courses, c)); pending.forEach(r=>upsert(state.rounds, r)); render(); return; }
+  loading = true;
   try{
     await flushPending();
     const res = await fetch(API_URL + "?t=" + Date.now());
@@ -2267,6 +2270,7 @@ async function connect(){
 }
 document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") connect(); });
 window.addEventListener("online", connect);
+window.addEventListener("offline", ()=>{ if(state.mode==="cloud"){ state.mode="offline"; render(); } });
 function writeErr(e){ toast("保存できませんでした。電波の良い場所でもう一度お試しください"); }
 
 /* ---------- helpers ---------- */
@@ -2352,7 +2356,7 @@ function render(){
   document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", String(b.dataset.tab===state.tab)));
   const s=$("#sync");
   if(state.mode==="cloud") s.innerHTML = pending.length ? `未送信 ${pending.length}件` : "<b>●</b> 同期済み";
-  else if(state.mode==="offline") s.textContent = "オフライン";
+  else if(state.mode==="offline") s.textContent = pending.length ? `オフライン・未送信 ${pending.length}件` : "オフライン";
   else if(state.mode==="local") s.textContent="この端末だけに保存中";
   else s.textContent="接続中…";
   killCharts();
