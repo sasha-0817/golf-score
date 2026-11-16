@@ -209,19 +209,17 @@ async function api(action, payload){
   const res = await fetch("/api", { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action, ...payload}) });
   const j = await res.json(); if(!j.ok) throw new Error(j.error||"failed"); return j;
 }
-async function load(){
-  if(!ON_CF) return;
-  try{
-    const r = await fetch("/api", {cache:"no-store"}); const j = await r.json();
-    if(j.ok){ S.courses=j.courses||[]; S.rounds=j.rounds||[]; LS.set("sc.courses",S.courses); LS.set("sc.rounds",S.rounds); render(); }
-  }catch(e){}
-}
+/* 本体と同じく、端末が本体・サーバーはバックアップ（2026-11-16）。サーバーから読み直さない（ほかの人の記録が混ざるため） */
+try{ if(localStorage.getItem("sc.rounds")===null && localStorage.getItem("sc.v2")===null) localStorage.setItem("sc.v2", String(Date.now())); }catch(e){}
+async function load(){}
 /* 送れなかったら本体のアプリと同じ「未送信」に入れる（本体を開いたときにも自動で送られる） */
 function queue(key, item){ const a=LS.get(key,[]).filter(x=>x.id!==item.id); a.push(item); LS.set(key,a); }
-async function saveCourse(c){ try{ if(!ON_CF) throw 0; await api("saveCourse",{course:c}); }catch(e){ queue("sc.pendingCourses", c); } }
+const unqueue = (key, item) => LS.set(key, LS.get(key,[]).filter(x=>x.id!==item.id));
+async function saveCourse(c){ queue("sc.pendingCourses", c); try{ if(!ON_CF) throw 0; await api("saveCourse",{course:c}); unqueue("sc.pendingCourses", c); }catch(e){} }
 async function saveRound(r){
   const i=S.rounds.findIndex(x=>x.id===r.id); if(i>=0) S.rounds[i]=r; else S.rounds.push(r); LS.set("sc.rounds",S.rounds);
-  try{ if(!ON_CF) throw 0; await api("saveRound",{round:r}); }catch(e){ queue("sc.pending", r); }
+  r.updatedAt=Date.now(); LS.set("sc.rounds",S.rounds); queue("sc.pending", r);
+  try{ if(!ON_CF) throw 0; await api("saveRound",{round:r}); unqueue("sc.pending", r); }catch(e){}
 }
 
 /* コース: 登録済み＋まだ登録していない用意済み */

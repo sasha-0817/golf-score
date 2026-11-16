@@ -45,7 +45,7 @@ def open_page(b, ls=None, dark=False, offline=False, repl=None):
               .replace("function pickableCourses(", "window.pickableCourses=pickableCourses; window.showPresets=()=>SHOW_PRESETS; function pickableCourses(")
               .replace("function greenMap(", "window.dirHeat=dirHeat; window.greenMap=greenMap; function greenMap(")
               .replace("function matchCalc(", "window.matchCalc=matchCalc; window.teamCalc=teamCalc; window.teamSumCalc=teamSumCalc; window.GAME_KEYS_ORDER=()=>GAME_KEYS.join(); window.nassauCalc=nassauCalc; window.vegasCalc=vegasCalc; window.stableCalc=stableCalc; window.peoriaCalc=peoriaCalc; window.olympicCalc=olympicCalc; window.peoriaHidden=peoriaHidden; function matchCalc(")
-              .replace("async function connect(){", "window.connect=()=>connect(); async function connect(){")
+              .replace("async function connect(){", "window.connect=async()=>{ await backup(); await legacyPull(); }; window.realConnect=()=>connect(); window.backup=()=>backup(); window.pendN=()=>pendN(); async function connect(){")
               .replace("let loading = false;", 'let loading = false; Object.defineProperty(window,"pending",{get:()=>pending});'))
     init = "if(!sessionStorage.t){sessionStorage.t=1;localStorage.clear();" + "".join(
         f"localStorage.setItem({json.dumps(k)},{json.dumps(v if isinstance(v, str) else json.dumps(v))});" for k, v in (ls or {}).items()) + "}"
@@ -506,10 +506,10 @@ with sync_playwright() as pw:
         if not pg.evaluate("state.cdraft&&state.cdraft.sel"): break
         C(pg, '[data-act=cd-key][data-v="3"]')
     pg.evaluate("window.__offline=false; window.__delay=700"); n0 = pg.evaluate("__db.rounds.length")
-    C(pg, "[data-act=cd-finish]"); pg.wait_for_timeout(150)
-    busy = "保存中" in (pg.text_content(".cd-save") or "")
-    C(pg, "[data-act=cd-finish]"); pg.wait_for_timeout(1600)
-    check("保存: 押したらすぐ「保存中…」になり、もう一度押しても二重に保存しない（4人で4件）", busy and pg.evaluate("__db.rounds.length") - n0 == 4 and pg.query_selector(".result-card") is not None)
+    pg.evaluate("document.querySelector('[data-act=cd-finish]').click(); const b2=document.querySelector('[data-act=cd-finish]'); if(b2) b2.click();"); pg.wait_for_timeout(150)
+    shown = pg.query_selector(".result-card") is not None   # サーバーの返事（0.7秒×4）を待たずに、すぐリザルトが出る
+    pg.wait_for_timeout(3600)
+    check("保存: サーバーを待たずにすぐ終わり、続けて2回押しても二重に保存しない（4人で4件）", shown and pg.evaluate("state.rounds.length") == 4 and pg.evaluate("__db.rounds.length") - n0 == 4)
     check("保存中の確認: エラーなし", not errs)
     pg.context.close()
 
@@ -918,16 +918,83 @@ with sync_playwright() as pw:
     check("メダルの選択肢は、その人の今のメダルから始まる（自分=金4、ほかは なし0）", [starts("m", 0), starts("m", 1)] == ["4", "0"])
     pg.context.close()
 
-    # 19o. 機内モードにしたら「同期済み」のままにしない
-    pg, errs = open_page(b, {"sc.player": "\"たろう\""})
+    # 19o. 右上の札: ふだんは出さない。送れていないときだけ「バックアップ待ち」
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.fields": dict(NONE)})
     pg.wait_for_timeout(300)
-    t0 = pg.inner_text("#sync")
-    pg.evaluate("Object.defineProperty(navigator,'onLine',{get:()=>false,configurable:true}); window.dispatchEvent(new Event('offline'))"); pg.wait_for_timeout(100)
-    t1 = pg.inner_text("#sync")
-    pg.evaluate("connect()"); pg.wait_for_timeout(200)
-    t2 = pg.inner_text("#sync")
-    if "同期済み" not in t0: print("  t0:", t0)
-    check("機内モードにすると「同期済み」から「オフライン」になる（開き直しても）", "同期済み" in t0 and "オフライン" in t1 and "オフライン" in t2 and not errs)
+    v0 = pg.is_visible("#sync")
+    start_preset(pg, "firtree"); walk(pg); C(pg, "[data-act=finish]"); pg.wait_for_timeout(500); C(pg, "[data-act=close-result]")
+    v1 = pg.is_visible("#sync")
+    check("右上の札: ふだんは出ない（保存してサーバーに送れたあとも）", not v0 and not v1 and pg.evaluate("pendN()") == 0 and pg.evaluate("__db.rounds.length") == 1)
+    pg.evaluate("window.__offline=true")
+    C(pg, "nav.tabs [data-tab=history]"); C(pg, "[data-act=ask-del-round]") or (C(pg, "[data-act=toggle-round]") and C(pg, "[data-act=ask-del-round]")); C(pg, "[data-act=del-round]"); pg.wait_for_timeout(300)
+    check("電波がなくても削除できる（端末からすぐ消え、札は「バックアップ待ち」）", pg.evaluate("state.rounds.length") == 0 and pg.is_visible("#sync") and "バックアップ待ち" in pg.inner_text("#sync") and pg.evaluate("__db.rounds.length") == 1)
+    check("バックアップの枠に「あとで自動で送ります」", "あとで自動で送ります" in pg.inner_text("#bk-line"))
+    pg.evaluate("window.__offline=false; window.dispatchEvent(new Event('online'))"); pg.wait_for_timeout(500)
+    check("電波が戻ると削除もサーバーに送られ、札が消える", pg.evaluate("__db.rounds.length") == 0 and not pg.is_visible("#sync") and "最後にバックアップした日時" in pg.inner_text("#bk-line") and not errs)
+    pg.context.close()
+
+    # 19p. 端末が本体・サーバーはバックアップ（2026-11-16 のバグ出しで見つかった不具合のチェック）
+    def bk_round(i, player, nos=None, putts=2):
+        return {"id": f"b{player}{i}", "player": player, "courseId": "c1", "courseName": "テストC", "date": f"2026-10-{10+i:02d}", "createdAt": 1000 + i, **({"nos": nos} if nos else {}),
+                "holes": [{"par": 3, "strokes": 3 + (i + h) % 3, "putts": putts, "dir": None, "bunker": False, "ob": False, "pen": False, "tee": None, "club": None} for h in range(len(nos) if nos else 9)]}
+    bk_course = [{"id": "c1", "name": "テストC", "holes": [{"par": 3, "yards": 100}] * 9, "createdAt": 1}]
+    # 新しい端末には、サーバーにあるほかの人の記録が入らない（名前なし・同じ名前のどちらでも）
+    for nm in (None, "たろう"):
+        pg, errs = open_page(b, {"sc.player": json.dumps(nm)} if nm else None)
+        pg.evaluate("([r,c])=>{ __db.rounds=r; __db.courses=c; }", [[bk_round(i, "あきら") for i in range(3)] + [bk_round(i, "たろう") for i in range(2)], bk_course])
+        pg.evaluate("realConnect()"); pg.wait_for_timeout(400); pg.evaluate("document.dispatchEvent(new Event('visibilitychange'))"); pg.wait_for_timeout(300)
+        C(pg, "nav.tabs [data-tab=history]"); C(pg, "nav.tabs [data-tab=stats]"); C(pg, "nav.tabs [data-tab=history]")
+        check(f"新しい端末（名前{'あり' if nm else 'なし'}）: サーバーのほかの人の記録は入らない・見えない", pg.evaluate("state.rounds.length") == 0 and pg.query_selector("[data-act=toggle-round]") is None and not errs)
+        pg.context.close()
+    # 古い版から上がった端末（sc.rounds がある）は、最初の1回だけ今までと同じ読み直しをして、次からはしない
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.rounds": [bk_round(0, "たろう")], "sc.courses": bk_course})
+    pg.evaluate("([r,c])=>{ __db.rounds=r; __db.courses=c; localStorage.removeItem('sc.v2'); }", [[bk_round(0, "たろう"), bk_round(1, "たろう")], bk_course])
+    pg.evaluate("realConnect()"); pg.wait_for_timeout(500)
+    one = pg.evaluate("state.rounds.length") == 2 and pg.evaluate("!!localStorage.getItem('sc.v2')")
+    pg.evaluate("__db.rounds.push(%s); 0" % json.dumps(bk_round(5, "あきら"))); pg.evaluate("realConnect()"); pg.wait_for_timeout(500)
+    check("古い版から上がった端末: 最初の1回だけサーバーから読み、次からは読まない", one and pg.evaluate("state.rounds.length") == 2 and not errs)
+    pg.context.close()
+    # 開き直した直後（裏でサーバーと話している間）に保存しても、ラウンドが消えない
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.fields": dict(NONE)})
+    pg.evaluate("window.__delay=1200")
+    start_preset(pg, "firtree"); walk(pg)
+    pg.evaluate("document.dispatchEvent(new Event('visibilitychange')); window.dispatchEvent(new Event('online'))"); pg.wait_for_timeout(100)
+    C(pg, "[data-act=finish]"); pg.wait_for_timeout(200)
+    fast = pg.query_selector(".result-card") is not None
+    pg.wait_for_timeout(3200); C(pg, "[data-act=close-result]"); C(pg, "nav.tabs [data-tab=history]")
+    check("保存はサーバーを待たずにすぐ終わり、あとで読み直しが来ても履歴から消えない", fast and pg.evaluate("state.rounds.length") == 1 and pg.query_selector("[data-act=toggle-round]") is not None and pg.evaluate("__db.rounds.length") == 1 and pg.evaluate("pendN()") == 0 and not errs)
+    pg.context.close()
+    # 途中で終わったラウンドを編集しても、ホール番号が残る
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.rounds": [bk_round(0, "たろう", nos=[1, 2, 6, 7])], "sc.courses": bk_course, "sc.v2": 1})
+    C(pg, "nav.tabs [data-tab=history]"); C(pg, "[data-act=toggle-round]"); C(pg, "[data-act=edit-round]"); pg.wait_for_timeout(200)
+    labels = pg.evaluate("[...document.querySelectorAll('.dots button')].map(e=>e.textContent.trim()).join(',')")
+    C(pg, "[data-act=next]"); C(pg, "[data-act=next]"); C(pg, "[data-act=next]"); C(pg, "[data-act=finish]"); pg.wait_for_timeout(500)
+    check("途中で終わったラウンドの編集: ホール番号（1・2・6・7）が残る", labels == "1H,2H,6H,7H" and pg.evaluate("JSON.stringify(state.rounds[0].nos)") == "[1,2,6,7]" and not errs)
+    pg.context.close()
+    # パットの設定がOFFのまま昔のラウンドを編集しても、パットが消えない
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.fields": {"putts": False}, "sc.rounds": [bk_round(0, "たろう")], "sc.courses": bk_course, "sc.v2": 1})
+    C(pg, "nav.tabs [data-tab=history]"); C(pg, "[data-act=toggle-round]"); C(pg, "[data-act=edit-round]"); pg.wait_for_timeout(200)
+    for _ in range(8): C(pg, "[data-act=next]")
+    C(pg, "[data-act=finish]"); pg.wait_for_timeout(500)
+    check("パットOFFで編集しても、もとのパットは残る", pg.evaluate("state.rounds[0].holes.every(h=>h.putts===2)") and not errs)
+    pg.context.close()
+    # 記録をファイルに保存 → 別の端末で読み込む
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.rounds": [bk_round(0, "たろう"), bk_round(1, "たろう")], "sc.courses": bk_course, "sc.v2": 1})
+    C(pg, "nav.tabs [data-tab=history]")
+    with pg.expect_download() as dl: C(pg, "[data-act=file-save]")
+    fpath = os.path.join(tempfile.mkdtemp(), "bk.json"); dl.value.save_as(fpath)
+    data = json.load(open(fpath, encoding="utf-8"))
+    check("ファイルに保存: ラウンド・コース・名前が入った JSON ができる", data.get("app") == "GOLF SC." and len(data["rounds"]) == 2 and len(data["courses"]) == 1 and data["player"] == "たろう" and dl.value.suggested_filename.endswith(".json"))
+    pg.context.close()
+    pg, errs = open_page(b, {"sc.rounds": [bk_round(1, "たろう")], "sc.v2": 1})
+    C(pg, "nav.tabs [data-tab=history]")
+    pg.set_input_files("#bk-file", fpath); pg.wait_for_timeout(300)
+    msg = pg.inner_text(".data-sheet")
+    C(pg, "[data-act=data-ok]"); pg.wait_for_timeout(500)
+    check("ファイルから読み込む: 足りない分だけ入り（2ラウンド中1つ・コース1つ）、名前も入り、サーバーにも送られる", "2ラウンド" in msg and "1ラウンド" in msg and pg.evaluate("state.rounds.length") == 2 and pg.evaluate("state.courses.length") == 1 and pg.evaluate("localStorage.getItem('sc.player')") == '"たろう"' and pg.evaluate("__db.rounds.length") == 1 and not errs)
+    bad = os.path.join(os.path.dirname(fpath), "bad.json"); open(bad, "w").write('{"hello":1}')
+    pg.set_input_files("#bk-file", bad); pg.wait_for_timeout(300)
+    check("ファイルから読み込む: 関係ないファイルは「読み込めませんでした」で、何も変わらない", "読み込めませんでした" in pg.inner_text(".data-sheet") and pg.evaluate("state.rounds.length") == 2 and not errs)
     pg.context.close()
 
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
@@ -938,21 +1005,33 @@ with sync_playwright() as pw:
     try:
         src = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
         src = (src.replace("setTimeout(checkUpdate, 1500);", "").replace("setTimeout(maybeShowA2HS, 2500);", "").replace("const state = {", "const state = window.state = {")
-                  .replace("async function connect(){", "window.connect=()=>connect(); async function connect(){")
+                  .replace("async function connect(){", "window.connect=async()=>{ await backup(); await legacyPull(); }; window.realConnect=()=>connect(); window.backup=()=>backup(); window.pendN=()=>pendN(); async function connect(){")
                   .replace("function ocrApplyRes(", "window.ocrApplyRes=ocrApplyRes; function ocrApplyRes("))
         src = src.replace("<body>", "<body><script>if(!sessionStorage.t){sessionStorage.t=1;localStorage.clear();localStorage.setItem('sc.player',JSON.stringify('たろう'));localStorage.setItem('sc.flickTip','true');localStorage.setItem('sc.presets','1');localStorage.setItem('sc.fields',JSON.stringify(%s));}</script>" % json.dumps(ALL), 1)
         open(os.path.join(ROOT, "_test_cf.html"), "w", encoding="utf-8").write(src)
         ctx = b.new_context(viewport={"width": 375, "height": 667}, service_workers="block"); pg = ctx.new_page(); errs = []
         pg.on("pageerror", lambda e: errs.append(str(e)))
         pg.goto(f"http://127.0.0.1:{PORT}/_test_cf.html"); pg.wait_for_timeout(1200)
-        check("Web版: 同じサイトの /api につながる（version 3・シート更新のお願いは出ない）", pg.evaluate("state.mode") == "cloud" and pg.evaluate("state.serverVer") == 3)
+        check("Web版: 同じサイトの /api につながる（version 3・シート更新のお願いは出ない）", pg.evaluate("state.mode") == "cloud" and not pg.is_visible("#sync"))
         start_preset(pg, "firtree"); play_round(pg, ALL)
         srvr = pg.evaluate("fetch('/api').then(r=>r.json())")
         hs = srvr["rounds"][0]["holes"] if srvr["rounds"] else []
         check("Web版: ラウンドがデータベースに保存され、クラブ・ティーショット・方向も残る", len(srvr["rounds"]) == 1 and any(h.get("club") for h in hs) and any(h.get("tee") for h in hs) and any(h.get("dir") for h in hs))
         check("Web版: コースも保存される", any(c.get("name") for c in srvr["courses"]))
-        pg.evaluate("localStorage.removeItem('sc.rounds')"); pg.reload(); pg.wait_for_timeout(1200)
-        check("Web版: 端末の控えを消して読み直してもデータベースから戻る", pg.evaluate("state.rounds.length") == 1 and pg.evaluate("state.rounds[0].holes.some(h=>h.club)"))
+        # 新しい端末（買い替え・入れ直し）: ほかの人の記録は勝手に入らない。「バックアップから戻す」で、同じ名前の記録だけ戻る
+        pg.evaluate("fetch('/api',{method:'POST',body:JSON.stringify({action:'saveRound',round:{id:'other1',player:'べつのひと',courseId:'cZ',courseName:'よそ',date:'2026-10-02',createdAt:5,holes:[{par:3,strokes:3,putts:2}]}})})"); pg.wait_for_timeout(200)
+        pg.evaluate("localStorage.clear(); localStorage.setItem('sc.flickTip','true'); localStorage.setItem('sc.presets','1')"); pg.reload(); pg.wait_for_timeout(1200)
+        C(pg, "nav.tabs [data-tab=history]"); pg.wait_for_timeout(200)
+        check("新しい端末: サーバーにあるほかの人の記録は入らない（履歴は空）", pg.evaluate("state.rounds.length") == 0 and pg.query_selector("[data-act=toggle-round]") is None and pg.query_selector("[data-act=restore]") is not None)
+        C(pg, "[data-act=restore]"); pg.fill("#bk-name", "いないひと"); C(pg, "[data-act=restore-find]"); pg.wait_for_timeout(500)
+        check("バックアップから戻す: 名前が違うと「見つかりませんでした」", "見つかりませんでした" in pg.inner_text(".data-sheet") and pg.query_selector("[data-act=data-ok]") is None)
+        C(pg, "[data-act=data-cancel]"); C(pg, "[data-act=restore]"); pg.fill("#bk-name", "たろう"); C(pg, "[data-act=restore-find]"); pg.wait_for_timeout(500)
+        check("バックアップから戻す: 同じ名前の記録が見つかる（1ラウンド）", "1ラウンド" in pg.inner_text(".data-sheet"))
+        C(pg, "[data-act=data-ok]"); pg.wait_for_timeout(300)
+        check("バックアップから戻す: 自分の記録だけが戻る（クラブも・コースも）", pg.evaluate("state.rounds.length") == 1 and pg.evaluate("state.rounds[0].player") == "たろう" and pg.evaluate("state.rounds[0].holes.some(h=>h.club)") and pg.evaluate("state.courses.length") == 1 and pg.evaluate("pendN()") == 0)
+        pg.reload(); pg.wait_for_timeout(1000)
+        check("バックアップから戻したあと、開き直しても残っている（ほかの人の分は入らない）", pg.evaluate("state.rounds.length") == 1)
+        pg.evaluate("fetch('/api',{method:'POST',body:JSON.stringify({action:'deleteRound',id:'other1'})})"); pg.wait_for_timeout(200)
         rid = pg.evaluate("state.rounds[0].id")
         pg.evaluate(f"fetch('/api',{{method:'POST',body:JSON.stringify({{action:'deleteRound',id:'{rid}'}})}})"); pg.wait_for_timeout(200)
         check("Web版: 削除できる", len(pg.evaluate("fetch('/api').then(r=>r.json())")["rounds"]) == 0)
@@ -1007,7 +1086,7 @@ with sync_playwright() as pw:
         # 古いアプリ（github.io）から引っ越し: 端末に残っていたクラブなども一緒に送る
         pg, errs = open_page(b, {"sc.player": "\"たろう\""}, repl={'const CF_URL = "";': f'const CF_URL = "http://127.0.0.1:{PORT}";'})
         pg.evaluate("window.__noNav=true; __db.courses.push({id:'cX',name:'旧コース',holes:[{par:3}]}); __db.rounds.push({id:'old1',player:'たろう',courseId:'cX',courseName:'旧コース',date:'2026-10-01',createdAt:1,holes:[{par:3,strokes:4,putts:2}]})")
-        pg.evaluate("localStorage.setItem('sc.rounds', JSON.stringify([{id:'old1',player:'たろう',holes:[{par:3,strokes:4,putts:2,club:'7I',tee:null,dir:'right'}]}]))")
+        pg.evaluate("state.rounds=[{id:'old1',player:'たろう',holes:[{par:3,strokes:4,putts:2,club:'7I',tee:null,dir:'right'}]}]; localStorage.setItem('sc.rounds', JSON.stringify(state.rounds))")
         pg.evaluate("connect()"); pg.wait_for_timeout(600)
         check("古いアプリ: 引っ越しの案内が出る", pg.query_selector(".move-bar [data-act=migrate]") is not None)
         C(pg, ".move-bar [data-act=migrate]"); pg.wait_for_timeout(1200)

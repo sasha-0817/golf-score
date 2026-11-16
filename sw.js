@@ -1,5 +1,5 @@
 /* GOLF SC. service worker — 電波がなくても開けるようにする */
-const CACHE = "golfsc-v4";
+const CACHE = "golfsc-v5";
 const CORE = [
   "./", "./index.html", "./manifest.webmanifest",
   "./icon.png", "./icon-192.png", "./icon-512.png", "./mark.png", "./ball.png",
@@ -36,11 +36,12 @@ self.addEventListener("fetch", e => {
     e.respondWith((async () => {
       try {
         const res = await fetch(req);
-        const own = url.pathname.endsWith("simple.html"); // シンプル版（試作）は自分の場所に保存する
-        const c = await caches.open(CACHE); c.put(own ? req : "./index.html", res.clone());
+        // うまく受け取れたときだけ保存する（サーバーのエラー画面を、電波がないとき用の保存版にしない）。本体以外のページ（シンプル版・試作）は自分の場所に保存する
+        const main = url.pathname.endsWith("/") || url.pathname.endsWith("/index.html");
+        if (res.ok) { const c = await caches.open(CACHE); c.put(main ? "./index.html" : req, res.clone()); }
         return res;
       } catch (err) {
-        if (url.pathname.endsWith("simple.html")) { const hit = await caches.match(req, { ignoreSearch: true }); if (hit) return hit; }
+        if (url.pathname.endsWith(".html") && !url.pathname.endsWith("/index.html")) { const hit = await caches.match(req, { ignoreSearch: true }); if (hit) return hit; }
         return (await caches.match("./index.html")) || (await caches.match("./")) || Response.error();
       }
     })());
