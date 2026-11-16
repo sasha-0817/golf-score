@@ -2033,6 +2033,10 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .sheet button.ds-go{background:var(--turf);border-color:var(--turf);color:var(--turf-ink)}
 .sheet button.ds-go:disabled{opacity:.6}
 header.top .sync[hidden]{display:none}
+/* ルールの「例」: 右端の列（コイン・メダル・「なし」・数字）は、同じ幅の列の真ん中にそろえ、行の高さもそろえる */
+.rp .sr-row2{grid-template-columns:56px 1fr 44px;min-height:28px;align-items:center}
+.rp .sr-row2 b{display:flex;align-items:center;justify-content:center;text-align:center;line-height:1;height:28px}
+.rp .sr-row2 b svg{display:block;flex:none}
 </style>
 
 </head>
@@ -2151,7 +2155,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-16-1500";
+const BUILD = "2026-11-17-0900";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
