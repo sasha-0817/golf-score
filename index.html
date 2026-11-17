@@ -1528,6 +1528,7 @@ input,select,textarea{font-size:max(16px,1em)}
 /* 推移グラフ: 左に固定の目盛り列、右は横スクロール（15ラウンド分の幅） */
 .tbox{display:flex;height:240px;position:relative}
 .tbox-ax{flex:0 0 40px;width:40px;min-width:0;overflow:hidden;position:relative}
+.tbox-ax.w46{flex-basis:46px;width:46px}
 .tbox canvas{display:block}
 .tbox-sc{flex:1;min-width:0;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .tbox-sc::-webkit-scrollbar{display:none}
@@ -2355,7 +2356,7 @@ async function restoreFind(){
   const a=state.dataAsk, name=(a.name||"").trim(); if(!name){ a.err="名前を入れてください"; render(); return; }
   a.step="busy"; a.err=""; render();
   try{
-    const res=await fetch(API_URL + "?t=" + Date.now()); const j=await res.json(); if(!j.ok) throw 0;
+    const res=await fetch(API_URL + "?player=" + encodeURIComponent(name) + "&t=" + Date.now()); const j=await res.json(); if(!j.ok) throw 0;   // サーバーが名前でしぼって返す（全員分は受け取らない）
     const mine=(j.rounds||[]).filter(r=>r && r.player===name && !pendingDel.includes(r.id));
     const ids=new Set(mine.map(r=>r.courseId));
     a.plan=planImport(mine, (j.courses||[]).filter(c=>c && ids.has(c.id))); a.step="found";
@@ -3012,7 +3013,7 @@ function viewStats(){
     ${!s.puttHoles?"":gauge("リカバリー率", s.scramble, `パーオン逃し<br>${s.scrambleN}Hのうち<br>パー以内`, "--accent2")}
     ${!(s.bunkerN||fields().bunker)?"":gauge("サンドボギーセーブ率", s.sandBogey, `バンカー<br>${s.bunkerN}Hのうち<br>ボギー以内`, "--c5")}
   </div>
-  ${s.puttHoles?`<div class="map-sub" style="margin-top:14px">パーオン率・ボギーオン率の推移</div><div class="tbox"><div class="tbox-ax"><canvas id="ch-on-ax" aria-hidden="true"></canvas></div><div class="tbox-sc"><div class="tbox-in"><canvas id="ch-on" aria-label="パーオン率とボギーオン率の推移"></canvas></div></div></div><div class="on-legend"><span><i style="background:var(--c-gir)"></i>パーオン率</span><span><i style="background:var(--c-bon)"></i>ボギーオン率</span></div><p class="muted cs-note">各ラウンドまでの直近5ラウンドの平均。</p>`:""}</div>
+  ${s.puttHoles?`<div class="map-sub" style="margin-top:14px">パーオン率・ボギーオン率の推移</div><div class="tbox"><div class="tbox-ax w46"><canvas id="ch-on-ax" aria-hidden="true"></canvas></div><div class="tbox-sc"><div class="tbox-in"><canvas id="ch-on" aria-label="パーオン率とボギーオン率の推移"></canvas></div></div></div><div class="on-legend"><span><i style="background:var(--c-gir)"></i>パーオン率</span><span><i style="background:var(--c-bon)"></i>ボギーオン率</span></div><p class="muted cs-note">各ラウンドまでの直近5ラウンドの平均。</p>`:""}</div>
   ${!(s.dirN||s.teeN||fields().shot)?"":`<div class="panel"><div class="sec"><em>TEE SHOT</em><span>ティーショットの行き先</span></div>
     <div class="map-sub">パー3（グリーン）</div>${greenMap(s)}
     ${s.teeN?`<div class="map-sub">パー4・5（フェアウェイ）</div>${dirHeat("fw", s.teeC, s.teeN)}<p class="muted" style="font-size:14px;text-align:center;margin:8px 0 0">${s.teeN}回の記録・フェアウェイキープ率 <b>${fmtPct(s.fwRate)}%</b></p>`:""}</div>`}
@@ -3159,7 +3160,7 @@ after.stats = () => {
     const axisChart = (el, right) => el && charts.push(new Chart(el, { type:"bar", data:{ labels:["9/1"], datasets:[{ data:[null] }] },
       options:{ maintainAspectRatio:false, layout:{padding:{top:8}}, events:[], animation:false, plugins:{ legend:{display:false}, tooltip:{enabled:false} },
         scales:{ x:{ ticks:{ color:"rgba(0,0,0,0)", maxRotation:0 }, grid:{display:false}, border:{display:false}, afterFit:s=>{ s.height=30; } },
-          y:{ min:yb.min, max:yb.max, grid:{display:false}, border:{display:false}, afterFit:s=>{ s.width= right?2:40; s.paddingTop=0; s.paddingBottom=0; },
+          y:{ min:yb.min, max:yb.max, grid:{display:false}, border:{display:false}, afterFit:s=>{ s.width= right?2:(el.parentElement.clientWidth||40); s.paddingTop=0; s.paddingBottom=0; },
             ticks:{ display:!right, precision:0, stepSize:yb.ticks.stepSize, callback: v => tf(v) } } } },
       plugins: right ? [{ id:"refLbl", afterDraw(ch){ const {ctx, scales:{y}, chartArea:a} = ch; ctx.save(); ctx.font="700 13px "+cssv("--f-num"); ctx.textAlign="left"; ctx.textBaseline="middle";
         refs.forEach(r=>{ const py=y.getPixelForValue(r.v); if(py<a.top-1||py>a.bottom+1) return; ctx.fillStyle=r.color; ctx.fillText(r.label, 4, py); }); ctx.restore(); } }] : [] }));

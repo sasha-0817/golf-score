@@ -1075,6 +1075,20 @@ with sync_playwright() as pw:
             rq = urllib.request.Request(f"http://127.0.0.1:{PORT}/api", data=(_json.dumps(body).encode() if body else None), headers={"Host": host, "Content-Type": "text/plain"}, method="POST" if body else "GET")
             return _json.loads(urllib.request.urlopen(rq).read())
         PREV = "preview.golf-score-bd6.pages.dev"
+        # サーバー: ?player=名前 で、その人のラウンドとそのコースだけを返す。大きすぎるデータは受け取らない
+        import urllib.parse, urllib.error
+        def getp(name): return _json.loads(urllib.request.urlopen(urllib.request.Request(f"http://127.0.0.1:{PORT}/api?player=" + urllib.parse.quote(name), headers={"Host": "localhost"})).read())
+        call("localhost", {"action": "saveCourse", "course": {"id": "pf-c", "name": "しぼりこみコース", "holes": [{"par": 3}]}})
+        call("localhost", {"action": "saveRound", "round": {"id": "pf-1", "player": "しぼり太郎", "courseId": "pf-c", "courseName": "しぼりこみコース", "date": "2026-11-17", "createdAt": 5, "holes": [{"par": 3, "strokes": 3, "putts": 2}]}})
+        g = getp("しぼり太郎")
+        check("サーバー: ?player=名前 は、その人のラウンドとそのコースだけを返す", [r["id"] for r in g["rounds"]] == ["pf-1"] and [c["id"] for c in g["courses"]] == ["pf-c"])
+        check("サーバー: いない名前には何も返さない", getp("いないひと")["rounds"] == [] and getp("いないひと")["courses"] == [])
+        def code(body):
+            try: urllib.request.urlopen(urllib.request.Request(f"http://127.0.0.1:{PORT}/api", data=body, headers={"Host": "localhost", "Content-Type": "text/plain"}, method="POST")); return 200
+            except urllib.error.HTTPError as e: return e.code
+        check("サーバー: 大きすぎるラウンド（300KB超）は受け取らない", code(_json.dumps({"action": "saveRound", "round": {"id": "big", "x": "a" * 400000}}).encode()) == 400 and "big" not in [r["id"] for r in call("localhost")["rounds"]])
+        check("サーバー: JSON が null でも落ちない（400）", code(b"null") == 400)
+        call("localhost", {"action": "deleteRound", "id": "pf-1"}); call("localhost", {"action": "deleteCourse", "id": "pf-c"})
         call(PREV, {"action": "saveRound", "round": {"id": "prev-r1", "player": "後輩", "courseId": "c", "courseName": "C", "date": "2026-11-09", "createdAt": 1, "holes": [{"par": 3, "strokes": 3, "putts": 2}]}})
         call(PREV, {"action": "saveCourse", "course": {"id": "prev-c1", "name": "プレビューのコース", "holes": [{"par": 3}]}})
         prod = call("golf-score-bd6.pages.dev"); prev = call(PREV)

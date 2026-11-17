@@ -33,6 +33,7 @@ async function setup(db, T) {
   ready[T.c] = true;
 }
 
+const MAX_BODY = 8_000_000, MAX_ONE = 300_000;   // 引っ越し・読み込みのまとめ送りは8MBまで、ラウンド1つ・コース1つは300KBまで
 const okId = (id) => typeof id === "string" && id.length > 0 && id.length <= 80;
 
 /* 引っ越しで同じラウンドが2台から届いたとき、空いている項目だけ埋める（クラブ・方向などを残すため） */
@@ -56,6 +57,19 @@ export async function onRequestGet({ request, env }) {
   try {
     const T = tablesFor(request);
     await setup(env.DB, T);
+    // ?player=名前 → その人のラウンドと、そのコースだけを返す（「バックアップから戻す」用。全員分を端末に送らない）
+    const player = new URL(request.url).searchParams.get("player");
+    if (player != null) {
+      const r = await env.DB.prepare(`SELECT data FROM ${T.r} WHERE json_extract(data, '$.player') = ?1 ORDER BY createdAt`).bind(player.slice(0, 80)).all();
+      const rounds = r.results.map((x) => JSON.parse(x.data));
+      const ids = [...new Set(rounds.map((x) => x.courseId).filter(okId))], courses = [];
+      for (let i = 0; i < ids.length; i += 50) {
+        const part = ids.slice(i, i + 50);
+        const q = await env.DB.prepare(`SELECT data FROM ${T.c} WHERE id IN (${part.map(() => "?").join(",")})`).bind(...part).all();
+        q.results.forEach((x) => courses.push(JSON.parse(x.data)));
+      }
+      return json({ ok: true, version: VERSION, courses, rounds });
+    }
     const [c, r] = await env.DB.batch([
       env.DB.prepare(`SELECT data FROM ${T.c}`),
       env.DB.prepare(`SELECT data FROM ${T.r} ORDER BY createdAt`),
@@ -68,7 +82,13 @@ export async function onRequestGet({ request, env }) {
 
 export async function onRequestPost({ request, env }) {
   let body;
-  try { body = JSON.parse(await request.text()); } catch (e) { return json({ ok: false, error: "bad json" }, 400); }
+  try {
+    const text = await request.text();
+    if (text.length > MAX_BODY) return json({ ok: false, error: "too big" }, 413);   // 大きすぎるデータは受け取らない（いたずら・まちがいでデータベースを埋めない）
+    body = JSON.parse(text);
+  } catch (e) { return json({ ok: false, error: "bad json" }, 400); }
+  if (!body || typeof body !== "object") return json({ ok: false, error: "bad json" }, 400);
+  if (body.action !== "import" && JSON.stringify(body).length > MAX_ONE) return json({ ok: false, error: "too big" }, 400);
   try {
     const T = tablesFor(request);
     await setup(env.DB, T);
