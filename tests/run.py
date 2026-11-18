@@ -40,6 +40,7 @@ def open_page(b, ls=None, dark=False, offline=False, repl=None, query=""):
     for a, z in (repl or {}).items(): src = src.replace(a, z)
     src = (src.replace("setTimeout(checkUpdate, 1500);", "").replace("setTimeout(maybeShowA2HS, 2500);", "")
               .replace("const state = {", "const state = window.state = {")
+              .replace("function render(){", "window.render=render; function render(){")
               .replace("function skinsCalc(", "window.skinsCalc=skinsCalc; function skinsCalc(")
               .replace("function courseGreens(", "window.courseGreens=courseGreens; function courseGreens(")
               .replace("function pickableCourses(", "window.pickableCourses=pickableCourses; window.showPresets=()=>SHOW_PRESETS; function pickableCourses(")
@@ -1246,7 +1247,13 @@ with sync_playwright() as pw:
     MV = "[0,1,2].map(i=>document.querySelector('#r-mate'+i).value).join()"
     pg, errs = open_page(b, TL, offline=True)
     C(pg, "[data-act=open-mates]")
-    check("お試し: 何も付けなければ今まで通り（候補は iPhone のまま・お試しの札やリンクなし）", pg.evaluate("document.querySelector('#r-mate0').getAttribute('list')") == "plist" and pg.query_selector(".try-tag") is None and pg.query_selector(".try-link") is None and pg.query_selector(".mt-chip") is None and not errs)
+    chips0 = pg.evaluate("[...document.querySelectorAll('.mt-chip')].map(e=>e.dataset.n)")
+    check("一緒に回る人: 何も付けなければ「前回と同じ」＋最近の人のボタン（iPhone の候補は出さない・見本の名前は混ぜない・お試しの札なし）", pg.evaluate("document.querySelector('#r-mate0').getAttribute('list')") is None and pg.query_selector("datalist") is None and pg.query_selector(".try-tag") is None and pg.query_selector(".try-link") is None and "ふゆこ・まさる" in pg.inner_text(".mt-last") and chips0 == ["まさる", "さくら"] and not errs)
+    check("名前は8文字まで（長い名前で表が崩れないように）", pg.evaluate("[document.querySelector('#r-mate0').maxLength, document.querySelector('#r-player').maxLength].join()") == "8,8" and pg.evaluate("document.querySelector('#r-player').getAttribute('list')") is None)
+    pg.context.close()
+    pg, errs = open_page(b, TL, offline=True, query="?mates=old")
+    C(pg, "[data-act=open-mates]")
+    check("お試し: ?mates=old で前の形（iPhone の候補）", pg.evaluate("document.querySelector('#r-mate0').getAttribute('list')") == "plist" and pg.query_selector("datalist#plist") is not None and not errs)
     pg.context.close()
     pg, errs = open_page(b, TL, offline=True, query="?mates=m1")
     C(pg, "[data-act=open-mates]")
@@ -1299,6 +1306,24 @@ with sync_playwright() as pw:
     check("お試し M2＋M5: シートが画面に収まる", w == [True, True] and not errs)
     pg.goto(pg.url.split("?")[0] + "?mates=0"); pg.wait_for_timeout(800)
     check("お試し: ?mates=0 で元に戻る", pg.evaluate("localStorage.getItem('sc.try.mates')") is None and pg.query_selector(".try-link") is None)
+    # 結果カード: COURSE BEST の札が出ても、コース名と日付は1行のまま（カードの高さが変わらない）
+    lc = [{"id": "c1", "name": "ファーツリーカントリークラブ", "holes": [{"par": 3, "yards": 100}] * 9, "createdAt": 1}]
+    def lrd(i, st, d): return {"id": "b%d" % i, "player": "たろう", "courseId": "c1", "courseName": lc[0]["name"], "date": d, "createdAt": i, "holes": [{"par": 3, "strokes": st, "putts": 2}] * 9}
+    hh = {}
+    for nm, first in [("best", 5), ("normal", 3)]:
+        pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.courses": lc, "sc.rounds": [lrd(1, first, "2026-10-01"), lrd(2, 4, "2026-11-18")], "sc.v2": 1, "sc.tab": "\"history\""}, offline=True)
+        pg.evaluate("state.result=state.rounds.find(r=>r.id==='b2'); render()"); pg.wait_for_timeout(300)
+        hh[nm] = pg.evaluate("[!!document.querySelector('.rc-flag'), Math.round(document.querySelector('.rc-top .c').getBoundingClientRect().height), Math.round(document.querySelector('.result-card').getBoundingClientRect().height)]")
+        pg.context.close()
+    check("結果カード: COURSE BEST でもコース名・日付は1行で、カードの高さは同じ", hh["best"][0] and not hh["normal"][0] and hh["best"][1] < 24 and hh["best"][2] == hh["normal"][2])
+    # 幅320px（iPhone の拡大表示）: カレンダーの土曜が切れない・「始める」が隠れたままにならない
+    pg, errs = open_page(b, {**TL, "sc.mates": ["はなこ", "じろう", ""]}, offline=True)
+    pg.set_viewport_size({"width": 320, "height": 568}); pg.evaluate("render()"); pg.wait_for_timeout(100)
+    cut = pg.evaluate("document.querySelector('[data-act=start]').getBoundingClientRect().bottom > document.querySelector('nav.tabs').getBoundingClientRect().top")
+    check("幅320px: 「始める」がタブに隠れるときは、画面を動かせる", (not cut) or not pg.evaluate("document.documentElement.classList.contains('noscroll')"))
+    C(pg, "[data-act=open-cal]")
+    check("幅320px: カレンダーの7列が画面に収まる", pg.evaluate("[...document.querySelectorAll('.cal-d')].every(e=>{const r=e.getBoundingClientRect(); return r.left>=0 && r.right<=320})") and not errs)
+    pg.context.close()
     pg.context.close()
     for v in ["r1", "r2", "r3"]:
         for n in [9, 18]:
