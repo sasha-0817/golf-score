@@ -2041,6 +2041,9 @@ header.top .sync[hidden]{display:none}
 .bk-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px;padding:0 2px}
 .bk-bar span{font-size:13px;color:var(--muted);line-height:1.4;min-width:0}
 .bk-bar .btn{flex:0 0 auto;height:38px;padding:0 14px;font-size:13px}
+/* 記録画面の左上の×: 歯車・スコアカードのボタンと同じ46pxの丸・28pxの絵にして、はっきりさせる */
+.rec2 .rec-top>.icon-btn[data-act="ask-discard"]{width:46px;height:46px;flex:0 0 46px}
+.rec2 .rec-top>.icon-btn[data-act="ask-discard"] svg{width:28px;height:28px;stroke-width:1.7}
 </style>
 
 </head>
@@ -2159,7 +2162,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-18-2100";
+const BUILD = "2026-11-18-2200";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });

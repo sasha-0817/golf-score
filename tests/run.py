@@ -942,6 +942,13 @@ with sync_playwright() as pw:
         pg.context.close()
     check("2段目のボタンは、項目が1〜4つのどれでも同じ大きさ・同じ位置から並ぶ", [len(ws[k]) for k in "4321"] == [4, 3, 2, 1] and len({tuple(v[0]) for v in ws.values()}) == 1 and all(ws[k] == ws["4"][:len(ws[k])] for k in ws))
 
+    # 19s. 記録画面の左上の×は、歯車・スコアカードのボタンと同じ大きさ（46pxの丸・28pxの絵）
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.fields": dict(NONE)})
+    start_preset(pg, "firtree")
+    xs = pg.evaluate("['[data-act=ask-discard]','.card-btn','.gear-btn'].map(q=>{const e=document.querySelector(q), r=e.getBoundingClientRect(), v=e.querySelector('svg').getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height), Math.round(v.width)]})")
+    check("記録画面の左上の×は、歯車・スコアカードと同じ大きさ（46pxの丸・28pxの絵）", xs[0] == xs[1] == xs[2] == [46, 46, 28] and not errs)
+    pg.context.close()
+
     # 19p. 端末が本体・サーバーはバックアップ（2026-11-16 のバグ出しで見つかった不具合のチェック）
     def bk_round(i, player, nos=None, putts=2):
         return {"id": f"b{player}{i}", "player": player, "courseId": "c1", "courseName": "テストC", "date": f"2026-10-{10+i:02d}", "createdAt": 1000 + i, **({"nos": nos} if nos else {}),
