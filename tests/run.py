@@ -207,7 +207,7 @@ with sync_playwright() as pw:
         return {"id": f"r{player}{i}", "player": player, "courseId": cid, "courseName": "コース" + cid, "date": f"2026-09-{10+i:02d}", "createdAt": i, "holes": hs}
     rounds = [rnd(i) for i in range(4)] + [rnd(i, putts=False) for i in range(4, 6)] + [rnd(6, n=18, cid="c2")] + [rnd(i, player="はなこ") for i in range(3)]
     courses = [{"id": "c1", "name": "コースc1", "holes": [{"par": 3, "yards": 100}] * 9}, {"id": "c2", "name": "コースc2", "holes": [{"par": 3, "yards": 100}] * 18}]
-    for dark in (False, True):
+    for dark in (False,):   # ナイトモードはやめた（いつも明るい表示）
         pg, errs = open_page(b, {"sc.rounds": rounds, "sc.courses": courses, "sc.player": "\"たろう\"", "sc.tab": "\"stats\""}, dark=dark, offline=True)
         for t in ["score", "shot", "putt"]: C(pg, f"[data-act=stat-tab][data-v={t}]")
         for v in ["1", "3", "all"]: pg.select_option("#f-range", v); pg.wait_for_timeout(150)
@@ -1034,6 +1034,29 @@ with sync_playwright() as pw:
     C(pg, "[data-act=open-mates]"); pg.wait_for_timeout(100)
     sb = pg.evaluate("(()=>{ const b=document.querySelector('.mates-sheet').closest('.sheet-back'); const sh=document.querySelector('.mates-sheet').getBoundingClientRect(); return [b.classList.contains('top'), Math.round(sh.bottom), window.innerHeight]; })()")
     check("開始画面: 名前の欄に黄色い枠を出さない（行をうすい緑にする）。「一緒に回る」のシートはゲームと同じ下から出る", fo[0] == "none" and sb[0] is False and sb[1] >= sb[2] - 2 and not errs)
+    pg.context.close()
+
+    # 19w. ナイトモードはやめた・名前の欄はカーソルを右端に・結果画面の下のボタン・コインが枠に収まる
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.v2": 1}, dark=True)
+    bg = pg.evaluate("(()=>{ const c=getComputedStyle(document.body).backgroundColor.match(/\\d+/g).map(Number); return (c[0]+c[1]+c[2])/3; })()")
+    check("ナイトモード（端末が暗い表示でも）: アプリはいつも明るい表示", bg > 200 and pg.evaluate("document.documentElement.outerHTML.includes('prefers-color-scheme')") is False and not errs)
+    pg.context.close()
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": cst, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.v2": 1})
+    pg.click("#r-player", position={"x": 5, "y": 10}); pg.wait_for_timeout(300)
+    car = pg.evaluate("(()=>{ const e=document.querySelector('#r-player'); return [e.selectionStart, e.selectionEnd, e.value.length]; })()")
+    check("名前の欄: 押したら、カーソルは名前の右端に入る（左側に入って消しにくい、をなくす）", car[0] == car[1] == car[2] and car[2] > 0 and not errs)
+    pg.context.close()
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": ["はなこ", "じろう", ""], "sc.courses": [{"id": "c1", "name": "C1", "holes": [{"par": 3, "yards": 100}] * 18}], "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"nearpin\"", "sc.v2": 1, "sc.fields": dict(NONE)})
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    for _ in range(120):
+        if not pg.evaluate("state.cdraft&&state.cdraft.sel"): break
+        C(pg, '[data-act=cd-key][data-v="3"]')
+    pg.evaluate("state.cdraft.pins=Object.fromEntries(Array.from({length:18},(_,i)=>[i,i<14?0:1]))")
+    C(pg, "[data-act=cd-finish]"); pg.wait_for_timeout(900)
+    cw = pg.evaluate("(()=>{ const e=document.querySelector('.rc-game .rs-c'); return [e.scrollWidth<=e.clientWidth+1, e.children.length, e.textContent]; })()")
+    btn = pg.evaluate("(()=>{ const q=s=>document.querySelector(s); const c=q('.rc-close'), t=q('.rc-2nd'), p=q('.rc-save'); return [!!c, !!t, !!p, getComputedStyle(c).backgroundColor, !!q('.rc-all'), document.querySelectorAll('.rc-2nd').length]; })()")
+    check("結果: 18Hで14枚でも、コインは枠に収まる（あふれる分は「…」、数字は右に出る）", cw[0] and cw[1] <= 8 and "…" in cw[2] and not errs)
+    check("結果画面の下: 色つきの主ボタン1つ・白い枠の副ボタン（全員分・スコア入力に戻る）・文字だけの「閉じる」の3段", btn[0] and btn[1] and btn[2] and btn[3] in ("rgba(0, 0, 0, 0)", "transparent") and not btn[4] and btn[5] == 1)   # 「みんな」の表示では、副ボタンは「全員分をまとめて保存」だけ（1人ずつの表示では「スコア入力に戻る」も並ぶ）
     pg.context.close()
 
     # 新しい端末には、サーバーにあるほかの人の記録が入らない（名前なし・同じ名前のどちらでも）
