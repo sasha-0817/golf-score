@@ -930,7 +930,7 @@ with sync_playwright() as pw:
     check("電波がなくても削除できる（端末からすぐ消え、札は「バックアップ待ち」）", pg.evaluate("state.rounds.length") == 0 and pg.is_visible("#sync") and "バックアップ待ち" in pg.inner_text("#sync") and pg.evaluate("__db.rounds.length") == 1)
     check("バックアップの枠に「あとで自動で送ります」", "あとで自動で送ります" in pg.inner_text("#bk-line"))
     pg.evaluate("window.__offline=false; window.dispatchEvent(new Event('online'))"); pg.wait_for_timeout(500)
-    check("電波が戻ると削除もサーバーに送られ、札が消える", pg.evaluate("__db.rounds.length") == 0 and not pg.is_visible("#sync") and "最後にバックアップした日時" in pg.inner_text("#bk-line") and not errs)
+    check("電波が戻ると削除もサーバーに送られ、札が消える", pg.evaluate("__db.rounds.length") == 0 and not pg.is_visible("#sync") and "最後のバックアップ" in pg.inner_text("#bk-line") and not errs)
     pg.context.close()
 
     # 19q. 2段目（方向・クラブ・OB・バンカー）は、項目が増えても減っても、1つのボタンの大きさと左からの位置が同じ
@@ -947,6 +947,27 @@ with sync_playwright() as pw:
         return {"id": f"b{player}{i}", "player": player, "courseId": "c1", "courseName": "テストC", "date": f"2026-10-{10+i:02d}", "createdAt": 1000 + i, **({"nos": nos} if nos else {}),
                 "holes": [{"par": 3, "strokes": 3 + (i + h) % 3, "putts": putts, "dir": None, "bunker": False, "ob": False, "pen": False, "tee": None, "club": None} for h in range(len(nos) if nos else 9)]}
     bk_course = [{"id": "c1", "name": "テストC", "holes": [{"par": 3, "yards": 100}] * 9, "createdAt": 1}]
+    # 19r. 履歴の一番上にバックアップの1行（ラウンドが多くても下までスクロールしない）・中断のシートの並び・分析のタブの色
+    many = [bk_round(i % 28, "たろう") | {"id": f"m{i}", "createdAt": 5000 + i} for i in range(40)]
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.rounds": many, "sc.courses": bk_course, "sc.v2": 1, "sc.fields": dict(NONE)})
+    C(pg, "nav.tabs [data-tab=history]"); pg.wait_for_timeout(200)
+    bt = pg.evaluate("(()=>{const e=document.querySelector('[data-act=bk-open]'); const r=e.getBoundingClientRect(); return [Math.round(r.top), document.documentElement.scrollHeight>window.innerHeight*2]})()")
+    C(pg, "[data-act=bk-open]")
+    three = pg.evaluate("[...document.querySelectorAll('.data-sheet button')].map(e=>e.dataset.act).join(',')")
+    check("履歴の一番上にバックアップのボタン（40ラウンドあっても画面の上のほう）。押すと3つの操作が出る", bt[0] < 250 and bt[1] and three == "file-save,file-pick,restore,bk-close" and not errs)
+    C(pg, "[data-act=bk-close]"); pg.context.close()
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.fields": dict(NONE)})
+    start_preset(pg, "firtree"); flick(pg, "s", 0, 4); C(pg, "[data-act=ask-discard]"); pg.wait_for_timeout(150)
+    order = pg.evaluate("[...document.querySelectorAll('.sheet button')].map(e=>e.dataset.act).join(',')")
+    dq = pg.evaluate("(()=>{const e=document.querySelector('.sheet button.danger'); const c=getComputedStyle(e); return [e.classList.contains('quiet'), c.backgroundColor, c.color]})()")
+    check("中断のシート: 破棄は一番下に離れて、赤い塗りではなく赤い文字だけ（緑・赤が灰色をはさまない）", order == "finish-early,pause,cancel-confirm,discard" and dq[0] and dq[1] in ("rgba(0, 0, 0, 0)", "transparent") and not errs)
+    pg.context.close()
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.rounds": [bk_round(0, "たろう")], "sc.courses": bk_course, "sc.v2": 1})
+    C(pg, "nav.tabs [data-tab=stats]"); pg.wait_for_timeout(200)
+    st = pg.evaluate("(()=>{const e=document.querySelector('.stat-tabs button[aria-selected=true]'), c=getComputedStyle(e); return [c.backgroundImage, c.borderTopColor]})()")
+    check("分析のタブ: 選んだタブは青いグラデーションではなく、ほかの切りかえと同じ緑の枠", st[0] == "none" and st[1] == "rgb(14, 159, 98)" and not errs)
+    pg.context.close()
+
     # 新しい端末には、サーバーにあるほかの人の記録が入らない（名前なし・同じ名前のどちらでも）
     for nm in (None, "たろう"):
         pg, errs = open_page(b, {"sc.player": json.dumps(nm)} if nm else None)
@@ -990,6 +1011,7 @@ with sync_playwright() as pw:
     # 記録をファイルに保存 → 別の端末で読み込む
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.rounds": [bk_round(0, "たろう"), bk_round(1, "たろう")], "sc.courses": bk_course, "sc.v2": 1})
     C(pg, "nav.tabs [data-tab=history]")
+    C(pg, "[data-act=bk-open]")
     with pg.expect_download() as dl: C(pg, "[data-act=file-save]")
     fpath = os.path.join(tempfile.mkdtemp(), "bk.json"); dl.value.save_as(fpath)
     data = json.load(open(fpath, encoding="utf-8"))
@@ -1031,10 +1053,11 @@ with sync_playwright() as pw:
         pg.evaluate("fetch('/api',{method:'POST',body:JSON.stringify({action:'saveRound',round:{id:'other1',player:'べつのひと',courseId:'cZ',courseName:'よそ',date:'2026-10-02',createdAt:5,holes:[{par:3,strokes:3,putts:2}]}})})"); pg.wait_for_timeout(200)
         pg.evaluate("localStorage.clear(); localStorage.setItem('sc.flickTip','true'); localStorage.setItem('sc.presets','1')"); pg.reload(); pg.wait_for_timeout(1200)
         C(pg, "nav.tabs [data-tab=history]"); pg.wait_for_timeout(200)
+        C(pg, "[data-act=bk-open]")
         check("新しい端末: サーバーにあるほかの人の記録は入らない（履歴は空）", pg.evaluate("state.rounds.length") == 0 and pg.query_selector("[data-act=toggle-round]") is None and pg.query_selector("[data-act=restore]") is not None)
         C(pg, "[data-act=restore]"); pg.fill("#bk-name", "いないひと"); C(pg, "[data-act=restore-find]"); pg.wait_for_timeout(500)
         check("バックアップから戻す: 名前が違うと「見つかりませんでした」", "見つかりませんでした" in pg.inner_text(".data-sheet") and pg.query_selector("[data-act=data-ok]") is None)
-        C(pg, "[data-act=data-cancel]"); C(pg, "[data-act=restore]"); pg.fill("#bk-name", "たろう"); C(pg, "[data-act=restore-find]"); pg.wait_for_timeout(500)
+        C(pg, "[data-act=data-cancel]"); C(pg, "[data-act=bk-open]"); C(pg, "[data-act=restore]"); pg.fill("#bk-name", "たろう"); C(pg, "[data-act=restore-find]"); pg.wait_for_timeout(500)
         check("バックアップから戻す: 同じ名前の記録が見つかる（1ラウンド）", "1ラウンド" in pg.inner_text(".data-sheet"))
         C(pg, "[data-act=data-ok]"); pg.wait_for_timeout(300)
         check("バックアップから戻す: 自分の記録だけが戻る（クラブも・コースも）", pg.evaluate("state.rounds.length") == 1 and pg.evaluate("state.rounds[0].player") == "たろう" and pg.evaluate("state.rounds[0].holes.some(h=>h.club)") and pg.evaluate("state.courses.length") == 1 and pg.evaluate("pendN()") == 0)

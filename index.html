@@ -2012,7 +2012,7 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .fnh{width:100%;height:48px;border-radius:12px;border:1px solid var(--line);background:var(--soft);color:var(--fg);display:flex;align-items:center;justify-content:center;gap:8px;font:inherit;cursor:pointer}.fnh b{font:700 24px/1 var(--f-num)}.fnh small{color:var(--muted);font-size:13px}
 .hgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.holes-sheet .hgrid button{height:54px;font:700 22px var(--f-num)}.holes-sheet .hgrid button[aria-pressed=true]{background:var(--rec-fg);color:var(--rec-bg);border-color:var(--rec-fg)}
 .cdt tfoot tr.gin td.ft small.blk,.cdt tfoot tr.gin td.ft small{display:block;white-space:nowrap;font-size:13px;letter-spacing:-.04em;word-break:keep-all;overflow:visible}
-.sheet button.early-b{background:linear-gradient(135deg,#0F9D62,#12A8C4);border:0;color:#fff}
+.sheet button.early-b{background:var(--turf);border:0;color:var(--turf-ink)}
 .note-partial{margin:8px 2px 0;font-size:13px;text-align:center}
 .trend-cap{margin:6px 2px 4px;min-height:24px;font:700 14px var(--f-body);color:var(--muted);text-align:center}.trend-cap.on{color:var(--fg)}
 .rc-sc table .mk3.m-eagle,.rc-sc table .mk3.m-double,.rc-sc table .mk3.m-hio{width:18px;height:18px;font-size:12px;outline-width:1.5px;outline-offset:1px}
@@ -2022,12 +2022,6 @@ body[data-tab=stats] #main .heat .ht span{font-size:14px}
 .ocr-sheet{overflow:hidden}.ocr-sheet>*{flex:none}.ocr-sheet .ocr-note{margin:12px 0 4px;padding:10px 12px;border-radius:12px;border:1.5px solid #0E9F62;background:color-mix(in srgb,#0E9F62 10%,var(--paper));font-size:14px;line-height:1.5}
 .par-cell input.need{border-color:#E5484D;background:color-mix(in srgb,#E5484D 12%,var(--paper))}.par-cell.need{outline:2px solid #E5484D;outline-offset:-2px;border-radius:12px}
 /* バックアップ（履歴の下）と、読み込みの確認 */
-.data-panel{margin-top:18px}
-.data-panel .dp-h{margin:0 0 6px;font-size:16px;font-weight:700;display:flex;align-items:baseline;gap:8px}
-.data-panel .dp-h small{font:700 11px var(--f-num);letter-spacing:.12em;color:var(--muted)}
-.data-panel .dp-line{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:12px}
-.data-panel .dp-btns{display:flex;flex-direction:column;gap:8px}
-.data-panel .dp-btns .btn{width:100%;height:46px;font-size:14px}
 .data-sheet .ds-msg{font-size:14px;line-height:1.7;color:var(--rec-fg);font-weight:400}
 .data-sheet .ds-err{font-size:13px;color:var(--q-double);font-weight:700}
 .data-sheet .ds-in{height:50px;border-radius:14px;border:1px solid var(--rec-line);background:var(--rec-bg);color:var(--rec-fg);font:inherit;font-size:16px;padding:0 14px;width:100%;box-sizing:border-box}
@@ -2038,6 +2032,15 @@ header.top .sync[hidden]{display:none}
 .rp .sr-row2{grid-template-columns:56px 1fr 44px;min-height:28px;align-items:center}
 .rp .sr-row2 b{display:flex;align-items:center;justify-content:center;text-align:center;line-height:1;height:28px}
 .rp .sr-row2 b svg{display:block;flex:none}
+/* 中断のシート: 「破棄」は一番下に離して、赤い文字だけ（赤と緑が灰色のボタンをはさんで分かりづらかったため） */
+.sheet button.danger.quiet{background:transparent;border-color:transparent;color:var(--rec-under);margin-top:6px;height:44px;font-weight:600}
+/* 分析のタブ（スコア・ショット・パット）: ほかの切りかえ（入力のしかた）と同じ、白地＋選んだら緑の枠 */
+.stat-tabs button[aria-selected="true"]{background:color-mix(in srgb,#0E9F62 9%,var(--paper));color:var(--fg);border-color:#0E9F62;box-shadow:inset 0 0 0 1px #0E9F62}
+.stat-tabs button[aria-selected="true"] em{color:#0E9F62;opacity:1}
+/* 履歴の一番上のバックアップの1行 */
+.bk-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px;padding:0 2px}
+.bk-bar span{font-size:13px;color:var(--muted);line-height:1.4;min-width:0}
+.bk-bar .btn{flex:0 0 auto;height:38px;padding:0 14px;font-size:13px}
 </style>
 
 </head>
@@ -2156,7 +2159,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-18-1900";
+const BUILD = "2026-11-18-2100";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2312,7 +2315,7 @@ window.addEventListener("storage", ev=>{ if(!["sc.rounds","sc.courses","sc.pendi
   if(!document.body.classList.contains("recording")) render(); backup(); });
 /* 右上の札: ふだんは出さない。送れていない記録があるときだけ出す */
 function paintSync(){ const s=$("#sync"); if(!s) return; const show = hasBackend && pendN()>0 && !!state.bkFail;
-  s.hidden=!show; s.textContent = show ? "バックアップ待ち" : ""; const l=$("#bk-line"); if(l) l.textContent=backupLine(); }
+  s.hidden=!show; s.textContent = show ? "バックアップ待ち" : ""; const l=$("#bk-line"); if(l) l.textContent=backupLine().replace("最後にバックアップした日時: ","最後のバックアップ "); }
 const fmtDT = t => { const d=new Date(t); return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,"0")}`; };
 function backupLine(){ const n=pendN(), lb=LS.get("sc.lastBackup",0);
   if(!hasBackend) return "記録はこの端末に保存しています。";
@@ -2348,8 +2351,8 @@ async function fileRead(file){
     if(file.size>20e6) throw 0;
     const j=JSON.parse(await file.text());
     if(!j || j.app!=="GOLF SC." || !Array.isArray(j.rounds)) throw 0;
-    state.dataAsk={ kind:"file", step:"found", plan:planImport(j.rounds, j.courses), extra:j };
-  }catch(e){ state.dataAsk={ kind:"file", step:"error" }; }
+    state.bkMenu=false; state.dataAsk={ kind:"file", step:"found", plan:planImport(j.rounds, j.courses), extra:j };
+  }catch(e){ state.bkMenu=false; state.dataAsk={ kind:"file", step:"error" }; }
   render();
 }
 async function restoreFind(){
@@ -2390,11 +2393,13 @@ function dataSheet(){
         <button class="ds-go" data-act="data-ok">この端末に入れる</button><button data-act="data-cancel">やめる</button>`; }
   return `<div class="sheet-back" data-act="data-cancel"><div class="sheet data-sheet" data-stop="1"><p>${title}</p>${body}</div></div>`;
 }
-function dataPanel(){
+function backupBar(){
   if(state.demo) return "";
-  return `<div class="panel data-panel"><h2 class="dp-h"><small>BACKUP</small>バックアップ</h2><div class="dp-line" id="bk-line">${esc(backupLine())}</div>
-    <div class="dp-btns"><button class="btn small" data-act="file-save">記録をファイルに保存</button><button class="btn small" data-act="file-pick">ファイルから読み込む</button>${hasBackend?`<button class="btn small" data-act="restore">バックアップから戻す</button>`:""}</div>
-    <input type="file" id="bk-file" accept=".json,application/json,text/plain" hidden></div>`;
+  return `<div class="bk-bar"><span id="bk-line">${esc(backupLine().replace("最後にバックアップした日時: ","最後のバックアップ "))}</span><button class="btn small" data-act="bk-open">バックアップ</button><input type="file" id="bk-file" accept=".json,application/json,text/plain" hidden></div>`;
+}
+function bkSheet(){
+  return `<div class="sheet-back" data-act="bk-close"><div class="sheet data-sheet" data-stop="1"><p>バックアップ</p><div class="ds-msg">${esc(backupLine())}</div>
+    <button data-act="file-save">記録をファイルに保存</button><button data-act="file-pick">ファイルから読み込む</button>${hasBackend?`<button data-act="restore">バックアップから戻す</button>`:""}<button data-act="bk-close">閉じる</button></div></div>`;
 }
 document.addEventListener("change", ev=>{ const t=ev.target; if(t && t.id==="bk-file" && t.files && t.files[0]){ const f=t.files[0]; t.value=""; fileRead(f); } });
 document.addEventListener("input", ev=>{ const t=ev.target; if(t && t.id==="bk-name" && state.dataAsk) state.dataAsk.name=t.value; });
@@ -2491,6 +2496,7 @@ function render(){
   const moveBar = (!ON_CF && CF_URL && !document.body.classList.contains("recording")) ? `<div class="move-bar"><b>GOLF SC. は新しいアドレスに引っ越しました</b><small>この端末の記録（クラブ・方向なども）を送ってから、新しいアプリを開きます。何回押しても大丈夫です。</small><button data-act="migrate" ${state.migrating?"disabled":""}>${state.migrating?"送っています…":"記録を送って新しいアプリへ"}</button>${LS.get("sc.migrated","")?`<a href="${CF_URL}">送らずに新しいアプリを開く ›</a>`:""}</div>` : "";
   m.innerHTML = `${moveBar}<section class="view">${view()}</section>`;
   [".game-sheet",".rp",".ocr-sheet",".ocr-scroll"].forEach((q,i)=>{ const e=document.querySelector(q); if(e&&keepScroll[i]) e.scrollTop=keepScroll[i]; });
+  if(state.bkMenu && state.tab==="history" && !state.dataAsk) m.insertAdjacentHTML("beforeend", bkSheet());
   if(state.dataAsk) m.insertAdjacentHTML("beforeend", dataSheet());
   placeMedalTip();
   after[state.tab] && after[state.tab]();
@@ -2769,7 +2775,7 @@ function viewRecordDraft(d){
       <button class="back" data-act="prev" ${state.hole===0?"disabled":""} aria-label="前のホール">${ICON.back}</button>
       ${state.hole<N-1?`<button class="go" data-act="next">${state.hole+2}番ホールへ<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>`:`<button class="go save ${state.saving?"busy":""}" data-act="finish" ${state.saving?"disabled":""}>${state.saving?`<i class="spin"></i>保存中…`:"ラウンドを保存"}</button>`}
     </div>
-    ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p>${earlyBtn("finish-early", d.holes.map((_,i)=>i).filter(i=>Array.from({length:1+(d.mates||[]).length},(_,j)=>j).every(j=>touchedS(d,j,i))).length, d.holes.length, d.editing)}<button data-act="pause">中断してホームへ（あとで続きから）</button><button class="danger" data-act="discard">${d.editing?"編集をやめる（変更は保存されません）":"記録を破棄する"}</button><button data-act="cancel-confirm">入力に戻る</button></div></div>`:""}
+    ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p>${earlyBtn("finish-early", d.holes.map((_,i)=>i).filter(i=>Array.from({length:1+(d.mates||[]).length},(_,j)=>j).every(j=>touchedS(d,j,i))).length, d.holes.length, d.editing)}<button data-act="pause">中断してホームへ（あとで続きから）</button><button data-act="cancel-confirm">入力に戻る</button><button class="danger quiet" data-act="discard">${d.editing?"編集をやめる（変更は保存されません）":"記録を破棄する"}</button></div></div>`:""}
     ${state.sheet==="fields"?fieldsSheet():""}
     ${state.rulesOpen?rulesPop(state.rulesOpen):""}
     ${LS.get("sc.flickTip",false)?"":flickTip()}
@@ -2895,7 +2901,7 @@ function viewCard(cd){
       ${done?`<button class="cd-save ${state.saving?"busy":""}" data-act="cd-finish" ${state.saving?"disabled":""}>${state.saving?`<i class="spin"></i>保存中…`:`ラウンドを保存${cd.players.length>1?`（${cd.players.length}人分）`:""}`}</button>`:""}
     </div>
     ${state.rulesOpen?rulesPop(state.rulesOpen):""}
-    ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p>${earlyBtn("cd-finish-early", cd.holes.filter((_,i)=>cd.players.every(p=>p.s[i]!=null)).length, cd.holes.length, false)}<button data-act="cd-pause">中断してホームへ（あとで続きから）</button><button class="danger" data-act="cd-discard">記録を破棄する</button><button data-act="cancel-confirm">入力に戻る</button></div></div>`:""}
+    ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p>${earlyBtn("cd-finish-early", cd.holes.filter((_,i)=>cd.players.every(p=>p.s[i]!=null)).length, cd.holes.length, false)}<button data-act="cd-pause">中断してホームへ（あとで続きから）</button><button data-act="cancel-confirm">入力に戻る</button><button class="danger quiet" data-act="cd-discard">記録を破棄する</button></div></div>`:""}
   </div>`;
 }
 function cardAfter(){ const c=$(".cdt td.sel"), box=$(".cd-scroll"); if(!c||!box) return;
@@ -3211,7 +3217,7 @@ function mark(h){ return `<span class="mk3 m-${TONEH(h)}">${h.strokes}</span>`; 
 function viewHistory(){
   const demoBand = state.demo ? `<div class="demo-band">デモデータを表示中です（保存はされていません）<button class="btn small" data-act="demo-off">自分のデータに戻る</button></div>` : "";
   const all = rounds();
-  if(!all.length) return state.mode==="connecting"?`<div class="panel empty">読み込み中…</div>`:`<div class="panel empty"><strong>まだラウンドがありません</strong>「記録」タブからラウンドを始めましょう。</div>`+dataPanel();
+  if(!all.length) return backupBar() + (state.mode==="connecting"?`<div class="panel empty">読み込み中…</div>`:`<div class="panel empty"><strong>まだラウンドがありません</strong>「記録」タブからラウンドを始めましょう。</div>`);
   state.fPlayer = me();
   const rs = all.filter(r=>r.player===state.fPlayer).sort(byDate).reverse();
   const W = ["日","月","火","水","木","金","土"];
@@ -3245,7 +3251,7 @@ function viewHistory(){
       </div>`:""}
     </div>`;
   }).join("");
-  return demoBand + (cards || `<div class="panel empty">${esc(state.fPlayer)}さんのラウンドはまだありません。</div>`) + dataPanel();
+  return demoBand + backupBar() + (cards || `<div class="panel empty">${esc(state.fPlayer)}さんのラウンドはまだありません。</div>`);
 }
 
 /* ----- スコアカードの写真から読み取り（サーバーの functions/ocr.js。AI がつながっているときだけボタンを出す） ----- */
@@ -3643,7 +3649,7 @@ document.addEventListener("click", ev => { if(state.trendSel!=null && !ev.target
 document.addEventListener("click", async ev => {
   const b = ev.target.closest("[data-act], nav.tabs button, [data-stop], label.fs-row");
   if(!b || b.dataset.stop || b.classList.contains("fs-row")) return;
-  if(b.dataset.tab){ if(b.dataset.tab!==state.tab) state.oneRound=null; state.tab=b.dataset.tab; state.confirm=null; LS.set("sc.tab",state.tab); render(); window.scrollTo({top:0}); return; }
+  if(b.dataset.tab){ if(b.dataset.tab!==state.tab) state.oneRound=null; state.tab=b.dataset.tab; state.confirm=null; state.bkMenu=false; LS.set("sc.tab",state.tab); render(); window.scrollTo({top:0}); return; }
   const a=b.dataset.act, d=state.draft, h=d && d.holes[state.hole];
   state.tap = (a==="sv"||a==="pv"||a==="dir") ? a+b.dataset.v : null;
   switch(a){
@@ -3802,9 +3808,11 @@ document.addEventListener("click", async ev => {
     case "cancel-confirm": state.confirm=null; render(); break;
     case "ask-del-round": state.confirm="del:"+b.dataset.id; render(); break;
     case "del-round": state.confirm=null; await store.delRound(b.dataset.id); toast("削除しました"); break;
-    case "file-save": await fileSave(); break;
+    case "bk-open": state.bkMenu=true; render(); break;
+    case "bk-close": state.bkMenu=false; render(); break;
+    case "file-save": state.bkMenu=false; render(); await fileSave(); break;
     case "file-pick": { const f=$("#bk-file"); if(f) f.click(); break; }
-    case "restore": state.dataAsk={ kind:"restore", step:"name", name:LS.get("sc.player","") }; render(); break;
+    case "restore": state.bkMenu=false; state.dataAsk={ kind:"restore", step:"name", name:LS.get("sc.player","") }; render(); break;
     case "restore-find": await restoreFind(); break;
     case "data-ok": dataOk(); break;
     case "data-cancel": state.dataAsk=null; render(); break;
