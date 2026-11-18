@@ -2155,7 +2155,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-17-0900";
+const BUILD = "2026-11-18-1900";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2743,7 +2743,7 @@ function viewRecordDraft(d){
   if(F.ob||F.pen){ const ob=evs(h,"ob").length>0, pn=evs(h,"pen").length>0, cur=ob?1:pn?2:0;
     bItems.push([F.ob&&F.pen?"OB・ペナ":F.ob?"OB":"1ペナ", `<div class="fc fb ${cur?"set "+(cur===1?"ob":"pn"):""}" role="button" tabindex="0" data-k="o" data-i="0" aria-label="OBか1ペナ。押したまま左右に動かして離すと変わります">${["なし","OB","ペナ"][cur]}</div>`]); }
   if(F.bunker) bItems.push(["バンカー", `<div class="fc fb ${h.bunker?"set bk":""}" role="button" tabindex="0" data-k="b" data-i="0" aria-label="バンカー。押したまま左右に動かして離すと変わります">${h.bunker?"あり":"なし"}</div>`]);
-  const rowB = bItems.length ? `<div class="rowb" style="grid-template-columns:repeat(${bItems.length},1fr)">${bItems.map(([c,x])=>`<div class="bc"><span>${c}</span>${x}</div>`).join("")}</div>` : "";
+  const rowB = bItems.length ? `<div class="rowb" style="grid-template-columns:repeat(4,1fr)">${bItems.map(([c,x])=>`<div class="bc"><span>${c}</span>${x}</div>`).join("")}</div>` : "";
   return `<div class="rec rec2 ${multi?"multi":""} ${fields().tracer?"":"no-tracer"}">
     <div class="rec-top">
       <button class="icon-btn" data-act="ask-discard" aria-label="記録を閉じる">${ICON.x}</button>

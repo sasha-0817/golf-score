@@ -933,6 +933,15 @@ with sync_playwright() as pw:
     check("電波が戻ると削除もサーバーに送られ、札が消える", pg.evaluate("__db.rounds.length") == 0 and not pg.is_visible("#sync") and "最後にバックアップした日時" in pg.inner_text("#bk-line") and not errs)
     pg.context.close()
 
+    # 19q. 2段目（方向・クラブ・OB・バンカー）は、項目が増えても減っても、1つのボタンの大きさと左からの位置が同じ
+    ws = {}
+    for nm, F in {"4": {"shot": True, "club": True, "ob": True, "bunker": True}, "3": {"shot": True, "club": False, "ob": True, "bunker": True}, "2": {"shot": True, "club": False, "ob": True, "bunker": False}, "1": {"shot": True, "club": False, "ob": False, "bunker": False}}.items():
+        pg, errs = open_page(b, {"sc.fields": {**NONE, "putts": True, **F}, "sc.player": "\"たろう\""})
+        start_preset(pg, "firtree")
+        ws[nm] = pg.evaluate("[...document.querySelectorAll('.rowb .fb')].map(e=>{const q=e.getBoundingClientRect(); return [Math.round(q.left),Math.round(q.width)]})")
+        pg.context.close()
+    check("2段目のボタンは、項目が1〜4つのどれでも同じ大きさ・同じ位置から並ぶ", [len(ws[k]) for k in "4321"] == [4, 3, 2, 1] and len({tuple(v[0]) for v in ws.values()}) == 1 and all(ws[k] == ws["4"][:len(ws[k])] for k in ws))
+
     # 19p. 端末が本体・サーバーはバックアップ（2026-11-16 のバグ出しで見つかった不具合のチェック）
     def bk_round(i, player, nos=None, putts=2):
         return {"id": f"b{player}{i}", "player": player, "courseId": "c1", "courseName": "テストC", "date": f"2026-10-{10+i:02d}", "createdAt": 1000 + i, **({"nos": nos} if nos else {}),
