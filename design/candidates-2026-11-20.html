@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>候補: 一緒に回る人の選び方 / 結果のスコア表</title>
+<style>
+:root{
+  --bg:#EEF2F0; --paper:#fff; --soft:#EEF2F0; --line:#DDE3E1; --fg:#0B1310; --muted:#6B7873;
+  --turf:#0E9F62; --cyan:#12A8C4; --navy:#1E3A8A;
+  --f-body:"Zen Kaku Gothic New",system-ui,-apple-system,"Hiragino Sans",sans-serif;
+  --f-num:"Barlow Condensed","Zen Kaku Gothic New",sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#dfe5e2;color:var(--fg);font-family:var(--f-body);-webkit-text-size-adjust:100%}
+h1{font-size:19px;margin:20px 16px 4px}
+h1.second{margin-top:44px}
+.lead{margin:0 16px 14px;font-size:13px;color:#46524d;line-height:1.7}
+.wall{display:flex;flex-wrap:wrap;gap:26px 22px;justify-content:center;padding:6px 12px 20px}
+.cand{width:375px}
+.cand>h2{margin:0 4px 6px;font-size:15px;display:flex;align-items:baseline;gap:8px}
+.cand>h2 b{font:700 26px var(--f-num);color:var(--turf)}
+.cand>p{margin:0 4px 10px;font-size:12.5px;color:#46524d;line-height:1.6;min-height:60px}
+.phone{position:relative;width:375px;height:667px;background:var(--bg);border-radius:22px;border:1px solid #c6cfcb;overflow:hidden;box-shadow:0 14px 30px -18px rgba(0,0,0,.45)}
+/* 後ろの開始画面（ぼかし） */
+.back{position:absolute;inset:0;padding:60px 16px 0;filter:blur(2px);opacity:.9}
+.back h3{margin:0 2px 10px;font-size:25px;font-weight:900}
+.back .g{background:#fff;border:1px solid var(--line);border-radius:16px;margin-bottom:10px}
+.back .r{height:46px;border-top:1px solid var(--line);padding:0 14px;display:flex;align-items:center;justify-content:space-between;font-size:15px;color:var(--muted);font-weight:700}
+.back .r:first-child{border-top:0}
+.back .r b{color:var(--fg)}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.38)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:18px 16px 18px;display:flex;flex-direction:column;gap:10px}
+.sheet>p{margin:0 0 2px;font-weight:900;font-size:17px}
+.inp{height:46px;border:1px solid var(--line);background:var(--soft);border-radius:13px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;font-size:16px;font-weight:500}
+.inp.ph{color:#a2aca7}
+.inp .x{width:30px;height:30px;border-radius:50%;background:#dfe6e3;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--fg)}
+.inp.focus{border-color:var(--turf);box-shadow:0 0 0 1px var(--turf);background:#fff}
+.done{height:50px;border-radius:14px;background:var(--turf);color:#fff;font-weight:900;font-size:16px;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.sub{font-size:12.5px;color:var(--muted);font-weight:700;margin:4px 2px -2px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{height:38px;border-radius:999px;background:var(--soft);border:1px solid var(--line);padding:0 14px;display:flex;align-items:center;font-size:15px;font-weight:700}
+.chip.more{color:var(--muted);border-style:dashed;background:transparent}
+.chip.grp{background:color-mix(in srgb,var(--turf) 10%,#fff);border-color:var(--turf)}
+.chip small{font-size:12px;color:var(--muted);margin-left:6px;font-weight:500}
+.sug{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:-4px;box-shadow:0 8px 20px -12px rgba(0,0,0,.35)}
+.sug div{height:42px;padding:0 14px;display:flex;align-items:center;font-size:15px;font-weight:700;border-top:1px solid var(--line)}
+.sug div:first-child{border-top:0}
+.sug div i{font-style:normal;color:var(--muted);font-weight:500;margin-left:8px;font-size:13px}
+.sug div em{font-style:normal;color:var(--turf)}
+/* 一覧シート */
+.full{position:absolute;left:0;right:0;bottom:0;top:70px;background:#fff;border-radius:20px 20px 0 0;padding:16px 16px 14px;display:flex;flex-direction:column;gap:8px}
+.full .top{display:flex;justify-content:space-between;align-items:center}
+.full .top b{font-size:17px;font-weight:900}.full .top span{font-size:14px;color:var(--turf);font-weight:700}
+.srch{height:42px;border-radius:12px;background:var(--soft);display:flex;align-items:center;padding:0 12px;gap:8px;color:#8b9691;font-size:15px}
+.srch svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.list{flex:1;overflow:hidden;border:1px solid var(--line);border-radius:14px}
+.list .row{height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-top:1px solid var(--line);font-size:16px;font-weight:700}
+.list .row:first-child{border-top:0}
+.list .row small{font-size:12.5px;color:var(--muted);font-weight:500;margin-left:8px}
+.list .hd{height:30px;padding:0 14px;background:var(--soft);font-size:12.5px;color:var(--muted);font-weight:700;display:flex;align-items:center}
+.ck{width:24px;height:24px;border-radius:50%;border:1.6px solid #b9c4bf;display:flex;align-items:center;justify-content:center}
+.ck.on{background:var(--turf);border-color:var(--turf)}
+.ck svg{width:14px;height:14px;stroke:#fff;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.newrow{height:46px;border:1.5px dashed #b9c4bf;border-radius:13px;display:flex;align-items:center;justify-content:center;color:var(--turf);font-weight:700;font-size:15px}
+.fade{height:30px;margin-top:-30px;background:linear-gradient(transparent,#fff);position:relative;pointer-events:none}
+
+/* ===== 結果カードの候補 ===== */
+.rcard{position:relative;width:375px;border-radius:26px;overflow:hidden;color:#fff;background:linear-gradient(160deg,#063A2A 0%,#0E7A52 55%,#12A8C4 130%);padding:22px 16px 20px;box-shadow:0 14px 30px -18px rgba(0,0,0,.5)}
+.rcard .eb{font:600 12px var(--f-num);letter-spacing:.28em;opacity:.7}
+.rcard h4{margin:6px 0 2px;font-size:24px;font-weight:900}
+.rcard .meta{font-size:13px;opacity:.75;margin-bottom:12px}
+.rank{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.rk{display:grid;grid-template-columns:30px 1fr auto auto;align-items:center;gap:10px;height:46px;padding:0 12px;border-radius:14px;background:rgba(255,255,255,.1)}
+.rk.w{background:rgba(255,215,106,.18);border:1px solid rgba(255,215,106,.55)}
+.rk i{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font:700 14px var(--f-num);font-style:normal}
+.rk.w i{background:#FFD76A;color:#3a2c00}
+.rk b{font-size:16px}.rk .t{font:700 26px var(--f-num)}.rk .d{font:600 15px var(--f-num);opacity:.8;width:34px;text-align:right}
+.tbl{background:rgba(255,255,255,.1);border-radius:16px;padding:8px 6px}
+table{border-collapse:collapse;width:100%;font-family:var(--f-num);text-align:center}
+th,td{padding:0}
+.sym{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:8px;background:rgba(255,255,255,.14);font:700 15px var(--f-num);color:#fff}
+.sym.b{background:transparent;border:2px solid #F6C453;color:#F6C453;border-radius:3px;width:22px;height:22px}
+.sym.d{background:transparent;border:2px solid #F29BA6;color:#F29BA6;border-radius:3px;width:22px;height:22px}
+.sym.r{background:transparent;border:2px solid #9CC4FF;color:#9CC4FF;border-radius:50%;width:22px;height:22px}
+.sym.big{width:34px;height:34px;font-size:19px;border-radius:10px}
+.sym.big.b,.sym.big.d,.sym.big.r{width:32px;height:32px}
+.sym.big.r{border-radius:50%}
+.hn{font:600 12px var(--f-num);opacity:.75}
+/* R1: 縦の表 */
+.v th.pl{vertical-align:bottom;padding:2px 2px 8px;font-family:var(--f-body)}
+.v .ph{display:flex;flex-direction:column;align-items:center;gap:3px}
+.v .ph i{width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font:700 13px var(--f-num);font-style:normal}
+.v .ph i.w{background:#FFD76A;color:#3a2c00}
+.v .ph span{font-size:12.5px;font-weight:700;line-height:1.15;word-break:break-all;max-width:64px}
+.v .ph .t{font:700 28px/1 var(--f-num)}
+.v .ph .d{font:600 13px var(--f-num);opacity:.8;margin-top:-2px}
+.v td{height:40px}
+.v td.h{font:600 14px var(--f-num);opacity:.8;width:28px}
+.v td.pr{font:600 15px var(--f-num);opacity:.85;width:34px}
+.v tr.sep td{border-top:1px solid rgba(255,255,255,.25)}
+.v tr.tot td{font:700 20px var(--f-num);height:44px;border-top:1px solid rgba(255,255,255,.3)}
+/* R2: 横の表（順位を行に） */
+.hz td{height:42px}
+.hz td.nm{text-align:left;font:700 12px/1.15 var(--f-body);width:74px;padding-left:2px}
+.hz td.nm .rkc{display:inline-flex;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.22);align-items:center;justify-content:center;font:700 11px var(--f-num);margin-right:4px;vertical-align:middle}
+.hz td.nm .rkc.w{background:#FFD76A;color:#3a2c00}
+.hz td.sm{font:700 18px var(--f-num);width:44px}
+.hz td.sm small{display:block;font:600 11px var(--f-num);opacity:.75}
+.hz .sym{width:22px;height:22px;font-size:13px;border-radius:7px}
+.hz .sym.b,.hz .sym.d,.hz .sym.r{width:20px;height:20px}
+/* R3: 順位は小さな帯 */
+.chiprk{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}
+.chiprk div{display:flex;align-items:center;gap:8px;height:42px;padding:0 10px;border-radius:12px;background:rgba(255,255,255,.1);font-size:14px;font-weight:700}
+.chiprk div.w{background:rgba(255,215,106,.18);border:1px solid rgba(255,215,106,.5)}
+.chiprk i{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font:700 12px var(--f-num);font-style:normal;flex:0 0 22px}
+.chiprk .w i{background:#FFD76A;color:#3a2c00}
+.chiprk span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chiprk b{font:700 20px var(--f-num)}
+.logo{margin-top:14px;display:flex;justify-content:flex-end}
+.logo span{background:#fff;color:#0B1310;border-radius:999px;padding:6px 14px;font:700 15px var(--f-num);letter-spacing:.04em}
+</style>
+</head>
+<body>
+
+<h1>① 一緒に回る人の選び方（5案）</h1>
+<p class="lead">今は、入力欄を押すと、これまでの名前が全部、縦に出てきます（人が増えると、無限に長くなります）。そこで、選び方を5通り考えました。どの案も、「前回の人が最初から入っている」のは、今のままです。</p>
+
+<div class="wall">
+
+<!-- M1 -->
+<section class="cand"><h2><b>M1</b>候補を出さない（打つだけ）</h2>
+<p>名前の候補は、いっさい出しません。前回の人が最初から入っているので、同じ人なら何もしなくてOK。違う人だけ、打ち直します。いちばんシンプルで、画面もすっきり。</p>
+<div class="phone"><div class="back"><h3>ラウンドを始める</h3><div class="g"><div class="r">名前<b>ふゆ</b></div><div class="r">日付<b>11月18日(水)</b></div><div class="r">コース<b>ファーツリー…</b></div></div><div class="g"><div class="r">一緒に回る<b>体操きんたろう・たろう</b></div></div></div><div class="dim"></div>
+<div class="sheet"><p>一緒に回る人</p>
+<div class="inp"><span>体操きんたろう</span><span class="x">×</span></div>
+<div class="inp"><span>たろう</span><span class="x">×</span></div>
+<div class="inp focus"><span style="color:#a2aca7">4人目</span><span class="x" style="visibility:hidden">×</span></div>
+<div class="done">完了</div></div></div></section>
+
+<!-- M2 -->
+<section class="cand"><h2><b>M2</b>「最近の人」を6人だけボタンで</h2>
+<p>入力欄の下に、最近いっしょに回った人を、最大6人、ボタンで出します。押すと、空いている欄に入ります。すでに入っている人は出しません。人が増えても、6人だけなので、画面は伸びません。</p>
+<div class="phone"><div class="back"><h3>ラウンドを始める</h3><div class="g"><div class="r">名前<b>ふゆ</b></div><div class="r">日付<b>11月18日(水)</b></div><div class="r">コース<b>ファーツリー…</b></div></div><div class="g"><div class="r">一緒に回る<b>体操きんたろう・たろう</b></div></div></div><div class="dim"></div>
+<div class="sheet"><p>一緒に回る人</p>
+<div class="inp"><span>体操きんたろう</span><span class="x">×</span></div>
+<div class="inp"><span>たろう</span><span class="x">×</span></div>
+<div class="inp ph"><span>4人目</span><span class="x" style="visibility:hidden">×</span></div>
+<div class="sub">最近いっしょに回った人（押すと入ります）</div>
+<div class="chips"><span class="chip">な</span><span class="chip">川越大生</span><span class="chip">永井聡</span><span class="chip">ふゆ</span><span class="chip">はなこ</span><span class="chip">じろう</span></div>
+<div class="done">完了</div></div></div></section>
+
+<!-- M3 -->
+<section class="cand"><h2><b>M3</b>打ち始めたら、候補を3つだけ</h2>
+<p>ふだんは、候補を出しません。文字を打ち始めたときだけ、その文字で始まる人を、最大3人、入力欄の下に出します。「た」と打てば「たろう」。同じ人は2回出しません。</p>
+<div class="phone"><div class="back"><h3>ラウンドを始める</h3><div class="g"><div class="r">名前<b>ふゆ</b></div><div class="r">日付<b>11月18日(水)</b></div><div class="r">コース<b>ファーツリー…</b></div></div><div class="g"><div class="r">一緒に回る<b>体操きんたろう・たろう</b></div></div></div><div class="dim"></div>
+<div class="sheet"><p>一緒に回る人</p>
+<div class="inp"><span>体操きんたろう</span><span class="x">×</span></div>
+<div class="inp"><span>たろう</span><span class="x">×</span></div>
+<div class="inp focus"><span>な</span><span class="x">×</span></div>
+<div class="sug"><div><em>な</em>　<i>2回いっしょ</i></div><div><em>な</em>おき<i>1回</i></div><div><em>な</em>つみ<i>1回</i></div></div>
+<div class="done">完了</div></div></div></section>
+
+<!-- M4 -->
+<section class="cand"><h2><b>M4</b>人を選ぶ画面（検索＋チェック）</h2>
+<p>「一緒に回る」を押すと、人の一覧が出ます。上に検索欄、よく回る人が上、チェックで3人まで選びます。人が何十人になっても、検索ですぐ見つかります。新しい人は「新しい名前を入れる」から。</p>
+<div class="phone"><div class="back"><h3>ラウンドを始める</h3></div><div class="dim"></div>
+<div class="full"><div class="top"><b>一緒に回る人</b><span>2/3人 ・ 完了</span></div>
+<div class="srch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>名前で探す</div>
+<div class="list"><div class="hd">よく回る人</div>
+<div class="row"><span>体操きんたろう<small>12回</small></span><span class="ck on"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span></div>
+<div class="row"><span>たろう<small>9回</small></span><span class="ck on"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span></div>
+<div class="row"><span>な<small>7回</small></span><span class="ck"></span></div>
+<div class="row"><span>川越大生<small>4回</small></span><span class="ck"></span></div>
+<div class="row"><span>永井聡<small>3回</small></span><span class="ck"></span></div>
+<div class="hd">ほかの人（あいうえお順）</div>
+<div class="row"><span>はなこ</span><span class="ck"></span></div></div>
+<div class="newrow">＋ 新しい名前を入れる</div></div></div></section>
+
+<!-- M5 -->
+<section class="cand"><h2><b>M5</b>前回のメンバー＋よく回る3人</h2>
+<p>いちばん多いのは「前回と同じ人たち」なので、それを1回で入れるボタンを、いちばん上に。その下に、よく一緒に回る人を3人だけ。ほかの人は打って入れます。</p>
+<div class="phone"><div class="back"><h3>ラウンドを始める</h3><div class="g"><div class="r">名前<b>ふゆ</b></div><div class="r">日付<b>11月18日(水)</b></div><div class="r">コース<b>ファーツリー…</b></div></div><div class="g"><div class="r">一緒に回る<b>なし</b></div></div></div><div class="dim"></div>
+<div class="sheet"><p>一緒に回る人</p>
+<div class="chips"><span class="chip grp">前回と同じ　<small style="margin-left:0">体操きんたろう・たろう・な</small></span></div>
+<div class="inp ph"><span>2人目</span><span class="x" style="visibility:hidden">×</span></div>
+<div class="inp ph"><span>3人目</span><span class="x" style="visibility:hidden">×</span></div>
+<div class="inp ph"><span>4人目</span><span class="x" style="visibility:hidden">×</span></div>
+<div class="sub">よく一緒に回る人</div>
+<div class="chips"><span class="chip">体操きんたろう<small>12</small></span><span class="chip">たろう<small>9</small></span><span class="chip">な<small>7</small></span></div>
+<div class="done">完了</div></div></div></section>
+
+</div>
+
+<h1 class="second">② 結果のスコア表の見せ方（3案）</h1>
+<p class="lead">今は「順位の一覧」と「スコア表」の両方があって、合計が重なっています。スコア表（1・2・3…のホール番号）は分かりやすいけれど、横に狭いので、<b>順位を表の中に入れて、順位の一覧をなくす</b>案を3つ作りました。</p>
+
+<div class="wall">
+
+<!-- R1 -->
+<section class="cand"><h2><b>R1</b>縦の表（ホールが縦・人が横）</h2>
+<p>ホール番号を縦に並べ、人を横に並べます。人は4人なので、1人あたり約64px使えて、ゆったり。上に順位の丸・名前・合計(+X)を出すので、順位の一覧は要りません。入力画面のスコアカードと同じ向きです。18Hは、前半の下に後半が続き、縦に長くなります。</p>
+<div class="rcard"><div class="eb">ROUND COMPLETE</div><h4>4人のスコア</h4><div class="meta">ファーツリーカントリークラブ・11/18</div>
+<div class="tbl v"><table>
+<tr><th style="width:62px"></th>
+<th class="pl"><div class="ph"><i class="w">1</i><span>川越大生</span><span class="t">33</span><span class="d">+4</span></div></th>
+<th class="pl"><div class="ph"><i>2</i><span>体操きんたろう</span><span class="t">34</span><span class="d">+5</span></div></th>
+<th class="pl"><div class="ph"><i>3</i><span>たろう</span><span class="t">35</span><span class="d">+6</span></div></th>
+<th class="pl"><div class="ph"><i>4</i><span>ふゆ</span><span class="t">37</span><span class="d">+8</span></div></th></tr>
+<tr class="sep"><td class="h">1</td><td><span class="sym b">4</span></td><td><span class="sym">3</span></td><td><span class="sym">3</span></td><td><span class="sym">3</span></td></tr>
+<tr><td class="h">2</td><td><span class="sym b">4</span></td><td><span class="sym">3</span></td><td><span class="sym d">5</span></td><td><span class="sym">3</span></td></tr>
+<tr><td class="h">3</td><td><span class="sym">3</span></td><td><span class="sym b">4</span></td><td><span class="sym r">2</span></td><td><span class="sym d">5</span></td></tr>
+<tr><td class="h">4</td><td><span class="sym">4</span></td><td><span class="sym r">3</span></td><td><span class="sym d">6</span></td><td><span class="sym">5</span></td></tr>
+<tr><td class="h">5</td><td><span class="sym">3</span></td><td><span class="sym">3</span></td><td><span class="sym b">4</span></td><td><span class="sym b">4</span></td></tr>
+<tr><td class="h">6</td><td><span class="sym d">5</span></td><td><span class="sym b">4</span></td><td><span class="sym">3</span></td><td><span class="sym b">4</span></td></tr>
+<tr><td class="h">7</td><td><span class="sym d">5</span></td><td><span class="sym d">5</span></td><td><span class="sym b">4</span></td><td><span class="sym d">5</span></td></tr>
+<tr><td class="h">8</td><td><span class="sym r">2</span></td><td><span class="sym d">5</span></td><td><span class="sym b">4</span></td><td><span class="sym b">4</span></td></tr>
+<tr><td class="h">9</td><td><span class="sym">3</span></td><td><span class="sym b">4</span></td><td><span class="sym b">4</span></td><td><span class="sym b">4</span></td></tr>
+<tr class="tot"><td class="h" style="font-size:12px">計</td><td>33</td><td>34</td><td>35</td><td>37</td></tr>
+</table></div><div class="logo"><span>GOLF SC.</span></div></div></section>
+
+<!-- R2 -->
+<section class="cand"><h2><b>R2</b>横の表＋順位を行の中に</h2>
+<p>今のように、ホールを横に並べます（18Hは前半・後半の2段）。順位の丸を名前の左に、合計の下に(+X)を入れて、順位の一覧をなくします。名前は2行まで。いちばん今の形に近い案です。</p>
+<div class="rcard"><div class="eb">ROUND COMPLETE</div><h4>4人のスコア</h4><div class="meta">ファーツリーカントリークラブ・11/18</div>
+<div class="tbl hz"><table>
+<tr><td class="hn" style="width:74px"></td><td class="hn">1</td><td class="hn">2</td><td class="hn">3</td><td class="hn">4</td><td class="hn">5</td><td class="hn">6</td><td class="hn">7</td><td class="hn">8</td><td class="hn">9</td><td class="hn">計</td></tr>
+<tr><td class="nm" style="opacity:.8">PAR</td><td>3</td><td>3</td><td>3</td><td>4</td><td>3</td><td>3</td><td>4</td><td>3</td><td>3</td><td class="sm" style="font-size:16px">29</td></tr>
+<tr><td class="nm"><span class="rkc w">1</span>川越大生</td><td><span class="sym b">4</span></td><td><span class="sym b">4</span></td><td><span class="sym">3</span></td><td><span class="sym">4</span></td><td><span class="sym">3</span></td><td><span class="sym d">5</span></td><td><span class="sym d">5</span></td><td><span class="sym r">2</span></td><td><span class="sym">3</span></td><td class="sm">33<small>+4</small></td></tr>
+<tr><td class="nm"><span class="rkc">2</span>体操きんたろう</td><td><span class="sym">3</span></td><td><span class="sym">3</span></td><td><span class="sym b">4</span></td><td><span class="sym r">3</span></td><td><span class="sym">3</span></td><td><span class="sym b">4</span></td><td><span class="sym d">5</span></td><td><span class="sym d">5</span></td><td><span class="sym b">4</span></td><td class="sm">34<small>+5</small></td></tr>
+<tr><td class="nm"><span class="rkc">3</span>たろう</td><td><span class="sym">3</span></td><td><span class="sym d">5</span></td><td><span class="sym r">2</span></td><td><span class="sym d">6</span></td><td><span class="sym b">4</span></td><td><span class="sym">3</span></td><td><span class="sym b">4</span></td><td><span class="sym b">4</span></td><td><span class="sym b">4</span></td><td class="sm">35<small>+6</small></td></tr>
+<tr><td class="nm"><span class="rkc">4</span>ふゆ</td><td><span class="sym">3</span></td><td><span class="sym">3</span></td><td><span class="sym d">5</span></td><td><span class="sym d">5</span></td><td><span class="sym b">4</span></td><td><span class="sym b">4</span></td><td><span class="sym d">5</span></td><td><span class="sym b">4</span></td><td><span class="sym b">4</span></td><td class="sm">37<small>+8</small></td></tr>
+</table></div><div class="logo"><span>GOLF SC.</span></div></div></section>
+
+<!-- R3 -->
+<section class="cand"><h2><b>R3</b>順位は小さな2×2の帯だけ</h2>
+<p>順位の一覧を、背の低い2×2の帯に縮めます（順位・名前・合計）。その下に、今のスコア表をそのまま。表は変えないので、いちばん安全ですが、合計はまだ2回出ます。</p>
+<div class="rcard"><div class="eb">ROUND COMPLETE</div><h4>4人のスコア</h4><div class="meta">ファーツリーカントリークラブ・11/18</div>
+<div class="chiprk"><div class="w"><i>1</i><span>川越大生</span><b>33</b></div><div><i>2</i><span>体操きんたろう</span><b>34</b></div><div><i>3</i><span>たろう</span><b>35</b></div><div><i>4</i><span>ふゆ</span><b>37</b></div></div>
+<div class="tbl hz"><table>
+<tr><td class="hn" style="width:74px"></td><td class="hn">1</td><td class="hn">2</td><td class="hn">3</td><td class="hn">4</td><td class="hn">5</td><td class="hn">6</td><td class="hn">7</td><td class="hn">8</td><td class="hn">9</td><td class="hn">計</td></tr>
+<tr><td class="nm" style="opacity:.8">PAR</td><td>3</td><td>3</td><td>3</td><td>4</td><td>3</td><td>3</td><td>4</td><td>3</td><td>3</td><td class="sm" style="font-size:16px">29</td></tr>
+<tr><td class="nm">川越大生</td><td><span class="sym b">4</span></td><td><span class="sym b">4</span></td><td><span class="sym">3</span></td><td><span class="sym">4</span></td><td><span class="sym">3</span></td><td><span class="sym d">5</span></td><td><span class="sym d">5</span></td><td><span class="sym r">2</span></td><td><span class="sym">3</span></td><td class="sm">33</td></tr>
+<tr><td class="nm">体操きんたろう</td><td><span class="sym">3</span></td><td><span class="sym">3</span></td><td><span class="sym b">4</span></td><td><span class="sym r">3</span></td><td><span class="sym">3</span></td><td><span class="sym b">4</span></td><td><span class="sym d">5</span></td><td><span class="sym d">5</span></td><td><span class="sym b">4</span></td><td class="sm">34</td></tr>
+<tr><td class="nm">たろう</td><td><span class="sym">3</span></td><td><span class="sym d">5</span></td><td><span class="sym r">2</span></td><td><span class="sym d">6</span></td><td><span class="sym b">4</span></td><td><span class="sym">3</span></td><td><span class="sym b">4</span></td><td><span class="sym b">4</span></td><td><span class="sym b">4</span></td><td class="sm">35</td></tr>
+<tr><td class="nm">ふゆ</td><td><span class="sym">3</span></td><td><span class="sym">3</span></td><td><span class="sym d">5</span></td><td><span class="sym d">5</span></td><td><span class="sym b">4</span></td><td><span class="sym b">4</span></td><td><span class="sym d">5</span></td><td><span class="sym b">4</span></td><td><span class="sym b">4</span></td><td class="sm">37</td></tr>
+</table></div><div class="logo"><span>GOLF SC.</span></div></div></section>
+
+</div>
+</body>
+</html>
