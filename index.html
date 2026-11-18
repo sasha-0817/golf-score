@@ -2051,6 +2051,22 @@ header.top .sync[hidden]{display:none}
 .sheet.mates-sheet{border-radius:0 0 20px 20px;border-top:0;border-bottom:1px solid var(--rec-line);padding-top:calc(18px + env(safe-area-inset-top,0px))}
 .mates-sheet .mates{display:grid;grid-template-columns:1fr;gap:8px}
 .sl-v.sl-name{white-space:normal;font-size:15px;line-height:1.3;display:block}
+/* 日付のカレンダー（アプリの見た目: 白いシート・選んだ日は緑の丸・今日は緑の輪） */
+.cal-sheet{padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.cal-h b{font-size:19px;font-weight:900;letter-spacing:.02em}
+.sheet .cal-nav{width:44px;height:44px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center}
+.cal-nav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.cal-w{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:13px;font-weight:700;color:var(--rec-muted)}
+.cal-w .su{color:var(--q-double)}.cal-w .sa{color:var(--q-birdie)}
+.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:4px 0;margin:4px 0 6px}
+.sheet .cal-d{height:46px;width:46px;margin:0 auto;border:0;border-radius:50%;background:transparent;font:700 18px var(--f-num);color:var(--rec-fg);padding:0}
+.sheet .cal-d.today{box-shadow:inset 0 0 0 1.5px var(--turf)}
+.sheet .cal-d.on{background:var(--turf);color:var(--turf-ink);box-shadow:none}
+.cal-f{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+/* コースがないときの案内のボタン */
+.sl-go.sm{width:auto;min-width:220px;padding:0 28px;margin:16px auto 0}
+.sl-in{padding-right:17px}   /* 右の矢印（›）の分だけ内側にして、名前の右端を他の行の値とそろえる */
 </style>
 
 </head>
@@ -2169,7 +2185,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-18-2300";
+const BUILD = "2026-11-19-0900";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2593,6 +2609,22 @@ function groupCard(g){
 const after = {};
 
 /* 一緒に回る人の名前（3人分）。入力欄は「一緒に回る」を押したときのシートの中にあるので、画面の入力欄ではなく state / 端末の値から読む */
+/* 日付の表示（今年なら「11月18日（水）」、ほかの年は年も） */
+function jpDate(v){ const [y,m,d]=String(v).split("-").map(Number); if(!y||!m||!d) return "";
+  const w="日月火水木金土"[new Date(y,m-1,d).getDay()]; return `${y===new Date().getFullYear()?"":y+"年"}${m}月${d}日(${w})`; }
+/* 日付のカレンダー（iPhone の標準のカレンダーは色や形を変えられないので、アプリの見た目で作る） */
+function calSheet(){
+  const cur=state.sd||today(), t=today(), [y,m]=(state.calMonth||cur.slice(0,7)).split("-").map(Number), pad=x=>String(x).padStart(2,"0");
+  const first=new Date(y,m-1,1).getDay(), n=new Date(y,m,0).getDate();
+  const mv=k=>{ const d=new Date(y,m-1+k,1); return d.getFullYear()+"-"+pad(d.getMonth()+1); };
+  const cells=[...Array(first).fill(0), ...Array.from({length:n},(_,i)=>i+1)];
+  const arrow=d=>`<svg viewBox="0 0 24 24"><path d="${d}"/></svg>`;
+  return `<div class="sheet-back" data-act="cal-close"><div class="sheet cal-sheet" data-stop="1">
+    <div class="cal-h"><button class="cal-nav" data-act="cal-go" data-v="${mv(-1)}" aria-label="前の月">${arrow("M15 5l-7 7 7 7")}</button><b>${y}年${m}月</b><button class="cal-nav" data-act="cal-go" data-v="${mv(1)}" aria-label="次の月">${arrow("M9 5l7 7-7 7")}</button></div>
+    <div class="cal-w">${["日","月","火","水","木","金","土"].map((w,i)=>`<span class="${i===0?"su":i===6?"sa":""}">${w}</span>`).join("")}</div>
+    <div class="cal-g">${cells.map(d=>{ if(!d) return "<i></i>"; const v=`${y}-${pad(m)}-${pad(d)}`; return `<button class="cal-d ${v===cur?"on":""} ${v===t?"today":""}" data-act="cal-pick" data-v="${v}" aria-label="${m}月${d}日" aria-pressed="${v===cur}">${d}</button>`; }).join("")}</div>
+    <div class="cal-f"><button data-act="cal-today">今日</button><button data-act="cal-close">閉じる</button></div></div></div>`;
+}
 function matesSheet(){
   const m=matesList();
   return `<div class="sheet-back top" data-act="mates-done"><div class="sheet mates-sheet" data-stop="1"><p>一緒に回る人</p><div class="mates">${[0,1,2].map(i=>`<span class="mate-in"><input id="r-mate${i}" list="plist" value="${esc(m[i])}" placeholder="${i+2}人目" aria-label="${i+2}人目の名前" autocomplete="off"><button data-act="mate-clear" data-i="${i}" aria-label="${i+2}人目を消す">×</button></span>`).join("")}</div><button class="ds-go" data-act="mates-done">完了</button></div></div>`;
@@ -2641,7 +2673,7 @@ function viewRecord(){
   }
   if(!d){
     if(state.mode==="connecting") return `<div class="panel empty">読み込み中…</div>`;
-    if(!pickableCourses().length) return `<div class="panel empty"><strong>まずコースを登録しましょう</strong>ホールごとのパーを登録すると、ラウンドの記録を始められます。<div style="margin-top:14px"><button class="btn primary" data-act="goto-courses">コースを登録する</button></div></div>`;
+    if(!pickableCourses().length) return `<div class="panel empty"><strong>まずコースを登録しましょう</strong>コースの名前と、ホールごとのパーを入れると、ラウンドの記録を始められます。${state.ocrReady?"<br>スコアカードの写真から入れることもできます。":""}<button class="sl-go sm" data-act="goto-courses">コースを登録する</button></div>`;
     const last = LS.get("sc.player","");
     const pl = players();
     const mlist=matesList().map(x=>x.trim()).filter(Boolean);
@@ -2650,7 +2682,7 @@ function viewRecord(){
       <div class="sl-seg" role="group" aria-label="入力のしかた"><button data-act="im" data-v="hole" aria-pressed="${state.im==="hole"}">くわしく記録</button><button data-act="im" data-v="card" aria-pressed="${state.im==="card"}">スコアカード</button></div>
       <div class="sl-group">
         <label class="sl-row" for="r-player"><span class="sl-l">名前</span><input id="r-player" class="sl-in" list="plist" value="${esc(state.sp!=null?state.sp:last)}" placeholder="名前を入れる" autocomplete="off"><datalist id="plist">${pl.map(p=>`<option value="${esc(p)}">`).join("")}</datalist></label>
-        <label class="sl-row" for="r-date"><span class="sl-l">日付</span><input id="r-date" type="date" class="sl-in" value="${state.sd||today()}"></label>
+        <button class="sl-row sl-btn" data-act="open-cal"><input type="hidden" id="r-date" value="${state.sd||today()}"><span class="sl-l">日付</span><span class="sl-v">${jpDate(state.sd||today())}</span><i aria-hidden="true">›</i></button>
         ${coursePickField()}
         <div class="sl-row" id="r-gwrap" hidden><label class="sl-l" for="r-green">グリーン</label><select id="r-green" class="sl-in"></select></div>
       </div>
@@ -2660,7 +2692,7 @@ function viewRecord(){
       </div>
       <div class="err" id="r-err"></div>
       <button class="sl-go" data-act="start">始める <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-    </div>${state.sheet==="pick"?coursePickSheet():""}${state.sheet==="game"?gameSheet():""}${state.matesOpen?matesSheet():""}`;
+    </div>${state.sheet==="pick"?coursePickSheet():""}${state.sheet==="game"?gameSheet():""}${state.matesOpen?matesSheet():""}${state.calOpen?calSheet():""}`;
   }
   return viewRecordDraft(d);
 }
@@ -2966,7 +2998,7 @@ function fieldsSheet(){
 }
 after.record = () => {
   const rp=$("#r-player"); if(rp) rp.oninput=()=>{ state.sp=rp.value; };
-  const rd=$("#r-date"); if(rd) rd.onchange=()=>{ state.sd=rd.value; };
+  if(!state.draft && !state.cdraft && state.tab==="record" && !pickableCourses().length) ocrCheck();   // コースがないときの案内に「写真から入れる」を出せるか調べる
   [0,1,2].forEach(i=>{ const el=$("#r-mate"+i); if(el) el.oninput=()=>{ state.mates=[0,1,2].map(j=>($("#r-mate"+j)||{}).value||""); }; });
   cardAfter();
   const rc=$("#r-course"), gw=$("#r-gwrap");
@@ -3275,7 +3307,7 @@ function viewHistory(){
 
 /* ----- スコアカードの写真から読み取り（サーバーの functions/ocr.js。AI がつながっているときだけボタンを出す） ----- */
 async function ocrCheck(){ if(!ON_CF || state.ocrReady!=null) return; state.ocrReady=false;
-  try{ const r=await fetch("/ocr",{cache:"no-store"}); const j=await r.json(); state.ocrReady=!!(j&&j.ready); if(state.ocrReady && state.courseEdit) render(); }catch(e){} }
+  try{ const r=await fetch("/ocr",{cache:"no-store"}); const j=await r.json(); state.ocrReady=!!(j&&j.ready); if(state.ocrReady && (state.courseEdit || (state.tab==="record" && !state.draft && !state.cdraft && !pickableCourses().length))) render(); }catch(e){} }
 function ocrPrep(file){ return new Promise((ok,ng)=>{ const url=URL.createObjectURL(file), img=new Image();
   img.onload=()=>{ const M=1600, k=Math.min(1,M/Math.max(img.width,img.height)), c=document.createElement("canvas"); c.width=Math.round(img.width*k); c.height=Math.round(img.height*k);
     c.getContext("2d").drawImage(img,0,0,c.width,c.height); URL.revokeObjectURL(url); ok(c.toDataURL("image/jpeg",.85)); };
@@ -3727,7 +3759,7 @@ document.addEventListener("click", async ev => {
       if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); window.scrollTo(0,0);
       LS.set("sc.player",p);
       // 一緒に回る人（同じ名前もOK: ボール2個で2回分回る人がいる）
-      const mates=matesList().map(x=>x.trim()).filter(Boolean); LS.set("sc.mates",[0,1,2].map(i=>mates[i]||"")); state.mates=null; state.matesOpen=false;
+      const mates=matesList().map(x=>x.trim()).filter(Boolean); LS.set("sc.mates",[0,1,2].map(i=>mates[i]||"")); state.mates=null; state.matesOpen=false; state.calOpen=false;
       if(state.game==="ghost" && gameFits("ghost",1+mates.length) && !ghostFor(cid,p)){ toast("このコースの過去の記録がないので、今回はゲームなしで記録します"); state.game=""; LS.set("sc.game",""); }
       if(state.game && !gameFits(state.game, 1+mates.length)) toast(`${GAMES[state.game].name}は${GAMES[state.game].n.replace("のみ","")}で遊ぶゲームなので、今回はゲームなしで記録します`);
       if(state.im==="card"){
@@ -3769,6 +3801,11 @@ document.addEventListener("click", async ev => {
     }
     case "ask-discard": state.confirm="discard"; render(); break;
     case "open-game": state.mates=matesList(); state.sheet="game"; render(); break;
+    case "open-cal": state.calOpen=true; state.calMonth=(state.sd||today()).slice(0,7); render(); break;
+    case "cal-go": state.calMonth=b.dataset.v; render(); break;
+    case "cal-pick": state.sd=b.dataset.v; state.calOpen=false; render(); break;
+    case "cal-today": state.sd=today(); state.calOpen=false; render(); break;
+    case "cal-close": state.calOpen=false; render(); break;
     case "open-mates": state.mates=matesList(); state.matesOpen=true; render(); break;
     case "mates-done": { state.matesOpen=false; LS.set("sc.mates", matesList()); render(); break; }
     case "pick-game": { const k=b.dataset.v, cnt=1+(state.mates||[]).filter(x=>String(x||"").trim()).length;

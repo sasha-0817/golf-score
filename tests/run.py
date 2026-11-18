@@ -972,6 +972,24 @@ with sync_playwright() as pw:
     check("開始画面: 画面に入力欄がなくても、ゲーム選択に人数（4人）が伝わる（ラスベガスが選べる）", pg.evaluate("state.game") == "vegas" and "ラスベガス" in pg.inner_text("[data-act=open-game]") and not errs)
     pg.context.close()
 
+    # 19u. 日付（右寄せの値＋アプリの見た目のカレンダー）・コースがないときの案内
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": cst, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.v2": 1, "sc.fields": dict(NONE)})
+    rights = pg.evaluate("[...document.querySelectorAll('.sl-row')].map(r=>r.querySelector('.sl-v')).filter(Boolean).map(e=>Math.round(e.getBoundingClientRect().right))")
+    C(pg, "[data-act=open-cal]"); pg.wait_for_timeout(100)
+    cal = pg.evaluate("({days:document.querySelectorAll('.cal-d').length, on:[...document.querySelectorAll('.cal-d.on')].map(e=>e.textContent), today:document.querySelectorAll('.cal-d.today').length, ttl:document.querySelector('.cal-h b').textContent})")
+    C(pg, "[data-act=cal-go]:last-of-type") or C(pg, ".cal-nav[aria-label='次の月']"); pg.wait_for_timeout(100)
+    ttl2 = pg.inner_text(".cal-h b")
+    C(pg, ".cal-d[data-v$='-15']"); pg.wait_for_timeout(100)
+    row = pg.inner_text("[data-act=open-cal]")
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    check("日付: 値は他の行と同じく右寄せ（右端がそろう）で、押すとアプリの見た目のカレンダー（今日の丸・月の切りかえ）が出る", len(set(rights)) == 1 and cal["days"] in range(28, 32) and cal["on"] and cal["ttl"] != ttl2 and not errs)
+    check("日付: カレンダーで選んだ日が行に出て、その日付でラウンドが始まる", "15日" in row and pg.evaluate("state.draft.date").endswith("-15") and not errs)
+    pg.context.close()
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.v2": 1, "sc.presets": "0"})
+    txt = pg.inner_text(".panel.empty")
+    check("コースがないときの案内: 説明文が正しく、ボタンは黒い丸ボタン（緑のグラデーションではない）", "コースの名前と、ホールごとのパーを入れると" in txt and pg.evaluate("(()=>{const e=document.querySelector('[data-act=goto-courses]'); return e.classList.contains('sl-go') && getComputedStyle(e).backgroundImage==='none'})()") and not errs)
+    pg.context.close()
+
     # 19p. 端末が本体・サーバーはバックアップ（2026-11-16 のバグ出しで見つかった不具合のチェック）
     def bk_round(i, player, nos=None, putts=2):
         return {"id": f"b{player}{i}", "player": player, "courseId": "c1", "courseName": "テストC", "date": f"2026-10-{10+i:02d}", "createdAt": 1000 + i, **({"nos": nos} if nos else {}),
