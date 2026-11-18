@@ -2168,11 +2168,11 @@ const cArea = c => (c && (c.area || (c.holes && c.holes[0] && c.holes[0].area)))
 const presetTaken = pc => state.courses.some(c=>c.presetKey===pc.key || c.name.replace(/\s/g,"").includes(pc.name.replace(/\s/g,"")));
 /* 用意済みコースは、ふだんは出さない（コースは各人が自分で登録する方針。写真読み取りで入れる）。動作確認用に、アドレスの最後に ?presets=1 を付けて開くと出る（?presets=0 で戻る。端末ごとに覚える。テストでは常に出す） */
 /* お試しの切りかえ（決めるまでのあいだ）: アドレスの後ろに ?mates=m1〜m5・m25 / ?result=r1〜r3 を付けると、その案で動く。端末に覚えるので、?mates=0 / ?result=0 で元に戻す。?show=9 / ?show=18 は見本の4人の結果を開く */
-const TRY = (()=>{ const o={mates:"",result:"",show:"",game:"",set:false}, ok={mates:["m1","m2","m3","m4","m5","m25","old"], result:["r1","r2","r3"]};
+const TRY = (()=>{ const o={mates:"",result:"",show:"",game:"",set:false,rset:false}, ok={mates:["m1","m2","m3","m4","m5","m25","old"], result:["r1","r2","r3"]};
   try{ const q=new URLSearchParams(location.search);
     for(const k of ["mates","result"]){ const v=q.get(k); if(v!=null){ if(ok[k].includes(v.toLowerCase())) localStorage.setItem("sc.try."+k, v.toLowerCase()); else localStorage.removeItem("sc.try."+k); }
       const cur=localStorage.getItem("sc.try."+k)||""; o[k]=ok[k].includes(cur)?cur:""; }
-    o.set=!!o.mates; if(!o.mates) o.mates="m25";   // 何も付けないときは「前回と同じ＋最近の6人」（iPhone の候補は出さない）
+    o.set=!!o.mates; o.rset=!!o.result; if(!o.mates) o.mates="m25"; if(!o.result) o.result="r1";   // 何も付けないときは、みんなの結果は縦の表（R1）。   // 何も付けないときは「前回と同じ＋最近の6人」（iPhone の候補は出さない）
     o.show=["9","18"].includes(q.get("show"))?q.get("show"):""; o.game=q.get("game")==="skins"?"skins":""; }catch(e){}
   return o; })();
 const TRY_NAMES = ["はなこ","じろう","さぶろう","ゆきこ","けんた","みさき","だいき","あやか"];
@@ -2242,7 +2242,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-22-0900";
+const BUILD = "2026-11-22-1200";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2823,7 +2823,7 @@ function viewRecord(){
       </div>
       <div class="err" id="r-err"></div>
       <button class="sl-go" data-act="start">始める <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-      ${TRY.set||TRY.result?`<a class="try-link" href="design/try.html">お試し中（${[TRY.set&&(TRY.mates==="m25"?"M2＋M5":TRY.mates==="old"?"前の形":TRY.mates.toUpperCase()), TRY.result&&TRY.result.toUpperCase()].filter(Boolean).join("・")}）　ほかの案を見る ›</a>`:""}
+      ${TRY.set||TRY.rset?`<a class="try-link" href="design/try.html">お試し中（${[TRY.set&&(TRY.mates==="m25"?"M2＋M5":TRY.mates==="old"?"前の形":TRY.mates.toUpperCase()), TRY.rset&&TRY.result.toUpperCase()].filter(Boolean).join("・")}）　ほかの案を見る ›</a>`:""}
     </div>${state.sheet==="pick"?coursePickSheet():""}${state.sheet==="game"?gameSheet():""}${state.matesOpen?matesSheet():""}${state.calOpen?calSheet():""}`;
   }
   return viewRecordDraft(d);

@@ -250,7 +250,7 @@ with sync_playwright() as pw:
     rs = pg.evaluate("__db.rounds.map(r=>({p:r.player,s:r.holes.reduce((a,h)=>a+h.strokes,0),pt:r.holes.reduce((a,h)=>a+h.putts,0),n:r.holes.length}))")
     check("スコアカード: 4人分が別々のラウンドで保存", sorted(x["p"] for x in rs) == sorted(["たろう", "はなこ", "じろう", "さぶろう"]) and all(x["n"] == 9 for x in rs))
     check("スコアカード: パットを書かなかった人は putts 0（記録なし）", {x["p"]: x["pt"] > 0 for x in rs} == {"たろう": True, "はなこ": False, "じろう": False, "さぶろう": False})
-    check("スコアカード: 保存後はみんなのリザルト（順位と全員のスコア）", pg.query_selector(".grp-card") is not None and pg.evaluate("document.querySelectorAll('.rc-rank>div').length") == 4)
+    check("スコアカード: 保存後はみんなのリザルト（順位は縦の表の見出しに・全員のスコア）", pg.query_selector(".grp-card") is not None and pg.evaluate("document.querySelectorAll('table.v1 .v1c').length") == 4)
     check("スコアカード: リザルトで「みんな」＋4人を切りかえられる", pg.evaluate("document.querySelectorAll('.rc-who button').length") == 5 and C(pg, '.rc-who button:nth-child(3)') and pg.evaluate("state.result.player") == "はなこ")
     check("リザルト: 2回目からは出てくるアニメーションをくり返さない（点滅しない）", "still" in pg.evaluate("document.querySelector('.result-back').className"))
     check("リザルト: 全員分まとめて保存のボタン（5枚）", "5枚" in (pg.text_content("[data-act=save-all]") or ""))

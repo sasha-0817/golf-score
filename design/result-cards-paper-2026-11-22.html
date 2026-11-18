@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>GOLF SC. 結果カード（ペーパー系）の候補</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+:root{color-scheme:light;--jp:"Zen Kaku Gothic New",system-ui,"Hiragino Sans",sans-serif;--num:"Barlow Condensed","Zen Kaku Gothic New",sans-serif;--birdie:#2F7DE1;--bogey:#F08A24;--double:#E5484D}
+*{box-sizing:border-box}
+body{margin:0;background:#E9ECEB;color:#1B2A22;font-family:var(--jp);line-height:1.6}
+main{max-width:1440px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:22px;margin:0 0 4px}.lead{font-size:15px;color:#48564F;margin:0 0 22px}
+h2.sec{font-size:18px;margin:30px 0 12px;padding-top:10px;border-top:2px solid #CFD6D2}
+.grid{display:flex;flex-wrap:wrap;gap:28px 24px;align-items:flex-start}
+.item{width:340px}.item h3{font-size:17px;margin:0 0 2px}.item p{font-size:14px;color:#48564F;margin:0 0 10px;min-height:46px;line-height:1.55}
+.card{width:340px;border-radius:22px;overflow:hidden;position:relative;box-shadow:0 14px 34px -16px rgba(0,0,0,.4)}
+.logo{display:inline-flex;align-items:center;gap:6px;font:700 15px var(--num);letter-spacing:.04em}.logo img{width:26px;height:26px}
+.m{display:inline-flex;width:22px;height:22px;align-items:center;justify-content:center;font-weight:700}
+.m.birdie{border:2px solid var(--birdie);border-radius:50%;color:var(--birdie)}
+.m.bogey{border:2px solid var(--bogey);color:#C96A0B}
+.m.double{border:2px solid var(--double);color:var(--double);outline:2px solid var(--double);outline-offset:1.5px;width:18px;height:18px;font-size:14px}
+table{border-collapse:collapse;width:100%;table-layout:fixed;font-family:var(--num)}
+/* P1 白い紙・緑の帯 */
+.p1{background:#FBFAF4;border:1px solid #E4E0D2}
+.p1 .band{background:#0B6B44;color:#fff;padding:14px 20px 12px;display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+.p1 .band b{font-size:16px;font-weight:900}.p1 .band span{font:600 15px var(--num)}
+.p1 .in{padding:16px 20px}.p1 .who{display:flex;align-items:flex-end;justify-content:space-between}
+.p1 .n{font-size:15px;font-weight:700}.p1 .n small{display:block;font:600 11px var(--num);letter-spacing:.2em;color:#7A857E}
+.p1 .sc{font:700 84px/.8 var(--num);display:flex;align-items:flex-end;gap:8px}.p1 .sc i{font-style:normal;font-size:28px;color:#F08A24;line-height:1}
+.p1 table{margin-top:16px}.p1 td{border:1px solid #CFCBBB;text-align:center;height:30px;font-size:17px;font-weight:600}
+.p1 tr.h td{background:#EFECE0;font-size:13px;color:#5B665F;height:22px}.p1 tr.p td{font-size:14px;color:#7A857E;height:24px}
+.p1 td:first-child{width:38px;font-size:11px;background:#EFECE0;color:#5B665F}.p1 td:last-child{width:36px;background:#F3F0E4;font-weight:700}
+.st{display:grid;grid-template-columns:repeat(4,1fr);margin-top:14px;padding-top:10px;text-align:center}.st span{display:block;font:600 11px var(--num);letter-spacing:.12em;color:#7A857E}.st b{font:700 26px/1.1 var(--num)}
+.p1 .st{border-top:2px solid #1B2A22}.ft{display:flex;justify-content:flex-end;margin-top:12px;color:#0B6B44}
+/* P2 ミニマル（罫線だけ） */
+.p2{background:#fff;padding:26px 24px 20px;border:1px solid #E6E8E7}
+.p2 .k{font:600 11px var(--num);letter-spacing:.24em;color:#8A948E}
+.p2 h4{margin:2px 0 0;font-size:18px;font-weight:900}.p2 .sub{font-size:13px;color:#6B756F}
+.p2 .big{display:flex;align-items:flex-end;gap:10px;margin:18px 0 12px}.p2 .big b{font:700 96px/.78 var(--num)}.p2 .big i{font-style:normal;font:700 30px var(--num);color:#F08A24;margin-bottom:4px}
+.p2 table{border-top:2px solid #1B2A22;border-bottom:1px solid #1B2A22}
+.p2 td{text-align:center;height:30px;font-size:17px;font-weight:600;border-bottom:1px solid #E2E5E3}
+.p2 tr.h td{font-size:12px;color:#8A948E;height:24px}.p2 tr.p td{font-size:14px;color:#8A948E}
+.p2 tr:last-child td{border-bottom:0;height:34px}.p2 td:last-child{font-weight:700;width:34px}
+.p2 .st{margin-top:16px;border:0;padding:0}.p2 .ft{margin-top:14px;justify-content:space-between;align-items:center;color:#8A948E;font:600 11px var(--num);letter-spacing:.14em}.p2 .logo{color:#0B6B44}
+/* P3 ゴルフ場のスコアカード風（色の帯・OUT/IN） */
+.p3{background:#FDFCF7;border:1px solid #DDD7C2}
+.p3 .top{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:3px double #B9B196}
+.p3 .top b{font-size:15px;font-weight:900;letter-spacing:.04em}.p3 .top span{font:600 14px var(--num);color:#6B756F}
+.p3 .in{padding:14px 16px 16px}.p3 .row{display:flex;align-items:flex-end;justify-content:space-between}
+.p3 .row .n{font-size:15px;font-weight:700}.p3 .row .n small{font-size:12px;color:#7A857E;display:block;font-weight:500}
+.p3 .row .s{font:700 64px/.8 var(--num);display:flex;align-items:flex-end;gap:6px}.p3 .row .s i{font-style:normal;font-size:24px;color:#F08A24;line-height:1}
+.p3 table{margin-top:14px}.p3 td{border:1px solid #CFC9B2;text-align:center;height:28px;font-size:16px;font-weight:600}
+.p3 tr.h td{background:#2D5B3F;color:#fff;font-size:12px;height:22px;border-color:#2D5B3F}.p3 tr.p td{background:#EDE9D7;font-size:13px;color:#6B756F;height:22px}
+.p3 td:first-child{width:38px;font-size:11px;background:#EDE9D7}.p3 tr.h td:first-child{background:#2D5B3F}
+.p3 td:last-child{width:34px;font-weight:700;background:#F3F0E4}.p3 tr.h td:last-child{background:#2D5B3F}
+.p3 .st{border-top:1px solid #B9B196}.p3 .ft{color:#2D5B3F}
+/* P4 ノート（方眼・あたたかい紙） */
+.p4{background:#FAF6EA;border:1px solid #E7DFC6;background-image:linear-gradient(#EAE2C8 1px,transparent 1px),linear-gradient(90deg,#EAE2C8 1px,transparent 1px);background-size:20px 20px}
+.p4 .in{padding:22px 20px 16px}.p4 .k{font:600 11px var(--num);letter-spacing:.22em;color:#8C7F5A}
+.p4 h4{margin:2px 0 0;font-size:17px;font-weight:900}.p4 .sub{font-size:13px;color:#7A6F4F}
+.p4 .big{display:flex;align-items:flex-end;gap:8px;margin:14px 0 8px}.p4 .big b{font:700 88px/.78 var(--num)}.p4 .big i{font-style:normal;font:700 28px var(--num);color:#C96A0B;margin-bottom:3px}
+.p4 .stamp{position:absolute;right:18px;top:20px;border:2px solid #C0392B;color:#C0392B;border-radius:8px;padding:2px 10px;font:700 13px var(--num);letter-spacing:.1em;transform:rotate(-8deg);opacity:.85}
+.p4 table{background:rgba(255,255,255,.72)}.p4 td{border:1px solid #D9CFAE;text-align:center;height:30px;font-size:17px;font-weight:600}
+.p4 tr.h td{font-size:12px;color:#8C7F5A;height:22px;background:rgba(255,255,255,.4)}.p4 tr.p td{font-size:14px;color:#8C7F5A;height:24px}
+.p4 td:first-child{width:36px;font-size:11px;color:#8C7F5A}.p4 td:last-child{width:34px;font-weight:700}
+.p4 .st{border-top:2px dashed #CDBF92}.p4 .ft{color:#6B5F3C}
+/* P5 ネイビー帯・金の合計（上品） */
+.p5{background:#fff;border:1px solid #D9DEE6}
+.p5 .hd{background:#14284B;color:#fff;padding:16px 20px 14px;display:flex;justify-content:space-between;align-items:flex-end}
+.p5 .hd .k{font:600 11px var(--num);letter-spacing:.24em;opacity:.7}.p5 .hd b{display:block;font-size:17px;font-weight:900}.p5 .hd .c{font-size:13px;opacity:.8}
+.p5 .hd .s{font:700 60px/.8 var(--num);color:#F2C14E;display:flex;align-items:flex-end;gap:6px}.p5 .hd .s i{font-style:normal;font-size:22px;color:#fff;line-height:1;opacity:.9}
+.p5 .in{padding:14px 20px 16px}.p5 td{border-bottom:1px solid #E3E7EE;text-align:center;height:32px;font-size:17px;font-weight:600}
+.p5 tr.h td{font-size:12px;color:#8793A8;height:24px}.p5 tr.p td{font-size:14px;color:#8793A8}
+.p5 tr:last-child td{border-bottom:0}.p5 td:first-child{width:36px;font-size:11px;color:#8793A8}.p5 td:last-child{width:34px;font-weight:700;color:#14284B}
+.p5 .st{border-top:2px solid #14284B}.p5 .ft{color:#14284B}
+/* 縦の表（人が横） */
+.v{background:#FBFAF4;border:1px solid #E4E0D2}
+.v .band{background:#0B6B44;color:#fff;padding:14px 18px 12px;display:flex;justify-content:space-between;align-items:flex-end}.v .band b{font-size:16px;font-weight:900}.v .band span{font:600 15px var(--num)}
+.v .in{padding:12px 12px 14px}
+.v th{font-weight:400;padding:8px 0 6px;vertical-align:bottom;border-bottom:2px solid #1B2A22}
+.v th .rk{display:inline-flex;width:20px;height:20px;border-radius:50%;background:#E4E0D2;font:700 13px var(--num);align-items:center;justify-content:center}
+.v th.w .rk{background:#F2C14E}.v th .nm{display:block;font:700 13px/1.2 var(--jp);min-height:32px;margin-top:4px;word-break:break-all}
+.v th b{display:block;font:700 28px/1 var(--num)}.v th small{font:700 14px var(--num);color:#6B756F}
+.v th.w{background:rgba(242,193,78,.2)}
+.v td{border-bottom:1px solid #DDD8C5;text-align:center;height:28px;font-size:16px;font-weight:600}
+.v td.h{width:30px;font-size:14px;color:#6B756F;font-weight:700}.v td.pp{width:28px;font-size:13px;color:#9AA29C}
+.v tr.t td{border-top:2px solid #1B2A22;border-bottom:0;font-weight:700;height:34px;font-size:19px}
+.v tr.t td.h{font:700 13px var(--jp)}
+.v .m{width:20px;height:20px;font-size:15px}.v .m.double{width:17px;height:17px;font-size:13px}
+.v .ft{margin-top:8px}
+</style></head><body><main>
+<h1>結果カード（ペーパー系）の候補</h1>
+<p class="lead">A の「白い紙のスコアカード」をもとに、5つの形を考えました。絵の見本で、まだアプリには入っていません。中身は同じラウンド（9ホール・32打・+3）です。</p>
+<h2 class="sec">1人のカード</h2>
+<div class="grid">
+
+<div class="item"><h3>P1　今のペーパー（緑の帯）</h3><p>前回の A。緑の帯に、罫線の入った表。ゴルフ場のカードに近い形です。</p>
+<div class="card p1"><div class="band"><b>ファーツリーカントリークラブ</b><span>2026.11.18</span></div><div class="in">
+<div class="who"><div class="n"><small>PLAYER</small>たろう</div><div class="sc">32<i>+3</i></div></div>
+<table><tr class="h"><td>H</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>計</td></tr>
+<tr class="p"><td>PAR</td><td>3</td><td>3</td><td>3</td><td>4</td><td>3</td><td>3</td><td>4</td><td>3</td><td>3</td><td>29</td></tr>
+<tr><td>打数</td><td>3</td><td><span class="m birdie">2</span></td><td><span class="m bogey">4</span></td><td>4</td><td>3</td><td><span class="m double">5</span></td><td><span class="m bogey">5</span></td><td>3</td><td>3</td><td>32</td></tr></table>
+<div class="st"><div><span>PUTTS</span><b>15</b></div><div><span>パーオン</span><b>56%</b></div><div><span>3パット</span><b>0</b></div><div><span>OB</span><b>0</b></div></div>
+<div class="ft"><span class="logo"><img src="../mark.png" alt="">GOLF SC.</span></div></div></div></div>
+
+<div class="item"><h3>P2　ミニマル（線だけ）</h3><p>帯も背景の色もなし。白い紙に、数字と細い線だけ。いちばんシンプルで、何にでも合います。</p>
+<div class="card p2"><div class="k">ROUND COMPLETE</div><h4>たろう</h4><div class="sub">ファーツリーカントリークラブ・11/18</div>
+<div class="big"><b>32</b><i>+3</i></div>
+<table><tr class="h"><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>計</td></tr>
+<tr class="p"><td>3</td><td>3</td><td>3</td><td>4</td><td>3</td><td>3</td><td>4</td><td>3</td><td>3</td><td>29</td></tr>
+<tr><td>3</td><td><span class="m birdie">2</span></td><td><span class="m bogey">4</span></td><td>4</td><td>3</td><td><span class="m double">5</span></td><td><span class="m bogey">5</span></td><td>3</td><td>3</td><td>32</td></tr></table>
+<div class="st"><div><span>PUTTS</span><b>15</b></div><div><span>パーオン</span><b>56%</b></div><div><span>3パット</span><b>0</b></div><div><span>OB</span><b>0</b></div></div>
+<div class="ft"><span>SHORT COURSE SCORECARD</span><span class="logo"><img src="../mark.png" alt="">GOLF SC.</span></div></div></div>
+
+<div class="item"><h3>P3　ゴルフ場のカード風</h3><p>濃い緑のホール番号の行、二重線のヘッダー。コースでもらう本物のスコアカードに寄せた形です。</p>
+<div class="card p3"><div class="top"><b>ファーツリーカントリークラブ</b><span>2026.11.18</span></div><div class="in">
+<div class="row"><div class="n"><small>PLAYER</small>たろう</div><div class="s">32<i>+3</i></div></div>
+<table><tr class="h"><td>HOLE</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>計</td></tr>
+<tr class="p"><td>PAR</td><td>3</td><td>3</td><td>3</td><td>4</td><td>3</td><td>3</td><td>4</td><td>3</td><td>3</td><td>29</td></tr>
+<tr><td>SCORE</td><td>3</td><td><span class="m birdie">2</span></td><td><span class="m bogey">4</span></td><td>4</td><td>3</td><td><span class="m double">5</span></td><td><span class="m bogey">5</span></td><td>3</td><td>3</td><td>32</td></tr></table>
+<div class="st"><div><span>PUTTS</span><b>15</b></div><div><span>パーオン</span><b>56%</b></div><div><span>3パット</span><b>0</b></div><div><span>OB</span><b>0</b></div></div>
+<div class="ft"><span class="logo"><img src="../mark.png" alt="">GOLF SC.</span></div></div></div></div>
+
+<div class="item"><h3>P4　ノート（方眼・あたたかい紙）</h3><p>あたたかい色の紙に方眼。COURSE BEST のときは、赤い「ハンコ」を押す形です。手帳のような、やさしい見た目。</p>
+<div class="card p4"><div class="stamp">COURSE BEST</div><div class="in"><div class="k">ROUND COMPLETE</div><h4>たろう</h4><div class="sub">ファーツリーカントリークラブ・11/18</div>
+<div class="big"><b>32</b><i>+3</i></div>
+<table><tr class="h"><td>H</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>計</td></tr>
+<tr class="p"><td>PAR</td><td>3</td><td>3</td><td>3</td><td>4</td><td>3</td><td>3</td><td>4</td><td>3</td><td>3</td><td>29</td></tr>
+<tr><td>打</td><td>3</td><td><span class="m birdie">2</span></td><td><span class="m bogey">4</span></td><td>4</td><td>3</td><td><span class="m double">5</span></td><td><span class="m bogey">5</span></td><td>3</td><td>3</td><td>32</td></tr></table>
+<div class="st"><div><span>PUTTS</span><b>15</b></div><div><span>パーオン</span><b>56%</b></div><div><span>3パット</span><b>0</b></div><div><span>OB</span><b>0</b></div></div>
+<div class="ft"><span class="logo"><img src="../mark.png" alt="">GOLF SC.</span></div></div></div></div>
+
+<div class="item"><h3>P5　ネイビー帯・金の合計</h3><p>紺の帯に、金色の大きな合計。白い紙の表は同じ。少し大人っぽく、あらたまった感じになります。</p>
+<div class="card p5"><div class="hd"><div><div class="k">ROUND COMPLETE</div><b>たろう</b><div class="c">ファーツリーカントリークラブ・11/18</div></div><div class="s">32<i>+3</i></div></div><div class="in">
+<table><tr class="h"><td>H</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>計</td></tr>
+<tr class="p"><td>PAR</td><td>3</td><td>3</td><td>3</td><td>4</td><td>3</td><td>3</td><td>4</td><td>3</td><td>3</td><td>29</td></tr>
+<tr><td>打</td><td>3</td><td><span class="m birdie">2</span></td><td><span class="m bogey">4</span></td><td>4</td><td>3</td><td><span class="m double">5</span></td><td><span class="m bogey">5</span></td><td>3</td><td>3</td><td>32</td></tr></table>
+<div class="st"><div><span>PUTTS</span><b>15</b></div><div><span>パーオン</span><b>56%</b></div><div><span>3パット</span><b>0</b></div><div><span>OB</span><b>0</b></div></div>
+<div class="ft"><span class="logo"><img src="../mark.png" alt="">GOLF SC.</span></div></div></div></div>
+
+</div>
+<h2 class="sec">みんなのカード（縦の表・ペーパー）</h2>
+<p class="lead">縦の表（R1）を、紙の形にしたもの。上の P1〜P5 のどれを選んでも、色や帯をそろえて作れます。</p>
+<div class="grid"><div class="item"><h3>P1 の縦の表（4人）</h3><p>順位・名前・合計は、人の見出しに入ります。1位は金色のうすい背景です。</p>
+<div class="card v"><div class="band"><b>ファーツリーカントリークラブ</b><span>11.18</span></div><div class="in"><table>
+<colgroup><col style="width:30px"><col style="width:28px"><col><col><col><col></colgroup>
+<tr><th></th><th></th><th class="w"><span class="rk">1</span><span class="nm">はなこ</span><b>33</b><small>+4</small></th><th><span class="rk">2</span><span class="nm">ながいなまえさん</span><b>34</b><small>+5</small></th><th><span class="rk">3</span><span class="nm">じろう</span><b>35</b><small>+6</small></th><th><span class="rk">4</span><span class="nm">たろう</span><b>37</b><small>+8</small></th></tr>
+<tr><td class="h">1</td><td class="pp">3</td><td><span class="m bogey">4</span></td><td>3</td><td>3</td><td>3</td></tr>
+<tr><td class="h">2</td><td class="pp">3</td><td><span class="m bogey">4</span></td><td>3</td><td><span class="m bogey">5</span></td><td>3</td></tr>
+<tr><td class="h">3</td><td class="pp">3</td><td>3</td><td><span class="m bogey">4</span></td><td><span class="m birdie">2</span></td><td><span class="m bogey">5</span></td></tr>
+<tr><td class="h">4</td><td class="pp">4</td><td>4</td><td><span class="m birdie">3</span></td><td><span class="m double">6</span></td><td><span class="m bogey">5</span></td></tr>
+<tr><td class="h">5</td><td class="pp">3</td><td>3</td><td>3</td><td><span class="m bogey">4</span></td><td><span class="m bogey">4</span></td></tr>
+<tr><td class="h">6</td><td class="pp">3</td><td><span class="m bogey">5</span></td><td><span class="m bogey">4</span></td><td>3</td><td><span class="m bogey">4</span></td></tr>
+<tr><td class="h">7</td><td class="pp">4</td><td><span class="m bogey">5</span></td><td><span class="m bogey">5</span></td><td>4</td><td><span class="m bogey">5</span></td></tr>
+<tr><td class="h">8</td><td class="pp">3</td><td><span class="m birdie">2</span></td><td><span class="m bogey">5</span></td><td><span class="m bogey">4</span></td><td><span class="m bogey">4</span></td></tr>
+<tr><td class="h">9</td><td class="pp">3</td><td>3</td><td><span class="m bogey">4</span></td><td><span class="m bogey">4</span></td><td><span class="m bogey">4</span></td></tr>
+<tr class="t"><td class="h">計</td><td class="pp">29</td><td>33</td><td>34</td><td>35</td><td>37</td></tr></table>
+<div class="ft"><span class="logo"><img src="../mark.png" alt="">GOLF SC.</span></div></div></div></div></div>
+</main></body></html>
