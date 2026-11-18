@@ -33,7 +33,7 @@ results = []
 def check(name, cond):
     results.append((bool(cond), name)); print(("OK  " if cond else "NG  ") + name)
 
-def open_page(b, ls=None, dark=False, offline=False, repl=None):
+def open_page(b, ls=None, dark=False, offline=False, repl=None, query=""):
     ls = {"sc.flickTip": True, "sc.presets": "1", **(ls or {})}   # 用意済みコースはふだんは出さないが、テストでは出す   # 初回のフリック案内は、ふだんのテストでは出さない
     src = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
     src = re.sub(r'const CF_URL = "[^"]*";', 'const CF_URL = "";', src, count=1)  # ふだんのテストは引っ越しの案内なし
@@ -56,7 +56,7 @@ def open_page(b, ls=None, dark=False, offline=False, repl=None):
     ctx = b.new_context(viewport={"width": 375, "height": 667}, color_scheme="dark" if dark else "light")
     pg = ctx.new_page(); errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)))
-    pg.goto("file://" + path); pg.wait_for_timeout(1200)
+    pg.goto("file://" + path + query); pg.wait_for_timeout(1200)
     return pg, errs
 
 def C(pg, sel):  # JS でクリック（重なりや disabled も含めて、アプリの動きをそのまま見る）
@@ -1237,6 +1237,85 @@ with sync_playwright() as pw:
         srv.terminate()
         try: os.remove(os.path.join(ROOT, "_test_cf.html"))
         except OSError: pass
+
+    # お試しの案（?mates= / ?result=）。決まるまでのあいだ、アドレスの後ろに付けたときだけ動く
+    tc = [{"id": "c1", "name": "テストコース", "holes": [{"par": 3, "yards": 100}] * 9, "createdAt": 1}]
+    def trd(i, p, d, ca): return {"id": "t%d" % i, "player": p, "courseId": "c1", "courseName": "テストコース", "date": d, "createdAt": ca, "holes": [{"par": 3, "strokes": 4, "putts": 2}] * 9}
+    trs = [trd(1, "たろう", "2026-11-01", 1000), trd(2, "ふゆこ", "2026-11-01", 1001), trd(3, "まさる", "2026-11-01", 1002), trd(4, "たろう", "2026-10-01", 500), trd(5, "ふゆこ", "2026-10-01", 501), trd(6, "さくら", "2026-09-01", 300), trd(7, "たろう", "2026-09-01", 299)]
+    TL = {"sc.player": "\"たろう\"", "sc.mates": ["ふゆこ", "", ""], "sc.courses": tc, "sc.rounds": trs, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.v2": 1}
+    MV = "[0,1,2].map(i=>document.querySelector('#r-mate'+i).value).join()"
+    pg, errs = open_page(b, TL, offline=True)
+    C(pg, "[data-act=open-mates]")
+    check("お試し: 何も付けなければ今まで通り（候補は iPhone のまま・お試しの札やリンクなし）", pg.evaluate("document.querySelector('#r-mate0').getAttribute('list')") == "plist" and pg.query_selector(".try-tag") is None and pg.query_selector(".try-link") is None and pg.query_selector(".mt-chip") is None and not errs)
+    pg.context.close()
+    pg, errs = open_page(b, TL, offline=True, query="?mates=m1")
+    C(pg, "[data-act=open-mates]")
+    check("お試し M1: 候補を出さない（入力欄だけ）", pg.evaluate("document.querySelector('#r-mate0').getAttribute('list')") is None and pg.query_selector(".mt-chip") is None and "M1" in pg.inner_text(".try-tag") and not errs)
+    pg.context.close()
+    pg, errs = open_page(b, TL, offline=True, query="?mates=m2")
+    check("お試し: 開始画面に「お試し中」のリンク", "M2" in pg.inner_text(".try-link"))
+    C(pg, "[data-act=open-mates]")
+    chips = pg.evaluate("[...document.querySelectorAll('.mt-chip')].map(e=>e.dataset.n)")
+    check("お試し M2: 最近の人が6人まで・新しい順・すでに入れた人と自分は出ない", len(chips) == 6 and chips[:2] == ["まさる", "さくら"] and "ふゆこ" not in chips and "たろう" not in chips)
+    C(pg, '.mt-chip[data-n="まさる"]')
+    check("お試し M2: 押すと空いている欄に入り、候補から消える", pg.evaluate(MV) == "ふゆこ,まさる," and pg.query_selector('.mt-chip[data-n="まさる"]') is None and pg.evaluate("JSON.parse(localStorage.getItem('sc.mates')).join()") == "ふゆこ,まさる,")
+    C(pg, '.mt-chip[data-n="さくら"]'); n3 = pg.evaluate(MV); C(pg, ".mt-chip")
+    check("お試し M2: 3人入ったら、それ以上は入らない", n3 == "ふゆこ,まさる,さくら" and pg.evaluate(MV) == n3 and not errs)
+    C(pg, "[data-act=mates-done]"); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    check("お試し M2: そのまま始められる（同伴者3人）", pg.evaluate("state.draft.mates.map(m=>m.name).join()") == "ふゆこ,まさる,さくら" and not errs)
+    pg.context.close()
+    pg, errs = open_page(b, TL, offline=True, query="?mates=m3")
+    C(pg, "[data-act=open-mates]"); pg.evaluate("window.__el=document.querySelector('#r-mate1')")
+    pg.fill("#r-mate1", "さ"); pg.dispatch_event("#r-mate1", "input")
+    sg = pg.evaluate("[...document.querySelectorAll('.mt-sug button')].map(e=>e.dataset.n)")
+    check("お試し M3: 打ち始めたら、その文字で始まる人だけ（3人まで）。入力欄は描き直さない", sg == ["さくら", "さぶろう"] and pg.evaluate("window.__el===document.querySelector('#r-mate1')"))
+    pg.fill("#r-mate1", "フ"); pg.dispatch_event("#r-mate1", "input")
+    check("お試し M3: すでに入れた人は出ない", pg.evaluate("document.querySelectorAll('.mt-sug button').length") == 0)
+    pg.fill("#r-mate1", "マ"); pg.dispatch_event("#r-mate1", "input"); C(pg, ".mt-sug button")
+    check("お試し M3: カタカナで打っても見つかり、押すとその欄に入る", pg.evaluate(MV) == "ふゆこ,まさる," and not errs)
+    pg.context.close()
+    pg, errs = open_page(b, TL, offline=True, query="?mates=m4")
+    C(pg, "[data-act=open-mates]")
+    check("お試し M4: 人の一覧（えらんだ人にチェック・1/3人）", pg.evaluate("[...document.querySelectorAll('.mp-row.on')].map(e=>e.dataset.n).join()") == "ふゆこ" and "1/3人" in pg.inner_text(".mp-n"))
+    C(pg, '.mp-row[data-n="まさる"]'); C(pg, '.mp-row[data-n="さくら"]'); C(pg, '.mp-row[data-n="はなこ"]')
+    check("お試し M4: 3人まで選べる（4人目は入らない）", pg.evaluate("JSON.parse(localStorage.getItem('sc.mates')).join()") == "ふゆこ,まさる,さくら" and "3/3人" in pg.inner_text(".mp-n"))
+    C(pg, '.mp-row[data-n="ふゆこ"]')
+    check("お試し M4: もう一度押すと外れて、前に詰まる", pg.evaluate("JSON.parse(localStorage.getItem('sc.mates')).join()") == "まさる,さくら,")
+    pg.fill("#mp-q", "サ"); pg.dispatch_event("#mp-q", "input")
+    check("お試し M4: 名前で探せる", pg.evaluate("[...document.querySelectorAll('.mp-row')].filter(e=>!e.hidden).map(e=>e.dataset.n).sort().join()") == "さくら,さぶろう,まさる")
+    pg.fill("#mp-new", "ごんべえ"); C(pg, "[data-act=mate-new]")
+    check("お試し M4: 新しい名前を足せる", pg.evaluate("JSON.parse(localStorage.getItem('sc.mates')).join()") == "まさる,さくら,ごんべえ" and pg.query_selector('.mp-row.on[data-n="ごんべえ"]') is not None and not errs)
+    pg.context.close()
+    pg, errs = open_page(b, {**TL, "sc.mates": []}, offline=True, query="?mates=m5")
+    C(pg, "[data-act=open-mates]")
+    check("お試し M5: 「前回と同じ」に前回の人たち・よく回る人は3人（回数つき）", "ふゆこ・まさる" in pg.inner_text(".mt-last") and pg.evaluate("document.querySelectorAll('.mt-chip').length") == 3 and pg.evaluate("document.querySelector('.mt-chip').dataset.n") == "ふゆこ")
+    C(pg, "[data-act=mate-last]")
+    check("お試し M5: 「前回と同じ」を押すと、前回の人が入る", pg.evaluate(MV) == "ふゆこ,まさる," and pg.query_selector(".mt-last.on") is not None and not errs)
+    pg.context.close()
+    pg, errs = open_page(b, {**TL, "sc.mates": []}, offline=True, query="?mates=m25")
+    C(pg, "[data-act=open-mates]")
+    check("お試し M2＋M5: 「前回と同じ」と、最近の人6人", pg.query_selector(".mt-last") is not None and pg.evaluate("document.querySelectorAll('.mt-chip').length") == 6 and pg.evaluate("localStorage.getItem('sc.try.mates')") == "m25")
+    w = pg.evaluate("[document.querySelector('.mates-sheet').scrollWidth<=375, document.querySelector('.mates-sheet').getBoundingClientRect().top>=0]")
+    check("お試し M2＋M5: シートが画面に収まる", w == [True, True] and not errs)
+    pg.goto(pg.url.split("?")[0] + "?mates=0"); pg.wait_for_timeout(800)
+    check("お試し: ?mates=0 で元に戻る", pg.evaluate("localStorage.getItem('sc.try.mates')") is None and pg.query_selector(".try-link") is None)
+    pg.context.close()
+    for v in ["r1", "r2", "r3"]:
+        for n in [9, 18]:
+            pg, errs = open_page(b, {"sc.v2": 1}, offline=True, query=f"?result={v}&show={n}&game=skins")
+            fit = pg.evaluate("(()=>{ const c=document.querySelector('.grp-card'), r=c.getBoundingClientRect(); return [...c.querySelectorAll('td,.rc-rank>div')].every(e=>{ const q=e.getBoundingClientRect(); return q.left>=r.left-0.5 && q.right<=r.right+0.5; }); })()")
+            if v == "r1":
+                ok = pg.query_selector(".rc-rank") is None and pg.evaluate("document.querySelectorAll('table.v1 .v1c').length") == 4 and pg.evaluate("document.querySelectorAll('table.v1 .mk3').length") == 4 * n and pg.evaluate("[...document.querySelectorAll('table.v1 tr.v1t td b')].map(e=>e.textContent).join()") == pg.evaluate("[...document.querySelectorAll('table.v1 .v1c b')].map(e=>e.textContent).join()") and pg.evaluate("document.querySelectorAll('table.v1 tr.v1s').length") == (2 if n == 18 else 0)
+            elif v == "r2":
+                ok = pg.query_selector(".rc-rank") is None and pg.evaluate("document.querySelectorAll('.rc-sc .rc-rk').length") == 4 * (n // 9) and pg.evaluate("document.querySelectorAll('.rc-sc td.sum small, .rc-sc td.tot small').length") == 4
+            else:
+                ok = pg.evaluate("document.querySelectorAll('.rc-rank.r3>div').length") == 4 and pg.evaluate("document.querySelectorAll('.rc-sc table.half').length") == n // 9
+            check(f"お試し {v.upper()}・{n}H: 見本の結果が出る・表がカードからはみ出さない・ゲームの欄もある", ok and fit and pg.query_selector(".grp-card .rc-skins") is not None and pg.evaluate("state.rounds.length") == 0 and not errs)
+            if v == "r1" and n == 9:
+                C(pg, "[data-act=result-pick]"); one = pg.query_selector(".result-card:not(.grp-card)") is not None and pg.query_selector("[data-act=back-to-input]") is None
+                C(pg, "[data-act=close-result]")
+                check("お試し: 見本の結果は1人ずつにも切りかえられ、編集はできない。閉じると消える（保存しない）", one and pg.query_selector(".result-back") is None and pg.evaluate("state.rounds.length") == 0 and pg.evaluate("localStorage.getItem('sc.rounds')") in (None, "[]") and not errs)
+            pg.context.close()
 
     b.close()
 

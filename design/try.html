@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="color-scheme" content="light">
+<title>GOLF SC. お試しの案</title>
+<style>
+:root{color-scheme:light}
+body{margin:0;background:#F3F5F4;color:#15201B;font-family:system-ui,"Hiragino Sans","Yu Gothic",sans-serif;font-size:16px;line-height:1.7}
+main{max-width:520px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:22px;margin:0 0 4px}
+h2{font-size:18px;margin:28px 0 6px}
+p{margin:6px 0;font-size:15px;color:#48564F}
+.now{background:#FFF4CF;border:1px solid #F0D27A;border-radius:14px;padding:10px 14px;font-weight:700;color:#5A3D00;margin-top:12px}
+a.c{display:block;background:#fff;border:1px solid #DDE3E0;border-radius:16px;padding:12px 14px;margin-top:10px;color:inherit;text-decoration:none}
+a.c b{display:block;font-size:16px}
+a.c span{display:block;font-size:14px;color:#5B6963;line-height:1.5}
+a.c.on{border:2px solid #0E9F62;background:#EEF8F3;padding:11px 13px}
+a.c em{font-style:normal;display:inline-block;margin-left:6px;padding:0 8px;border-radius:999px;background:#0E9F62;color:#fff;font-size:12px;font-weight:700;vertical-align:middle}
+.row{display:flex;gap:8px;margin-top:8px}
+.row a{flex:1;text-align:center;background:#15201B;color:#fff;border-radius:12px;padding:10px 4px;text-decoration:none;font-weight:700;font-size:14px}
+.row a.g{background:#fff;color:#15201B;border:1px solid #DDE3E0}
+.r{background:#fff;border:1px solid #DDE3E0;border-radius:16px;padding:12px 14px;margin-top:10px}
+.r.on{border:2px solid #0E9F62;background:#EEF8F3;padding:11px 13px}
+.r b{display:block}.r span{display:block;font-size:14px;color:#5B6963;line-height:1.5}
+.off{display:block;text-align:center;margin-top:28px;color:#5B6963;font-size:15px}
+</style></head><body><main>
+<h1>お試しの案</h1>
+<p>案を押すと、アプリがその案で開きます。選んだ案は、この端末が覚えています（アプリを開き直しても、そのままです）。</p>
+<div class="now" id="now"></div>
+
+<h2>① 「一緒に回る」の名前の候補</h2>
+<p>案を押す → アプリの「一緒に回る」を押して、試してください。まだ一緒に回った人が少ないときは、見本の名前（はなこ・じろう など）が入ります。</p>
+<div id="mates"></div>
+
+<h2>② 結果のスコア表</h2>
+<p>「9ホールの見本」「18ホールの見本」を押すと、4人の結果の見本が開きます。「画像を保存・送る」も試せます。</p>
+<div id="result"></div>
+
+<a class="off" href="../?mates=0&result=0">お試しをやめて、今の形に戻す</a>
+</main>
+<script>
+var M=[["m25","M2＋M5（おすすめ）","上に「前回と同じ」のボタン。下に、最近いっしょに回った人を6人まで。"],
+["m2","M2　最近の人を6人だけ","入力欄の下に、最近いっしょに回った人のボタン。押すと入ります。"],
+["m5","M5　前回のメンバー＋よく回る3人","上に「前回と同じ」のボタン。下に、よく一緒に回る人を3人。"],
+["m1","M1　候補を出さない","名前の候補は出しません。違う人だけ、打ち直します。"],
+["m3","M3　打ち始めたら3つだけ","文字を打つと、その文字で始まる人を3人まで出します。"],
+["m4","M4　人を選ぶ画面","人の一覧から、チェックで3人まで。上に検索があります。"],
+["0","今の形","iPhone の候補（これまでの全員の名前）が出ます。"]];
+var R=[["r1","R1　縦の表（おすすめ）","ホールが縦、人が横。順位・名前・合計は、人の見出しに入ります。"],
+["r2","R2　横の表の中に順位","今の表のまま、名前の左に順位、合計の下に(+X)。"],
+["r3","R3　順位は小さな2×2の帯","順位の一覧を小さくして、表は今のまま。"],
+["0","今の形","順位の一覧と、スコア表の両方。"]];
+function get(k){ try{ return localStorage.getItem("sc.try."+k)||"0"; }catch(e){ return "0"; } }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+var cm=get("mates"), cr=get("result");
+document.getElementById("now").textContent="いまの設定： 名前の候補＝"+(cm==="0"?"今の形":cm==="m25"?"M2＋M5":cm.toUpperCase())+"　／　結果の表＝"+(cr==="0"?"今の形":cr.toUpperCase());
+document.getElementById("mates").innerHTML=M.map(function(x){ return '<a class="c '+(x[0]===cm?"on":"")+'" href="../?mates='+x[0]+'"><b>'+esc(x[1])+(x[0]===cm?"<em>いま</em>":"")+'</b><span>'+esc(x[2])+'</span></a>'; }).join("");
+document.getElementById("result").innerHTML=R.map(function(x){ var q="../?result="+x[0];
+  return '<div class="r '+(x[0]===cr?"on":"")+'"><b>'+esc(x[1])+'</b><span>'+esc(x[2])+'</span><div class="row"><a href="'+q+'&show=9">9ホールの見本</a><a href="'+q+'&show=18">18ホールの見本</a><a class="g" href="'+q+'&show=9&game=skins">ゲームつき</a></div></div>'; }).join("");
+</script>
+</body></html>

@@ -2072,6 +2072,84 @@ header.top .sync[hidden]{display:none}
 .rc-actions.rc-sub{margin-top:8px}
 .rc-2nd{flex:1;height:50px;min-width:0;padding:0 8px;border-radius:16px;background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.4);font:inherit;font-weight:700;font-size:14px;line-height:1.2;cursor:pointer}
 .rc-close{margin-top:4px;height:44px;background:none;color:#fff;font-weight:700;font-size:15px;opacity:.9}
+
+/* ===== お試しの案（?mates= / ?result=）。決まったら、選ばれなかった分は消す ===== */
+.try-tag{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;background:#FFE9A8;color:#5A3D00;font:700 12px var(--f-body);vertical-align:middle}
+.try-link{display:block;text-align:center;margin-top:12px;font-size:13px;font-weight:700;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.mt-cap{font-size:13px;font-weight:700;color:var(--rec-muted);margin-top:4px}
+.mt-note{font-size:13px;color:var(--rec-muted);opacity:.8}
+.mt-chips{display:flex;flex-wrap:wrap;gap:8px}
+.sheet .mt-chip{height:42px;padding:0 16px;border-radius:999px;font-size:15px;background:var(--rec-surface);display:inline-flex;align-items:center;gap:6px;max-width:100%;overflow:hidden;white-space:nowrap;touch-action:manipulation}
+.sheet .mt-chip small{font:700 13px var(--f-num);color:var(--rec-muted);background:var(--rec-bg);border-radius:999px;padding:1px 7px}
+.sheet .mt-last{height:auto;min-height:56px;display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:8px;text-align:left;padding:8px 14px;border:1px solid var(--turf);background:color-mix(in srgb,var(--turf) 7%,var(--rec-surface));touch-action:manipulation}
+.sheet .mt-last b{grid-column:1;font-size:13px;color:var(--turf)}
+.sheet .mt-last span{grid-column:1;font-size:15px;line-height:1.3;word-break:break-all}
+.sheet .mt-last i{grid-column:2;grid-row:1/3;width:24px;height:24px;border-radius:50%;background:var(--turf);display:flex;align-items:center;justify-content:center}
+.sheet .mt-last.on{border-width:2px;padding:7px 13px}
+.mt-sug{display:flex;flex-direction:column;gap:4px;margin:-2px 40px 2px 0}
+.mt-sug:empty{display:none}
+.sheet .mt-sug button{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-radius:12px;background:color-mix(in srgb,var(--turf) 8%,var(--rec-surface));border-color:color-mix(in srgb,var(--turf) 40%,var(--rec-line));touch-action:manipulation}
+.sheet .mt-sug button small{font-size:13px;font-weight:500;color:var(--rec-muted)}
+.mt-pick .mp-h{display:flex;align-items:center;justify-content:space-between}
+.mt-pick .mp-h p{margin:0}
+.mp-n{font-size:14px;font-weight:700;color:var(--rec-muted)}.mp-n b{font:700 20px var(--f-num);color:var(--turf)}
+.mp-q,.mp-new input{height:46px;border-radius:14px;border:1px solid var(--rec-line);background:var(--rec-bg);color:var(--rec-fg);font:inherit;font-size:16px;padding:0 14px;width:100%;box-sizing:border-box;min-width:0;-webkit-appearance:none;appearance:none}
+.mp-q:focus-visible,.mp-new input:focus-visible{outline:none;border-color:var(--turf);box-shadow:0 0 0 1px var(--turf)}
+.mp-list{display:flex;flex-direction:column;gap:6px;overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:max(110px,min(330px,calc(100dvh - var(--kb,0px) - 300px)));overscroll-behavior:contain}
+.mp-sec{font-size:13px;font-weight:700;color:var(--rec-muted);margin-top:4px}
+.mp-sec[hidden],.mp-row[hidden]{display:none!important}
+.sheet .mp-row{flex:0 0 auto;height:48px;display:flex;align-items:center;gap:10px;text-align:left;padding:0 12px 0 14px;background:var(--rec-surface);touch-action:manipulation}
+.sheet .mp-row span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:16px}
+.sheet .mp-row small{font-size:13px;font-weight:500;color:var(--rec-muted)}
+.mp-ck{flex:0 0 24px;width:24px;height:24px;border-radius:50%;border:2px solid var(--rec-line);display:flex;align-items:center;justify-content:center;box-sizing:border-box}
+.mp-ck svg{opacity:0}
+.sheet .mp-row.on{border:2px solid var(--turf);padding:0 11px 0 13px;background:color-mix(in srgb,var(--turf) 8%,var(--rec-surface))}
+.mp-row.on .mp-ck{background:var(--turf);border-color:var(--turf)}.mp-row.on .mp-ck svg{opacity:1}
+.mp-new{display:flex;gap:8px}
+.sheet .mp-new button{flex:0 0 72px;height:46px}
+/* 結果のお試し。順位の丸 */
+.rc-rk{font-style:normal;width:20px;height:20px;flex:0 0 20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font:700 13px var(--f-num);background:rgba(255,255,255,.2);color:#fff}
+.rc-rk.win{background:#FFD76A;color:#3A2600}
+/* R1: 縦の表 */
+.rc-sc table.v1{background:rgba(255,255,255,.07);border-radius:14px;border-collapse:separate;border-spacing:0}
+.rc-sc table.v1 col.ch{width:30px}.rc-sc table.v1 col.cp{width:30px}
+.rc-sc table.v1 td{height:28px;padding:0;font-size:15px;border-top:1px solid rgba(255,255,255,.08)}
+.rc-sc table.v1 tr.v1head td{border-top:0;vertical-align:bottom}
+.rc-sc table.v1 td.v1h{font-size:14px;font-weight:700;opacity:.85}
+.rc-sc table.v1 td.v1p{font-size:13px;opacity:.6}
+.rc-sc table.v1 tr.v1head td.v1h,.rc-sc table.v1 tr.v1head td.v1p{font-size:10px;letter-spacing:.06em;opacity:.6;padding-bottom:6px}
+.rc-sc table.v1 td.v1c{padding:8px 2px 6px;vertical-align:top;border-left:1px solid rgba(255,255,255,.08)}
+.rc-sc table.v1 td.v1c .rc-rk{display:flex;margin:0 auto 4px}
+.rc-sc table.v1 td.v1c .v1n{display:flex;align-items:center;justify-content:center;min-height:32px;font:700 13px/1.2 var(--f-body);word-break:break-all;overflow:hidden;max-height:32px}
+.rc-sc table.v1 td.v1c b{display:block;font:700 28px/1 var(--f-num);margin-top:4px}
+.rc-sc table.v1 td.v1c small{display:block;font:700 14px/1.2 var(--f-num);opacity:.8}
+.rc-sc table.v1 td.v1c.win{background:rgba(255,215,106,.16)}
+.rc-sc table.v1 td.v1c.win b{color:#FFD76A}
+.rc-sc table.v1 tr:not(.v1head) td:nth-child(n+3){border-left:1px solid rgba(255,255,255,.08)}
+.rc-sc table.v1 .mk3{width:22px;height:22px;font-size:15px}
+.rc-sc table.v1 .mk3.m-eagle,.rc-sc table.v1 .mk3.m-double,.rc-sc table.v1 .mk3.m-hio{width:19px;height:19px;font-size:13px}
+.rc-sc table.v1 tr.v1s td,.rc-sc table.v1 tr.v1t td{background:rgba(255,255,255,.1);font-weight:700}
+.rc-sc table.v1 tr.v1s td.v1h{font-size:10px;letter-spacing:.06em}
+.rc-sc table.v1 tr.v1t td{height:32px}.rc-sc table.v1 tr.v1t td b{font-size:19px}.rc-sc table.v1 tr.v1t td.v1h{font:700 13px var(--f-body)}
+.rc-sc table.v1 td.v1h.hh{color:#3A2600;opacity:1}
+.rc-sc table.v1 tr.v1t td:first-child{border-radius:0 0 0 14px}.rc-sc table.v1 tr.v1t td:last-child{border-radius:0 0 14px 0}
+/* R2: 横の表の中に順位 */
+.rc-sc table.grp.r2 col.lab{width:76px}.rc-sc table.grp.r2.wt col.lab{width:66px}.rc-sc table.grp.r2.wt col.sum{width:28px}.rc-sc table.grp.r2.wt .mk3{width:17px;height:17px;font-size:12px}.rc-sc table.grp.r2.wt .mk3.m-eagle,.rc-sc table.grp.r2.wt .mk3.m-double,.rc-sc table.grp.r2.wt .mk3.m-hio{width:14px;height:14px;font-size:11px}
+.rc-sc table.grp.r2 td.nm{opacity:1}
+.rc-sc table.grp.r2 col.sum{width:30px}.rc-sc table.grp.r2 col.tot{width:32px}
+.rc-sc table.grp.r2 td.nm .nmr{display:flex;align-items:center;gap:4px}
+.rc-sc table.grp.r2 td.nm .rc-rk{width:17px;height:17px;flex:0 0 17px;font-size:12px}
+.rc-sc table.grp.r2 td.nm .nmr>span{font-family:var(--f-body);font-size:11px;line-height:1.15}
+.rc-sc table.grp.r2 td{padding:4px 0}
+.rc-sc table.grp.r2 td.sum small,.rc-sc table.grp.r2 td.tot small{display:block;font-size:11px;opacity:.8;line-height:1}
+.rc-sc table.grp.r2 td.tot{font-size:10px}.rc-sc table.grp.r2 td.tot b{font-size:15px;color:#FFD76A}
+.rc-sc table.grp.r2 tr.h td.tot{font-family:var(--f-body);opacity:.6}
+/* R3: 順位は小さな2×2の帯 */
+.rc-rank.r3{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.rc-rank.r3>div{gap:6px;padding:3px 8px;min-width:0}
+.rc-rank.r3 i{width:18px;height:18px;flex:0 0 18px;font-size:12px}
+.rc-rank.r3 span{font-size:13px}
+.rc-rank.r3 b{font-size:20px}
 </style>
 
 </head>
@@ -2124,6 +2202,14 @@ const cPref = c => (c && (c.pref || (c.holes && c.holes[0] && c.holes[0].pref)))
 const cArea = c => (c && (c.area || (c.holes && c.holes[0] && c.holes[0].area))) || "";
 const presetTaken = pc => state.courses.some(c=>c.presetKey===pc.key || c.name.replace(/\s/g,"").includes(pc.name.replace(/\s/g,"")));
 /* 用意済みコースは、ふだんは出さない（コースは各人が自分で登録する方針。写真読み取りで入れる）。動作確認用に、アドレスの最後に ?presets=1 を付けて開くと出る（?presets=0 で戻る。端末ごとに覚える。テストでは常に出す） */
+/* お試しの切りかえ（決めるまでのあいだ）: アドレスの後ろに ?mates=m1〜m5・m25 / ?result=r1〜r3 を付けると、その案で動く。端末に覚えるので、?mates=0 / ?result=0 で元に戻す。?show=9 / ?show=18 は見本の4人の結果を開く */
+const TRY = (()=>{ const o={mates:"",result:"",show:"",game:""}, ok={mates:["m1","m2","m3","m4","m5","m25"], result:["r1","r2","r3"]};
+  try{ const q=new URLSearchParams(location.search);
+    for(const k of ["mates","result"]){ const v=q.get(k); if(v!=null){ if(ok[k].includes(v.toLowerCase())) localStorage.setItem("sc.try."+k, v.toLowerCase()); else localStorage.removeItem("sc.try."+k); }
+      const cur=localStorage.getItem("sc.try."+k)||""; o[k]=ok[k].includes(cur)?cur:""; }
+    o.show=["9","18"].includes(q.get("show"))?q.get("show"):""; o.game=q.get("game")==="skins"?"skins":""; }catch(e){}
+  return o; })();
+const TRY_NAMES = ["はなこ","じろう","さぶろう","ゆきこ","けんた","みさき","だいき","あやか"];
 const SHOW_PRESETS = (()=>{ try{ if(/[?&]presets=1/.test(location.search)) localStorage.setItem("sc.presets","1"); if(/[?&]presets=0/.test(location.search)) localStorage.removeItem("sc.presets"); return localStorage.getItem("sc.presets")==="1"; }catch(e){ return false; } })();
 /* 選べるコース = 登録済み + （確認用のときだけ）まだ追加していない用意済みコース（id は "preset:キー"） */
 function pickableCourses(){
@@ -2190,7 +2276,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-20-0900";
+const BUILD = "2026-11-21-0900";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2584,7 +2670,7 @@ function resultOverlay(r){
     ${(state.resultGroup||[]).length>1?(()=>{ const g=state.resultGroup, nm=g.map(x=>x.player);
       return `<div class="rc-who" role="group" aria-label="だれのリザルト"><button data-act="result-all" aria-pressed="${!!state.resultAll}">みんな</button>${g.map((x,k)=>`<button data-act="result-pick" data-id="${esc(x.id)}" aria-pressed="${!state.resultAll&&x.id===r.id}">${esc(dupLabel(nm,k))}</button>`).join("")}</div>`; })():""}
     <div class="rc-actions"><button class="rc-save" data-act="save-card">画像を保存・送る</button></div>
-    <div class="rc-actions rc-sub">${(state.resultGroup||[]).length>1?`<button class="rc-2nd" data-act="save-all">全員分をまとめて保存（${state.resultGroup.length+1}枚）</button>`:""}${state.resultAll&&(state.resultGroup||[]).length>1?"":`<button class="rc-2nd" data-act="back-to-input">スコア入力に戻る</button>`}</div>
+    <div class="rc-actions rc-sub">${(state.resultGroup||[]).length>1?`<button class="rc-2nd" data-act="save-all">全員分をまとめて保存（${state.resultGroup.length+1}枚）</button>`:""}${(state.resultAll&&(state.resultGroup||[]).length>1)||state.resultTry?"":`<button class="rc-2nd" data-act="back-to-input">スコア入力に戻る</button>`}</div>
     <button class="rc-close" data-act="close-result">閉じる</button>
   </div></div>`;
 }
@@ -2595,20 +2681,43 @@ function groupCard(g){
   const r0=g[0], [y,m,d]=r0.date.split("-"), N=r0.holes.length, nm=g.map(x=>x.player);
   const tots=g.map(r=>roundTotals(r)), order=g.map((r,k)=>k).sort((a,b)=>tots[a].score-tots[b].score || a-b);
   const rank=k=>1+tots.filter(t=>t.score<tots[k].score).length;
-  const tables=[]; for(let i=0;i<N;i+=9){ const idx=Array.from({length:Math.min(9,N-i)},(_,j)=>i+j), lab=N>9?(i?"IN":"OUT"):"";
-    tables.push(`<table class="half grp"><colgroup><col class="lab">${idx.map(()=>"<col>").join("")}<col class="sum"></colgroup>
-      <tr class="h"><td class="lab">${lab}</td>${idx.map(h=>`<td class="${isPeoria(state.resultGame)&&state.resultEx&&(state.resultEx.hidden||[]).includes(h)?"hh":""}">${holeNo(r0,h)}</td>`).join("")}<td class="sum">計</td></tr>
-      <tr class="p"><td class="lab">PAR</td>${idx.map(h=>`<td>${r0.holes[h].par}</td>`).join("")}<td class="sum">${sum(idx,h=>r0.holes[h].par)}</td></tr>
-      ${order.map(k=>`<tr><td class="lab nm">${esc(dupLabel(nm,k))}</td>${idx.map(h=>`<td>${mark(g[k].holes[h])}</td>`).join("")}<td class="sum"><b>${sum(idx,h=>g[k].holes[h].strokes)}</b></td></tr>`).join("")}</table>`); }
-  return `<div class="result-card grp-card"><svg class="rc-rings" viewBox="0 0 320 280" aria-hidden="true">${Array.from({length:10},(_,k)=>`<ellipse cx="160" cy="140" rx="${16+k*16}" ry="${14+k*14}" fill="none" stroke="rgba(255,255,255,.13)" stroke-width="1"/>`).join("")}</svg><div class="rc-in">
-    <div class="rc-top"><div><div class="k">ROUND COMPLETE</div><div class="n">${g.length}人のスコア</div><div class="c">${esc(r0.courseName)}・${+m}/${+d}</div></div></div>
-    <div class="rc-rank">${order.map(k=>`<div class="${rank(k)===1?"win":""}"><i>${rank(k)}</i><span>${esc(dupLabel(nm,k))}</span><b>${tots[k].score}</b><small>${toPar(tots[k].diff)}</small></div>`).join("")}</div>
-    ${state.resultGame==="skins"?(()=>{ const sk=skinsCalc(g.map(r=>r.holes.map(h=>h.strokes)), N, !!state.resultCarry), mx=Math.max(...sk.won);
+  const rv=TRY.result, hid=h=>isPeoria(state.resultGame)&&state.resultEx&&(state.resultEx.hidden||[]).includes(h)?"hh":"";
+  const rk=k=>`<i class="rc-rk ${rank(k)===1?"win":""}">${rank(k)}</i>`;
+  const tables=[];
+  if(rv==="r1"){   // お試し R1: 縦の表（ホールが縦・人が横）。順位・名前・合計は人の見出しに入れる
+    const rows=[];
+    for(let i=0;i<N;i+=9){ const idx=Array.from({length:Math.min(9,N-i)},(_,j)=>i+j);
+      idx.forEach(h=>rows.push(`<tr><td class="v1h ${hid(h)}">${holeNo(r0,h)}</td><td class="v1p">${r0.holes[h].par}</td>${order.map(k=>`<td>${mark(g[k].holes[h])}</td>`).join("")}</tr>`));
+      if(N>9) rows.push(`<tr class="v1s"><td class="v1h">${i?"IN":"OUT"}</td><td class="v1p">${sum(idx,h=>r0.holes[h].par)}</td>${order.map(k=>`<td>${sum(idx,h=>g[k].holes[h].strokes)}</td>`).join("")}</tr>`); }
+    tables.push(`<table class="v1"><colgroup><col class="ch"><col class="cp">${order.map(()=>"<col>").join("")}</colgroup>
+      <tr class="v1head"><td class="v1h">H</td><td class="v1p">PAR</td>${order.map(k=>`<td class="v1c ${rank(k)===1?"win":""}">${rk(k)}<span class="v1n">${esc(dupLabel(nm,k))}</span><b>${tots[k].score}</b><small>${toPar(tots[k].diff)}</small></td>`).join("")}</tr>
+      ${rows.join("")}
+      <tr class="v1t"><td class="v1h">計</td><td class="v1p">${sum(r0.holes,h=>h.par)}</td>${order.map(k=>`<td><b>${tots[k].score}</b></td>`).join("")}</tr></table>`);
+  } else for(let i=0;i<N;i+=9){ const idx=Array.from({length:Math.min(9,N-i)},(_,j)=>i+j), lab=N>9?(i?"IN":"OUT"):"", lastT=i+9>=N, tot=rv==="r2"&&N>9&&lastT;
+    tables.push(`<table class="half grp ${rv==="r2"?"r2":""} ${tot?"wt":""}"><colgroup><col class="lab">${idx.map(()=>"<col>").join("")}<col class="sum">${tot?`<col class="tot">`:""}</colgroup>
+      <tr class="h"><td class="lab">${lab}</td>${idx.map(h=>`<td class="${hid(h)}">${holeNo(r0,h)}</td>`).join("")}<td class="sum">計</td>${tot?`<td class="tot">合計</td>`:""}</tr>
+      <tr class="p"><td class="lab">PAR</td>${idx.map(h=>`<td>${r0.holes[h].par}</td>`).join("")}<td class="sum">${sum(idx,h=>r0.holes[h].par)}</td>${tot?`<td class="tot">${sum(r0.holes,h=>h.par)}</td>`:""}</tr>
+      ${order.map(k=>`<tr><td class="lab nm">${rv==="r2"?`<span class="nmr">${rk(k)}<span>${esc(dupLabel(nm,k))}</span></span>`:esc(dupLabel(nm,k))}</td>${idx.map(h=>`<td>${mark(g[k].holes[h])}</td>`).join("")}<td class="sum"><b>${sum(idx,h=>g[k].holes[h].strokes)}</b>${rv==="r2"&&N<=9?`<small>${toPar(tots[k].diff)}</small>`:""}</td>${tot?`<td class="tot"><b>${tots[k].score}</b><small>${toPar(tots[k].diff)}</small></td>`:""}</tr>`).join("")}</table>`); }
+  const rankList = rv==="r1"||rv==="r2" ? "" : rv==="r3"
+    ? `<div class="rc-rank r3">${order.map(k=>`<div class="${rank(k)===1?"win":""}"><i>${rank(k)}</i><span>${esc(dupLabel(nm,k))}</span><b>${tots[k].score}</b></div>`).join("")}</div>`
+    : `<div class="rc-rank">${order.map(k=>`<div class="${rank(k)===1?"win":""}"><i>${rank(k)}</i><span>${esc(dupLabel(nm,k))}</span><b>${tots[k].score}</b><small>${toPar(tots[k].diff)}</small></div>`).join("")}</div>`;
+  const gameBox = `${state.resultGame==="skins"?(()=>{ const sk=skinsCalc(g.map(r=>r.holes.map(h=>h.strokes)), N, !!state.resultCarry), mx=Math.max(...sk.won);
       return `<div class="rc-skins"><div class="rs-h"><span>SKINS</span>スキンズ${sk.carry?`<em>持ち越し${sk.carry}枚は決着なし</em>`:""}</div>${order.map(k=>`<div class="rs-row ${mx>0&&sk.won[k]===mx?"top":""}"><span class="rs-n">${esc(dupLabel(nm,k))}</span><span class="rs-c">${Array.from({length:Math.min(sk.won[k],6)},()=>coinSVG(24)).join("")}${sk.won[k]>6?"…":""}</span><b><i class="rs-num">${sk.won[k]}</i></b></div>`).join("")}</div>`; })():""}
-    ${state.resultGame && state.resultGame!=="skins" ? gameResult(state.resultGame, g.map(r=>r.holes.map(h=>h.strokes)), r0.holes.map(h=>h.par), N, g.map((x,k)=>esc(dupLabel(nm,k))), order, state.resultEx||{}) : ""}
-    <div class="rc-sc">${tables.join("")}</div>
+    ${state.resultGame && state.resultGame!=="skins" ? gameResult(state.resultGame, g.map(r=>r.holes.map(h=>h.strokes)), r0.holes.map(h=>h.par), N, g.map((x,k)=>esc(dupLabel(nm,k))), order, state.resultEx||{}) : ""}`;
+  const scBox = `<div class="rc-sc">${tables.join("")}</div>`, tblFirst = rv==="r1"||rv==="r2";   // お試し R1・R2 は、順位が表の中にあるので、表を先に
+  return `<div class="result-card grp-card ${rv?"try-"+rv:""}"><svg class="rc-rings" viewBox="0 0 320 280" aria-hidden="true">${Array.from({length:10},(_,k)=>`<ellipse cx="160" cy="140" rx="${16+k*16}" ry="${14+k*14}" fill="none" stroke="rgba(255,255,255,.13)" stroke-width="1"/>`).join("")}</svg><div class="rc-in">
+    <div class="rc-top"><div><div class="k">ROUND COMPLETE</div><div class="n">${g.length}人のスコア</div><div class="c">${esc(r0.courseName)}・${+m}/${+d}</div></div></div>
+    ${rankList}
+    ${tblFirst?scBox+gameBox:gameBox+scBox}
     <div class="rc-brand"><span class="rc-logo"><img src="mark.png" alt=""><span><b>GOLF SC.</b><small>SHORT COURSE SCORECARD</small></span></span></div>
   </div></div>`;
+}
+/* お試し: ?show=9 / ?show=18 で、見本の4人の結果を開く（保存はしない） */
+function tryShow(){
+  const N=+TRY.show, P9=[3,3,3,4,3,3,4,3,3], S=[[3,3,5,5,4,4,5,4,4],[4,4,3,4,3,5,5,2,3],[3,5,2,6,4,3,4,4,4],[3,3,4,3,3,4,5,5,4]], S2=[[4,3,3,5,3,4,6,3,2],[3,4,4,4,5,3,4,3,4],[5,3,3,4,3,2,5,4,3],[3,4,6,5,3,3,4,3,4]];
+  const rs=["たろう","はなこ","じろう","ながいなまえさん"].map((n,k)=>({ id:"try"+k, card:true, player:n, courseId:"try", courseName:"見本のコース", date:today(), createdAt:k,
+    holes:Array.from({length:N},(_,i)=>({par:P9[i%9], strokes:(i<9?S:S2)[k][i%9], putts:0, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null})) }));
+  state.result=rs[0]; state.resultGroup=rs; state.resultAll=true; state.resultGame=TRY.game||null; state.resultCarry=false; state.resultEx={medals:{},pins:{},hidden:null}; state.resultTry=true;
 }
 const after = {};
 
@@ -2638,8 +2747,51 @@ function calSheet(){
     <div class="cal-f"><button data-act="cal-today">今日</button><button data-act="cal-close">閉じる</button></div></div></div>`;
 }
 function matesSheet(){
-  const m=matesList();
-  return `<div class="sheet-back" data-act="mates-done"><div class="sheet mates-sheet" data-stop="1"><p>一緒に回る人</p><div class="mates">${[0,1,2].map(i=>`<span class="mate-in"><input id="r-mate${i}" list="plist" value="${esc(m[i])}" placeholder="${i+2}人目" aria-label="${i+2}人目の名前" autocomplete="off"><button data-act="mate-clear" data-i="${i}" aria-label="${i+2}人目を消す">×</button></span>`).join("")}</div><button class="ds-go" data-act="mates-done">完了</button></div></div>`;
+  const m=matesList(), v=TRY.mates, tag=v?`<small class="try-tag">お試し ${v==="m25"?"M2＋M5":v.toUpperCase()}</small>`:"";
+  if(v==="m4") return matesPick(m, tag);
+  const ppl=v?matePeople():[], has=n=>m.some(x=>x.trim()===n), smp=ppl.some(x=>x.sample)?`<div class="mt-note">※ お試し用の名前が入っています</div>`:"";
+  const chip=(x,cnt)=>`<button class="mt-chip" data-act="mate-add" data-n="${esc(x.name)}">${esc(x.name)}${cnt?`<small>${x.n}</small>`:""}</button>`;
+  let top="", bottom="";
+  if(v==="m5"||v==="m25"){ const last=lastMates(), same=last.length && m.map(x=>x.trim()).filter(Boolean).join("\n")===last.join("\n");
+    if(last.length) top=`<button class="mt-last ${same?"on":""}" data-act="mate-last" aria-pressed="${!!same}"><b>前回と同じ</b><span>${esc(last.join("・"))}</span>${same?`<i>${CHECK}</i>`:""}</button>`; }
+  if(v==="m2"||v==="m25"){ const l=ppl.filter(x=>!has(x.name)).sort((a,b)=>b.t.localeCompare(a.t)).slice(0,6);
+    if(l.length) bottom=`<div class="mt-cap">最近いっしょに回った人（押すと入ります）</div><div class="mt-chips">${l.map(x=>chip(x,false)).join("")}</div>${smp}`; }
+  if(v==="m5"){ const l=ppl.filter(x=>!has(x.name)).sort(byFreq).slice(0,3);
+    if(l.length) bottom=`<div class="mt-cap">よく一緒に回る人（押すと入ります）</div><div class="mt-chips">${l.map(x=>chip(x,true)).join("")}</div>${smp}`; }
+  return `<div class="sheet-back" data-act="mates-done"><div class="sheet mates-sheet" data-stop="1"><p>一緒に回る人${tag}</p>${top}<div class="mates">${[0,1,2].map(i=>`<span class="mate-in"><input id="r-mate${i}" ${v?"":`list="plist"`} value="${esc(m[i])}" placeholder="${i+2}人目" aria-label="${i+2}人目の名前" autocomplete="off"><button data-act="mate-clear" data-i="${i}" aria-label="${i+2}人目を消す">×</button></span>${v==="m3"?`<div class="mt-sug" data-i="${i}"></div>`:""}`).join("")}</div>${bottom}<button class="ds-go" data-act="mates-done">完了</button></div></div>`;
+}
+/* お試し M4: 人を選ぶ画面（検索＋チェックで3人まで） */
+function matesPick(m, tag){
+  const sel=m.map(x=>x.trim()).filter(Boolean), ppl=matePeople(), known=new Set(ppl.map(x=>x.name));
+  const top=[...ppl].sort(byFreq).slice(0,5), rest=ppl.filter(x=>!top.includes(x)).sort((a,b)=>a.name.localeCompare(b.name,"ja"));
+  const row=(n,cnt)=>`<button class="mp-row ${sel.includes(n)?"on":""}" data-act="mate-tog" data-n="${esc(n)}" aria-pressed="${sel.includes(n)}"><span>${esc(n)}</span>${cnt?`<small>${cnt}回</small>`:""}<i class="mp-ck">${CHECK}</i></button>`;
+  const extra=[...new Set(sel)].filter(n=>!known.has(n));
+  return `<div class="sheet-back" data-act="mates-done"><div class="sheet mates-sheet mt-pick" data-stop="1"><div class="mp-h"><p>一緒に回る人${tag}</p><span class="mp-n"><b>${sel.length}</b>/3人</span></div>
+    <input id="mp-q" class="mp-q" type="search" placeholder="名前で探す" aria-label="名前で探す" autocomplete="off" value="${esc(state.mq||"")}">
+    <div class="mp-list">${extra.length?`<div class="mp-sec">えらんだ人</div>${extra.map(n=>row(n,0)).join("")}`:""}
+      ${top.length?`<div class="mp-sec">よく回る人</div>${top.map(x=>row(x.name,x.n)).join("")}`:""}
+      ${rest.length?`<div class="mp-sec">ほかの人（あいうえお順）</div>${rest.map(x=>row(x.name,x.n)).join("")}`:""}
+      ${ppl.some(x=>x.sample)?`<div class="mt-note">※ お試し用の名前が入っています</div>`:""}</div>
+    <div class="mp-new"><input id="mp-new" placeholder="＋ 新しい名前を入れる" aria-label="新しい名前" autocomplete="off"><button data-act="mate-new">追加</button></div>
+    <button class="ds-go" data-act="mates-done">完了</button></div></div>`;
+}
+const byFreq = (a,b)=>(a.sample?1:0)-(b.sample?1:0) || b.n-a.n || b.t.localeCompare(a.t);   // よく回る順（見本の名前は、本当の人のあと）
+const kanaKey = s=>String(s||"").trim().replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-96)).toLowerCase();
+/* これまで一緒に回った人（自分以外）。n=回数、t=いちばん最近の日。お試しの案で人が少ないときは、見本の名前を足す */
+function matePeople(){
+  const meN=String(state.sp!=null?state.sp:LS.get("sc.player","")).trim(), mp=new Map();
+  for(const r of state.rounds){ if(!r.player || r.player===meN) continue; const t=(r.date||"")+"|"+String(r.createdAt||0).padStart(15,"0"), o=mp.get(r.player)||{name:r.player,n:0,t:""}; o.n++; if(t>o.t) o.t=t; mp.set(r.player,o); }
+  const list=[...mp.values()];
+  if(TRY.mates && list.length<6) TRY_NAMES.forEach((n,i)=>{ if(list.length<8 && n!==meN && !mp.has(n)) list.push({name:n, n:Math.max(1,12-i*2), t:"0000|"+(9-i), sample:true}); });
+  return list;
+}
+/* 前回いっしょに回った人たち（自分のいちばん新しいラウンドと、同じ日・同じコース・同じときに保存された人） */
+function lastMates(){
+  const meN=String(state.sp!=null?state.sp:LS.get("sc.player","")).trim(), key=r=>(r.date||"")+"|"+String(r.createdAt||0).padStart(15,"0");
+  const mine=state.rounds.filter(r=>r.player===meN).sort((a,b)=>key(b).localeCompare(key(a)))[0];
+  const g=mine?state.rounds.filter(r=>r.id!==mine.id && r.player && r.date===mine.date && r.courseId===mine.courseId && Math.abs((r.createdAt||0)-(mine.createdAt||0))<60000).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)).map(r=>r.player).slice(0,3):[];
+  if(g.length) return g;
+  return TRY.mates ? matePeople().filter(x=>x.sample).slice(0,3).map(x=>x.name) : [];
 }
 function matesList(){ const m=state.mates||LS.get("sc.mates",[]); return [0,1,2].map(i=>String((Array.isArray(m)?m[i]:"")||"")); }
 function coursePickField(){
@@ -2704,6 +2856,7 @@ function viewRecord(){
       </div>
       <div class="err" id="r-err"></div>
       <button class="sl-go" data-act="start">始める <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      ${TRY.mates||TRY.result?`<a class="try-link" href="design/try.html">お試し中（${[TRY.mates&&(TRY.mates==="m25"?"M2＋M5":TRY.mates.toUpperCase()), TRY.result&&TRY.result.toUpperCase()].filter(Boolean).join("・")}）　ほかの案を見る ›</a>`:""}
     </div>${state.sheet==="pick"?coursePickSheet():""}${state.sheet==="game"?gameSheet():""}${state.matesOpen?matesSheet():""}${state.calOpen?calSheet():""}`;
   }
   return viewRecordDraft(d);
@@ -3011,7 +3164,13 @@ function fieldsSheet(){
 after.record = () => {
   const rp=$("#r-player"); if(rp) rp.oninput=()=>{ state.sp=rp.value; };
   if(!state.draft && !state.cdraft && state.tab==="record" && !pickableCourses().length) ocrCheck();   // コースがないときの案内に「写真から入れる」を出せるか調べる
-  [0,1,2].forEach(i=>{ const el=$("#r-mate"+i); if(el) el.oninput=()=>{ state.mates=[0,1,2].map(j=>($("#r-mate"+j)||{}).value||""); }; });
+  [0,1,2].forEach(i=>{ const el=$("#r-mate"+i); if(el) el.oninput=()=>{ state.mates=[0,1,2].map(j=>($("#r-mate"+j)||{}).value||"");
+    if(TRY.mates==="m3"){   // お試し M3: 打ち始めたら、その文字で始まる人を3人まで（描き直すとキーボードが閉じるので、ここだけ書きかえる）
+      const q=kanaKey(el.value), oth=state.mates.filter((_,j)=>j!==i).map(x=>x.trim()), l=q?matePeople().filter(x=>kanaKey(x.name).startsWith(q) && x.name!==el.value.trim() && !oth.includes(x.name)).sort(byFreq).slice(0,3):[];
+      document.querySelectorAll(".mt-sug").forEach(e=>{ e.innerHTML = +e.dataset.i===i ? l.map(x=>`<button data-act="mate-set" data-i="${i}" data-n="${esc(x.name)}"><b>${esc(x.name)}</b><small>${x.n}回いっしょ</small></button>`).join("") : ""; }); }
+  }; });
+  { const q=$("#mp-q"), ls=$(".mp-list"); if(q && ls){ const f=()=>{ state.mq=q.value; const k=kanaKey(q.value); ls.querySelectorAll(".mp-row").forEach(e=>{ e.hidden = !!k && !kanaKey(e.dataset.n).includes(k); }); ls.querySelectorAll(".mp-sec").forEach(e=>{ e.hidden=!!k; }); };
+      q.oninput=f; f(); if(state.mpScroll) ls.scrollTop=state.mpScroll; } }
   cardAfter();
   const rc=$("#r-course"), gw=$("#r-gwrap");
   if(rc && gw){ const upd=()=>{ const g=courseGreens(pickableCourses().find(x=>x.id===rc.value)); gw.hidden=!g; if(g) $("#r-green").innerHTML=g.map((n,i)=>`<option value="${i}">${esc(n)}</option>`).join(""); }; rc.addEventListener("change",upd); upd(); }
@@ -3426,7 +3585,7 @@ async function shotCard(card){
     onclone: doc => { const st=doc.createElement("style"); st.textContent="*,*::before,*::after{animation:none!important;transition:none!important;opacity:1}"
         +".result-card{border-radius:0!important;box-shadow:none!important}"
         // html2canvas は Barlow Condensed の数字を約1.7px下・少し左に描くので、記号の中の数字だけ逆向きに寄せて真ん中に見せる
-        +".rc-sc .mk3,.rc-rank i{box-sizing:border-box!important;padding:0 0 3px 1.5px!important}"; doc.head.appendChild(st);
+        +".rc-sc .mk3,.rc-rank i,.rc-rk{box-sizing:border-box!important;padding:0 0 3px 1.5px!important}"; doc.head.appendChild(st);
       doc.querySelectorAll(".result-card,.result-card *").forEach(el=>{ el.style.animation="none"; }); // キラキラは同じ位置のまま止めて写す
       // 字間（letter-spacing）の広い英字の小さな文字（SHORT COURSE SCORECARD など）は、html2canvas が1文字ずつ置くときにずれることがあるので、1文字ずつの箱に分けて、同じ間隔で並べる
       doc.querySelectorAll(".result-card *").forEach(el=>{ const cs=doc.defaultView.getComputedStyle(el), fs=parseFloat(cs.fontSize), ls=parseFloat(cs.letterSpacing); if(!(ls>0) || ls/fs<0.1) return;
@@ -3742,7 +3901,7 @@ document.addEventListener("click", async ev => {
       state.hole=r.holes.length-1; state.tab="record"; LS.set("sc.tab","record"); saveDraft(); render(); break;
     }
     case "trend-mode": state.trendTotal = b.dataset.v==="total"; LS.set("sc.trendTotal", state.trendTotal); render(); break;
-    case "close-result": state.result=null; state.resultGroup=null; state.resultAll=false; state.resultGame=null; render(); break;
+    case "close-result": state.resultTry=false; state.result=null; state.resultGroup=null; state.resultAll=false; state.resultGame=null; render(); break;
     case "toggle-round": state.openRound = state.openRound===b.dataset.id ? null : b.dataset.id; state.confirm=null; render(); break;
     case "stat-tab": { const tb=$(".stat-tabs"), y0=tb?tb.getBoundingClientRect().top:0; state.statTab=b.dataset.v; LS.set("sc.statTab",b.dataset.v); state.trendSel=null; render();
       const t2=$(".stat-tabs"); if(t2) window.scrollBy(0, t2.getBoundingClientRect().top-y0); break; } // タブの位置を動かさない
@@ -3814,7 +3973,7 @@ document.addEventListener("click", async ev => {
     case "cal-today": state.sd=today(); state.calOpen=false; render(); break;
     case "cal-close": state.calOpen=false; render(); break;
     case "open-mates": state.mates=matesList(); state.matesOpen=true; render(); break;
-    case "mates-done": { state.matesOpen=false; LS.set("sc.mates", matesList()); render(); break; }
+    case "mates-done": { state.matesOpen=false; state.mq=""; state.mpScroll=0; LS.set("sc.mates", matesList()); render(); break; }
     case "pick-game": { const k=b.dataset.v, cnt=1+(state.mates||[]).filter(x=>String(x||"").trim()).length;
       if(!gameFits(k,cnt)){ toast(`${GAMES[k].name}は${GAMES[k].n.replace("のみ","")}で遊ぶゲームです`); break; }
       if(k==="ghost" && !ghostFor(state.pick,(state.sp||LS.get("sc.player","")).trim())){ toast("このコースの過去の記録がないので、ゴーストはまだ選べません"); break; }
@@ -3848,6 +4007,14 @@ document.addEventListener("click", async ev => {
     case "close-pick": state.sheet=null; state.pickAdd=false; render(); break;
     case "open-fields": state.sheet="fields"; render(); break;
     case "close-sheet": { const h0=state.draft&&state.draft.holes[state.hole]; if(h0) h0.clubAuto=false; state.sheet=null; state.clubFor=null; saveDraft(); render(); break; }
+    case "mate-add": case "mate-set": case "mate-tog": case "mate-new": case "mate-last": {
+      let v=matesList(); const act=b.dataset.act, n=String(act==="mate-new"?(($("#mp-new")||{}).value||""):(b.dataset.n||"")).trim(), ls=$(".mp-list"); state.mpScroll=ls?ls.scrollTop:0;
+      if(act==="mate-last"){ const l=lastMates(); v=[0,1,2].map(i=>l[i]||""); }
+      else if(!n){ break; }
+      else if(act==="mate-set"){ v[+b.dataset.i]=n; }
+      else if((act==="mate-tog"||act==="mate-new") && v.some(x=>x.trim()===n)){ if(act==="mate-tog"){ const l=v.map(x=>x.trim()).filter(x=>x && x!==n); v=[0,1,2].map(i=>l[i]||""); } }
+      else { const i=v.findIndex(x=>!x.trim()); if(i<0){ toast("一緒に回れるのは3人までです"); break; } v[i]=n; }
+      state.mates=v; LS.set("sc.mates",v); render(); break; }
     case "mate-clear": { const v=matesList(); v[+b.dataset.i]=""; state.mates=v; LS.set("sc.mates",v); render(); break; }
     // 同伴者の打数: 枠をタップすると大きな数字キーが出る。押すと次の人へ（最後の人で閉じる）
     case "open-holes": state.holesSheet=true; render(); break;
@@ -4026,6 +4193,7 @@ if(state.draft){ const i=state.draft.holes.findIndex(x=>!sOf(x)); state.hole = i
   document.addEventListener("touchmove",e=>{ if(st && e.cancelable) e.preventDefault(); },{passive:false});
   document.addEventListener("contextmenu",e=>{ if(e.target.closest&&e.target.closest(".fc")) e.preventDefault(); });
 })();
+if(TRY.show) tryShow();
 render();
 connect();
 })();
