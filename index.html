@@ -1245,21 +1245,6 @@ input,select,textarea{font-size:max(16px,1em)}
 /* 開始画面: ゲームのボタンが上の日付に近すぎたので間をあける */
 .lab-row{margin-top:10px;margin-bottom:4px}
 /* 開始画面を iPhone のアプリ表示（SE）でも下のタブに隠れず収める */
-.start-panel{padding:12px 14px}
-.start-panel h2{font-size:16px}
-.start-panel .im-seg{margin:6px 0 8px}
-.start-panel .im-seg button{padding:6px 6px;font-size:13px;gap:1px}
-.start-panel .im-seg small{font-size:10px}
-.start-panel .field{gap:3px}
-.start-panel .start-row input{height:40px;padding:6px 10px}
-.start-panel .lab-row{margin-top:8px;margin-bottom:3px}
-.start-panel .mates{gap:5px}
-.start-panel .mates .mate-in input{height:36px;padding:5px 10px}
-.start-panel .mate-in button{flex-basis:30px;width:30px;height:30px}
-.start-panel .cp-field{min-height:50px;padding:5px 14px}
-.start-panel .cp-field span{gap:0;line-height:1.2}.start-panel .cp-field{min-height:46px;padding:3px 14px}.start-panel .cp-field b{font-size:15px}
-.start-panel .field+.field,.start-panel .row+.field,.start-panel .field+.err{margin-top:6px}
-.start-panel [data-act=start]{height:46px;margin-top:8px!important}
 
 
 
@@ -1621,8 +1606,6 @@ input,select,textarea{font-size:max(16px,1em)}
 .game-sheet .gm-rule{font-size:13px!important;height:28px!important}
 
 
-.start-panel .im-seg button{padding-top:5px;padding-bottom:4px}
-.start-panel .lab-row{margin-top:7px}
 .sr-ex span{white-space:nowrap}
 nav.tabs button{font-size:12px!important}
 /* ---- 入力の作り直し（2026-10-27）: 打数・パットは数字を1タップ、方向は十字キー、ゲームの入力は入力欄の中 ---- */
@@ -2044,6 +2027,30 @@ header.top .sync[hidden]{display:none}
 /* 記録画面の左上の×: 歯車・スコアカードのボタンと同じ46pxの丸・28pxの絵にして、はっきりさせる */
 .rec2 .rec-top>.icon-btn[data-act="ask-discard"]{width:46px;height:46px;flex:0 0 46px}
 .rec2 .rec-top>.icon-btn[data-act="ask-discard"] svg{width:28px;height:28px;stroke-width:1.7}
+/* ラウンドを始める画面（2026-11-18: 設定アプリ風のリスト。A1案） */
+.start-list{padding:2px 0 0}
+.sl-h{margin:2px 2px 10px;font-size:25px;font-weight:900;letter-spacing:.01em}
+.sl-seg{display:grid;grid-template-columns:1fr 1fr;background:color-mix(in srgb,var(--fg) 9%,var(--bg));border-radius:12px;padding:3px;margin-bottom:12px}
+.sl-seg button{border:0;background:transparent;height:38px;border-radius:10px;font:inherit;font-weight:700;font-size:14px;color:var(--muted);cursor:pointer;touch-action:manipulation}
+.sl-seg button[aria-pressed="true"]{background:var(--paper);color:var(--fg);box-shadow:0 1px 4px rgba(0,0,0,.14)}
+.sl-group{background:var(--paper);border-radius:16px;border:1px solid var(--line);overflow:hidden;margin-bottom:10px}
+.sl-row{display:flex;align-items:center;gap:10px;padding:0 14px;min-height:48px;margin:0;border:0;border-top:1px solid var(--line);border-radius:0;background:transparent;width:100%;text-align:left;font:inherit;color:var(--fg);cursor:pointer;touch-action:manipulation}
+.sl-row:first-child{border-top:0}
+.sl-l{flex:0 0 auto;white-space:nowrap;font-size:14px;font-weight:700;color:var(--muted)}
+.sl-v{flex:1;min-width:0;text-align:right;font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sl-v.sl-none{color:var(--muted);opacity:.75;font-weight:500}
+.sl-v small{display:block;font-size:13px;color:var(--muted);font-weight:500;overflow:hidden;text-overflow:ellipsis}
+.sl-row>i{font-style:normal;color:var(--muted);font-size:20px;line-height:1;flex:0 0 auto}
+.sl-in{flex:1;min-width:0;height:46px;border:0;border-radius:0;background:transparent;text-align:right;font:inherit;font-size:16px;font-weight:700;color:var(--fg);padding:0;-webkit-appearance:none;appearance:none;outline:none;box-shadow:none}
+.sl-in::-webkit-date-and-time-value{text-align:right}
+.sl-in::placeholder{color:var(--muted);opacity:.6;font-weight:500}
+.sl-go{width:100%;height:54px;border:0;border-radius:18px;background:var(--fg);color:var(--bg);font:inherit;font-weight:900;font-size:17px;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;cursor:pointer;touch-action:manipulation}
+.sl-go svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.start-list .err{min-height:0;margin:4px 4px 0}
+.sheet-back.top{align-items:flex-start}
+.sheet.mates-sheet{border-radius:0 0 20px 20px;border-top:0;border-bottom:1px solid var(--rec-line);padding-top:calc(18px + env(safe-area-inset-top,0px))}
+.mates-sheet .mates{display:grid;grid-template-columns:1fr;gap:8px}
+.sl-v.sl-name{white-space:normal;font-size:15px;line-height:1.3;display:block}
 </style>
 
 </head>
@@ -2162,7 +2169,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-18-2200";
+const BUILD = "2026-11-18-2300";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2585,13 +2592,18 @@ function groupCard(g){
 }
 const after = {};
 
+/* 一緒に回る人の名前（3人分）。入力欄は「一緒に回る」を押したときのシートの中にあるので、画面の入力欄ではなく state / 端末の値から読む */
+function matesSheet(){
+  const m=matesList();
+  return `<div class="sheet-back top" data-act="mates-done"><div class="sheet mates-sheet" data-stop="1"><p>一緒に回る人</p><div class="mates">${[0,1,2].map(i=>`<span class="mate-in"><input id="r-mate${i}" list="plist" value="${esc(m[i])}" placeholder="${i+2}人目" aria-label="${i+2}人目の名前" autocomplete="off"><button data-act="mate-clear" data-i="${i}" aria-label="${i+2}人目を消す">×</button></span>`).join("")}</div><button class="ds-go" data-act="mates-done">完了</button></div></div>`;
+}
+function matesList(){ const m=state.mates||LS.get("sc.mates",[]); return [0,1,2].map(i=>String((Array.isArray(m)?m[i]:"")||"")); }
 function coursePickField(){
   const all = pickableCourses();
   const favList = myCourses();
   const cur = all.find(c=>c.id===state.pick) || favList.find(c=>c.id===LS.get("sc.lastCourse","")) || favList[0] || null;
   state.pick = cur && cur.id;
-  return `<div class="field"><label>コース</label><input type="hidden" id="r-course" value="${cur?esc(cur.id):""}">
-    <button class="cp-field ${cur?"":"ph"}" data-act="open-pick">${cur?`<span><b>${esc(cur.name)}</b><small>${esc(cur.area||cur.pref||"")}${cur.area||cur.pref?"・":""}${cur.holes.length}H パー${sum(cur.holes,h=>h.par)}</small></span>`:`<span>${favList.length?"タップしてコースを選ぶ":"タップしてコースを登録"}</span>`}<i aria-hidden="true">›</i></button></div>`;
+  return `<button class="sl-row sl-btn" data-act="open-pick"><input type="hidden" id="r-course" value="${cur?esc(cur.id):""}"><span class="sl-l">コース</span>${cur?`<span class="sl-v sl-name">${esc(cur.name)}<small>${esc(cur.area||cur.pref||"")}${cur.area||cur.pref?"・":""}${cur.holes.length}H パー${sum(cur.holes,h=>h.par)}</small></span>`:`<span class="sl-v sl-none">${favList.length?"タップして選ぶ":"タップして登録"}</span>`}<i aria-hidden="true">›</i></button>`;
 }
 /* コースの一覧（コース画面とラウンド開始で共通）。mode="pick" はタップで選ぶ、"edit" はタップで編集 */
 function courseRows(list, mode){
@@ -2632,19 +2644,23 @@ function viewRecord(){
     if(!pickableCourses().length) return `<div class="panel empty"><strong>まずコースを登録しましょう</strong>ホールごとのパーを登録すると、ラウンドの記録を始められます。<div style="margin-top:14px"><button class="btn primary" data-act="goto-courses">コースを登録する</button></div></div>`;
     const last = LS.get("sc.player","");
     const pl = players();
-    return `<div class="panel start-panel">
-      <h2>新しいラウンド</h2>
-      <div class="im-seg" role="group" aria-label="入力のしかた"><button data-act="im" data-v="hole" aria-pressed="${state.im==="hole"}">くわしく記録<small>ショットやクラブも</small></button><button data-act="im" data-v="card" aria-pressed="${state.im==="card"}">スコアカード<small>紙と同じ表で手早く</small></button></div>
-      <div class="row start-row">
-        <div class="field"><label for="r-player">あなたの名前</label><input id="r-player" list="plist" value="${esc(state.sp!=null?state.sp:last)}" placeholder="名前"><datalist id="plist">${pl.map(p=>`<option value="${esc(p)}">`).join("")}</datalist></div>
-        <div class="field" style="flex:0 0 150px"><label for="r-date">日付</label><input id="r-date" type="date" value="${state.sd||today()}"></div>
+    const mlist=matesList().map(x=>x.trim()).filter(Boolean);
+    return `<div class="start-list">
+      <h2 class="sl-h">ラウンドを始める</h2>
+      <div class="sl-seg" role="group" aria-label="入力のしかた"><button data-act="im" data-v="hole" aria-pressed="${state.im==="hole"}">くわしく記録</button><button data-act="im" data-v="card" aria-pressed="${state.im==="card"}">スコアカード</button></div>
+      <div class="sl-group">
+        <label class="sl-row" for="r-player"><span class="sl-l">名前</span><input id="r-player" class="sl-in" list="plist" value="${esc(state.sp!=null?state.sp:last)}" placeholder="名前を入れる" autocomplete="off"><datalist id="plist">${pl.map(p=>`<option value="${esc(p)}">`).join("")}</datalist></label>
+        <label class="sl-row" for="r-date"><span class="sl-l">日付</span><input id="r-date" type="date" class="sl-in" value="${state.sd||today()}"></label>
+        ${coursePickField()}
+        <div class="sl-row" id="r-gwrap" hidden><label class="sl-l" for="r-green">グリーン</label><select id="r-green" class="sl-in"></select></div>
       </div>
-      ${`<div class="field"><div class="lab-row"><label>一緒に回る人</label><button class="game-btn ${state.game?"on":""}" data-act="open-game">${state.game?gameMini(state.game)+GAMES[state.game].name:"ゲーム：なし"}<i>›</i></button></div><div class="mates">${[0,1,2].map(i=>`<span class="mate-in"><input id="r-mate${i}" list="plist" value="${esc((state.mates||LS.get("sc.mates",[]))[i]||"")}" placeholder="${i+2}人目" aria-label="${i+2}人目の名前"><button data-act="mate-clear" data-i="${i}" aria-label="${i+2}人目を消す">×</button></span>`).join("")}</div></div>`}
-      ${coursePickField()}
-      <div class="field" id="r-gwrap" hidden><label for="r-green">今日のグリーン</label><select id="r-green"></select></div>
+      <div class="sl-group">
+        <button class="sl-row sl-btn" data-act="open-mates"><span class="sl-l">一緒に回る</span><span class="sl-v ${mlist.length?"":"sl-none"}">${mlist.length?esc(mlist.join("・")):"なし"}</span><i aria-hidden="true">›</i></button>
+        <button class="sl-row sl-btn" data-act="open-game"><span class="sl-l">ゲーム</span><span class="sl-v ${state.game?"":"sl-none"}">${state.game?esc(GAMES[state.game].name):"なし"}</span><i aria-hidden="true">›</i></button>
+      </div>
       <div class="err" id="r-err"></div>
-      <button class="btn primary" style="width:100%;margin-top:6px" data-act="start">始める</button>
-    </div>${state.sheet==="pick"?coursePickSheet():""}${state.sheet==="game"?gameSheet():""}`;
+      <button class="sl-go" data-act="start">始める <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </div>${state.sheet==="pick"?coursePickSheet():""}${state.sheet==="game"?gameSheet():""}${state.matesOpen?matesSheet():""}`;
   }
   return viewRecordDraft(d);
 }
@@ -3711,7 +3727,7 @@ document.addEventListener("click", async ev => {
       if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); window.scrollTo(0,0);
       LS.set("sc.player",p);
       // 一緒に回る人（同じ名前もOK: ボール2個で2回分回る人がいる）
-      const mates=[0,1,2].map(i=>(($("#r-mate"+i)||{}).value||"").trim()).filter(Boolean); LS.set("sc.mates",[0,1,2].map(i=>mates[i]||"")); state.mates=null;
+      const mates=matesList().map(x=>x.trim()).filter(Boolean); LS.set("sc.mates",[0,1,2].map(i=>mates[i]||"")); state.mates=null; state.matesOpen=false;
       if(state.game==="ghost" && gameFits("ghost",1+mates.length) && !ghostFor(cid,p)){ toast("このコースの過去の記録がないので、今回はゲームなしで記録します"); state.game=""; LS.set("sc.game",""); }
       if(state.game && !gameFits(state.game, 1+mates.length)) toast(`${GAMES[state.game].name}は${GAMES[state.game].n.replace("のみ","")}で遊ぶゲームなので、今回はゲームなしで記録します`);
       if(state.im==="card"){
@@ -3752,7 +3768,9 @@ document.addEventListener("click", async ev => {
       break;
     }
     case "ask-discard": state.confirm="discard"; render(); break;
-    case "open-game": state.mates=[0,1,2].map(j=>(($("#r-mate"+j)||{}).value||"")); state.sheet="game"; render(); break;
+    case "open-game": state.mates=matesList(); state.sheet="game"; render(); break;
+    case "open-mates": state.mates=matesList(); state.matesOpen=true; render(); break;
+    case "mates-done": { state.matesOpen=false; LS.set("sc.mates", matesList()); render(); break; }
     case "pick-game": { const k=b.dataset.v, cnt=1+(state.mates||[]).filter(x=>String(x||"").trim()).length;
       if(!gameFits(k,cnt)){ toast(`${GAMES[k].name}は${GAMES[k].n.replace("のみ","")}で遊ぶゲームです`); break; }
       if(k==="ghost" && !ghostFor(state.pick,(state.sp||LS.get("sc.player","")).trim())){ toast("このコースの過去の記録がないので、ゴーストはまだ選べません"); break; }
@@ -3786,7 +3804,7 @@ document.addEventListener("click", async ev => {
     case "close-pick": state.sheet=null; state.pickAdd=false; render(); break;
     case "open-fields": state.sheet="fields"; render(); break;
     case "close-sheet": { const h0=state.draft&&state.draft.holes[state.hole]; if(h0) h0.clubAuto=false; state.sheet=null; state.clubFor=null; saveDraft(); render(); break; }
-    case "mate-clear": { const v=[0,1,2].map(j=>(($("#r-mate"+j)||{}).value||"")); v[+b.dataset.i]=""; state.mates=v; LS.set("sc.mates",v); render(); break; }
+    case "mate-clear": { const v=matesList(); v[+b.dataset.i]=""; state.mates=v; LS.set("sc.mates",v); render(); break; }
     // 同伴者の打数: 枠をタップすると大きな数字キーが出る。押すと次の人へ（最後の人で閉じる）
     case "open-holes": state.holesSheet=true; render(); break;
     case "close-holes": state.holesSheet=false; render(); break;

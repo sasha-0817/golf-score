@@ -230,7 +230,8 @@ with sync_playwright() as pw:
             C(pg, '[data-act=cd-key][data-v="4"]' if sel["k"] == "s" else '[data-act=cd-key][data-v="2"]')
     LSC = {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": ["はなこ", "じろう", "さぶろう"]}
     pg, errs = open_page(b, LSC)
-    check("スコアカード: 開始画面に3人分の同伴者欄", pg.evaluate("document.querySelectorAll('.mates input').length") == 3)
+    check("スコアカード: 開始画面に「一緒に回る」の1行（名前が並ぶ）。押すと3人分の入力欄が出る", "はなこ・じろう・さぶろう" in pg.inner_text("[data-act=open-mates]") and pg.query_selector(".mates input") is None and (C(pg, "[data-act=open-mates]") or True) and pg.evaluate("document.querySelectorAll('.mates input').length") == 3)
+    C(pg, "[data-act=mates-done]")
     start_preset(pg, "firtree")
     check("スコアカード: 4人で開始・表が出る", pg.evaluate("state.cdraft&&state.cdraft.players.length") == 4 and pg.query_selector(".cdt") is not None)
     check("スコアカード: 1画面に収まる（ページがスクロールしない）", pg.evaluate("document.documentElement.scrollHeight") <= 667)
@@ -276,9 +277,11 @@ with sync_playwright() as pw:
     c1 = [{"id": "c1", "name": "C1", "holes": [{"par": 3, "yards": 100}] * 9}]
     old = [{"id": "o1", "player": "たろう", "courseId": "c1", "courseName": "C1", "date": "2026-09-01", "createdAt": 1, "holes": [{"par": 3, "strokes": 5, "putts": 2}] * 9}]
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"hole\"", "sc.mates": ["たろう", "はなこ", ""], "sc.courses": c1, "sc.rounds": old, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\""}, offline=True)
+    C(pg, "[data-act=open-mates]")
     check("1ホールずつでも同伴者欄が出る", pg.evaluate("document.querySelectorAll('.mates input').length") == 3)
     pg.fill("#r-mate2", "まちがい"); pg.dispatch_event("#r-mate2", "input"); C(pg, '[data-act=mate-clear][data-i="2"]')
     check("同伴者を × で消せる（選ばないにできる）", pg.evaluate("document.querySelector('#r-mate2').value") == "" and pg.evaluate("document.querySelector('#r-mate0').value") == "たろう")
+    C(pg, "[data-act=mates-done]"); pg.wait_for_timeout(100)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
     check("同じ名前でも始められる・同伴者2人", pg.evaluate("state.draft&&state.draft.mates.length") == 2)
     check("同伴者は人ごとの行（自分＋2人）・1画面に収まる", pg.evaluate("document.querySelectorAll('.scoreblock .frow').length") == 3 and pg.query_selector(".frow.me") is not None and pg.evaluate("document.documentElement.scrollHeight") <= 667)
@@ -319,7 +322,7 @@ with sync_playwright() as pw:
     check("スキンズの計算（同点は持ち越し・取った人が持ち越し分も獲得）", r == ["1,2", 0, 1])
     r = pg.evaluate("(()=>{ const x=skinsCalc([[3,3],[3,3]],2); return [x.won.join(), x.carry]; })()")
     check("スキンズの計算（最後まで同点なら持ち越しが残る）", r == ["0,0", 2])
-    w = pg.evaluate("[0,1,2].map(i=>Math.round(document.querySelector('#r-mate'+i).getBoundingClientRect().width))")
+    C(pg, "[data-act=open-mates]"); w = pg.evaluate("[0,1,2].map(i=>Math.round(document.querySelector('#r-mate'+i).getBoundingClientRect().width))"); C(pg, "[data-act=mates-done]")
     check("同伴者の欄は名前がなくても × の分の幅を空けておく（入力しても幅が変わらない）", len(set(w)) == 1)
     C(pg, "[data-act=open-game]")
     check("ゲームの選択画面はカードだけ（ルールは出さない）", pg.query_selector(".game-sheet .sr-ex") is None and pg.query_selector(".gm-rule") is not None)
@@ -882,7 +885,7 @@ with sync_playwright() as pw:
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"skins\"", "sc.fields": ALL}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300); walk(pg); C(pg, "[data-act=finish]"); pg.wait_for_timeout(900)
     C(pg, "[data-act=close-result]"); C(pg, "nav.tabs [data-tab=record]"); pg.wait_for_timeout(300)
-    check("保存したあとの記録タブ: 前回の同伴者・コース・ゲームがそのまま入っていて、「始める」だけで続けられる", pg.evaluate("document.querySelector('#r-mate0').value") == "はなこ" and pg.evaluate("document.querySelector('#r-course').value") == "c1" and pg.evaluate("state.game") == "skins" and pg.query_selector("[data-act=start]") is not None)
+    check("保存したあとの記録タブ: 前回の同伴者・コース・ゲームがそのまま入っていて、「始める」だけで続けられる", "はなこ" in pg.inner_text("[data-act=open-mates]") and pg.evaluate("document.querySelector('#r-course').value") == "c1" and pg.evaluate("state.game") == "skins" and pg.query_selector("[data-act=start]") is not None)
     check("リザルトに専用の「もう1周」ボタンはない", pg.query_selector("[data-act=next-round]") is None)
     pg.context.close()
 
@@ -947,6 +950,26 @@ with sync_playwright() as pw:
     start_preset(pg, "firtree")
     xs = pg.evaluate("['[data-act=ask-discard]','.card-btn','.gear-btn'].map(q=>{const e=document.querySelector(q), r=e.getBoundingClientRect(), v=e.querySelector('svg').getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height), Math.round(v.width)]})")
     check("記録画面の左上の×は、歯車・スコアカードと同じ大きさ（46pxの丸・28pxの絵）", xs[0] == xs[1] == xs[2] == [46, 46, 28] and not errs)
+    pg.context.close()
+
+    # 19t. ラウンドを始める画面（設定アプリ風のリスト）: 同伴者が何人でも高さは同じ・シートで入れた名前で始められる・ゲーム選択に人数が伝わる
+    cst = [{"id": "c1", "name": "ファーツリーカントリークラブ", "holes": [{"par": 3, "yards": 100}] * 9, "createdAt": 1}]
+    hs = {}
+    for nm, ml in {"0": [], "1": ["はなこ"], "3": ["はなこ", "じろう", "さぶろう"]}.items():
+        pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ml, "sc.courses": cst, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.v2": 1})
+        hs[nm] = pg.evaluate("[Math.round(document.querySelector('[data-act=start]').getBoundingClientRect().top), document.querySelectorAll('.sl-row').length]")
+        pg.context.close()
+    check("開始画面: 一緒に回る人が0人でも3人でも、行の数も「始める」の位置も同じ", hs["0"] == hs["1"] == hs["3"])
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": [], "sc.courses": cst, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.v2": 1, "sc.fields": dict(NONE)})
+    C(pg, "[data-act=open-mates]"); pg.fill("#r-mate0", "はなこ"); pg.dispatch_event("#r-mate0", "input"); pg.fill("#r-mate1", "じろう"); pg.dispatch_event("#r-mate1", "input")
+    C(pg, "[data-act=mates-done]")
+    t1 = pg.inner_text("[data-act=open-mates]")
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    check("開始画面: シートで入れた名前が1行に並び、そのまま始められる（同伴者2人）", "はなこ・じろう" in t1 and pg.evaluate("state.draft.mates.map(m=>m.name).join()") == "はなこ,じろう" and pg.evaluate("JSON.parse(localStorage.getItem('sc.mates')).join()") == "はなこ,じろう," and not errs)
+    pg.context.close()
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "じろう", "さぶろう"], "sc.courses": cst, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.v2": 1})
+    C(pg, "[data-act=open-game]"); C(pg, "[data-act=pick-game][data-v=vegas]"); pg.wait_for_timeout(100)
+    check("開始画面: 画面に入力欄がなくても、ゲーム選択に人数（4人）が伝わる（ラスベガスが選べる）", pg.evaluate("state.game") == "vegas" and "ラスベガス" in pg.inner_text("[data-act=open-game]") and not errs)
     pg.context.close()
 
     # 19p. 端末が本体・サーバーはバックアップ（2026-11-16 のバグ出しで見つかった不具合のチェック）
