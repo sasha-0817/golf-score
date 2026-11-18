@@ -1469,16 +1469,6 @@ input,select,textarea{font-size:max(16px,1em)}
 
 
 /* 4人の個人戦のときのチームの1行 */
-.team-line{margin:8px 0 0;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.12);color:#fff}
-.team-line .tl-h{font-size:11px;font-weight:700;opacity:.85;display:flex;gap:6px;align-items:baseline}
-.team-line .tl-h small{font-size:10px;font-weight:500;opacity:.8}
-.team-line .tl-row{display:flex;align-items:center;gap:8px;margin-top:4px}
-.team-line .tl-row>span{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px;border-radius:9px}
-.team-line .tl-row>span small{font-size:11px;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.team-line .tl-row>span b{font:700 20px var(--f-num)}
-.team-line .tl-row>span.w{background:rgba(255,214,90,.22)}
-.team-line .tl-row>span.w b{color:#FFD65A}
-.team-line .tl-row i{font-style:normal;font:700 12px var(--f-num);opacity:.7}
 /* 弾道のアニメーション OFF（記録する項目の「表示」）: 線を出さず、ボールはすぐその場所に */
 .no-tracer .tr{display:none}
 
@@ -2047,8 +2037,6 @@ header.top .sync[hidden]{display:none}
 .sl-go{width:100%;height:54px;border:0;border-radius:18px;background:var(--fg);color:var(--bg);font:inherit;font-weight:900;font-size:17px;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;cursor:pointer;touch-action:manipulation}
 .sl-go svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .start-list .err{min-height:0;margin:4px 4px 0}
-.sheet-back.top{align-items:flex-start}
-.sheet.mates-sheet{border-radius:0 0 20px 20px;border-top:0;border-bottom:1px solid var(--rec-line);padding-top:calc(18px + env(safe-area-inset-top,0px))}
 .mates-sheet .mates{display:grid;grid-template-columns:1fr;gap:8px}
 .sl-v.sl-name{white-space:normal;font-size:15px;line-height:1.3;display:block}
 /* 日付のカレンダー（アプリの見た目: 白いシート・選んだ日は緑の丸・今日は緑の輪） */
@@ -2067,6 +2055,38 @@ header.top .sync[hidden]{display:none}
 /* コースがないときの案内のボタン */
 .sl-go.sm{width:auto;min-width:220px;padding:0 28px;margin:16px auto 0}
 .sl-in{padding-right:17px}   /* 右の矢印（›）の分だけ内側にして、名前の右端を他の行の値とそろえる */
+/* 履歴: 打数の数字と（±X）の列をそろえる。（±X）はいつもグレー */
+.rcard .sc-tot b{display:inline-flex;align-items:baseline;justify-content:flex-end;font-variant-numeric:tabular-nums}
+.rcard .sc-tot .st-n{display:inline-block;min-width:2ch;text-align:right;font-size:inherit;color:inherit;margin:0}
+.rcard>button{gap:8px}
+.rcard .sc-tot small{display:inline-block;min-width:2.35em;text-align:left;margin:0 0 0 2px;color:var(--muted);font-size:13px}
+/* 履歴のコースの絞り込み */
+.hist-filter{margin:0 0 12px}
+.hist-filter select{width:100%;height:46px;border-radius:14px;border:1px solid var(--line);background:var(--paper);color:var(--fg);font:700 16px var(--f-body);padding:0 14px}
+/* 開始画面: 名前を入れるとき、黄色い枠をはみ出させず、行のうすい緑で示す。iPhone の候補の矢印（▾）は名前の欄では出さない */
+.sl-in:focus-visible{outline:none}
+.sl-row:focus-within{background:color-mix(in srgb,var(--turf) 7%,var(--paper))}
+#r-player::-webkit-calendar-picker-indicator,#r-player::-webkit-list-button{display:none!important;opacity:0;pointer-events:none}
+/* 文字の大きさ（開始画面・記録する項目のシート）: 値は16px、見出しは15px にそろえる */
+.sl-seg button{font-size:15px}
+.sl-l{font-size:15px}
+.sl-v.sl-name{font-size:16px}
+.sl-v small{font-size:14px}
+.fs-row{font-size:16px}
+.sheet .fs-sub{font-size:15px;height:46px}
+.fs-sub small{font-size:14px}
+.fs-sec{font-size:13px}
+.fs-note{font-size:13px}
+/* 下から出るシートは、キーボードが出たらその上に */
+.sheet-back{padding-bottom:var(--kb,0px)}
+/* ゲームの結果: 名前の列を広げ（途中で切れないように）、数字は右そろえの決まった幅にする */
+.rs-row{grid-template-columns:104px 1fr 30px}
+.rc-game .rs-row{grid-template-columns:104px 1fr auto}
+.rs-row b i{font-style:normal}
+.rs-row b .rs-num{display:inline-block;min-width:2ch;text-align:right;font-variant-numeric:tabular-nums}
+.rs-row b .rs-u{font-size:.72em;margin-left:2px}
+/* 結果のミニスコアカード: 長い名前は2行まで折り返して全部見せる */
+.rc-sc table.grp td.nm{white-space:normal;overflow:visible;text-overflow:clip;word-break:break-all;line-height:1.15;font-size:11px;letter-spacing:0}
 </style>
 
 </head>
@@ -2185,7 +2205,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-19-0900";
+const BUILD = "2026-11-19-1200";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2599,15 +2619,18 @@ function groupCard(g){
     <div class="rc-top"><div><div class="k">ROUND COMPLETE</div><div class="n">${g.length}人のスコア</div><div class="c">${esc(r0.courseName)}・${+m}/${+d}</div></div></div>
     <div class="rc-rank">${order.map(k=>`<div class="${rank(k)===1?"win":""}"><i>${rank(k)}</i><span>${esc(dupLabel(nm,k))}</span><b>${tots[k].score}</b><small>${toPar(tots[k].diff)}</small></div>`).join("")}</div>
     ${state.resultGame==="skins"?(()=>{ const sk=skinsCalc(g.map(r=>r.holes.map(h=>h.strokes)), N, !!state.resultCarry), mx=Math.max(...sk.won);
-      return `<div class="rc-skins"><div class="rs-h"><span>SKINS</span>スキンズ${sk.carry?`<em>持ち越し${sk.carry}枚は決着なし</em>`:""}</div>${order.map(k=>`<div class="rs-row ${mx>0&&sk.won[k]===mx?"top":""}"><span class="rs-n">${esc(dupLabel(nm,k))}</span><span class="rs-c">${Array.from({length:Math.min(sk.won[k],9)},()=>coinSVG(24)).join("")}${sk.won[k]>9?"…":""}</span><b>${sk.won[k]}</b></div>`).join("")}</div>`; })():""}
+      return `<div class="rc-skins"><div class="rs-h"><span>SKINS</span>スキンズ${sk.carry?`<em>持ち越し${sk.carry}枚は決着なし</em>`:""}</div>${order.map(k=>`<div class="rs-row ${mx>0&&sk.won[k]===mx?"top":""}"><span class="rs-n">${esc(dupLabel(nm,k))}</span><span class="rs-c">${Array.from({length:Math.min(sk.won[k],9)},()=>coinSVG(24)).join("")}${sk.won[k]>9?"…":""}</span><b><i class="rs-num">${sk.won[k]}</i></b></div>`).join("")}</div>`; })():""}
     ${state.resultGame && state.resultGame!=="skins" ? gameResult(state.resultGame, g.map(r=>r.holes.map(h=>h.strokes)), r0.holes.map(h=>h.par), N, g.map((x,k)=>esc(dupLabel(nm,k))), order, state.resultEx||{}) : ""}
-    ${g.length===4 && state.resultGame ? teamLine(state.resultGame, g.map(r=>r.holes.map(h=>h.strokes)), r0.holes.map(h=>h.par), N, g.map((x,k)=>esc(dupLabel(nm,k))), state.resultEx||{}) : ""}
     <div class="rc-sc">${tables.join("")}</div>
     <div class="rc-brand"><span class="rc-logo"><img src="mark.png" alt=""><span><b>GOLF SC.</b><small>SHORT COURSE SCORECARD</small></span></span></div>
   </div></div>`;
 }
 const after = {};
 
+/* キーボードが出たとき、下から出るシートをその上に持ち上げる（iPhone の visualViewport。--kb = キーボードの高さ） */
+(()=>{ const vv=window.visualViewport; if(!vv) return;
+  const f=()=>{ const kb=Math.max(0, Math.round(window.innerHeight-(vv.height+vv.offsetTop))); document.documentElement.style.setProperty("--kb", kb+"px"); };
+  vv.addEventListener("resize",f); vv.addEventListener("scroll",f); f(); })();
 /* 一緒に回る人の名前（3人分）。入力欄は「一緒に回る」を押したときのシートの中にあるので、画面の入力欄ではなく state / 端末の値から読む */
 /* 日付の表示（今年なら「11月18日（水）」、ほかの年は年も） */
 function jpDate(v){ const [y,m,d]=String(v).split("-").map(Number); if(!y||!m||!d) return "";
@@ -2627,7 +2650,7 @@ function calSheet(){
 }
 function matesSheet(){
   const m=matesList();
-  return `<div class="sheet-back top" data-act="mates-done"><div class="sheet mates-sheet" data-stop="1"><p>一緒に回る人</p><div class="mates">${[0,1,2].map(i=>`<span class="mate-in"><input id="r-mate${i}" list="plist" value="${esc(m[i])}" placeholder="${i+2}人目" aria-label="${i+2}人目の名前" autocomplete="off"><button data-act="mate-clear" data-i="${i}" aria-label="${i+2}人目を消す">×</button></span>`).join("")}</div><button class="ds-go" data-act="mates-done">完了</button></div></div>`;
+  return `<div class="sheet-back" data-act="mates-done"><div class="sheet mates-sheet" data-stop="1"><p>一緒に回る人</p><div class="mates">${[0,1,2].map(i=>`<span class="mate-in"><input id="r-mate${i}" list="plist" value="${esc(m[i])}" placeholder="${i+2}人目" aria-label="${i+2}人目の名前" autocomplete="off"><button data-act="mate-clear" data-i="${i}" aria-label="${i+2}人目を消す">×</button></span>`).join("")}</div><button class="ds-go" data-act="mates-done">完了</button></div></div>`;
 }
 function matesList(){ const m=state.mates||LS.get("sc.mates",[]); return [0,1,2].map(i=>String((Array.isArray(m)?m[i]:"")||"")); }
 function coursePickField(){
@@ -3270,7 +3293,11 @@ function viewHistory(){
   const all = rounds();
   if(!all.length) return backupBar() + (state.mode==="connecting"?`<div class="panel empty">読み込み中…</div>`:`<div class="panel empty"><strong>まだラウンドがありません</strong>「記録」タブからラウンドを始めましょう。</div>`);
   state.fPlayer = me();
-  const rs = all.filter(r=>r.player===state.fPlayer).sort(byDate).reverse();
+  const mine = all.filter(r=>r.player===state.fPlayer);
+  const hcs = (()=>{ const m=new Map(); mine.forEach(r=>{ if(r.courseId && !m.has(r.courseId)){ const c=courses().find(x=>x.id===r.courseId); m.set(r.courseId, (c&&c.name)||r.courseName||"（名前なし）"); } }); return [...m].map(([id,name])=>({id,name})).sort((a,b)=>a.name.localeCompare(b.name,"ja")); })();
+  if(state.fCourse!=="all" && !hcs.some(c=>c.id===state.fCourse)) state.fCourse="all";   // 分析のコースの絞り込みと同じ（どちらで選んでも両方に効く）
+  const hfilter = hcs.length>1 ? `<div class="hist-filter"><select id="h-course" aria-label="コースで絞り込む"><option value="all">すべてのコース</option>${hcs.map(c=>`<option value="${esc(c.id)}" ${c.id===state.fCourse?"selected":""}>${esc(c.name)}</option>`).join("")}</select></div>` : "";
+  const rs = mine.filter(r=>state.fCourse==="all" || r.courseId===state.fCourse).sort(byDate).reverse();
   const W = ["日","月","火","水","木","金","土"];
   let lastMonth = "";
   const cards = rs.map(r=>{
@@ -3289,12 +3316,11 @@ function viewHistory(){
       ${hasTr?`<tr class="tr"><th>OB・B</th>${ch.map(x=>`<td>${[evs(x.h,"ob").length?"OB"+(evs(x.h,"ob").length>1?"×"+evs(x.h,"ob").length:""):"",evs(x.h,"pen").length?"1P"+(evs(x.h,"pen").length>1?"×"+evs(x.h,"pen").length:""):"",x.h.bunker?"B":""].filter(Boolean).join("<br>")||""}</td>`).join("")}<td></td></tr>`:""}
     </table></div>`).join("");
     const conf = state.confirm==="del:"+r.id;
-    const tcol = t.diff/r.holes.length<=0 ? "var(--turf)" : t.diff/r.holes.length<=1 ? "var(--muted)" : "var(--q-triple)";
     return `${mh}<div class="rcard">
       <button data-act="toggle-round" data-id="${r.id}" aria-expanded="${open}">
         <div class="day"><b>${+m}/${+d}</b><small>${wd}</small></div>
         <div class="mid"><div class="cname">${esc(r.courseName)}</div><div class="strip">${r.holes.map(h=>`<i class="q-${TONEH(h)}"></i>`).join("")}</div></div>
-        <div class="sc-tot"><b>${t.score}<small style="color:${tcol}">(${toPar(t.diff)})</small></b></div>
+        <div class="sc-tot"><b><span class="st-n">${t.score}</span><small>(${toPar(t.diff)})</small></b></div>
       </button>
       ${open?`<div class="detail">${tables}${legend}
         <button class="btn small one-go" data-act="one-round" data-id="${r.id}">このラウンドの分析を見る ›</button>
@@ -3302,7 +3328,7 @@ function viewHistory(){
       </div>`:""}
     </div>`;
   }).join("");
-  return demoBand + backupBar() + (cards || `<div class="panel empty">${esc(state.fPlayer)}さんのラウンドはまだありません。</div>`);
+  return demoBand + backupBar() + hfilter + (cards || `<div class="panel empty">${esc(state.fPlayer)}さんのラウンドはまだありません。</div>`);
 }
 
 /* ----- スコアカードの写真から読み取り（サーバーの functions/ocr.js。AI がつながっているときだけボタンを出す） ----- */
@@ -3392,6 +3418,7 @@ function viewCourses(){
     <button class="btn add-course" data-act="new-course">＋ コースを追加</button>
   </div>`;
 }
+after.history = () => { const el=$("#h-course"); if(el) el.onchange=()=>{ state.fCourse=el.value; state.openRound=null; render(); }; };
 after.courses = () => {
   const e=state.courseEdit; if(!e) return;
   ocrCheck();
@@ -3412,6 +3439,10 @@ async function shotCard(card){
         // html2canvas は Barlow Condensed の数字を約1.7px下・少し左に描くので、記号の中の数字だけ逆向きに寄せて真ん中に見せる
         +".rc-sc .mk3,.rc-rank i{box-sizing:border-box!important;padding:0 0 3px 1.5px!important}"; doc.head.appendChild(st);
       doc.querySelectorAll(".result-card,.result-card *").forEach(el=>{ el.style.animation="none"; }); // キラキラは同じ位置のまま止めて写す
+      // 字間（letter-spacing）の広い英字の小さな文字（SHORT COURSE SCORECARD など）は、html2canvas が1文字ずつ置くときにずれることがあるので、1文字ずつの箱に分けて、同じ間隔で並べる
+      doc.querySelectorAll(".result-card *").forEach(el=>{ const cs=doc.defaultView.getComputedStyle(el), fs=parseFloat(cs.fontSize), ls=parseFloat(cs.letterSpacing); if(!(ls>0) || ls/fs<0.1) return;
+        [...el.childNodes].forEach(n=>{ if(n.nodeType!==3 || !n.textContent.trim()) return; const f=doc.createDocumentFragment();
+          [...n.textContent].forEach(ch=>{ const sp=doc.createElement("span"); sp.style.cssText=`display:inline-block;letter-spacing:0;margin-right:${ls}px;white-space:pre`; sp.textContent=ch===" "?"\u00a0":ch; f.appendChild(sp); }); n.replaceWith(f); }); });
     }});
   return new Promise(r=>cv.toBlob(r,"image/png"));
 }
@@ -3567,24 +3598,11 @@ function gameTags(game, rows, pars, n, N, ex={}){
   return null;
 }
 /* 4人で個人戦のゲームをしたとき、リザルトの下に「1・2人目 vs 3・4人目」のチームの合計を1行だけ添える（チーム戦のカードを別に作らない） */
-function teamLine(game, rows, pars, N, names, ex={}){
-  if(!GAMES[game] || GAMES[game].type!=="solo" || rows.length!==4) return "";
-  let v=null, unit="", low=false, dec=0;
-  if(game==="skins"){ v=skinsCalc(rows,N,!!state.resultCarry).won; unit="枚"; }
-  if(game==="nearpin"){ v=pinCalc(ex.pins,4,pars).won; unit="枚"; }
-  if(game==="olympic"){ v=olympicCalc(ex.medals,4).pts; unit="pt"; }
-  if(game==="stable"){ v=stableCalc(rows,pars,N).pts; unit="pt"; }
-  if(game==="nassau"){ v=nassauCalc(rows,N,N).pts; unit="pt"; }
-  if(game==="peoria" && ex.hidden){ v=peoriaCalc(rows,pars,ex.hidden).map(x=>x.net); low=true; dec=1; }
-  if(!v) return "";
-  const t=[v[0]+v[1], v[2]+v[3]].map(x=>Math.round(x*10)/10), w=t[0]===t[1]?-1:((t[0]<t[1])===low?0:1);
-  const cell=k=>`<span class="${w===k?"w":""}"><small>${names[k*2]}・${names[k*2+1]}</small><b>${dec?t[k].toFixed(1):t[k]}${unit}</b></span>`;
-  return `<div class="team-line"><div class="tl-h">チームで見ると<small>1・2人目 vs 3・4人目</small></div><div class="tl-row">${cell(0)}<i>vs</i>${cell(1)}</div></div>`;
-}
 /* みんなのリザルトに出すゲームの結果（スキンズは別） */
 function gameResult(game, rows, pars, N, names, order, ex={}){
   const box=(body,note="")=>`<div class="rc-skins rc-game"><div class="rs-h"><span>${GAMES[game].eng}</span>${GAMES[game].name}${note?`<em>${note}</em>`:""}</div>${body}</div>`;
-  const line=(n,v,top,extra="")=>`<div class="rs-row ${top?"top":""}"><span class="rs-n">${n}</span><span class="rs-c">${extra}</span><b>${v}</b></div>`;
+  const unitize=v=>{ const m=String(v).match(/^([−-]?\d+(?:\.\d+)?)(.*)$/); return m?`<i class="rs-num">${m[1]}</i><i class="rs-u">${m[2]}</i>`:v; };   // 数字は右そろえの決まった幅、単位（枚・pt・点…）はその右
+  const line=(n,v,top,extra="")=>`<div class="rs-row ${top?"top":""}"><span class="rs-n">${n}</span><span class="rs-c">${extra}</span><b>${unitize(v)}</b></div>`;
   if(game==="match" && rows.length===2){ const m=matchCalc(rows,N,N);
     const txt = m.diff===0 ? "引き分け（五分）" : `${names[m.diff>0?0:1]} の勝ち（${m.dec&&m.dec.left?`残り${m.dec.left}ホールで${m.dec.up}勝ち越し`:`${Math.abs(m.diff)}勝ち越し`}）`;
     return box([0,1].map(k=>line(names[k], `${m.won[k]}H`, m.diff!==0 && (m.diff>0?0:1)===k, `<small class="rs-sub">勝ったホール</small>`)).join("")+`<div class="rs-sum">${txt}</div>`); }

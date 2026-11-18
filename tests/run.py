@@ -484,8 +484,8 @@ with sync_playwright() as pw:
         C(pg, '[data-act=cd-key][data-v="3"]')
     C(pg, "[data-act=cd-finish]"); pg.wait_for_timeout(900)
     t = pg.evaluate("(document.querySelector('.rc-game')||{}).textContent||''")
-    tl = pg.evaluate("(document.querySelector('.team-line')||{}).textContent||''")
-    check("ニアピン: リザルトにコインの数、4人ならチームで見た1行（はなこ側のチームが1枚で勝ち）", "ニアピン" in t and "1枚" in t and "チームで見ると" in tl and pg.query_selector(".team-line .w") is not None)
+    nums = pg.evaluate("[...document.querySelectorAll('.rc-game .rs-row b .rs-num')].map(e=>Math.round(e.getBoundingClientRect().right))")
+    check("ニアピン: リザルトにコインの数（数字は右そろえで列がそろう）。ゲームを選んだだけでは、勝手に1・2人目と3・4人目のチームにしない", "ニアピン" in t and "1枚" in t and len(nums) == 4 and len(set(nums)) == 1 and pg.query_selector(".team-line") is None and "チームで見ると" not in pg.inner_text(".result-card"))
     pg.context.close()
     pg, errs2 = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"nearpin\""}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
@@ -1014,6 +1014,26 @@ with sync_playwright() as pw:
     C(pg, "nav.tabs [data-tab=stats]"); pg.wait_for_timeout(200)
     st = pg.evaluate("(()=>{const e=document.querySelector('.stat-tabs button[aria-selected=true]'), c=getComputedStyle(e); return [c.backgroundImage, c.borderTopColor]})()")
     check("分析のタブ: 選んだタブは青いグラデーションではなく、ほかの切りかえと同じ緑の枠", st[0] == "none" and st[1] == "rgb(14, 159, 98)" and not errs)
+    pg.context.close()
+
+    # 19v. 履歴の数字の列・（±X）はグレー・コースの絞り込み（分析と共通）・名前の欄の枠・一緒に回る人のシート（下から）
+    two = [bk_round(0, "たろう"), bk_round(1, "たろう") | {"holes": [{"par": 3, "strokes": 9, "putts": 2}] * 9}, bk_round(2, "たろう") | {"courseId": "c2", "courseName": "べつのコース"}]
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.rounds": two, "sc.courses": cst, "sc.v2": 1})
+    C(pg, "nav.tabs [data-tab=history]"); pg.wait_for_timeout(200)
+    hm = pg.evaluate("(()=>{ const n=[...document.querySelectorAll('.rcard .st-n')].map(e=>Math.round(e.getBoundingClientRect().right)); const g=[...document.querySelectorAll('.rcard .sc-tot small')].map(e=>getComputedStyle(e).color); return {n, g, rows:document.querySelectorAll('.rcard').length}; })()")
+    check("履歴: 打数の数字の列は右そろえ・（±X）はどの値でも同じグレー", len(hm["n"]) == 3 and len(set(hm["n"])) == 1 and len(set(hm["g"])) == 1 and not errs)
+    C(pg, "[data-act=bk-open]") ; C(pg, "[data-act=bk-close]")
+    pg.select_option("#h-course", "c2"); pg.wait_for_timeout(200)
+    after = pg.evaluate("({rows:document.querySelectorAll('.rcard').length, f:state.fCourse})")
+    C(pg, "nav.tabs [data-tab=stats]"); pg.wait_for_timeout(300)
+    check("履歴: コースで絞り込める（分析のコースの絞り込みと共通）", hm["rows"] == 3 and after["rows"] == 1 and after["f"] == "c2" and pg.evaluate("document.querySelector('#f-course').value") == "c2" and not errs)
+    pg.context.close()
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": cst, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.v2": 1})
+    pg.focus("#r-player"); pg.wait_for_timeout(100)
+    fo = pg.evaluate("(()=>{ const e=document.querySelector('#r-player'); const c=getComputedStyle(e); const row=e.closest('.sl-row'); return [c.outlineStyle, getComputedStyle(row).backgroundColor]; })()")
+    C(pg, "[data-act=open-mates]"); pg.wait_for_timeout(100)
+    sb = pg.evaluate("(()=>{ const b=document.querySelector('.mates-sheet').closest('.sheet-back'); const sh=document.querySelector('.mates-sheet').getBoundingClientRect(); return [b.classList.contains('top'), Math.round(sh.bottom), window.innerHeight]; })()")
+    check("開始画面: 名前の欄に黄色い枠を出さない（行をうすい緑にする）。「一緒に回る」のシートはゲームと同じ下から出る", fo[0] == "none" and sb[0] is False and sb[1] >= sb[2] - 2 and not errs)
     pg.context.close()
 
     # 新しい端末には、サーバーにあるほかの人の記録が入らない（名前なし・同じ名前のどちらでも）
