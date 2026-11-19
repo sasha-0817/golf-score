@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>GOLF SC. スコアカード 10案と人数ごとの形</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+:root{color-scheme:light;--jp:"Zen Kaku Gothic New",system-ui,"Hiragino Sans",sans-serif;--num:"Barlow Condensed","Zen Kaku Gothic New",sans-serif;--birdie:#2F7DE1;--bogey:#E07B12;--double:#E5484D;--triple:#A61B29;--hio:#F2B01E}
+*{box-sizing:border-box}
+body{margin:0;background:#E3E7E5;color:#1B2A22;font-family:var(--jp);line-height:1.6}
+main{max-width:1500px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:22px;margin:0 0 4px}.lead{font-size:15px;color:#48564F;margin:0 0 18px}
+h2.sec{font-size:19px;margin:34px 0 4px;padding-top:12px;border-top:2px solid #C5CCC8}
+p.note{font-size:14px;color:#48564F;margin:2px 0 14px;max-width:900px}
+.grid{display:flex;flex-wrap:wrap;gap:26px 22px;align-items:flex-start}
+.item{width:340px}.item h3{font-size:16px;margin:0 0 2px}.item p{font-size:13.5px;color:#48564F;margin:0 0 8px;min-height:40px;line-height:1.5}
+.card{width:340px;position:relative;overflow:hidden;background:#FBFAF4;border:1px solid #E1DCC9;border-radius:14px;box-shadow:0 12px 28px -16px rgba(0,0,0,.45)}
+.logo{display:inline-flex;align-items:center;gap:6px;font:700 15px var(--num);letter-spacing:.04em;color:#0B6B44}.logo img{width:24px;height:24px}
+.m{display:inline-flex;width:21px;height:21px;align-items:center;justify-content:center;font-weight:700;line-height:1}
+.m.b{border:2px solid var(--birdie);border-radius:50%;color:var(--birdie)}
+.m.g{border:2px solid var(--bogey);color:#C96A0B}
+.m.d{border:2px solid var(--double);color:var(--double);outline:2px solid var(--double);outline-offset:1.5px;width:17px;height:17px;font-size:13px}
+.m.t{background:var(--triple);color:#fff;border-radius:3px}
+.m.h{background:var(--hio);border-radius:50%;color:#3A2600}
+table{border-collapse:collapse;width:100%;table-layout:fixed;font-family:var(--num)}
+td,th{padding:0;text-align:center}
+.h2{font:700 11px var(--num);letter-spacing:.2em;color:#7A857E}
+/* 共通の横書き表 */
+.hz td{border:1px solid #CFCBBB;height:30px;font-size:17px;font-weight:600}
+.hz tr.hd td{background:#EFECE0;font-size:13px;color:#5B665F;height:22px}
+.hz tr.pr td{font-size:14px;color:#7A857E;height:24px}
+.hz td.l{width:40px;font-size:11px;background:#EFECE0;color:#5B665F}
+.hz td.s{width:36px;background:#F3F0E4;font-weight:700}
+.hz td.l.nm{font-size:11px;line-height:1.1;word-break:break-all;padding:0 2px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);text-align:center}.stats span{display:block;font:600 11px var(--num);letter-spacing:.12em;color:#7A857E}.stats b{font:700 25px/1.1 var(--num)}
+.tot{display:flex;align-items:flex-end;gap:8px;font:700 80px/.8 var(--num)}.tot i{font-style:normal;font-size:26px;line-height:1;color:var(--bogey)}
+.pad{padding:16px 18px}
+/* 1 緑の帯 */
+.c1 .band{background:#0B6B44;color:#fff;padding:13px 18px 11px;display:flex;justify-content:space-between;align-items:flex-end}.c1 .band b{font-size:16px;font-weight:900}.c1 .band span{font:600 15px var(--num)}
+.c1 .who{display:flex;justify-content:space-between;align-items:flex-end}.c1 .who .n{font-size:15px;font-weight:700}
+.c1 .stats{border-top:2px solid #1B2A22;margin-top:12px;padding-top:9px}.c1 .ft{display:flex;justify-content:flex-end;margin-top:8px}
+/* 2 帯なし・太い上罫線 */
+.c2{background:#FFFEF9}.c2 .top{border-top:6px solid #1B2A22;padding:12px 18px 0;display:flex;justify-content:space-between;align-items:baseline}.c2 .top b{font-size:16px;font-weight:900}.c2 .top span{font:600 14px var(--num);color:#6B756F}
+.c2 .who{display:flex;justify-content:space-between;align-items:flex-end;margin-top:6px}.c2 .stats{margin-top:12px;border-top:1px solid #1B2A22;padding-top:9px}.c2 .ft{display:flex;justify-content:space-between;margin-top:8px;color:#8A948E;font:600 11px var(--num);letter-spacing:.14em;align-items:center}
+.c2 .hz td{border-color:#D7D3C2}
+/* 3 二重線・ティー色の丸 */
+.c3 .top{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:3px double #B9B196}.c3 .top b{font-size:15px;font-weight:900;letter-spacing:.04em}.c3 .top span{font:600 14px var(--num);color:#6B756F}
+.c3 .tee{display:inline-flex;gap:4px;margin-left:8px;vertical-align:middle}.c3 .tee i{width:11px;height:11px;border-radius:50%;border:1.5px solid #6B756F}.c3 .tee i.on{background:#2F7DE1;border-color:#2F7DE1}
+.c3 .row{display:flex;justify-content:space-between;align-items:flex-end}.c3 .row .n{font-size:15px;font-weight:700}.c3 .row .n small{display:block;font:500 12px var(--jp);color:#7A857E}.c3 .row .tot{font-size:60px}
+.c3 .stats{margin-top:12px;border-top:1px solid #B9B196;padding-top:9px}
+/* 4 濃い緑のホール行 */
+.c4 .top{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:3px double #B9B196}.c4 .top b{font-size:15px;font-weight:900}.c4 .top span{font:600 14px var(--num);color:#6B756F}
+.c4 .row{display:flex;justify-content:space-between;align-items:flex-end}.c4 .row .n{font-size:15px;font-weight:700}.c4 .row .tot{font-size:60px}
+.c4 .hz tr.hd td{background:#2D5B3F;color:#fff;border-color:#2D5B3F}.c4 .hz tr.pr td{background:#EDE9D7}.c4 .hz td.l{background:#EDE9D7}.c4 .hz tr.hd td.l{background:#2D5B3F}
+.c4 .stats{margin-top:12px;border-top:1px solid #B9B196;padding-top:9px}
+/* 5 署名欄つき（本物のカード風） */
+.c5 .top{padding:12px 18px 8px;display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #1B2A22}.c5 .top b{font-size:16px;font-weight:900}.c5 .top span{font:600 14px var(--num);color:#6B756F}
+.c5 .row{display:flex;justify-content:space-between;align-items:flex-end}.c5 .row .tot{font-size:60px}
+.c5 .sign{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}.c5 .sign div{border-bottom:1px solid #1B2A22;padding-bottom:2px;font-size:12px;color:#6B756F}.c5 .sign b{display:block;font-size:14px;color:#1B2A22;font-weight:700}
+.c5 .stats{margin-top:12px}.c5 .ft{display:flex;justify-content:flex-end;margin-top:6px}
+/* 6 紺の帯 */
+.c6 .band{background:#14284B;color:#fff;padding:13px 18px 11px;display:flex;justify-content:space-between;align-items:flex-end}.c6 .band b{font-size:16px;font-weight:900}.c6 .band span{font:600 15px var(--num)}
+.c6 .who{display:flex;justify-content:space-between;align-items:flex-end}.c6 .who .n{font-size:15px;font-weight:700}.c6 .tot b{color:#14284B}
+.c6 .hz td{border-color:#C9CFDA}.c6 .hz tr.hd td,.c6 .hz td.l{background:#E8ECF3}.c6 .hz td.s{background:#EEF1F6}
+.c6 .stats{border-top:2px solid #14284B;margin-top:12px;padding-top:9px}.c6 .ft{display:flex;justify-content:flex-end;margin-top:8px}.c6 .logo{color:#14284B}
+/* 7 左の緑の綴じ帯 */
+.c7{padding-left:22px}.c7::before{content:"";position:absolute;left:0;top:0;bottom:0;width:14px;background:#0B6B44}
+.c7 .top{padding:14px 18px 0 14px;display:flex;justify-content:space-between;align-items:baseline}.c7 .top b{font-size:16px;font-weight:900}.c7 .top span{font:600 14px var(--num);color:#6B756F}
+.c7 .in{padding:8px 18px 14px 14px}.c7 .who{display:flex;justify-content:space-between;align-items:flex-end}.c7 .who .n{font-size:15px;font-weight:700}.c7 .tot{font-size:72px}
+.c7 .stats{margin-top:12px;border-top:2px solid #1B2A22;padding-top:9px}.c7 .ft{display:flex;justify-content:flex-end;margin-top:8px}
+/* 8 打数の行を大きく・薄い色づけ */
+.c8 .band{background:#0B6B44;color:#fff;padding:11px 18px;display:flex;justify-content:space-between}.c8 .band b{font-size:15px;font-weight:900}.c8 .band span{font:600 14px var(--num)}
+.c8 .who{display:flex;justify-content:space-between;align-items:flex-end}.c8 .who .n{font-size:15px;font-weight:700}
+.c8 .hz td{border-color:#D7D3C2}.c8 .hz tr.sc td{height:42px;font-size:21px;background:#FFFEF7}.c8 .hz tr.sc td.l{font-size:11px;background:#EFECE0}.c8 .hz tr.sc td.s{font-size:22px;background:#F3F0E4}
+.c8 .stats{margin-top:12px;border-top:2px solid #1B2A22;padding-top:9px}.c8 .ft{display:flex;justify-content:flex-end;margin-top:8px}
+/* 9 台紙・穴あき */
+.c9{background:#F4EFDD;border-color:#DCD3B4}.c9::before,.c9::after{content:"";position:absolute;top:50%;width:12px;height:12px;border-radius:50%;background:#E3E7E5;box-shadow:inset 0 1px 2px rgba(0,0,0,.25)}.c9::before{left:7px;margin-top:-30px}.c9::after{left:7px;margin-top:20px}
+.c9 .top{margin-left:26px;padding:14px 18px 6px 4px;display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #1B2A22}.c9 .top b{font-size:16px;font-weight:900}.c9 .top span{font:600 14px var(--num);color:#6B756F}
+.c9 .in{margin-left:26px;padding:10px 18px 14px 4px}.c9 .who{display:flex;justify-content:space-between;align-items:flex-end}.c9 .who .n{font-size:15px;font-weight:700}
+.c9 .hz td{border-color:#CFC6A6;background:rgba(255,255,255,.55)}.c9 .hz tr.hd td,.c9 .hz td.l{background:#E9E1C6}.c9 .hz td.s{background:#EFE8CF}
+.c9 .stats{margin-top:12px;border-top:1px solid #1B2A22;padding-top:9px}.c9 .ft{display:flex;justify-content:flex-end;margin-top:8px}
+/* 10 ロゴの帯 */
+.c10 .band{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;border-bottom:3px solid #0B6B44}.c10 .band .l{display:flex;align-items:center;gap:8px}.c10 .band img{width:30px;height:30px}.c10 .band b{display:block;font-size:15px;font-weight:900;line-height:1.2}.c10 .band small{font:500 12px var(--jp);color:#6B756F}
+.c10 .band .d{font:700 18px var(--num);text-align:right;line-height:1.1}.c10 .band .d small{display:block;font:600 11px var(--num);letter-spacing:.14em}
+.c10 .who{display:flex;justify-content:space-between;align-items:flex-end}.c10 .who .n{font-size:15px;font-weight:700}
+.c10 .stats{margin-top:12px;border-top:1px solid #1B2A22;padding-top:9px}.c10 .ft{display:flex;justify-content:flex-end;margin-top:6px;color:#7A857E;font:600 11px var(--num);letter-spacing:.14em}
+/* 縦の表 */
+.vt th{font-weight:400;vertical-align:bottom;border-bottom:2px solid #1B2A22;padding:8px 0 6px}
+.vt th .rk{display:inline-flex;width:19px;height:19px;border-radius:50%;background:#E4E0D2;font:700 12px var(--num);align-items:center;justify-content:center}
+.vt th.w{background:rgba(242,193,78,.22)}.vt th.w .rk{background:var(--hio)}
+.vt th .nm{display:block;font:700 13px/1.2 var(--jp);min-height:31px;margin-top:3px;word-break:break-all;padding:0 2px}
+.vt th b{display:block;font:700 27px/1 var(--num)}.vt th small{font:700 14px var(--num);color:#6B756F}
+.vt td{border-bottom:1px solid #DDD8C5;height:28px;font-size:16px;font-weight:600}
+.vt td.h{width:30px;font-size:14px;font-weight:700;color:#6B756F}.vt td.p{width:28px;font-size:13px;color:#9AA29C}
+.vt td.bd{border-left:1px solid #E6E1CF}
+.vt tr.sm td{background:#EFECE0;font-weight:700;height:30px}.vt tr.sm td.h{font-size:11px}
+.vt tr.tt td{border-top:2px solid #1B2A22;border-bottom:0;height:34px;font-weight:700;font-size:19px}.vt tr.tt td.h{font:700 13px var(--jp)}
+.vt .m{width:20px;height:20px;font-size:15px}.vt .m.d{width:16px;height:16px;font-size:12px}
+.card.vc .band{background:#0B6B44;color:#fff;padding:12px 16px 10px;display:flex;justify-content:space-between;align-items:flex-end}.card.vc .band b{font-size:15px;font-weight:900}.card.vc .band span{font:600 14px var(--num)}
+.card.vc .in{padding:8px 12px 12px}.card.vc .ft{display:flex;justify-content:flex-end;margin-top:6px}
+.card.hc .band{background:#0B6B44;color:#fff;padding:12px 16px 10px;display:flex;justify-content:space-between;align-items:flex-end}.card.hc .band b{font-size:15px;font-weight:900}.card.hc .band span{font:600 14px var(--num)}
+.card.hc .in{padding:12px 14px 12px}.card.hc .ft{display:flex;justify-content:flex-end;margin-top:6px}
+.card.hc .rk{display:inline-flex;width:15px;height:15px;border-radius:50%;background:#E4E0D2;font:700 11px var(--num);align-items:center;justify-content:center;margin-right:2px;vertical-align:-1px}
+.card.hc .rk.w{background:var(--hio)}
+.hz.mp td.l.nm{width:64px;text-align:left;padding:0 3px;font:700 12px/1.15 var(--jp)}.hz.mp td.s{width:34px}
+.hz.mp tr.hd2 td{height:22px;background:#EFECE0;font-size:13px;color:#5B665F}
+.hz.mp td.s small{display:block;font:600 10px var(--num);color:#6B756F;line-height:1}
+.hz.mp tr+tr.gap td{border:0;height:8px;background:transparent}
+.tag{display:inline-block;font:700 12px var(--jp);padding:1px 8px;border-radius:99px;margin-left:6px;vertical-align:middle}
+.tag.ok{background:#DDF3E6;color:#0B6B44}.tag.ng{background:#FDE3E3;color:#B3261E}
+</style></head><body><main>
+<h1>スコアカードの案 10種類と、人数ごとの形</h1>
+<p class="lead">P1（白い紙のリアルなスコアカード）をもとにした10通りです。絵の見本で、まだアプリには入っていません。中身は同じラウンド（9ホール・32打・+3）です。</p>
+
+<h2 class="sec">① 1人のカード（横書き）10案</h2>
+<p class="note">どれも「紙の表」は同じ形で、帯・罫線・紙の色・飾りだけを変えています。リアルさと、シンプルさのバランスで選んでください。</p>
+<div class="grid" id="ten"></div>
+
+<h2 class="sec">② 人数が変わると、どうなる？</h2>
+<p class="note">1人は横書きがいちばん自然です。4人は、名前を横に並べる縦書きにすると、長い名前も収まります。いちばん迷うのが、2人と3人です。「横のまま」と「縦にする」を並べました。</p>
+<div class="grid" id="people"></div>
+
+<h2 class="sec">③ 18ホールのとき</h2>
+<p class="note">横書きは前半（OUT）と後半（IN）の2段に分けます。縦書きは1つの表のまま長くなります（前半の下に後半が続く）。</p>
+<div class="grid" id="h18"></div>
+</main>
+<script>
+var PAR=[3,3,3,4,3,3,4,3,3], PAR18=PAR.concat([3,4,3,5,3,4,3,3,4]);
+var P=[{n:"たろう",s:[3,2,4,4,3,5,5,3,3]},{n:"はなこ",s:[4,4,3,4,3,5,5,2,3]},{n:"じろう",s:[3,5,2,6,4,3,4,4,4]},{n:"ながいなまえさん",s:[3,3,4,3,3,4,5,5,4]}];
+var P18=[{n:"たろう",s:P[0].s.concat([3,4,3,5,4,4,3,2,4])},{n:"はなこ",s:P[1].s.concat([4,3,3,4,5,3,4,3,3])},{n:"じろう",s:P[2].s.concat([5,4,3,6,3,3,4,3,4])},{n:"ながいなまえさん",s:P[3].s.concat([3,4,4,5,3,4,3,3,4])}];
+function mk(s,p){var d=s-p; if(s===1)return '<span class="m h">1</span>'; if(d<=-1)return '<span class="m b">'+s+'</span>'; if(d===0)return s; if(d===1)return '<span class="m g">'+s+'</span>'; if(d===2)return '<span class="m d">'+s+'</span>'; return '<span class="m t">'+s+'</span>';}
+function sum(a,f,t){var x=0;for(var i=f;i<t;i++)x+=a[i];return x;}
+function tp(d){return d===0?"±0":(d>0?"+":"−")+Math.abs(d);}
+function tbl(p,par,lab,o){o=o||{};var N=par.length,h='';
+ for(var f=0;f<N;f+=9){var t=Math.min(f+9,N),sm=N>9;
+  var cols=[];for(var i=f;i<t;i++)cols.push(i);
+  h+='<table class="hz" style="'+(f?'margin-top:8px':'')+'"><tr class="hd"><td class="l">'+(sm?(f?'IN':'OUT'):'H')+'</td>'+cols.map(function(i){return '<td>'+(i+1)+'</td>'}).join('')+'<td class="s">計</td></tr>'+
+  '<tr class="pr"><td class="l">PAR</td>'+cols.map(function(i){return '<td>'+par[i]+'</td>'}).join('')+'<td class="s">'+sum(par,f,t)+'</td></tr>'+
+  '<tr class="sc"><td class="l">'+(lab||'打数')+'</td>'+cols.map(function(i){return '<td>'+mk(p.s[i],par[i])+'</td>'}).join('')+'<td class="s">'+sum(p.s,f,t)+'</td></tr></table>';}
+ return h;}
+var ST='<div class="stats"><div><span>PUTTS</span><b>15</b></div><div><span>パーオン</span><b>56%</b></div><div><span>3パット</span><b>0</b></div><div><span>OB</span><b>0</b></div></div>';
+var LOGO='<span class="logo"><img src="../mark.png" alt="">GOLF SC.</span>';
+var COURSE='ファーツリーカントリークラブ';
+function single(i,p,par){var d=sum(p.s,0,par.length)-sum(par,0,par.length), tot=sum(p.s,0,par.length), T=tbl(p,par), TOT='<div class="tot">'+tot+'<i>'+tp(d)+'</i></div>';
+ if(i==1)return '<div class="card c1"><div class="band"><b>'+COURSE+'</b><span>2026.11.18</span></div><div class="pad"><div class="who"><div class="n"><div class="h2">PLAYER</div>'+p.n+'</div>'+TOT+'</div><div style="margin-top:14px">'+T+'</div>'+ST+'<div class="ft">'+LOGO+'</div></div></div>';
+ if(i==2)return '<div class="card c2"><div class="top"><b>'+COURSE+'</b><span>2026.11.18</span></div><div class="pad" style="padding-top:6px"><div class="who"><div class="n"><div class="h2">PLAYER</div>'+p.n+'</div>'+TOT+'</div><div style="margin-top:12px">'+T+'</div>'+ST+'<div class="ft"><span>SHORT COURSE SCORECARD</span>'+LOGO+'</div></div></div>';
+ if(i==3)return '<div class="card c3"><div class="top"><b>'+COURSE+'<span class="tee"><i class="on"></i><i></i><i></i></span></b><span>2026.11.18</span></div><div class="pad"><div class="row"><div class="n"><small>PLAYER</small>'+p.n+'</div>'+TOT+'</div><div style="margin-top:12px">'+T+'</div>'+ST+'<div style="display:flex;justify-content:flex-end;margin-top:8px">'+LOGO+'</div></div></div>';
+ if(i==4)return '<div class="card c4"><div class="top"><b>'+COURSE+'</b><span>2026.11.18</span></div><div class="pad"><div class="row"><div class="n"><div class="h2">PLAYER</div>'+p.n+'</div>'+TOT+'</div><div style="margin-top:12px">'+tbl(p,par,'SCORE').replace(/<td class="l">H</,'<td class="l">HOLE<')+'</div>'+ST+'<div style="display:flex;justify-content:flex-end;margin-top:8px">'+LOGO+'</div></div></div>';
+ if(i==5)return '<div class="card c5"><div class="top"><b>'+COURSE+'</b><span>2026.11.18</span></div><div class="pad"><div class="row"><div class="n"><div class="h2">PLAYER</div>'+p.n+'</div>'+TOT+'</div><div style="margin-top:12px">'+T+'</div>'+ST+'<div class="sign"><div>PLAYER<b>'+p.n+'</b></div><div>MARKER<b>&nbsp;</b></div></div><div class="ft">'+LOGO+'</div></div></div>';
+ if(i==6)return '<div class="card c6"><div class="band"><b>'+COURSE+'</b><span>2026.11.18</span></div><div class="pad"><div class="who"><div class="n"><div class="h2">PLAYER</div>'+p.n+'</div>'+TOT+'</div><div style="margin-top:14px">'+T+'</div>'+ST+'<div class="ft">'+LOGO+'</div></div></div>';
+ if(i==7)return '<div class="card c7"><div class="top"><b>'+COURSE+'</b><span>2026.11.18</span></div><div class="in"><div class="who"><div class="n"><div class="h2">PLAYER</div>'+p.n+'</div>'+TOT+'</div><div style="margin-top:12px">'+T+'</div>'+ST+'<div class="ft">'+LOGO+'</div></div></div>';
+ if(i==8)return '<div class="card c8"><div class="band"><b>'+COURSE+'</b><span>2026.11.18</span></div><div class="pad"><div class="who"><div class="n"><div class="h2">PLAYER</div>'+p.n+'</div>'+TOT+'</div><div style="margin-top:14px">'+T+'</div>'+ST+'<div class="ft">'+LOGO+'</div></div></div>';
+ if(i==9)return '<div class="card c9"><div class="top"><b>'+COURSE+'</b><span>2026.11.18</span></div><div class="in"><div class="who"><div class="n"><div class="h2">PLAYER</div>'+p.n+'</div>'+TOT+'</div><div style="margin-top:12px">'+T+'</div>'+ST+'<div class="ft">'+LOGO+'</div></div></div>';
+ return '<div class="card c10"><div class="band"><div class="l"><img src="../mark.png" alt=""><div><b>'+COURSE+'</b><small>'+p.n+'</small></div></div><div class="d">11.18<small>2026 WED</small></div></div><div class="pad"><div class="who"><div class="n"><div class="h2">SCORE</div></div>'+TOT+'</div><div style="margin-top:12px">'+T+'</div>'+ST+'<div class="ft"><span>SHORT COURSE SCORECARD</span></div></div></div>';}
+var NAMES=["P1 緑の帯（今の形）","P2 帯なし・太い上罫線","P3 二重線・ティーの丸","P4 濃い緑のホール行","P5 署名欄つき（本物のカード風）","P6 紺の帯","P7 左に綴じの緑帯","P8 打数の行を大きく","P9 台紙・穴あき","P10 ロゴの帯"];
+var DESC=["緑の帯に罫線の表。基準にする形。","帯をやめて、黒い太線だけ。いちばんすっきり。","コースでもらうカードのような二重線と、ティーの色の丸。","ホール番号の行だけ濃い緑。ゴルフ場のカードに近い。","プレーヤー／マーカーの署名の線つき。いちばん本物らしい。","緑を紺に。表の罫線も青みのグレー。","紙の左に緑の帯（綴じ）。帯より控えめ。","打数の行だけ背を高く、数字を大きく。見やすさ重視。","台紙に穴が2つ。紙の手触りを出す。","ロゴを帯に入れ、日付を右に大きく。ブランド寄り。"];
+var el=document.getElementById('ten'),h='';
+for(var i=1;i<=10;i++)h+='<div class="item"><h3>'+NAMES[i-1]+'</h3><p>'+DESC[i-1]+'</p>'+single(i,P[0],PAR)+'</div>';
+el.innerHTML=h;
+/* 人数 */
+function vert(ps,par,rows){var N=par.length,n=ps.length,tots=ps.map(function(p){return sum(p.s,0,N)}),min=Math.min.apply(null,tots);
+ var order=ps.map(function(p,i){return i}).sort(function(a,b){return tots[a]-tots[b]||a-b});
+ var rank=function(i){return 1+tots.filter(function(t){return t<tots[i]}).length};
+ var cg='<colgroup><col style="width:30px"><col style="width:28px">'+ps.map(function(){return '<col>'}).join('')+'</colgroup>';
+ var head='<tr><th></th><th></th>'+order.map(function(i){var r=rank(i),d=tots[i]-sum(par,0,N);return '<th class="'+(r===1?'w':'')+'"><span class="rk">'+r+'</span><span class="nm">'+ps[i].n+'</span><b>'+tots[i]+'</b><small>'+tp(d)+'</small></th>'}).join('')+'</tr>';
+ var body='';for(var f=0;f<N;f+=9){var t=Math.min(f+9,N);for(var j=f;j<t;j++)body+='<tr><td class="h">'+(j+1)+'</td><td class="p">'+par[j]+'</td>'+order.map(function(i){return '<td class="bd">'+mk(ps[i].s[j],par[j])+'</td>'}).join('')+'</tr>';
+  if(N>9)body+='<tr class="sm"><td class="h">'+(f?'IN':'OUT')+'</td><td class="p">'+sum(par,f,t)+'</td>'+order.map(function(i){return '<td class="bd">'+sum(ps[i].s,f,t)+'</td>'}).join('')+'</tr>';}
+ body+='<tr class="tt"><td class="h">計</td><td class="p">'+sum(par,0,N)+'</td>'+order.map(function(i){return '<td class="bd">'+tots[i]+'</td>'}).join('')+'</tr>';
+ return '<div class="card vc"><div class="band"><b>'+COURSE+'</b><span>11.18</span></div><div class="in"><table class="vt">'+cg+head+body+'</table><div class="ft">'+LOGO+'</div></div></div>';}
+function horiz(ps,par){var N=par.length,tots=ps.map(function(p){return sum(p.s,0,N)});var rank=function(i){return 1+tots.filter(function(t){return t<tots[i]}).length};
+ var order=ps.map(function(p,i){return i}).sort(function(a,b){return tots[a]-tots[b]||a-b});var h='';
+ for(var f=0;f<N;f+=9){var t=Math.min(f+9,N),cols=[];for(var i=f;i<t;i++)cols.push(i);
+  h+='<table class="hz mp" style="'+(f?'margin-top:8px':'')+'"><tr class="hd2"><td class="l nm" style="text-align:center">'+(N>9?(f?'IN':'OUT'):'H')+'</td>'+cols.map(function(i){return '<td>'+(i+1)+'</td>'}).join('')+'<td class="s">計</td>'+(N>9&&f?'<td class="s">合計</td>':'')+'</tr>'+
+  '<tr class="pr"><td class="l nm" style="text-align:center;font-weight:500">PAR</td>'+cols.map(function(i){return '<td>'+par[i]+'</td>'}).join('')+'<td class="s">'+sum(par,f,t)+'</td>'+(N>9&&f?'<td class="s">'+sum(par,0,N)+'</td>':'')+'</tr>'+
+  order.map(function(k){return '<tr><td class="l nm"><span class="rk '+(rank(k)===1?'w':'')+'">'+rank(k)+'</span>'+ps[k].n+'</td>'+cols.map(function(i){return '<td>'+mk(ps[k].s[i],par[i])+'</td>'}).join('')+'<td class="s">'+sum(ps[k].s,f,t)+'</td>'+(N>9&&f?'<td class="s"><b>'+tots[k]+'</b><small>'+tp(tots[k]-sum(par,0,N))+'</small></td>':'')+'</tr>'}).join('')+'</table>';}
+ return '<div class="card hc"><div class="band"><b>'+COURSE+'</b><span>11.18</span></div><div class="in">'+h+'<div class="ft">'+LOGO+'</div></div></div>';}
+var pp='';
+pp+='<div class="item"><h3>1人：横書き</h3><p>名前は上に大きく。いちばん読みやすい形。</p>'+single(1,P[0],PAR)+'</div>';
+pp+='<div class="item"><h3>2人：横書き<span class="tag ok">おすすめ</span></h3><p>表の行が2つ。名前は左の列に入ります。見た目は1人の続きで、自然です。</p>'+horiz(P.slice(0,2),PAR)+'</div>';
+pp+='<div class="item"><h3>2人：縦書き</h3><p>列が2つで、1つの列がとても広くなります。すき間が目立ちます。</p>'+vert(P.slice(0,2),PAR)+'</div>';
+pp+='<div class="item"><h3>3人：横書き</h3><p>行が3つ。名前の列が狭いので、4文字くらいまでなら収まります。長い名前は2行になります。</p>'+horiz(P.slice(0,3),PAR)+'</div>';
+pp+='<div class="item"><h3>3人：縦書き<span class="tag ok">おすすめ</span></h3><p>列が3つ。名前を上に出せるので、長い名前でも切れません。</p>'+vert(P.slice(0,3),PAR)+'</div>';
+pp+='<div class="item"><h3>4人：横書き</h3><p>行が4つ。名前の列が狭く、5文字以上は小さい字で2行になります。</p>'+horiz(P,PAR)+'</div>';
+pp+='<div class="item"><h3>4人：縦書き<span class="tag ok">おすすめ</span></h3><p>列が4つ。名前も合計も、上の見出しにそろいます。</p>'+vert(P,PAR)+'</div>';
+document.getElementById('people').innerHTML=pp;
+var h18='';
+h18+='<div class="item"><h3>1人・18ホール：横書き</h3><p>前半（OUT）と後半（IN）の2段。</p>'+(function(){var p=P18[0];var d=sum(p.s,0,18)-sum(PAR18,0,18);return '<div class="card c1"><div class="band"><b>'+COURSE+'</b><span>2026.11.18</span></div><div class="pad"><div class="who"><div class="n"><div class="h2">PLAYER</div>'+p.n+'</div><div class="tot">'+sum(p.s,0,18)+'<i>'+tp(d)+'</i></div></div><div style="margin-top:14px">'+tbl(p,PAR18)+'</div>'+ST+'<div class="ft">'+LOGO+'</div></div></div>';})()+'</div>';
+h18+='<div class="item"><h3>2人・18ホール：横書き</h3><p>2段に分けて、後半の段の右に「合計」を出します。</p>'+horiz(P18.slice(0,2),PAR18)+'</div>';
+h18+='<div class="item"><h3>4人・18ホール：縦書き</h3><p>1つの表のまま、前半の計・後半の計の行を入れます。縦に長くなります。</p>'+vert(P18,PAR18)+'</div>';
+document.getElementById('h18').innerHTML=h18;
+</script></body></html>
