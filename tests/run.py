@@ -253,7 +253,7 @@ with sync_playwright() as pw:
     check("スコアカード: 保存後はみんなのリザルト（順位は縦の表の見出しに・全員のスコア）", pg.query_selector(".grp-card") is not None and pg.evaluate("document.querySelectorAll('table.v1 .v1c').length") == 4)
     check("スコアカード: リザルトで「みんな」＋4人を切りかえられる", pg.evaluate("document.querySelectorAll('.rc-who button').length") == 5 and C(pg, '.rc-who button:nth-child(3)') and pg.evaluate("state.result.player") == "はなこ")
     check("リザルト: 2回目からは出てくるアニメーションをくり返さない（点滅しない）", "still" in pg.evaluate("document.querySelector('.result-back').className"))
-    check("リザルト: 全員分まとめて保存のボタン（5枚）", "5枚" in (pg.text_content("[data-act=save-all]") or ""))
+    check("リザルト: 全員分まとめて保存のボタン（枚数は書かない）", (pg.text_content("[data-act=save-all]") or "").strip() == "全員分をまとめて保存")
     check("スコアカード: 保存後は下書きが消える", pg.evaluate("localStorage.getItem('sc.cdraft')") in (None, "null"))
     check("スコアカード: エラーなし", not errs)
     pg.context.close()

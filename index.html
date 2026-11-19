@@ -2168,6 +2168,13 @@ header.top .sync[hidden]{display:none}
 .paper .rc-sc td.lab{font-size:13px!important;letter-spacing:0}
 .paper .rc-sc table.v1 td.v1c .v1n{max-height:none;overflow:visible;min-height:0}
 @media (max-width:350px){.paper .rc-band b{font-size:14px}.paper .rc-band .rc-date{font-size:14px}}
+
+/* 2026-11-24 感想への対応: 紙のカードのまわりの縁をなくす・COURSE BEST は金色で目立たせる・「一緒に回る」の×は丸の真ん中に */
+.result-card.paper{border:0}
+.result-card.paper.best{background:linear-gradient(180deg,#FFEFB8 0,#FFF7DC 38%,#FBFAF4 70%);box-shadow:0 0 0 3px #F2B01E,0 0 34px 6px rgba(242,176,30,.55),0 30px 60px -20px rgba(0,0,0,.6)}
+.paper.best .rc-stars svg{filter:drop-shadow(0 0 6px rgba(240,163,10,.9))}
+.mate-in button{display:flex;align-items:center;justify-content:center;padding:0}
+.mate-in button svg{width:60%;height:60%;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;display:block}
 </style>
 
 </head>
@@ -2295,7 +2302,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-24-1200";
+const BUILD = "2026-11-25-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2651,9 +2658,9 @@ function fillStars(){
   /* 星を置ける場所: 名前（左）と合計（右）のあいだ。文字の上には置かない */
   const pl=card.querySelector(".rc-pl"), sc=card.querySelector(".rc-score"), row=card.querySelector(".rc-who2");
   const spots=[]; if(pl&&sc&&row){ const L=rel(pl).r+2, R=rel(sc).l-2, T=rel(row).t-1, B=rel(row).b; let tries=0;
-    while(R-L>6 && spots.length<7 && tries++<400){ const x=L+Math.random()*(R-L), y=T+Math.random()*(B-T); if(spots.some(([px,py])=>Math.abs(px-x)<5 && Math.abs(py-y)<9)) continue; spots.push([x,y]); } }
+    while(R-L>6 && spots.length<10 && tries++<500){ const x=L+Math.random()*(R-L), y=T+Math.random()*(B-T); if(spots.some(([px,py])=>Math.abs(px-x)<5 && Math.abs(py-y)<9)) continue; spots.push([x,y]); } }
   const star=(sz,col,op)=>`<svg viewBox="0 0 24 24" width="${sz}" height="${sz}"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z" fill="${col}" fill-opacity="${op}"/></svg>`;
-  box.innerHTML = spots.map(([x,y],i)=>{ const big=i<2, sz=big?20+Math.round(Math.random()*6):9+Math.round(Math.random()*8), col=i%3===2?"#F7C948":"#F0A30A";
+  box.innerHTML = spots.map(([x,y],i)=>{ const big=i<3, sz=big?26+Math.round(Math.random()*10):11+Math.round(Math.random()*9), col=i%3===2?"#F7C948":"#F0A30A";
     return `<i class="${big?"big":""}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%"><svg style="animation-delay:${(-Math.random()*2.4).toFixed(2)}s;animation-duration:${(1.6+Math.random()*1.4).toFixed(2)}s" ${star(sz,col,big?.95:(.6+Math.random()*.4).toFixed(2)).slice(5)}</i>`; }).join("");
   if(spots.length){ starCache[key]=box.innerHTML; fillStars.n=0; } else if((fillStars.n=(fillStars.n||0)+1)<6) setTimeout(fillStars,150); // 描く前で場所が測れなかったら少し待ってやり直す
 }
@@ -2666,7 +2673,7 @@ function resultOverlay(r){
   const best = flag==="COURSE BEST!";
   const conf = best ? `<div class="rc-stars" aria-hidden="true"></div>` : "";
   return `<div class="result-back" role="dialog" aria-label="ラウンド結果"><div class="result-wrap">
-    ${state.resultAll&&(state.resultGroup||[]).length>1?groupCard(state.resultGroup):`<div class="result-card paper">${conf}<div class="rc-band"><b>${esc(r.courseName)}</b><span class="rc-date">${y}.${m}.${d}</span></div><div class="rc-in">
+    ${state.resultAll&&(state.resultGroup||[]).length>1?groupCard(state.resultGroup):`<div class="result-card paper ${best?"best":""}">${conf}<div class="rc-band"><b>${esc(r.courseName)}</b><span class="rc-date">${y}.${m}.${d}</span></div><div class="rc-in">
       <div class="rc-who2"><div class="rc-pl"><small>PLAYER</small><span>${esc(r.player)}</span>${flag?`<em class="rc-flag">${flag}</em>`:""}</div><div class="rc-score ${t.diff>0?"up":t.diff<0?"down":"even"}"><b>${t.score}</b><span>${toPar(t.diff)}</span></div></div>
       <div class="rc-sc">${(()=>{ const out=[]; for(let i=0;i<r.holes.length;i+=9){ const ch=r.holes.slice(i,i+9);
         const two=r.holes.length>9, lab=two?(i===0?"OUT":"IN"):"H", sub=ch.reduce((x,h)=>x+h.strokes,0), subp=ch.reduce((x,h)=>x+h.par,0);
@@ -2687,7 +2694,7 @@ function resultOverlay(r){
     ${(state.resultGroup||[]).length>1?(()=>{ const g=state.resultGroup, nm=g.map(x=>x.player);
       return `<div class="rc-who" role="group" aria-label="だれのリザルト"><button data-act="result-all" aria-pressed="${!!state.resultAll}">みんな</button>${g.map((x,k)=>`<button data-act="result-pick" data-id="${esc(x.id)}" aria-pressed="${!state.resultAll&&x.id===r.id}">${esc(dupLabel(nm,k))}</button>`).join("")}</div>`; })():""}
     <div class="rc-actions"><button class="rc-save" data-act="save-card">画像を保存・送る</button></div>
-    <div class="rc-actions rc-sub">${(state.resultGroup||[]).length>1?`<button class="rc-2nd" data-act="save-all">全員分をまとめて保存（${state.resultGroup.length+1}枚）</button>`:""}${(state.resultAll&&(state.resultGroup||[]).length>1)||state.resultTry?"":`<button class="rc-2nd" data-act="back-to-input">スコア入力に戻る</button>`}</div>
+    <div class="rc-actions rc-sub">${(state.resultGroup||[]).length>1?`<button class="rc-2nd" data-act="save-all">全員分をまとめて保存</button>`:""}${(state.resultAll&&(state.resultGroup||[]).length>1)||state.resultTry?"":`<button class="rc-2nd" data-act="back-to-input">スコア入力に戻る</button>`}</div>
     <button class="rc-close" data-act="close-result">閉じる</button>
   </div></div>`;
 }
@@ -2764,7 +2771,7 @@ function matesSheet(){
     if(l.length) bottom=`<div class="mt-cap">最近いっしょに回った人（押すと入ります）</div><div class="mt-chips">${l.map(x=>chip(x,false)).join("")}</div>${smp}`; }
   if(v==="m5"){ const l=ppl.filter(x=>!has(x.name)).sort(byFreq).slice(0,3);
     if(l.length) bottom=`<div class="mt-cap">よく一緒に回る人（押すと入ります）</div><div class="mt-chips">${l.map(x=>chip(x,true)).join("")}</div>${smp}`; }
-  return `<div class="sheet-back" data-act="mates-done"><div class="sheet mates-sheet" data-stop="1"><p>一緒に回る人${tag}</p>${top}<div class="mates">${[0,1,2].map(i=>`<span class="mate-in"><input id="r-mate${i}" ${v==="old"?`list="plist"`:""} maxlength="8" value="${esc(m[i])}" placeholder="${i+2}人目" aria-label="${i+2}人目の名前" autocomplete="off"><button data-act="mate-clear" data-i="${i}" aria-label="${i+2}人目を消す">×</button></span>${v==="m3"?`<div class="mt-sug" data-i="${i}"></div>`:""}`).join("")}</div>${bottom}<button class="ds-go" data-act="mates-done">完了</button>${v==="old"?`<datalist id="plist">${players().map(p=>`<option value="${esc(p)}">`).join("")}</datalist>`:""}</div></div>`;
+  return `<div class="sheet-back" data-act="mates-done"><div class="sheet mates-sheet" data-stop="1"><p>一緒に回る人${tag}</p>${top}<div class="mates">${[0,1,2].map(i=>`<span class="mate-in"><input id="r-mate${i}" ${v==="old"?`list="plist"`:""} maxlength="8" value="${esc(m[i])}" placeholder="${i+2}人目" aria-label="${i+2}人目の名前" autocomplete="off"><button data-act="mate-clear" data-i="${i}" aria-label="${i+2}人目を消す"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button></span>${v==="m3"?`<div class="mt-sug" data-i="${i}"></div>`:""}`).join("")}</div>${bottom}<button class="ds-go" data-act="mates-done">完了</button>${v==="old"?`<datalist id="plist">${players().map(p=>`<option value="${esc(p)}">`).join("")}</datalist>`:""}</div></div>`;
 }
 /* お試し M4: 人を選ぶ画面（検索＋チェックで3人まで） */
 function matesPick(m, tag){
