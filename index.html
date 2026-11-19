@@ -475,10 +475,6 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);bo
 @keyframes rise{from{transform:translateY(30px) scale(.96);opacity:0}to{transform:none;opacity:1}}
 .result-card::before{content:"";position:absolute;right:-90px;top:-80px;width:320px;height:280px;border-radius:50%;background:repeating-radial-gradient(ellipse at center,rgba(255,255,255,.12) 0 1px,transparent 1px 14px)}
 .rc-in{position:relative;z-index:4;padding:22px 22px 18px;display:flex;flex-direction:column;gap:14px}
-.rc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.rc-top .k{font-size:10px;letter-spacing:.22em;font-weight:700;opacity:.7}
-.rc-top .n{font-size:18px;font-weight:900;margin-top:2px}
-.rc-top .c{font-size:12px;opacity:.75}
 .rc-flag{font-size:10px;font-weight:900;letter-spacing:.12em;padding:5px 10px;border-radius:999px;background:linear-gradient(120deg,#F2B01E,#FFD76A);color:#3A2600;white-space:nowrap}
 .rc-score{display:flex;align-items:flex-end;gap:12px}
 .rc-score b{font-family:var(--f-num);font-size:96px;line-height:.8;font-weight:700}
@@ -763,7 +759,6 @@ table.sc tr.hn td{background:var(--soft);color:var(--muted);font-size:13px}
 .mk.b{border:1.5px solid var(--under);border-radius:50%;color:var(--under)}
 .mk.e{border:1.5px solid var(--under);border-radius:50%;box-shadow:0 0 0 2px var(--paper),0 0 0 3.5px var(--under);color:var(--under)}
 .mk.bo{border:1.5px solid var(--over)}
-.mk.db{border:1.5px solid var(--over);box-shadow:0 0 0 2px var(--paper),0 0 0 3.5px var(--over)}
 
 .actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 
@@ -835,7 +830,6 @@ table.sc tr.hn td{background:var(--soft);color:var(--muted);font-size:13px}
 .rc-brand .rc-logo>span{display:flex;flex-direction:column;align-items:flex-start}
 
 .result-card::before{display:none}
-.rc-rings{position:absolute;right:-90px;top:-80px;width:320px;height:280px;pointer-events:none}
 
 .hc2 .badges{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .pace2{font-size:9px;font-weight:900;letter-spacing:.14em;padding:4px 8px;border-radius:999px;background:linear-gradient(120deg,#F2B01E,#FFD76A);color:#3A2600;white-space:nowrap}
@@ -2043,16 +2037,7 @@ header.top .sync[hidden]{display:none}
 .rc-sc table.v1 td.v1h.hh{color:#3A2600;opacity:1}
 .rc-sc table.v1 tr.v1t td:first-child{border-radius:0 0 0 14px}.rc-sc table.v1 tr.v1t td:last-child{border-radius:0 0 14px 0}
 /* R2: 横の表の中に順位 */
-.rc-sc table.grp.r2 col.lab{width:76px}.rc-sc table.grp.r2.wt col.lab{width:66px}.rc-sc table.grp.r2.wt col.sum{width:28px}.rc-sc table.grp.r2.wt .mk3{width:17px;height:17px;font-size:12px}.rc-sc table.grp.r2.wt .mk3.m-eagle,.rc-sc table.grp.r2.wt .mk3.m-double,.rc-sc table.grp.r2.wt .mk3.m-hio{width:14px;height:14px;font-size:11px}
-.rc-sc table.grp.r2 td.nm{opacity:1}
-.rc-sc table.grp.r2 col.sum{width:30px}.rc-sc table.grp.r2 col.tot{width:32px}
-.rc-sc table.grp.r2 td.nm .nmr{display:flex;align-items:center;gap:4px}
-.rc-sc table.grp.r2 td.nm .rc-rk{width:17px;height:17px;flex:0 0 17px;font-size:12px}
-.rc-sc table.grp.r2 td.nm .nmr>span{font-family:var(--f-body);font-size:11px;line-height:1.15}
-.rc-sc table.grp.r2 td{padding:4px 0}
-.rc-sc table.grp.r2 td.sum small,.rc-sc table.grp.r2 td.tot small{display:block;font-size:11px;opacity:.8;line-height:1}
-.rc-sc table.grp.r2 td.tot{font-size:10px}.rc-sc table.grp.r2 td.tot b{font-size:15px;color:#FFD76A}
-.rc-sc table.grp.r2 tr.h td.tot{font-family:var(--f-body);opacity:.6}
+.rc-sc table.grp.r2 col.lab{width:76px}
 /* R3: 順位は小さな2×2の帯 */
 .rc-rank.r3{display:grid;grid-template-columns:1fr 1fr;gap:4px}
 .rc-rank.r3>div{gap:6px;padding:3px 8px;min-width:0}
@@ -2062,11 +2047,6 @@ header.top .sync[hidden]{display:none}
 
 /* ===== 2026-11-22 仕上げ: 結果カードの上はいつも同じ高さ・小さい日本語を13pxに・長い名前を切らない ===== */
 .rc-top{display:block}
-.rc-hd{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.rc-hd>div{min-width:0}.rc-top .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rc-top .c{font-size:13px;display:flex;min-width:0}
-.rc-top .c span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rc-top .c i{font-style:normal;flex:0 0 auto;white-space:nowrap}
 .rc-grid span{font-size:11px;height:14px;line-height:14px;margin-bottom:4px;white-space:nowrap}
 .rc-grid span.jp{font-size:13px;letter-spacing:.04em}
 .rc-who button{font-size:13px!important}
@@ -2115,6 +2095,79 @@ header.top .sync[hidden]{display:none}
   .game-sheet .gm-h b.long{font-size:13px!important;letter-spacing:-.06em}
   .club-tbl th:nth-child(4),.club-tbl td:nth-child(4){padding-left:2px}
 }
+
+/* ===== 2026-11-24 結果カードは「白い紙のスコアカード」（P1: 緑の帯＋罫線の表）。1人は横書き、2人以上は縦書き ===== */
+.result-card.paper{background:#FBFAF4;color:#1B2A22;border:1px solid #E4E0D2;border-radius:18px;box-shadow:0 30px 60px -20px rgba(0,0,0,.6)}
+.paper .rc-band{background:#0B6B44;color:#fff;padding:13px 18px 11px;display:flex;align-items:flex-end;gap:8px}
+.paper .rc-band b{flex:1;min-width:0;font-size:16px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.paper .rc-band .rc-date{font:600 15px var(--f-num);white-space:nowrap}
+.paper .rc-flag{font-size:11px;padding:3px 9px;letter-spacing:.08em;display:inline-block;font-style:normal;margin-top:4px}
+.paper .rc-in{padding:16px 18px 14px;gap:12px}
+.rc-who2{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+.rc-pl{min-width:0;font-size:16px;font-weight:700;line-height:1.3}
+.rc-pl small{display:block;font:600 11px var(--f-num);letter-spacing:.2em;color:#7A857E}
+.rc-pl span{display:block;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.paper .rc-score b{font-size:80px}
+.paper .rc-score span{font-size:26px;line-height:1;opacity:1;margin-bottom:2px;color:var(--q-bogey)}
+.paper .rc-score.down span{color:var(--q-birdie)}.paper .rc-score.even span{color:#6B756F}
+/* 1人: 罫線の表（H / PAR / 打数） */
+.paper .rc-sc table{border-collapse:collapse;background:none;border-radius:0}
+.paper .rc-sc td{border:1px solid #CFCBBB;color:#1B2A22;opacity:1;height:30px;font-size:17px;font-weight:600;padding:0}
+.paper .rc-sc tr.h td{background:#EFECE0;color:#5B665F;font-size:13px;height:22px}
+.paper .rc-sc tr.p td{color:#7A857E;font-size:14px;height:24px}
+.paper .rc-sc table.half col.lab{width:40px}.paper .rc-sc table.half col.sum{width:36px}
+.paper .rc-sc td.lab{background:#EFECE0;color:#5B665F;font-size:11px!important;letter-spacing:.04em;opacity:1;text-align:center;padding:0 1px}
+.paper .rc-sc td.sum{background:#F3F0E4;font-weight:700;color:#1B2A22;font-size:15px;opacity:1}.paper .rc-sc td.sum b{font-size:17px}
+.paper .rc-sc tr.h td.sum{font-size:13px!important}.paper .rc-sc tr.p td.sum{font-size:14px;color:#7A857E;font-weight:500}
+.paper .rc-sc table td.hh{background:#FFD76A;color:#3A2600}
+.paper .rc-sc table+table{margin-top:8px}
+/* 記号は、ふつうの画面と同じ色 */
+.paper .rc-sc .m-par{color:#1B2A22;background:none;border-radius:0}
+.paper .rc-sc .m-bogey{border-color:var(--q-bogey);color:var(--q-bogey)}
+.paper .rc-sc .m-birdie{border-color:var(--q-birdie);color:var(--q-birdie)}
+.paper .rc-sc .m-eagle{border-color:var(--q-eagle);color:var(--q-eagle);outline-color:var(--q-eagle)}
+.paper .rc-sc .m-double{border-color:var(--q-double);color:var(--q-double);outline-color:var(--q-double)}
+.paper .rc-sc .m-triple{background:var(--q-triple);color:#fff}
+.paper .rc-sc .m-hio{background:var(--q-hio);color:#3A2600;outline-color:var(--q-hio)}
+/* 数字の欄・ロゴ */
+.paper .rc-grid{border-top:2px solid #1B2A22;color:#1B2A22}
+.paper .rc-grid span{color:#7A857E;opacity:1}
+.paper .rc-brand{opacity:1}.paper .rc-logo{background:none;box-shadow:none;padding:0}
+.paper .rc-logo b{color:#0B6B44}.paper .rc-logo small{color:#7A857E}
+/* 2人以上: 縦の表（人が横）。順位・名前・合計は人の見出しに */
+.paper .rc-sc table.v1{background:none;border-radius:0;border-collapse:collapse}
+.paper .rc-sc table.v1 col.ch{width:30px}.paper .rc-sc table.v1 col.cp{width:28px}
+.paper .rc-sc table.v1 td{border:0;border-bottom:1px solid #DDD8C5;color:#1B2A22;height:28px;font-size:16px;font-weight:600}
+.paper .rc-sc table.v1 tr:not(.v1head) td:nth-child(n+3){border-left:1px solid #E6E1CF}
+.paper .rc-sc table.v1 td.v1h{color:#6B756F;font-size:14px;font-weight:700;opacity:1}
+.paper .rc-sc table.v1 td.v1p{color:#9AA29C;font-size:13px;opacity:1}
+.paper .rc-sc table.v1 tr.v1head td{border-bottom:2px solid #1B2A22}
+.paper .rc-sc table.v1 tr.v1head td.v1h,.paper .rc-sc table.v1 tr.v1head td.v1p{font-size:10px;letter-spacing:.06em;color:#7A857E}
+.paper .rc-sc table.v1 td.v1c{border-left:0;padding:8px 2px 6px}
+.paper .rc-sc table.v1 td.v1c.win{background:rgba(242,193,78,.22)}
+.paper .rc-sc table.v1 td.v1c .v1n{color:#1B2A22}
+.paper .rc-sc table.v1 td.v1c b{color:#1B2A22}.paper .rc-sc table.v1 td.v1c small{color:#6B756F;opacity:1}
+.paper .rc-sc table.v1 .rc-rk{background:#E4E0D2;color:#1B2A22}.paper .rc-sc table.v1 .rc-rk.win{background:#F2C14E;color:#3A2600}
+.paper .rc-sc table.v1 tr.v1s td{background:#EFECE0;font-weight:700;border-top:1px solid #CFCBBB}
+.paper .rc-sc table.v1 tr.v1t td{background:none;border-top:2px solid #1B2A22;border-bottom:0;height:34px;font-weight:700}
+.paper .rc-sc table.v1 tr.v1t td b{font-size:19px;color:#1B2A22}
+.paper .rc-sc table.v1 td.v1h.hh{background:#FFD76A;color:#3A2600;border-radius:4px}
+/* ゲームの欄（紙の上） */
+.paper .rc-skins{background:#F3F0E4;color:#1B2A22;border:1px solid #E1DCC9}
+.paper .rc-skins *{border-color:#DDD8C5}
+.paper .rs-h span,.paper .rs-h em,.paper .rs-sum,.paper .rs-seg small,.paper .pe-hid span,.paper .pe-row span:not(.rs-n),.paper .rs-sub{color:#5B665F;opacity:1}
+.paper .rs-row.top b{color:#B07D00}
+.paper .rs-seg{border-bottom-color:#DDD8C5}
+.paper .pe-head span{color:#7A857E!important;opacity:1!important}
+.paper .rs-n{color:#1B2A22}
+/* COURSE BEST の星は、金色（紙の上で見えるように） */
+.paper .rc-stars svg{filter:drop-shadow(0 0 3px rgba(240,163,10,.5))}
+
+/* 結果カード（紙）の仕上げ: 長い名前は2行まで・帯のコース名は小さい画面で少し小さく・行の見出しは13px */
+.rc-pl span{white-space:normal;word-break:break-all;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;line-height:1.25}
+.paper .rc-sc td.lab{font-size:13px!important;letter-spacing:0}
+.paper .rc-sc table.v1 td.v1c .v1n{max-height:none;overflow:visible;min-height:0}
+@media (max-width:350px){.paper .rc-band b{font-size:14px}.paper .rc-band .rc-date{font-size:14px}}
 </style>
 
 </head>
@@ -2167,12 +2220,12 @@ const cPref = c => (c && (c.pref || (c.holes && c.holes[0] && c.holes[0].pref)))
 const cArea = c => (c && (c.area || (c.holes && c.holes[0] && c.holes[0].area))) || "";
 const presetTaken = pc => state.courses.some(c=>c.presetKey===pc.key || c.name.replace(/\s/g,"").includes(pc.name.replace(/\s/g,"")));
 /* 用意済みコースは、ふだんは出さない（コースは各人が自分で登録する方針。写真読み取りで入れる）。動作確認用に、アドレスの最後に ?presets=1 を付けて開くと出る（?presets=0 で戻る。端末ごとに覚える。テストでは常に出す） */
-/* お試しの切りかえ（決めるまでのあいだ）: アドレスの後ろに ?mates=m1〜m5・m25 / ?result=r1〜r3 を付けると、その案で動く。端末に覚えるので、?mates=0 / ?result=0 で元に戻す。?show=9 / ?show=18 は見本の4人の結果を開く */
-const TRY = (()=>{ const o={mates:"",result:"",show:"",game:"",set:false,rset:false}, ok={mates:["m1","m2","m3","m4","m5","m25","old"], result:["r1","r2","r3"]};
+/* お試しの切りかえ（決めるまでのあいだ）: アドレスの後ろに ?mates=m1〜m5・m25 を付けると、その案で動く。端末に覚えるので、?mates=0 で元に戻す。?show=9 / ?show=18 は見本の4人の結果を開く */
+const TRY = (()=>{ const o={mates:"",show:"",game:"",set:false}, ok={mates:["m1","m2","m3","m4","m5","m25","old"]};
   try{ const q=new URLSearchParams(location.search);
-    for(const k of ["mates","result"]){ const v=q.get(k); if(v!=null){ if(ok[k].includes(v.toLowerCase())) localStorage.setItem("sc.try."+k, v.toLowerCase()); else localStorage.removeItem("sc.try."+k); }
+    for(const k of ["mates"]){ const v=q.get(k); if(v!=null){ if(ok[k].includes(v.toLowerCase())) localStorage.setItem("sc.try."+k, v.toLowerCase()); else localStorage.removeItem("sc.try."+k); }
       const cur=localStorage.getItem("sc.try."+k)||""; o[k]=ok[k].includes(cur)?cur:""; }
-    o.set=!!o.mates; o.rset=!!o.result; if(!o.mates) o.mates="m25"; if(!o.result) o.result="r1";   // 何も付けないときは、みんなの結果は縦の表（R1）。   // 何も付けないときは「前回と同じ＋最近の6人」（iPhone の候補は出さない）
+    o.set=!!o.mates; if(!o.mates) o.mates="m25";   // 何も付けないときは「前回と同じ＋最近の6人」   // 何も付けないときは「前回と同じ＋最近の6人」（iPhone の候補は出さない）
     o.show=["9","18"].includes(q.get("show"))?q.get("show"):""; o.game=q.get("game")==="skins"?"skins":""; }catch(e){}
   return o; })();
 const TRY_NAMES = ["はなこ","じろう","さぶろう","ゆきこ","けんた","みさき","だいき","あやか"];
@@ -2242,7 +2295,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-22-1200";
+const BUILD = "2026-11-24-1200";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2595,15 +2648,13 @@ function fillStars(){
   const card=$(".result-card"), box=card&&card.querySelector(".rc-stars"); if(!box) return;
   const key=state.result&&state.result.id; if(starCache[key]){ box.innerHTML=starCache[key]; return; }
   const cr=card.getBoundingClientRect(), rel=el=>{ const b=el.getBoundingClientRect(); return {l:(b.left-cr.left)/cr.width*100, r:(b.right-cr.left)/cr.width*100, t:(b.top-cr.top)/cr.height*100, b:(b.bottom-cr.top)/cr.height*100}; };
-  const sc=card.querySelector(".rc-score span")||card.querySelector(".rc-score b"), sheet=card.querySelector(".rc-sc"), flag=card.querySelector(".rc-flag"); const ci=card.querySelector(".rc-top .c i"), cx=ci?rel(ci):null;
-  const X0=(sc?rel(sc).r:55)+3, Y1=(sheet?rel(sheet).t:40)-2, fl=flag?rel(flag):null;
-  const spots=[]; let tries=0; while(spots.length<14 && tries++<600){ const x=X0+Math.sqrt(Math.random())*(95-X0), y=6+Math.random()*(Y1-8);
-    if(fl && x>fl.l-3 && x<fl.r+2 && y>fl.t-2 && y<fl.b+2) continue;
-    if(cx && x<cx.r+3 && y>cx.t-4 && y<cx.b+2) continue;   // コース名・日付の文字の上には置かない
-    if(spots.some(([px,py])=>Math.abs(px-x)<6 && Math.abs(py-y)<5)) continue; spots.push([x,y]); }
+  /* 星を置ける場所: 名前（左）と合計（右）のあいだ。文字の上には置かない */
+  const pl=card.querySelector(".rc-pl"), sc=card.querySelector(".rc-score"), row=card.querySelector(".rc-who2");
+  const spots=[]; if(pl&&sc&&row){ const L=rel(pl).r+2, R=rel(sc).l-2, T=rel(row).t-1, B=rel(row).b; let tries=0;
+    while(R-L>6 && spots.length<7 && tries++<400){ const x=L+Math.random()*(R-L), y=T+Math.random()*(B-T); if(spots.some(([px,py])=>Math.abs(px-x)<5 && Math.abs(py-y)<9)) continue; spots.push([x,y]); } }
   const star=(sz,col,op)=>`<svg viewBox="0 0 24 24" width="${sz}" height="${sz}"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z" fill="${col}" fill-opacity="${op}"/></svg>`;
-  box.innerHTML = spots.map(([x,y],i)=>{ const big=i<3, sz=big?22+Math.round(Math.random()*8):8+Math.round(Math.random()*9), col=i%3===2?"#FFFFFF":"#FFD76A";
-    return `<i class="${big?"big":""}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%"><svg style="animation-delay:${(-Math.random()*2.4).toFixed(2)}s;animation-duration:${(1.6+Math.random()*1.4).toFixed(2)}s" ${star(sz,col,big?.95:(.55+Math.random()*.4).toFixed(2)).slice(5)}</i>`; }).join("");
+  box.innerHTML = spots.map(([x,y],i)=>{ const big=i<2, sz=big?20+Math.round(Math.random()*6):9+Math.round(Math.random()*8), col=i%3===2?"#F7C948":"#F0A30A";
+    return `<i class="${big?"big":""}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%"><svg style="animation-delay:${(-Math.random()*2.4).toFixed(2)}s;animation-duration:${(1.6+Math.random()*1.4).toFixed(2)}s" ${star(sz,col,big?.95:(.6+Math.random()*.4).toFixed(2)).slice(5)}</i>`; }).join("");
   if(spots.length){ starCache[key]=box.innerHTML; fillStars.n=0; } else if((fillStars.n=(fillStars.n||0)+1)<6) setTimeout(fillStars,150); // 描く前で場所が測れなかったら少し待ってやり直す
 }
 function resultOverlay(r){
@@ -2615,12 +2666,11 @@ function resultOverlay(r){
   const best = flag==="COURSE BEST!";
   const conf = best ? `<div class="rc-stars" aria-hidden="true"></div>` : "";
   return `<div class="result-back" role="dialog" aria-label="ラウンド結果"><div class="result-wrap">
-    ${state.resultAll&&(state.resultGroup||[]).length>1?groupCard(state.resultGroup):`<div class="result-card"><svg class="rc-rings" viewBox="0 0 320 280" aria-hidden="true">${Array.from({length:10},(_,k)=>`<ellipse cx="160" cy="140" rx="${16+k*16}" ry="${14+k*14}" fill="none" stroke="rgba(255,255,255,.13)" stroke-width="1"/>`).join("")}<circle cx="160" cy="140" r="1.5" fill="rgba(255,255,255,.3)"/></svg>${conf}<div class="rc-in">
-      <div class="rc-top"><div class="rc-hd"><div><div class="k">ROUND COMPLETE</div><div class="n">${esc(r.player)}</div></div>${flag?`<span class="rc-flag">${flag}</span>`:""}</div><div class="c"><span>${esc(r.courseName)}</span><i>・${+m}/${+d}</i></div></div>
-      <div class="rc-score"><b>${t.score}</b><span>${toPar(t.diff)}</span></div>
+    ${state.resultAll&&(state.resultGroup||[]).length>1?groupCard(state.resultGroup):`<div class="result-card paper">${conf}<div class="rc-band"><b>${esc(r.courseName)}</b><span class="rc-date">${y}.${m}.${d}</span></div><div class="rc-in">
+      <div class="rc-who2"><div class="rc-pl"><small>PLAYER</small><span>${esc(r.player)}</span>${flag?`<em class="rc-flag">${flag}</em>`:""}</div><div class="rc-score ${t.diff>0?"up":t.diff<0?"down":"even"}"><b>${t.score}</b><span>${toPar(t.diff)}</span></div></div>
       <div class="rc-sc">${(()=>{ const out=[]; for(let i=0;i<r.holes.length;i+=9){ const ch=r.holes.slice(i,i+9);
-        const two=r.holes.length>9, lab=two?(i===0?"OUT":"IN"):"", sub=ch.reduce((x,h)=>x+h.strokes,0), subp=ch.reduce((x,h)=>x+h.par,0);
-        out.push(`<table class="${two?"half":""}">${two?`<colgroup><col class="lab">${ch.map(()=>"<col>").join("")}<col class="sum"></colgroup>`:""}<tr class="h">${two?`<td class="lab">${lab}</td>`:""}${ch.map((h,j)=>`<td>${holeNo(r,i+j)}</td>`).join("")}${two?`<td class="sum">計</td>`:""}</tr><tr class="p">${two?`<td class="lab">PAR</td>`:""}${ch.map(h=>`<td>${h.par}</td>`).join("")}${two?`<td class="sum">${subp}</td>`:""}</tr><tr>${two?`<td class="lab"></td>`:""}${ch.map(h=>`<td>${mark(h)}</td>`).join("")}${two?`<td class="sum"><b>${sub}</b></td>`:""}</tr></table>`); } return out.join(""); })()}</div>
+        const two=r.holes.length>9, lab=two?(i===0?"OUT":"IN"):"H", sub=ch.reduce((x,h)=>x+h.strokes,0), subp=ch.reduce((x,h)=>x+h.par,0);
+        out.push(`<table class="half"><colgroup><col class="lab">${ch.map(()=>"<col>").join("")}<col class="sum"></colgroup><tr class="h"><td class="lab">${lab}</td>${ch.map((h,j)=>`<td>${holeNo(r,i+j)}</td>`).join("")}<td class="sum">計</td></tr><tr class="p"><td class="lab">PAR</td>${ch.map(h=>`<td>${h.par}</td>`).join("")}<td class="sum">${subp}</td></tr><tr><td class="lab">打数</td>${ch.map(h=>`<td>${mark(h)}</td>`).join("")}<td class="sum"><b>${sub}</b></td></tr></table>`); } return out.join(""); })()}</div>
       <div class="rc-grid">
         <div><span>BIRDIE+</span><b>${n("hio")+n("eagle")+n("birdie")}</b></div>
         <div><span>PAR</span><b>${n("par")}</b></div>
@@ -2648,34 +2698,23 @@ function groupCard(g){
   const r0=g[0], [y,m,d]=r0.date.split("-"), N=r0.holes.length, nm=g.map(x=>x.player);
   const tots=g.map(r=>roundTotals(r)), order=g.map((r,k)=>k).sort((a,b)=>tots[a].score-tots[b].score || a-b);
   const rank=k=>1+tots.filter(t=>t.score<tots[k].score).length;
-  const rv=TRY.result, hid=h=>isPeoria(state.resultGame)&&state.resultEx&&(state.resultEx.hidden||[]).includes(h)?"hh":"";
+  const hid=h=>isPeoria(state.resultGame)&&state.resultEx&&(state.resultEx.hidden||[]).includes(h)?"hh":"";
   const rk=k=>`<i class="rc-rk ${rank(k)===1?"win":""}">${rank(k)}</i>`;
-  const tables=[];
-  if(rv==="r1"){   // お試し R1: 縦の表（ホールが縦・人が横）。順位・名前・合計は人の見出しに入れる
-    const rows=[];
-    for(let i=0;i<N;i+=9){ const idx=Array.from({length:Math.min(9,N-i)},(_,j)=>i+j);
-      idx.forEach(h=>rows.push(`<tr><td class="v1h ${hid(h)}">${holeNo(r0,h)}</td><td class="v1p">${r0.holes[h].par}</td>${order.map(k=>`<td>${mark(g[k].holes[h])}</td>`).join("")}</tr>`));
-      if(N>9) rows.push(`<tr class="v1s"><td class="v1h">${i?"IN":"OUT"}</td><td class="v1p">${sum(idx,h=>r0.holes[h].par)}</td>${order.map(k=>`<td>${sum(idx,h=>g[k].holes[h].strokes)}</td>`).join("")}</tr>`); }
-    tables.push(`<table class="v1"><colgroup><col class="ch"><col class="cp">${order.map(()=>"<col>").join("")}</colgroup>
+  /* 2人以上は縦の表（ホールが縦・人が横）。順位・名前・合計は人の見出しに入れる */
+  const rows=[];
+  for(let i=0;i<N;i+=9){ const idx=Array.from({length:Math.min(9,N-i)},(_,j)=>i+j);
+    idx.forEach(h=>rows.push(`<tr><td class="v1h ${hid(h)}">${holeNo(r0,h)}</td><td class="v1p">${r0.holes[h].par}</td>${order.map(k=>`<td>${mark(g[k].holes[h])}</td>`).join("")}</tr>`));
+    if(N>9) rows.push(`<tr class="v1s"><td class="v1h">${i?"IN":"OUT"}</td><td class="v1p">${sum(idx,h=>r0.holes[h].par)}</td>${order.map(k=>`<td>${sum(idx,h=>g[k].holes[h].strokes)}</td>`).join("")}</tr>`); }
+  const table=`<table class="v1"><colgroup><col class="ch"><col class="cp">${order.map(()=>"<col>").join("")}</colgroup>
       <tr class="v1head"><td class="v1h">H</td><td class="v1p">PAR</td>${order.map(k=>`<td class="v1c ${rank(k)===1?"win":""}">${rk(k)}<span class="v1n">${esc(dupLabel(nm,k))}</span><b>${tots[k].score}</b><small>${toPar(tots[k].diff)}</small></td>`).join("")}</tr>
       ${rows.join("")}
-      <tr class="v1t"><td class="v1h">計</td><td class="v1p">${sum(r0.holes,h=>h.par)}</td>${order.map(k=>`<td><b>${tots[k].score}</b></td>`).join("")}</tr></table>`);
-  } else for(let i=0;i<N;i+=9){ const idx=Array.from({length:Math.min(9,N-i)},(_,j)=>i+j), lab=N>9?(i?"IN":"OUT"):"", lastT=i+9>=N, tot=rv==="r2"&&N>9&&lastT;
-    tables.push(`<table class="half grp ${rv==="r2"?"r2":""} ${tot?"wt":""}"><colgroup><col class="lab">${idx.map(()=>"<col>").join("")}<col class="sum">${tot?`<col class="tot">`:""}</colgroup>
-      <tr class="h"><td class="lab">${lab}</td>${idx.map(h=>`<td class="${hid(h)}">${holeNo(r0,h)}</td>`).join("")}<td class="sum">計</td>${tot?`<td class="tot">合計</td>`:""}</tr>
-      <tr class="p"><td class="lab">PAR</td>${idx.map(h=>`<td>${r0.holes[h].par}</td>`).join("")}<td class="sum">${sum(idx,h=>r0.holes[h].par)}</td>${tot?`<td class="tot">${sum(r0.holes,h=>h.par)}</td>`:""}</tr>
-      ${order.map(k=>`<tr><td class="lab nm">${rv==="r2"?`<span class="nmr">${rk(k)}<span>${esc(dupLabel(nm,k))}</span></span>`:esc(dupLabel(nm,k))}</td>${idx.map(h=>`<td>${mark(g[k].holes[h])}</td>`).join("")}<td class="sum"><b>${sum(idx,h=>g[k].holes[h].strokes)}</b>${rv==="r2"&&N<=9?`<small>${toPar(tots[k].diff)}</small>`:""}</td>${tot?`<td class="tot"><b>${tots[k].score}</b><small>${toPar(tots[k].diff)}</small></td>`:""}</tr>`).join("")}</table>`); }
-  const rankList = rv==="r1"||rv==="r2" ? "" : rv==="r3"
-    ? `<div class="rc-rank r3">${order.map(k=>`<div class="${rank(k)===1?"win":""}"><i>${rank(k)}</i><span>${esc(dupLabel(nm,k))}</span><b>${tots[k].score}</b></div>`).join("")}</div>`
-    : `<div class="rc-rank">${order.map(k=>`<div class="${rank(k)===1?"win":""}"><i>${rank(k)}</i><span>${esc(dupLabel(nm,k))}</span><b>${tots[k].score}</b><small>${toPar(tots[k].diff)}</small></div>`).join("")}</div>`;
+      <tr class="v1t"><td class="v1h">計</td><td class="v1p">${sum(r0.holes,h=>h.par)}</td>${order.map(k=>`<td><b>${tots[k].score}</b></td>`).join("")}</tr></table>`;
   const gameBox = `${state.resultGame==="skins"?(()=>{ const sk=skinsCalc(g.map(r=>r.holes.map(h=>h.strokes)), N, !!state.resultCarry), mx=Math.max(...sk.won);
       return `<div class="rc-skins"><div class="rs-h"><span>SKINS</span>スキンズ${sk.carry?`<em>持ち越し${sk.carry}枚は決着なし</em>`:""}</div>${order.map(k=>`<div class="rs-row ${mx>0&&sk.won[k]===mx?"top":""}"><span class="rs-n">${esc(dupLabel(nm,k))}</span><span class="rs-c">${Array.from({length:Math.min(sk.won[k],6)},()=>coinSVG(24)).join("")}${sk.won[k]>6?"…":""}</span><b><i class="rs-num">${sk.won[k]}</i></b></div>`).join("")}</div>`; })():""}
     ${state.resultGame && state.resultGame!=="skins" ? gameResult(state.resultGame, g.map(r=>r.holes.map(h=>h.strokes)), r0.holes.map(h=>h.par), N, g.map((x,k)=>esc(dupLabel(nm,k))), order, state.resultEx||{}) : ""}`;
-  const scBox = `<div class="rc-sc">${tables.join("")}</div>`, tblFirst = rv==="r1"||rv==="r2";   // お試し R1・R2 は、順位が表の中にあるので、表を先に
-  return `<div class="result-card grp-card ${rv?"try-"+rv:""}"><svg class="rc-rings" viewBox="0 0 320 280" aria-hidden="true">${Array.from({length:10},(_,k)=>`<ellipse cx="160" cy="140" rx="${16+k*16}" ry="${14+k*14}" fill="none" stroke="rgba(255,255,255,.13)" stroke-width="1"/>`).join("")}</svg><div class="rc-in">
-    <div class="rc-top"><div class="rc-hd"><div><div class="k">ROUND COMPLETE</div><div class="n">${g.length}人のスコア</div></div></div><div class="c"><span>${esc(r0.courseName)}</span><i>・${+m}/${+d}</i></div></div>
-    ${rankList}
-    ${tblFirst?scBox+gameBox:gameBox+scBox}
+  return `<div class="result-card paper grp-card"><div class="rc-band"><b>${esc(r0.courseName)}</b><span class="rc-date">${y}.${m}.${d}</span></div><div class="rc-in">
+    <div class="rc-sc">${table}</div>
+    ${gameBox}
     <div class="rc-brand"><span class="rc-logo"><img src="mark.png" alt=""><span><b>GOLF SC.</b><small>SHORT COURSE SCORECARD</small></span></span></div>
   </div></div>`;
 }
@@ -2823,7 +2862,7 @@ function viewRecord(){
       </div>
       <div class="err" id="r-err"></div>
       <button class="sl-go" data-act="start">始める <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-      ${TRY.set||TRY.rset?`<a class="try-link" href="design/try.html">お試し中（${[TRY.set&&(TRY.mates==="m25"?"M2＋M5":TRY.mates==="old"?"前の形":TRY.mates.toUpperCase()), TRY.rset&&TRY.result.toUpperCase()].filter(Boolean).join("・")}）　ほかの案を見る ›</a>`:""}
+      ${TRY.set?`<a class="try-link" href="design/try.html">お試し中（${[TRY.set&&(TRY.mates==="m25"?"M2＋M5":TRY.mates==="old"?"前の形":TRY.mates.toUpperCase())].filter(Boolean).join("・")}）　ほかの案を見る ›</a>`:""}
     </div>${state.sheet==="pick"?coursePickSheet():""}${state.sheet==="game"?gameSheet():""}${state.matesOpen?matesSheet():""}${state.calOpen?calSheet():""}`;
   }
   return viewRecordDraft(d);

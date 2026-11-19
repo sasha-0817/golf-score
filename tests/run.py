@@ -1313,9 +1313,9 @@ with sync_playwright() as pw:
     for nm, first in [("best", 5), ("normal", 3)]:
         pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.courses": lc, "sc.rounds": [lrd(1, first, "2026-10-01"), lrd(2, 4, "2026-11-18")], "sc.v2": 1, "sc.tab": "\"history\""}, offline=True)
         pg.evaluate("state.result=state.rounds.find(r=>r.id==='b2'); render()"); pg.wait_for_timeout(300)
-        hh[nm] = pg.evaluate("[!!document.querySelector('.rc-flag'), Math.round(document.querySelector('.rc-top .c').getBoundingClientRect().height), Math.round(document.querySelector('.result-card').getBoundingClientRect().height)]")
+        hh[nm] = pg.evaluate("[!!document.querySelector('.rc-flag'), Math.round(document.querySelector('.rc-band').getBoundingClientRect().height), Math.round(document.querySelector('.result-card').getBoundingClientRect().height)]")
         pg.context.close()
-    check("結果カード: COURSE BEST でもコース名・日付は1行で、カードの高さは同じ", hh["best"][0] and not hh["normal"][0] and hh["best"][1] < 24 and hh["best"][2] == hh["normal"][2])
+    check("結果カード: COURSE BEST の札が出ても、緑の帯（コース名・日付）の高さもカードの高さも同じ", hh["best"][0] and not hh["normal"][0] and hh["best"][1] == hh["normal"][1] and hh["best"][2] == hh["normal"][2])
     # 幅320px（iPhone の拡大表示）: カレンダーの土曜が切れない・「始める」が隠れたままにならない
     pg, errs = open_page(b, {**TL, "sc.mates": ["はなこ", "じろう", ""]}, offline=True)
     pg.set_viewport_size({"width": 320, "height": 568}); pg.evaluate("render()"); pg.wait_for_timeout(100)
@@ -1325,22 +1325,19 @@ with sync_playwright() as pw:
     check("幅320px: カレンダーの7列が画面に収まる", pg.evaluate("[...document.querySelectorAll('.cal-d')].every(e=>{const r=e.getBoundingClientRect(); return r.left>=0 && r.right<=320})") and not errs)
     pg.context.close()
     pg.context.close()
-    for v in ["r1", "r2", "r3"]:
-        for n in [9, 18]:
-            pg, errs = open_page(b, {"sc.v2": 1}, offline=True, query=f"?result={v}&show={n}&game=skins")
-            fit = pg.evaluate("(()=>{ const c=document.querySelector('.grp-card'), r=c.getBoundingClientRect(); return [...c.querySelectorAll('td,.rc-rank>div')].every(e=>{ const q=e.getBoundingClientRect(); return q.left>=r.left-0.5 && q.right<=r.right+0.5; }); })()")
-            if v == "r1":
-                ok = pg.query_selector(".rc-rank") is None and pg.evaluate("document.querySelectorAll('table.v1 .v1c').length") == 4 and pg.evaluate("document.querySelectorAll('table.v1 .mk3').length") == 4 * n and pg.evaluate("[...document.querySelectorAll('table.v1 tr.v1t td b')].map(e=>e.textContent).join()") == pg.evaluate("[...document.querySelectorAll('table.v1 .v1c b')].map(e=>e.textContent).join()") and pg.evaluate("document.querySelectorAll('table.v1 tr.v1s').length") == (2 if n == 18 else 0)
-            elif v == "r2":
-                ok = pg.query_selector(".rc-rank") is None and pg.evaluate("document.querySelectorAll('.rc-sc .rc-rk').length") == 4 * (n // 9) and pg.evaluate("document.querySelectorAll('.rc-sc td.sum small, .rc-sc td.tot small').length") == 4
-            else:
-                ok = pg.evaluate("document.querySelectorAll('.rc-rank.r3>div').length") == 4 and pg.evaluate("document.querySelectorAll('.rc-sc table.half').length") == n // 9
-            check(f"お試し {v.upper()}・{n}H: 見本の結果が出る・表がカードからはみ出さない・ゲームの欄もある", ok and fit and pg.query_selector(".grp-card .rc-skins") is not None and pg.evaluate("state.rounds.length") == 0 and not errs)
-            if v == "r1" and n == 9:
-                C(pg, "[data-act=result-pick]"); one = pg.query_selector(".result-card:not(.grp-card)") is not None and pg.query_selector("[data-act=back-to-input]") is None
-                C(pg, "[data-act=close-result]")
-                check("お試し: 見本の結果は1人ずつにも切りかえられ、編集はできない。閉じると消える（保存しない）", one and pg.query_selector(".result-back") is None and pg.evaluate("state.rounds.length") == 0 and pg.evaluate("localStorage.getItem('sc.rounds')") in (None, "[]") and not errs)
-            pg.context.close()
+    for n in [9, 18]:
+        pg, errs = open_page(b, {"sc.v2": 1}, offline=True, query=f"?show={n}&game=skins")
+        fit = pg.evaluate("(()=>{ const c=document.querySelector('.grp-card'), r=c.getBoundingClientRect(); return [...c.querySelectorAll('td,.rc-band b')].every(e=>{ const q=e.getBoundingClientRect(); return q.left>=r.left-0.5 && q.right<=r.right+0.5; }); })()")
+        ok = (pg.query_selector(".result-card.paper.grp-card") is not None and pg.query_selector(".rc-rank") is None and pg.query_selector(".rc-top") is None
+              and pg.evaluate("document.querySelectorAll('table.v1 .v1c').length") == 4 and pg.evaluate("document.querySelectorAll('table.v1 .mk3').length") == 4 * n
+              and pg.evaluate("[...document.querySelectorAll('table.v1 tr.v1t td b')].map(e=>e.textContent).join()") == pg.evaluate("[...document.querySelectorAll('table.v1 .v1c b')].map(e=>e.textContent).join()")
+              and pg.evaluate("document.querySelectorAll('table.v1 tr.v1s').length") == (2 if n == 18 else 0))
+        check(f"みんなの結果・{n}H: 紙のカードの縦の表（人が横・順位と合計は見出し）・表がカードからはみ出さない・ゲームの欄もある", ok and fit and pg.query_selector(".grp-card .rc-skins") is not None and pg.evaluate("state.rounds.length") == 0 and not errs)
+        if n == 9:
+            C(pg, "[data-act=result-pick]"); one = pg.query_selector(".result-card.paper:not(.grp-card)") is not None and pg.query_selector("[data-act=back-to-input]") is None and pg.query_selector(".rc-who2 .rc-score") is not None
+            C(pg, "[data-act=close-result]")
+            check("見本の結果は1人ずつ（横書きの紙のカード）にも切りかえられ、編集はできない。閉じると消える（保存しない）", one and pg.query_selector(".result-back") is None and pg.evaluate("state.rounds.length") == 0 and pg.evaluate("localStorage.getItem('sc.rounds')") in (None, "[]") and not errs)
+        pg.context.close()
 
     b.close()
 
