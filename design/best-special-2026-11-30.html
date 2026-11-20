@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<title>GOLF SC. ベストの特別版カード 20案</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+:root{color-scheme:light;--jp:"Zen Kaku Gothic New",system-ui,"Hiragino Sans",sans-serif;--num:"Barlow Condensed","Zen Kaku Gothic New",sans-serif;--birdie:#2F7DE1;--bogey:#E07B12;--double:#E5484D;--triple:#A61B29;--hio:#F2B01E}
+*{box-sizing:border-box}
+body{margin:0;background:#E3E7E5;color:#1B2A22;font-family:var(--jp);line-height:1.6}
+main{max-width:1500px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:22px;margin:0 0 4px}.lead{font-size:15px;color:#48564F;margin:0 0 18px}
+h2.sec{font-size:19px;margin:34px 0 4px;padding-top:12px;border-top:2px solid #C5CCC8}
+p.note{font-size:14px;color:#48564F;margin:2px 0 14px;max-width:900px}
+.grid{display:flex;flex-wrap:wrap;gap:26px 22px;align-items:flex-start}
+.item{width:340px}.item h3{font-size:16px;margin:0 0 2px}.item p{font-size:13.5px;color:#48564F;margin:0 0 8px;min-height:40px;line-height:1.5}
+.card{width:340px;position:relative;overflow:hidden;background:#FBFAF4;border:1px solid #E1DCC9;border-radius:14px;box-shadow:0 12px 28px -16px rgba(0,0,0,.45)}
+.logo{display:inline-flex;align-items:center;gap:6px;font:700 15px var(--num);letter-spacing:.04em;color:#0B6B44}.logo img{width:24px;height:24px}
+.m{display:inline-flex;width:21px;height:21px;align-items:center;justify-content:center;font-weight:700;line-height:1}
+.m.b{border:2px solid var(--birdie);border-radius:50%;color:var(--birdie)}
+.m.g{border:2px solid var(--bogey);color:#C96A0B}
+.m.d{border:2px solid var(--double);color:var(--double);outline:2px solid var(--double);outline-offset:1.5px;width:17px;height:17px;font-size:13px}
+.m.t{background:var(--triple);color:#fff;border-radius:3px}
+.m.h{background:var(--hio);border-radius:50%;color:#3A2600}
+table{border-collapse:collapse;width:100%;table-layout:fixed;font-family:var(--num)}
+td,th{padding:0;text-align:center}
+.h2{font:700 11px var(--num);letter-spacing:.2em;color:#7A857E}
+/* 共通の横書き表 */
+.hz td{border:1px solid #CFCBBB;height:30px;font-size:17px;font-weight:600}
+.hz tr.hd td{background:#EFECE0;font-size:13px;color:#5B665F;height:22px}
+.hz tr.pr td{font-size:14px;color:#7A857E;height:24px}
+.hz td.l{width:40px;font-size:11px;background:#EFECE0;color:#5B665F}
+.hz td.s{width:36px;background:#F3F0E4;font-weight:700}
+.hz td.l.nm{font-size:11px;line-height:1.1;word-break:break-all;padding:0 2px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);text-align:center}.stats span{display:block;font:600 11px var(--num);letter-spacing:.12em;color:#7A857E}.stats b{font:700 25px/1.1 var(--num)}
+.tot{display:flex;align-items:flex-end;gap:8px;font:700 80px/.8 var(--num)}.tot i{font-style:normal;font-size:26px;line-height:1;color:var(--bogey)}
+.pad{padding:16px 18px}
+/* 1 緑の帯 */
+.c1 .band{background:#0B6B44;color:#fff;padding:13px 18px 11px;display:flex;justify-content:space-between;align-items:flex-end}.c1 .band b{font-size:16px;font-weight:900}.c1 .band span{font:600 15px var(--num)}
+.c1 .who{display:flex;justify-content:space-between;align-items:flex-end}.c1 .who .n{font-size:15px;font-weight:700}
+.c1 .stats{border-top:2px solid #1B2A22;margin-top:12px;padding-top:9px}.c1 .ft{display:flex;justify-content:flex-end;margin-top:8px}
+/* 2 帯なし・太い上罫線 */
+.c2{background:#FFFEF9}.c2 .top{border-top:6px solid #1B2A22;padding:12px 18px 0;display:flex;justify-content:space-between;align-items:baseline}.c2 .top b{font-size:16px;font-weight:900}.c2 .top span{font:600 14px var(--num);color:#6B756F}
+.c2 .who{display:flex;justify-content:space-between;align-items:flex-end;margin-top:6px}.c2 .stats{margin-top:12px;border-top:1px solid #1B2A22;padding-top:9px}.c2 .ft{display:flex;justify-content:space-between;margin-top:8px;color:#8A948E;font:600 11px var(--num);letter-spacing:.14em;align-items:center}
+.c2 .hz td{border-color:#D7D3C2}
+/* 3 二重線・ティー色の丸 */
+.c3 .top{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:3px double #B9B196}.c3 .top b{font-size:15px;font-weight:900;letter-spacing:.04em}.c3 .top span{font:600 14px var(--num);color:#6B756F}
+.c3 .tee{display:inline-flex;gap:4px;margin-left:8px;vertical-align:middle}.c3 .tee i{width:11px;height:11px;border-radius:50%;border:1.5px solid #6B756F}.c3 .tee i.on{background:#2F7DE1;border-color:#2F7DE1}
+.c3 .row{display:flex;justify-content:space-between;align-items:flex-end}.c3 .row .n{font-size:15px;font-weight:700}.c3 .row .n small{display:block;font:500 12px var(--jp);color:#7A857E}.c3 .row .tot{font-size:60px}
+.c3 .stats{margin-top:12px;border-top:1px solid #B9B196;padding-top:9px}
+/* 4 濃い緑のホール行 */
+.c4 .top{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:3px double #B9B196}.c4 .top b{font-size:15px;font-weight:900}.c4 .top span{font:600 14px var(--num);color:#6B756F}
+.c4 .row{display:flex;justify-content:space-between;align-items:flex-end}.c4 .row .n{font-size:15px;font-weight:700}.c4 .row .tot{font-size:60px}
+.c4 .hz tr.hd td{background:#2D5B3F;color:#fff;border-color:#2D5B3F}.c4 .hz tr.pr td{background:#EDE9D7}.c4 .hz td.l{background:#EDE9D7}.c4 .hz tr.hd td.l{background:#2D5B3F}
+.c4 .stats{margin-top:12px;border-top:1px solid #B9B196;padding-top:9px}
+/* 5 署名欄つき（本物のカード風） */
+.c5 .top{padding:12px 18px 8px;display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #1B2A22}.c5 .top b{font-size:16px;font-weight:900}.c5 .top span{font:600 14px var(--num);color:#6B756F}
+.c5 .row{display:flex;justify-content:space-between;align-items:flex-end}.c5 .row .tot{font-size:60px}
+.c5 .sign{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}.c5 .sign div{border-bottom:1px solid #1B2A22;padding-bottom:2px;font-size:12px;color:#6B756F}.c5 .sign b{display:block;font-size:14px;color:#1B2A22;font-weight:700}
+.c5 .stats{margin-top:12px}.c5 .ft{display:flex;justify-content:flex-end;margin-top:6px}
+/* 6 紺の帯 */
+.c6 .band{background:#14284B;color:#fff;padding:13px 18px 11px;display:flex;justify-content:space-between;align-items:flex-end}.c6 .band b{font-size:16px;font-weight:900}.c6 .band span{font:600 15px var(--num)}
+.c6 .who{display:flex;justify-content:space-between;align-items:flex-end}.c6 .who .n{font-size:15px;font-weight:700}.c6 .tot b{color:#14284B}
+.c6 .hz td{border-color:#C9CFDA}.c6 .hz tr.hd td,.c6 .hz td.l{background:#E8ECF3}.c6 .hz td.s{background:#EEF1F6}
+.c6 .stats{border-top:2px solid #14284B;margin-top:12px;padding-top:9px}.c6 .ft{display:flex;justify-content:flex-end;margin-top:8px}.c6 .logo{color:#14284B}
+/* 7 左の緑の綴じ帯 */
+.c7{padding-left:22px}.c7::before{content:"";position:absolute;left:0;top:0;bottom:0;width:14px;background:#0B6B44}
+.c7 .top{padding:14px 18px 0 14px;display:flex;justify-content:space-between;align-items:baseline}.c7 .top b{font-size:16px;font-weight:900}.c7 .top span{font:600 14px var(--num);color:#6B756F}
+.c7 .in{padding:8px 18px 14px 14px}.c7 .who{display:flex;justify-content:space-between;align-items:flex-end}.c7 .who .n{font-size:15px;font-weight:700}.c7 .tot{font-size:72px}
+.c7 .stats{margin-top:12px;border-top:2px solid #1B2A22;padding-top:9px}.c7 .ft{display:flex;justify-content:flex-end;margin-top:8px}
+/* 8 打数の行を大きく・薄い色づけ */
+.c8 .band{background:#0B6B44;color:#fff;padding:11px 18px;display:flex;justify-content:space-between}.c8 .band b{font-size:15px;font-weight:900}.c8 .band span{font:600 14px var(--num)}
+.c8 .who{display:flex;justify-content:space-between;align-items:flex-end}.c8 .who .n{font-size:15px;font-weight:700}
+.c8 .hz td{border-color:#D7D3C2}.c8 .hz tr.sc td{height:42px;font-size:21px;background:#FFFEF7}.c8 .hz tr.sc td.l{font-size:11px;background:#EFECE0}.c8 .hz tr.sc td.s{font-size:22px;background:#F3F0E4}
+.c8 .stats{margin-top:12px;border-top:2px solid #1B2A22;padding-top:9px}.c8 .ft{display:flex;justify-content:flex-end;margin-top:8px}
+/* 9 台紙・穴あき */
+.c9{background:#F4EFDD;border-color:#DCD3B4}.c9::before,.c9::after{content:"";position:absolute;top:50%;width:12px;height:12px;border-radius:50%;background:#E3E7E5;box-shadow:inset 0 1px 2px rgba(0,0,0,.25)}.c9::before{left:7px;margin-top:-30px}.c9::after{left:7px;margin-top:20px}
+.c9 .top{margin-left:26px;padding:14px 18px 6px 4px;display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #1B2A22}.c9 .top b{font-size:16px;font-weight:900}.c9 .top span{font:600 14px var(--num);color:#6B756F}
+.c9 .in{margin-left:26px;padding:10px 18px 14px 4px}.c9 .who{display:flex;justify-content:space-between;align-items:flex-end}.c9 .who .n{font-size:15px;font-weight:700}
+.c9 .hz td{border-color:#CFC6A6;background:rgba(255,255,255,.55)}.c9 .hz tr.hd td,.c9 .hz td.l{background:#E9E1C6}.c9 .hz td.s{background:#EFE8CF}
+.c9 .stats{margin-top:12px;border-top:1px solid #1B2A22;padding-top:9px}.c9 .ft{display:flex;justify-content:flex-end;margin-top:8px}
+/* 10 ロゴの帯 */
+.c10 .band{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;border-bottom:3px solid #0B6B44}.c10 .band .l{display:flex;align-items:center;gap:8px}.c10 .band img{width:30px;height:30px}.c10 .band b{display:block;font-size:15px;font-weight:900;line-height:1.2}.c10 .band small{font:500 12px var(--jp);color:#6B756F}
+.c10 .band .d{font:700 18px var(--num);text-align:right;line-height:1.1}.c10 .band .d small{display:block;font:600 11px var(--num);letter-spacing:.14em}
+.c10 .who{display:flex;justify-content:space-between;align-items:flex-end}.c10 .who .n{font-size:15px;font-weight:700}
+.c10 .stats{margin-top:12px;border-top:1px solid #1B2A22;padding-top:9px}.c10 .ft{display:flex;justify-content:flex-end;margin-top:6px;color:#7A857E;font:600 11px var(--num);letter-spacing:.14em}
+/* 縦の表 */
+.vt th{font-weight:400;vertical-align:bottom;border-bottom:2px solid #1B2A22;padding:8px 0 6px}
+.vt th .rk{display:inline-flex;width:19px;height:19px;border-radius:50%;background:#E4E0D2;font:700 12px var(--num);align-items:center;justify-content:center}
+.vt th.w{background:rgba(242,193,78,.22)}.vt th.w .rk{background:var(--hio)}
+.vt th .nm{display:block;font:700 13px/1.2 var(--jp);min-height:31px;margin-top:3px;word-break:break-all;padding:0 2px}
+.vt th b{display:block;font:700 27px/1 var(--num)}.vt th small{font:700 14px var(--num);color:#6B756F}
+.vt td{border-bottom:1px solid #DDD8C5;height:28px;font-size:16px;font-weight:600}
+.vt td.h{width:30px;font-size:14px;font-weight:700;color:#6B756F}.vt td.p{width:28px;font-size:13px;color:#9AA29C}
+.vt td.bd{border-left:1px solid #E6E1CF}
+.vt tr.sm td{background:#EFECE0;font-weight:700;height:30px}.vt tr.sm td.h{font-size:11px}
+.vt tr.tt td{border-top:2px solid #1B2A22;border-bottom:0;height:34px;font-weight:700;font-size:19px}.vt tr.tt td.h{font:700 13px var(--jp)}
+.vt .m{width:20px;height:20px;font-size:15px}.vt .m.d{width:16px;height:16px;font-size:12px}
+.card.vc .band{background:#0B6B44;color:#fff;padding:12px 16px 10px;display:flex;justify-content:space-between;align-items:flex-end}.card.vc .band b{font-size:15px;font-weight:900}.card.vc .band span{font:600 14px var(--num)}
+.card.vc .in{padding:8px 12px 12px}.card.vc .ft{display:flex;justify-content:flex-end;margin-top:6px}
+.card.hc .band{background:#0B6B44;color:#fff;padding:12px 16px 10px;display:flex;justify-content:space-between;align-items:flex-end}.card.hc .band b{font-size:15px;font-weight:900}.card.hc .band span{font:600 14px var(--num)}
+.card.hc .in{padding:12px 14px 12px}.card.hc .ft{display:flex;justify-content:flex-end;margin-top:6px}
+.card.hc .rk{display:inline-flex;width:15px;height:15px;border-radius:50%;background:#E4E0D2;font:700 11px var(--num);align-items:center;justify-content:center;margin-right:2px;vertical-align:-1px}
+.card.hc .rk.w{background:var(--hio)}
+.hz.mp td.l.nm{width:64px;text-align:left;padding:0 3px;font:700 12px/1.15 var(--jp)}.hz.mp td.s{width:34px}
+.hz.mp tr.hd2 td{height:22px;background:#EFECE0;font-size:13px;color:#5B665F}
+.hz.mp td.s small{display:block;font:600 10px var(--num);color:#6B756F;line-height:1}
+.hz.mp tr+tr.gap td{border:0;height:8px;background:transparent}
+.tag{display:inline-block;font:700 12px var(--jp);padding:1px 8px;border-radius:99px;margin-left:6px;vertical-align:middle}
+.tag.ok{background:#DDF3E6;color:#0B6B44}.tag.ng{background:#FDE3E3;color:#B3261E}
+
+.item{width:340px}.item p{min-height:44px}
+.grid{gap:38px 30px}
+.card{border-radius:18px;border:0;overflow:visible;position:relative}
+.card .band{border-radius:18px 18px 0 0;position:relative;z-index:1}
+.who{position:relative}.pad{position:relative;z-index:1}
+.stars{position:absolute;inset:0;pointer-events:none}
+.stars svg{position:absolute;transform-origin:50% 50%;opacity:0;filter:drop-shadow(0 0 6px var(--star));animation:gl 2.8s ease-out var(--dl) infinite}
+@keyframes gl{0%,55%,100%{transform:scale(.25) rotate(0);opacity:.15}74%{transform:scale(1.15) rotate(18deg);opacity:1}90%{transform:scale(.6) rotate(30deg);opacity:.15}}
+.sp{background:var(--bg);color:var(--ink);box-shadow:var(--frame)}
+.sp .band{background:var(--band);color:var(--bandc)}
+.sp .h2{color:var(--mut)}.sp .who .n{color:var(--ink)}
+.sp .tot b{background:var(--numg);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:700}
+.sp .tot i{color:var(--acc)!important}
+.sp .hz td{border-color:var(--line);color:var(--ink)}
+.sp .hz tr.hd td,.sp .hz td.l{background:var(--cell);color:var(--mut)}
+.sp .hz tr.pr td{color:var(--mut)}.sp .hz td.s{background:var(--cell2)}
+.sp .m.b{border-color:var(--acc);color:var(--acc)}
+.sp .stats{border-top-color:var(--rule)}.sp .stats span{color:var(--mut)}.sp .stats b{color:var(--ink)}
+.sp .logo{color:var(--ink)!important}
+.flag{display:inline-block;margin-top:4px;font:900 11px var(--jp);letter-spacing:.08em;padding:3px 9px;border-radius:99px;background:var(--flag);color:var(--flagc)}
+.ov{position:absolute;inset:0;border-radius:18px;pointer-events:none;overflow:hidden}
+.ov.stripe{background:repeating-linear-gradient(115deg,rgba(242,193,78,.10) 0 1px,transparent 1px 9px)}
+.ov.inner{inset:6px;border:1px solid var(--rule);border-radius:13px;z-index:2}
+.ov.night{background:radial-gradient(1px 1px at 12% 30%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 28% 72%,#fff 50%,transparent 51%),radial-gradient(1.5px 1.5px at 44% 44%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 63% 83%,#fff 50%,transparent 51%),radial-gradient(1.5px 1.5px at 81% 61%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 91% 36%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 7% 90%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 55% 95%,#fff 50%,transparent 51%);opacity:.7}
+.ov.shine{background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.35) 46%,transparent 60%)}
+.wrap-rb{padding:3px;border-radius:21px;background:conic-gradient(from 20deg,#FFD76A,#FF9EC4,#A9C8FF,#9DF5C9,#FFD76A,#FFB86B,#C9A7FF,#FFD76A);box-shadow:0 0 26px 4px rgba(200,180,255,.45)}
+</style></head><body><main>
+<h1>ベストのときの「特別版カード」 20案</h1>
+<p class="lead">ベストスコアのときだけ、白い紙のカードがこの形に変わります。色・帯・枠のちがいを見てください（星は少し光ります）。まだアプリには入っていません。</p>
+<div class="grid" id="g"></div>
+</main><script>
+var PAR=[3,3,3,4,3,3,4,3,3], PAR18=PAR.concat([3,4,3,5,3,4,3,3,4]);
+var P=[{n:"たろう",s:[3,2,4,4,3,5,5,3,3]},{n:"はなこ",s:[4,4,3,4,3,5,5,2,3]},{n:"じろう",s:[3,5,2,6,4,3,4,4,4]},{n:"ながいなまえさん",s:[3,3,4,3,3,4,5,5,4]}];
+var P18=[{n:"たろう",s:P[0].s.concat([3,4,3,5,4,4,3,2,4])},{n:"はなこ",s:P[1].s.concat([4,3,3,4,5,3,4,3,3])},{n:"じろう",s:P[2].s.concat([5,4,3,6,3,3,4,3,4])},{n:"ながいなまえさん",s:P[3].s.concat([3,4,4,5,3,4,3,3,4])}];
+function mk(s,p){var d=s-p; if(s===1)return '<span class="m h">1</span>'; if(d<=-1)return '<span class="m b">'+s+'</span>'; if(d===0)return s; if(d===1)return '<span class="m g">'+s+'</span>'; if(d===2)return '<span class="m d">'+s+'</span>'; return '<span class="m t">'+s+'</span>';}
+function sum(a,f,t){var x=0;for(var i=f;i<t;i++)x+=a[i];return x;}
+function tp(d){return d===0?"±0":(d>0?"+":"−")+Math.abs(d);}
+function tbl(p,par,lab,o){o=o||{};var N=par.length,h='';
+ for(var f=0;f<N;f+=9){var t=Math.min(f+9,N),sm=N>9;
+  var cols=[];for(var i=f;i<t;i++)cols.push(i);
+  h+='<table class="hz" style="'+(f?'margin-top:8px':'')+'"><tr class="hd"><td class="l">'+(sm?(f?'IN':'OUT'):'H')+'</td>'+cols.map(function(i){return '<td>'+(i+1)+'</td>'}).join('')+'<td class="s">計</td></tr>'+
+  '<tr class="pr"><td class="l">PAR</td>'+cols.map(function(i){return '<td>'+par[i]+'</td>'}).join('')+'<td class="s">'+sum(par,f,t)+'</td></tr>'+
+  '<tr class="sc"><td class="l">'+(lab||'打数')+'</td>'+cols.map(function(i){return '<td>'+mk(p.s[i],par[i])+'</td>'}).join('')+'<td class="s">'+sum(p.s,f,t)+'</td></tr></table>';}
+ return h;}
+var ST='<div class="stats"><div><span>PUTTS</span><b>15</b></div><div><span>パーオン</span><b>56%</b></div><div><span>3パット</span><b>0</b></div><div><span>OB</span><b>0</b></div></div>';
+var LOGO='<span class="logo"><img src="../mark.png" alt="">GOLF SC.</span>';
+var COURSE='ファーツリーカントリークラブ';
+
+var p={n:"かまきり",s:[3,3,2,4,3,3,4,3,3]};
+var GOLD='linear-gradient(110deg,#B57E00 0%,#F2C14E 40%,#FFE9A6 52%,#F2C14E 64%,#B57E00 100%)', GNUM='linear-gradient(180deg,#FFF1B8 0,#F2C14E 55%,#C98F0A 100%)';
+var SILV='linear-gradient(110deg,#7C8794 0%,#D5DBE2 40%,#FFFFFF 52%,#D5DBE2 64%,#7C8794 100%)', SNUM='linear-gradient(180deg,#FFFFFF 0,#D5DBE2 55%,#9AA5B1 100%)';
+var ROSE='linear-gradient(110deg,#9A5A45 0%,#E7A98F 40%,#FFE0D0 52%,#E7A98F 64%,#9A5A45 100%)', RNUM='linear-gradient(180deg,#FFE6DA 0,#E7A98F 55%,#B9735A 100%)';
+function fr(c,g){return '0 0 0 2px '+c+',0 0 30px 4px '+g+',0 14px 30px -14px rgba(0,0,0,.7)';}
+function dark(bg,o){var t={bg:bg,band:GOLD,bandc:'#2A1B00',ink:'#FFF6D8',mut:'#B9A66A',line:'rgba(242,193,78,.35)',cell:'rgba(242,193,78,.12)',cell2:'rgba(242,193,78,.18)',numg:GNUM,acc:'#8EC5FF',rule:'#C9971B',frame:fr('#C9971B','rgba(242,176,30,.45)'),flag:'linear-gradient(120deg,#F2B01E,#FFD76A)',flagc:'#3A2600',star:'#FFD76A'};for(var k in o)t[k]=o[k];return t;}
+var silver={band:SILV,bandc:'#1B2430',ink:'#F2F5F8',mut:'#9AA5B1',line:'rgba(213,219,226,.35)',cell:'rgba(213,219,226,.12)',cell2:'rgba(213,219,226,.2)',numg:SNUM,rule:'#AEB8C3',frame:fr('#AEB8C3','rgba(200,215,235,.45)'),flag:SILV,flagc:'#1B2430',star:'#FFFFFF'};
+var T=[
+ ["1 濃い緑 × 金","さっきの A。ゴルフらしい落ち着いた緑。",dark('linear-gradient(170deg,#12382A 0,#0A2219 60%,#071912 100%)')],
+ ["2 黒 × 金","ブラックカード。いちばん高級感がある。",dark('linear-gradient(170deg,#1C1C1E 0,#0B0B0C 70%)')],
+ ["3 紺 × 金","ネイビー。アプリの分析の色に近い。",dark('linear-gradient(170deg,#16264A 0,#0B1530 70%)')],
+ ["4 ワインレッド × 金","深い赤。お祝いの色。",dark('linear-gradient(170deg,#4A1420 0,#2A0A12 70%)',{acc:'#FFD9A0'})],
+ ["5 緑 × 金（帯も緑）","金の帯をやめて、金は線と数字だけ。ひかえめ。",dark('linear-gradient(170deg,#12382A 0,#0A2219 60%,#071912 100%)',{band:'#0B6B44',bandc:'#FFF6D8'})],
+ ["6 黒 × 金の細い線","帯も黒。金は細い線と数字だけ。ミニマル。",dark('#0E0E10',{band:'#0E0E10',bandc:'#F2C14E',frame:'0 0 0 1.5px #C9971B,0 14px 30px -14px rgba(0,0,0,.7)'}),"inner"],
+ ["7 紺 × 銀","プラチナカード。すっきりクール。",dark('linear-gradient(170deg,#1A2740 0,#0C1424 70%)',silver)],
+ ["8 黒 × 虹の縁","レアカード。縁が虹色に光る。",dark('linear-gradient(170deg,#1C1C1E 0,#0B0B0C 70%)',{frame:'none',band:'linear-gradient(110deg,#FFD76A,#FF9EC4,#A9C8FF,#9DF5C9)',bandc:'#1B1B1B'}),"","wrap-rb"],
+ ["9 深い紫 × 金","ロイヤルパープル。王冠のイメージ。",dark('linear-gradient(170deg,#2E1A4A 0,#170B2A 70%)')],
+ ["10 チャコール × ローズゴールド","やわらかい銅色。大人っぽい。",dark('linear-gradient(170deg,#2A2726 0,#161413 70%)',{band:ROSE,bandc:'#2A1510',ink:'#FFEDE4',mut:'#C09A8A',line:'rgba(231,169,143,.35)',cell:'rgba(231,169,143,.12)',cell2:'rgba(231,169,143,.2)',numg:RNUM,rule:'#C98A70',frame:fr('#C98A70','rgba(231,169,143,.4)'),flag:ROSE,flagc:'#2A1510',star:'#FFD0BC'})],
+ ["11 全面ゴールド","カード全体が金。文字は黒。いちばん派手。",dark('linear-gradient(135deg,#C9971B 0%,#F2C14E 25%,#FFEFB8 48%,#F2C14E 70%,#B57E00 100%)',{band:'#2A1B00',bandc:'#FFE9A6',ink:'#2A1B00',mut:'#6B4E0A',line:'rgba(58,38,0,.35)',cell:'rgba(58,38,0,.10)',cell2:'rgba(58,38,0,.16)',numg:'linear-gradient(180deg,#3A2600,#1B1200)',acc:'#0B4FB3',rule:'#3A2600',frame:fr('#8A5E00','rgba(242,176,30,.6)'),flag:'#2A1B00',flagc:'#FFE9A6',star:'#FFFFFF'}),"shine"],
+ ["12 白い紙 × 金の帯","地は白のまま、帯と数字だけ金。軽い特別版。",dark('linear-gradient(180deg,#FFF4CF 0,#FBFAF4 55%)',{ink:'#1B2A22',mut:'#7A857E',line:'#D9C99A',cell:'#F6EDCF',cell2:'#F3E6B8',numg:'linear-gradient(180deg,#D9A21A 0,#A8760A 100%)',acc:'#2F7DE1',rule:'#C9971B',frame:'0 0 0 2px #E3A81A,0 0 26px 3px rgba(242,176,30,.4),0 12px 28px -16px rgba(0,0,0,.45)',star:'#F0A30A'})],
+ ["13 前の緑のカード × 金","以前の緑〜青緑のグラデーションを、ベストのときだけ復活。",dark('linear-gradient(150deg,#0C7A4D 0,#0A6B60 55%,#0A5868 100%)',{mut:'#CFE6C8',line:'rgba(255,246,216,.35)',cell:'rgba(255,255,255,.10)',cell2:'rgba(255,255,255,.16)'})],
+ ["14 夜空 × 金","紺から紫の夜空に、小さな星。",dark('linear-gradient(165deg,#101C40 0,#231546 60%,#0B0F26 100%)'),"night"],
+ ["15 黒 × 金のピンストライプ","黒い地に、うすい金の斜めの線。",dark('linear-gradient(170deg,#1A1A1C 0,#0B0B0C 70%)'),"stripe"],
+ ["16 緑 × 金の二重の枠","賞状のような二重の金の線。",dark('linear-gradient(170deg,#12382A 0,#0A2219 60%,#071912 100%)',{frame:'0 0 0 2px #C9971B,0 0 0 5px #0A2219,0 0 0 6.5px #C9971B,0 0 26px 8px rgba(242,176,30,.35)'}),"inner"],
+ ["17 グリーンジャケット","明るい緑に黄色。大きな大会のイメージ。",dark('linear-gradient(170deg,#0B6B3A 0,#06512B 70%)',{band:'#F6D21A',bandc:'#0B3A20',numg:'linear-gradient(180deg,#FFF27A,#F6D21A)',rule:'#F6D21A',line:'rgba(246,210,26,.4)',frame:fr('#F6D21A','rgba(246,210,26,.4)'),flag:'#F6D21A',flagc:'#0B3A20',mut:'#CFE6A8'})],
+ ["18 黒 × エメラルド","金のかわりに、緑に光る。アプリの緑と合う。",dark('linear-gradient(170deg,#101614 0,#070A09 70%)',{band:'linear-gradient(110deg,#0B6B44,#2FD08A 50%,#0B6B44)',bandc:'#04140D',ink:'#EAFBF2',mut:'#7FB79C',line:'rgba(47,208,138,.3)',cell:'rgba(47,208,138,.10)',cell2:'rgba(47,208,138,.18)',numg:'linear-gradient(180deg,#C9FFE6,#2FD08A 60%,#0F9A5E)',rule:'#2FD08A',frame:fr('#2FD08A','rgba(47,208,138,.4)'),flag:'linear-gradient(120deg,#2FD08A,#A8F5D0)',flagc:'#04140D',star:'#A8F5D0',acc:'#8EC5FF'})],
+ ["19 紺 × 金（数字は白）","数字は白ではっきり。金は帯と線だけ。",dark('linear-gradient(170deg,#10214A 0,#081230 70%)',{numg:'linear-gradient(180deg,#FFFFFF,#E6ECF7)'})],
+ ["20 革の茶色 × 金","ヴィンテージ。古いクラブハウスのイメージ。",dark('linear-gradient(170deg,#4A2E1A 0,#2A1A0E 70%)',{mut:'#C9AE84'})]
+];
+var SP=[[36,2,26],[52,34,15],[30,52,12],[47,-6,12],[42,60,16],[58,6,20]];
+function stars(){var s=7;function r(){s=(s*16807)%2147483647;return s/2147483647;}var h='<div class="stars">';
+ for(var i=0;i<SP.length;i++){var q=SP[i];h+='<svg style="left:'+q[0]+'%;top:'+q[1]+'%;--dl:'+(-r()*2.8).toFixed(2)+'s" width="'+q[2]+'" height="'+q[2]+'" viewBox="0 0 24 24"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z" fill="var(--star)"/></svg>';}return h+'</div>';}
+function card(i){var t=T[i][2], st='';for(var k in t)st+='--'+k+':'+t[k]+';';var Tb=tbl(p,PAR), tot=sum(p.s,0,9), d=tot-29;
+ var c='<div class="card c1 sp" style="'+st+'">'+(T[i][3]?'<div class="ov '+T[i][3]+'"></div>':'')+'<div class="band"><b>'+COURSE+'</b><span>2026.11.20</span></div><div class="pad"><div class="who">'+stars()+'<div class="n" style="position:relative"><div class="h2">PLAYER</div>'+p.n+'<br><span class="flag">COURSE BEST!</span></div><div class="tot" style="position:relative"><b>'+tot+'</b><i>'+tp(d)+'</i></div></div><div style="margin-top:14px">'+Tb+'</div>'+ST.replace('<b>15</b>','<b>—</b>').replace('<b>56%</b>','<b>—</b>').replace('<div><span>3パット</span><b>0</b>','<div><span>3パット</span><b>—</b>')+'<div class="ft">'+LOGO+'</div></div></div>';
+ return T[i][4]?'<div class="'+T[i][4]+'">'+c+'</div>':c;}
+var h='';for(var i=0;i<T.length;i++)h+='<div class="item"><h3>'+T[i][0]+'</h3><p>'+T[i][1]+'</p>'+card(i)+'</div>';
+document.getElementById('g').innerHTML=h;
+</script></body></html>
