@@ -2183,6 +2183,20 @@ header.top .sync[hidden]{display:none}
 .rs-c{align-items:center}
 .rs-c .rs-more{font-style:normal;flex:0 0 auto;line-height:1;margin-left:1px}
 @media (min-width:360px){.rs-c{flex-wrap:nowrap}}
+
+/* 2026-12-02: COURSE BEST のカードは「白い紙 × 金の帯」（W1）。帯と合計の数字が金、表はうすい金、星は1つずつキラッと光る */
+.result-card.paper.best{background:linear-gradient(180deg,#FFF4CF 0,#FBFAF4 55%);box-shadow:0 0 0 2px #E3A81A,0 0 26px 3px rgba(242,176,30,.4),0 30px 60px -20px rgba(0,0,0,.6)}
+.paper.best .rc-band{background:linear-gradient(110deg,#B57E00 0%,#F2C14E 40%,#FFE9A6 52%,#F2C14E 64%,#B57E00 100%);color:#2A1B00}
+.paper.best .rc-score b{background:linear-gradient(180deg,#D9A21A 0,#A8760A 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.paper.best .rc-sc td{border-color:#D9C99A}
+.paper.best .rc-sc tr.h td,.paper.best .rc-sc td.lab{background:#F6EDCF}
+.paper.best .rc-sc td.sum{background:#F3E6B8}
+.paper.best .rc-grid{border-top-color:#C9971B}
+.paper.best .rc-stars svg{animation-name:glint!important;animation-duration:2.8s!important;animation-timing-function:ease-out}
+@keyframes glint{0%,55%,100%{transform:scale(.25) rotate(0);opacity:.15}74%{transform:scale(1.15) rotate(18deg);opacity:1}90%{transform:scale(.6) rotate(30deg);opacity:.15}}
+/* 開始画面の「グリーン」（MG / SG）も、ほかの行と同じ右そろえ（select は text-align が効かないので、最後の行の寄せと書く向きで寄せる） */
+select.sl-in{text-align:right;text-align-last:right;direction:rtl}
+select.sl-in option{direction:ltr}
 </style>
 
 </head>
@@ -2310,7 +2324,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-28-1000";
+const BUILD = "2026-12-02-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3603,11 +3617,13 @@ after.courses = () => {
 /* リザルトカードを画像にする（アニメーションを止め、記号の中の数字のずれを直して写す） */
 async function shotCard(card){
   const cv = await html2canvas(card,{scale:3, backgroundColor:null, useCORS:true,
-    onclone: doc => { const st=doc.createElement("style"); st.textContent="*,*::before,*::after{animation:none!important;transition:none!important;opacity:1}"
+    onclone: doc => { const st=doc.createElement("style"); st.textContent="*,*::before,*::after{animation:none!important;transition:none!important;opacity:1}.paper.best .rc-score b{background:none!important;color:#B8860B!important;-webkit-text-fill-color:#B8860B!important}.result-card.paper.best .rc-stars i svg{animation-name:none!important;transform:none!important;opacity:1!important;filter:none!important}"
         +".result-card{border-radius:0!important;box-shadow:none!important}"
         // html2canvas は Barlow Condensed の数字を約1.7px下・少し左に描くので、記号の中の数字だけ逆向きに寄せて真ん中に見せる
         +".rc-sc .mk3,.rc-rank i,.rc-rk{box-sizing:border-box!important;padding:0 0 3px 1.5px!important}"; doc.head.appendChild(st);
       doc.querySelectorAll(".result-card,.result-card *").forEach(el=>{ el.style.animation="none"; }); // キラキラは同じ位置のまま止めて写す
+      // html2canvas は SVG に「写した瞬間の見た目」（動きの途中の大きさ・うすさ・光）を直接書きこむので、星は直接もとの形に戻す（光の filter は四角く切れて写るので外す）
+      doc.querySelectorAll(".rc-stars svg").forEach(el=>{ el.style.transform="none"; el.style.opacity="1"; el.style.filter="none"; });
       // 字間（letter-spacing）の広い英字の小さな文字（SHORT COURSE SCORECARD など）は、html2canvas が1文字ずつ置くときにずれることがあるので、1文字ずつの箱に分けて、同じ間隔で並べる
       doc.querySelectorAll(".result-card *").forEach(el=>{ const cs=doc.defaultView.getComputedStyle(el), fs=parseFloat(cs.fontSize), ls=parseFloat(cs.letterSpacing); if(!(ls>0) || ls/fs<0.1) return;
         [...el.childNodes].forEach(n=>{ if(n.nodeType!==3 || !n.textContent.trim()) return; const f=doc.createDocumentFragment();

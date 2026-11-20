@@ -1319,8 +1319,21 @@ with sync_playwright() as pw:
         pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.courses": lc, "sc.rounds": [lrd(1, first, "2026-10-01"), lrd(2, 4, "2026-11-18")], "sc.v2": 1, "sc.tab": "\"history\""}, offline=True)
         pg.evaluate("state.result=state.rounds.find(r=>r.id==='b2'); render()"); pg.wait_for_timeout(300)
         hh[nm] = pg.evaluate("[!!document.querySelector('.rc-flag'), Math.round(document.querySelector('.rc-band').getBoundingClientRect().height), Math.round(document.querySelector('.result-card').getBoundingClientRect().height)]")
+        hh[nm] += pg.evaluate("(()=>{ const q=x=>document.querySelector(x), g=x=>getComputedStyle(q(x)); const sv=q('.rc-stars svg'); return [g('.rc-band').backgroundImage.includes('gradient'), g('.rc-score b').backgroundImage.includes('gradient'), sv?getComputedStyle(sv).animationName:'', g('.rc-sc tr:last-child td.sum').backgroundColor]; })()")
         pg.context.close()
     check("結果カード: COURSE BEST の札が出ても、緑の帯（コース名・日付）の高さもカードの高さも同じ", hh["best"][0] and not hh["normal"][0] and hh["best"][1] == hh["normal"][1] and hh["best"][2] == hh["normal"][2])
+    check("結果カード: COURSE BEST は白い紙×金の帯（帯と合計の数字が金・表はうすい金・星はキラッと光る）。ふだんのカードは緑の帯のまま", hh["best"][3] and hh["best"][4] and hh["best"][5] == "glint" and hh["best"][6] == "rgb(243, 230, 184)" and not hh["normal"][3] and not hh["normal"][4])
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.courses": lc, "sc.rounds": [lrd(1, 5, "2026-10-01"), lrd(2, 4, "2026-11-18")], "sc.v2": 1, "sc.tab": "\"history\""}, offline=True)
+    pg.evaluate("state.result=state.rounds.find(r=>r.id==='b2'); render()"); pg.wait_for_timeout(300)
+    # 保存画像を作るときに足すCSS（onclone）と同じものを画面に足して、星と数字が消えないことを確かめる
+    sv = pg.evaluate("(()=>{ const src=document.documentElement.outerHTML, m=src.match(/st\\.textContent=\"([^\"]+)\"/); if(!m) return null; const st=document.createElement('style'); st.textContent=m[1]; document.head.appendChild(st); const e=document.querySelector('.rc-stars svg'), g=getComputedStyle(e), n=getComputedStyle(document.querySelector('.rc-score b')); return [g.animationName, g.opacity, g.transform, n.color, n.backgroundImage]; })()")
+    check("結果カード: 保存画像では、COURSE BEST の星は止まって見える（消えない）・合計の数字は金の1色", sv is not None and sv[0] == "none" and sv[1] == "1" and sv[2] == "none" and sv[3] == "rgb(184, 134, 11)" and sv[4] == "none")
+    pg.context.close()
+    gc = [{"id": "g1", "name": "二グリーン", "holes": [{"par": 3, "yards": 100, "yards2": 90, "gn": ["MG", "SG"]}] + [{"par": 3, "yards": 100, "yards2": 90}] * 8, "createdAt": 1}]
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.courses": gc, "sc.favs": ["g1"], "sc.lastCourse": "\"g1\"", "sc.v2": 1}, offline=True)
+    ga = pg.evaluate("(()=>{ const e=document.querySelector('#r-green'); if(!e||e.closest('[hidden]')) return null; const g=getComputedStyle(e); return [g.textAlignLast, g.direction, e.options.length]; })()")
+    check("開始画面: グリーン（MG / SG）は、ほかの行と同じ右そろえ", ga is not None and ga[0] == "right" and ga[1] == "rtl" and ga[2] == 2 and not errs)
+    pg.context.close()
     # 幅320px（iPhone の拡大表示）: カレンダーの土曜が切れない・「始める」が隠れたままにならない
     pg, errs = open_page(b, {**TL, "sc.mates": ["はなこ", "じろう", ""]}, offline=True)
     pg.set_viewport_size({"width": 320, "height": 568}); pg.evaluate("render()"); pg.wait_for_timeout(100)
