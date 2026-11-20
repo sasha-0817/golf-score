@@ -2133,7 +2133,7 @@ header.top .sync[hidden]{display:none}
 .paper .rc-grid{border-top:2px solid #1B2A22;color:#1B2A22}
 .paper .rc-grid span{color:#7A857E;opacity:1}
 .paper .rc-brand{opacity:1}.paper .rc-logo{background:none;box-shadow:none;padding:0}
-.paper .rc-logo b{color:#0B6B44}.paper .rc-logo small{color:#7A857E}
+.paper .rc-logo b{color:#0B1310}.paper .rc-logo small{color:#7A857E}
 /* 2人以上: 縦の表（人が横）。順位・名前・合計は人の見出しに */
 .paper .rc-sc table.v1{background:none;border-radius:0;border-collapse:collapse}
 .paper .rc-sc table.v1 col.ch{width:30px}.paper .rc-sc table.v1 col.cp{width:28px}
@@ -2175,6 +2175,14 @@ header.top .sync[hidden]{display:none}
 .paper.best .rc-stars svg{filter:drop-shadow(0 0 6px rgba(240,163,10,.9))}
 .mate-in button{display:flex;align-items:center;justify-content:center;padding:0}
 .mate-in button svg{width:60%;height:60%;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;display:block}
+
+/* 2026-11-28: ホール数の表が iPhone で右にはみ出して 6・12・18 が押せなかった（ボタンの最小幅のせい）。6列をいつも画面の中に収める */
+.holes-sheet .hgrid{grid-template-columns:repeat(6,minmax(0,1fr))}
+.holes-sheet .hgrid button{min-width:0;padding:0;width:100%}
+/* コインが多いときの「…」は、コインと同じ行に置く */
+.rs-c{align-items:center}
+.rs-c .rs-more{font-style:normal;flex:0 0 auto;line-height:1;margin-left:1px}
+@media (min-width:360px){.rs-c{flex-wrap:nowrap}}
 </style>
 
 </head>
@@ -2302,7 +2310,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-11-25-1000";
+const BUILD = "2026-11-28-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2717,7 +2725,7 @@ function groupCard(g){
       ${rows.join("")}
       <tr class="v1t"><td class="v1h">計</td><td class="v1p">${sum(r0.holes,h=>h.par)}</td>${order.map(k=>`<td><b>${tots[k].score}</b></td>`).join("")}</tr></table>`;
   const gameBox = `${state.resultGame==="skins"?(()=>{ const sk=skinsCalc(g.map(r=>r.holes.map(h=>h.strokes)), N, !!state.resultCarry), mx=Math.max(...sk.won);
-      return `<div class="rc-skins"><div class="rs-h"><span>SKINS</span>スキンズ${sk.carry?`<em>持ち越し${sk.carry}枚は決着なし</em>`:""}</div>${order.map(k=>`<div class="rs-row ${mx>0&&sk.won[k]===mx?"top":""}"><span class="rs-n">${esc(dupLabel(nm,k))}</span><span class="rs-c">${Array.from({length:Math.min(sk.won[k],6)},()=>coinSVG(24)).join("")}${sk.won[k]>6?"…":""}</span><b><i class="rs-num">${sk.won[k]}</i></b></div>`).join("")}</div>`; })():""}
+      return `<div class="rc-skins"><div class="rs-h"><span>SKINS</span>スキンズ${sk.carry?`<em>持ち越し${sk.carry}枚は決着なし</em>`:""}</div>${order.map(k=>`<div class="rs-row ${mx>0&&sk.won[k]===mx?"top":""}"><span class="rs-n">${esc(dupLabel(nm,k))}</span><span class="rs-c">${Array.from({length:sk.won[k]>6?5:sk.won[k]},()=>coinSVG(24)).join("")}${sk.won[k]>6?`<i class="rs-more">…</i>`:""}</span><b><i class="rs-num">${sk.won[k]}</i></b></div>`).join("")}</div>`; })():""}
     ${state.resultGame && state.resultGame!=="skins" ? gameResult(state.resultGame, g.map(r=>r.holes.map(h=>h.strokes)), r0.holes.map(h=>h.par), N, g.map((x,k)=>esc(dupLabel(nm,k))), order, state.resultEx||{}) : ""}`;
   return `<div class="result-card paper grp-card"><div class="rc-band"><b>${esc(r0.courseName)}</b><span class="rc-date">${y}.${m}.${d}</span></div><div class="rc-in">
     <div class="rc-sc">${table}</div>
@@ -3780,7 +3788,7 @@ function gameResult(game, rows, pars, N, names, order, ex={}){
       + [0,1].map(k=>line(`チーム${"AB"[k]}`, t[k].toFixed(1), w===k, `<small class="rs-sub">${names[k*2]} ${x[k*2].net.toFixed(1)}・${names[k*2+1]} ${x[k*2+1].net.toFixed(1)}</small>`)).join("")
       + `<div class="rs-sum">${w<0?"引き分け":`ネットの合計で チーム${"AB"[w]} の勝ち`}</div>`); }
   if(game==="nearpin"){ const x=pinCalc(ex.pins, rows.length, pars), mx=Math.max(...x.won);
-    return box([...order].sort((a,b)=>x.won[b]-x.won[a]).map(k=>line(names[k], `${x.won[k]}枚`, mx>0&&x.won[k]===mx, Array.from({length:Math.min(x.won[k],8)},()=>coinSVG(15)).join("")+(x.won[k]>8?"…":""))).join("")); }
+    return box([...order].sort((a,b)=>x.won[b]-x.won[a]).map(k=>line(names[k], `${x.won[k]}枚`, mx>0&&x.won[k]===mx, Array.from({length:x.won[k]>8?7:x.won[k]},()=>coinSVG(15)).join("")+(x.won[k]>8?`<i class="rs-more">…</i>`:""))).join("")); }
   if(game==="olympicteam" && rows.length===4){ const x=olympicCalc(ex.medals, 4), t=[x.pts[0]+x.pts[1], x.pts[2]+x.pts[3]], w=t[0]===t[1]?-1:t[0]>t[1]?0:1;
     return box([0,1].map(k=>line(`チーム${"AB"[k]}`, `${t[k]}pt`, w===k, `<small class="rs-sub">${names[k*2]} ${x.pts[k*2]}・${names[k*2+1]} ${x.pts[k*2+1]}</small>`)).join("")
       + `<div class="rs-sum">${w<0?"引き分け":`チーム${"AB"[w]} の勝ち`}</div>`); }

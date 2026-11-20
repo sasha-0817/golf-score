@@ -682,6 +682,8 @@ with sync_playwright() as pw:
         C(pg, "[data-act=open-holes]"); pg.wait_for_timeout(150); C(pg, f'[data-act=set-holes][data-n="{n}"]'); pg.wait_for_timeout(200)
     C(pg, "[data-act=open-holes]"); pg.wait_for_timeout(150)
     check("ホール数: タップで開く6列×3行（18個）の表が出る", pg.evaluate("document.querySelectorAll('.hgrid button').length") == 18)
+    hg = pg.evaluate("(()=>{ const b=[...document.querySelectorAll('.hgrid button')], r=b[17].getBoundingClientRect(), g=getComputedStyle(b[0]); return [r.right<=innerWidth, b[5].getBoundingClientRect().top===b[0].getBoundingClientRect().top, g.minWidth, g.paddingLeft]; })()")
+    check("ホール数: 6・12・18 の列も画面の中に収まる（ボタンの最小幅・余白で右にはみ出さない）", hg[0] and hg[1] and hg[2] in ("0px", "auto") and hg[3] == "0px")
     C(pg, "[data-act=close-holes]"); pg.wait_for_timeout(150)
     pick_holes(7)
     check("ホール数: 7ホールにできる（6・9・12・18に限らない）", pg.evaluate("state.courseEdit.holes.length") == 7 and pg.evaluate("document.querySelectorAll('.par-cell').length") == 7)
@@ -1057,6 +1059,9 @@ with sync_playwright() as pw:
     cw = pg.evaluate("(()=>{ const e=document.querySelector('.rc-game .rs-c'); return [e.scrollWidth<=e.clientWidth+1, e.children.length, e.textContent]; })()")
     btn = pg.evaluate("(()=>{ const q=s=>document.querySelector(s); const c=q('.rc-close'), t=q('.rc-2nd'), p=q('.rc-save'); return [!!c, !!t, !!p, getComputedStyle(c).backgroundColor, !!q('.rc-all'), document.querySelectorAll('.rc-2nd').length]; })()")
     check("結果: 18Hで14枚でも、コインは枠に収まる（あふれる分は「…」、数字は右に出る）", cw[0] and cw[1] <= 8 and "…" in cw[2] and not errs)
+    mo = pg.evaluate("(()=>{ const e=document.querySelector('.rc-game .rs-c'), m=e.querySelector('.rs-more'), a=e.firstElementChild.getBoundingClientRect(), r=m.getBoundingClientRect(); return [r.top<a.bottom && r.bottom>a.top, e.getBoundingClientRect().height<=a.height+8, getComputedStyle(document.querySelector('.paper .rc-logo b')).color]; })()")
+    check("結果: コインの「…」はコインと同じ行（下の行に落ちない）", mo[0] and mo[1])
+    check("結果: 紙のカードの右下の GOLF SC. は、上のロゴと同じ黒（緑にしない）", mo[2] == "rgb(11, 19, 16)")
     check("結果画面の下: 色つきの主ボタン1つ・白い枠の副ボタン（全員分・スコア入力に戻る）・文字だけの「閉じる」の3段", btn[0] and btn[1] and btn[2] and btn[3] in ("rgba(0, 0, 0, 0)", "transparent") and not btn[4] and btn[5] == 1)   # 「みんな」の表示では、副ボタンは「全員分をまとめて保存」だけ（1人ずつの表示では「スコア入力に戻る」も並ぶ）
     pg.context.close()
 
