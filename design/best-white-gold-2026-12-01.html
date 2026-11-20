@@ -136,7 +136,7 @@ td,th{padding:0;text-align:center}
 
 .stars.still svg{animation:none;opacity:1;filter:drop-shadow(0 0 4px rgba(240,163,10,.7))}
 .swp{position:absolute;inset:0;border-radius:18px;overflow:hidden;pointer-events:none;z-index:5}
-.swp::before,.band.sw::after{content:"";position:absolute;top:-10%;bottom:-10%;width:38%;left:-60%;background:linear-gradient(100deg,rgba(255,214,102,0),rgba(255,214,102,.5) 30%,rgba(255,255,255,.95) 50%,rgba(255,214,102,.5) 70%,rgba(255,214,102,0));transform:skewX(-18deg);animation:swp 3.4s ease-in-out infinite}
+.swp::before,.band.sw::after{content:"";position:absolute;top:-10%;bottom:-10%;width:36%;left:-60%;background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.8),rgba(255,255,255,0));transform:skewX(-18deg);animation:swp 3.4s ease-in-out infinite}
 .band.sw{overflow:hidden}
 @keyframes swp{0%{left:-60%}42%,100%{left:135%}}
 .sp .tot b.shine{background:linear-gradient(100deg,#B57E00 0%,#D9A21A 38%,#FFF6D0 50%,#D9A21A 62%,#B57E00 100%);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:nshine 3.4s ease-in-out infinite}
@@ -177,7 +177,7 @@ var BLK='linear-gradient(180deg,#1B2A22,#1B2A22)', PLAIN={line:'#CFCBBB',cell:'#
 // [名前, 説明, 色, {st:星(blink/still/none), sw:光の筋(all/band/num), ov:重ねる飾り, band:帯のクラス}]
 var T=[
  ["W1 もとの形","20案の12番そのまま。星は1つずつキラッと光る。",W({}),{st:'blink'}],
- ["W2 星は止まったまま＋光の筋","ご希望の形。星は点滅しない。金色の光がカード全体を横切る。",W({}),{st:'still',sw:'all'}],
+ ["W2 星は止まったまま＋光の筋","ご希望の形。星は点滅しない。S9 と同じ白い光がカード全体を横切る。",W({}),{st:'still',sw:'all'}],
  ["W3 光の筋は金の帯だけ","星は止まったまま。光は上の金の帯だけを走る。数字や表の上は通らない。",W({}),{st:'still',sw:'band'}],
  ["W4 光の筋は数字だけ","星は止まったまま。金の数字の中を光が走る。",W({}),{st:'still',sw:'num'}],
  ["W5 星なし＋光の筋","星をやめて、光の筋だけ。いちばんすっきり。",W({}),{st:'none',sw:'all'}],
