@@ -185,10 +185,11 @@ var OPT=[
  ["S7 はじける","1か所から外へ広がって消える。花火のよう。"],
  ["S8 動かない","星は止まったまま。保存した画像と同じ見た目。"],
  ["S9 光の筋","星は止まったまま、白い光がカードを横切る。"],
- ["S10 最初だけ","出たときに1回ポンと出て、あとは止まる。"]
+ ["S10 最初だけ","出たときに1回ポンと出て、あとは止まる。"],
+ ["S2+S9 呼吸＋光の筋","星はゆっくり呼吸し、その上を白い光が横切る。"]
 ];
 function card(i){var T=tbl(p,PAR), tot=sum(p.s,0,9), d=tot-29;
- return '<div class="card c1 s'+(i+1)+'">'+(i==8?'<div class="sweep"></div>':'')+'<div class="band"><b>'+COURSE+'</b><span>2026.11.20</span></div><div class="pad"><div class="who">'+stars()+'<div class="n" style="position:relative"><div class="h2">PLAYER</div>'+p.n+'<br><span class="flag">COURSE BEST!</span></div><div class="tot" style="position:relative"><b style="font-weight:700">'+tot+'</b><i style="color:#2F7DE1">'+tp(d)+'</i></div></div><div style="margin-top:14px">'+T+'</div>'+ST.replace('<b>15</b>','<b>—</b>').replace('<b>56%</b>','<b>—</b>').replace('<div><span>3パット</span><b>0</b>','<div><span>3パット</span><b>—</b>')+'<div class="ft">'+LOGO+'</div></div></div>';}
+ return '<div class="card c1 '+(i==10?'s2':'s'+(i+1))+'">'+(i==8||i==10?'<div class="sweep"></div>':'')+'<div class="band"><b>'+COURSE+'</b><span>2026.11.20</span></div><div class="pad"><div class="who">'+stars()+'<div class="n" style="position:relative"><div class="h2">PLAYER</div>'+p.n+'<br><span class="flag">COURSE BEST!</span></div><div class="tot" style="position:relative"><b style="font-weight:700">'+tot+'</b><i style="color:#2F7DE1">'+tp(d)+'</i></div></div><div style="margin-top:14px">'+T+'</div>'+ST.replace('<b>15</b>','<b>—</b>').replace('<b>56%</b>','<b>—</b>').replace('<div><span>3パット</span><b>0</b>','<div><span>3パット</span><b>—</b>')+'<div class="ft">'+LOGO+'</div></div></div>';}
 var h='';for(var i=0;i<OPT.length;i++)h+='<div class="item" id="it'+i+'"><h3>'+OPT[i][0]+'</h3><p>'+OPT[i][1]+'</p><div class="cw">'+card(i)+'</div>'+(i==9?'<button class="again" onclick="var c=this.parentNode.querySelector(\'.cw\');c.innerHTML=card(9)">もう一度見る</button>':'')+'</div>';
 document.getElementById('g').innerHTML=h;
 </script></body></html>
