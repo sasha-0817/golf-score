@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<title>GOLF SC. 開始画面 シンプルに少し足す 12案</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+:root{color-scheme:light;--jp:"Zen Kaku Gothic New",system-ui,"Hiragino Sans",sans-serif;--num:"Barlow Condensed","Zen Kaku Gothic New",sans-serif;--bg:#F1F4F3;--fg:#0B1310;--mut:#66746D;--line:#E0E6E3;--turf:#0E9F62;--deep:#0B6B44;--gold:#E3A81A}
+*{box-sizing:border-box}body{margin:0;background:#D9DEDB;color:var(--fg);font-family:var(--jp);line-height:1.5}
+main{max-width:1420px;margin:0 auto;padding:24px 16px 60px}h1{font-size:22px;margin:0 0 4px}.lead{font-size:15px;color:#48564F;margin:0 0 20px}
+.grid{display:flex;flex-wrap:wrap;gap:34px 26px}.item{width:320px}.item h3{font-size:16px;margin:0 0 2px}.item>p{font-size:13.5px;color:#48564F;margin:0 0 8px;min-height:64px}
+.ph{width:320px;height:569px;border-radius:26px;overflow:hidden;box-shadow:0 14px 34px -14px rgba(0,0,0,.5);border:1px solid #BCC4C0;position:relative;background:var(--bg)}
+.sc{width:375px;height:667px;transform:scale(.8533);transform-origin:0 0;position:relative;display:flex;flex-direction:column;background:var(--bg)}
+.hd{display:flex;align-items:center;gap:9px;padding:14px 18px 6px}.hd img{width:40px;height:40px}.hd b{font:700 25px/1 var(--num);letter-spacing:.03em;display:block}.hd small{font:600 8.5px var(--num);letter-spacing:.2em;color:var(--mut)}
+.bd{flex:1;padding:6px 16px 0;display:flex;flex-direction:column;min-height:0}
+.tt{font-size:23px;font-weight:900;margin:6px 2px 10px}
+.tabs{height:60px;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);text-align:center;font-size:12px;font-weight:700;color:var(--mut);padding-top:8px}.tabs i{display:block;width:22px;height:22px;margin:0 auto 2px;border:2px solid currentColor;border-radius:6px;opacity:.8}.tabs .on{color:var(--turf)}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:#DDE2DF;border-radius:13px;padding:3px;margin-bottom:10px}.seg span{height:38px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--mut);border-radius:10px}.seg .on{background:#fff;color:var(--fg);box-shadow:0 1px 4px rgba(0,0,0,.14)}
+.gp{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:10px}
+.rw{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px;border-top:1px solid var(--line)}.rw:first-child{border-top:0}.rw .l{font-size:15px;font-weight:700;color:var(--mut);white-space:nowrap}.rw .v{flex:1;text-align:right;font-size:16px;font-weight:700}.rw .v small{display:block;font-size:13px;font-weight:500;color:var(--mut)}.rw .c{color:#9AA5A0;font-size:18px}
+.go{height:56px;border-radius:18px;background:var(--fg);color:#fff;font-size:17px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px}.go.g{background:linear-gradient(110deg,#0E9F62,#12A5B8)}.go.gd{background:linear-gradient(110deg,#B57E00,#F2C14E 50%,#B57E00);color:#2A1B00}
+.ic{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font:700 15px var(--num);flex:none}
+.mu{color:var(--mut)}.n{font-family:var(--num)}
+.av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:900;color:#fff;flex:none}
+.chip{display:inline-flex;align-items:center;height:34px;padding:0 13px;border-radius:99px;background:#fff;border:1px solid var(--line);font-size:14px;font-weight:700;margin:0 6px 6px 0}
+.u{border-bottom:2px solid var(--turf);font-weight:900;padding:0 2px}
+.sec{display:flex;align-items:baseline;gap:7px;margin:4px 4px 5px}.sec b{font:700 13px var(--num);letter-spacing:.2em;color:var(--deep)}.sec span{font-size:13px;font-weight:700;color:var(--mut)}
+.li{width:22px;height:22px;flex:none;fill:none;stroke:var(--deep);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.pl{display:inline-flex;align-items:center;height:28px;padding:0 11px;border-radius:99px;font-size:14px;font-weight:900}
+.pg{background:#0B6B44;color:#fff}.py{background:#FFF1BF;color:#5A3E00;border:1px solid #E3A81A}
+.avs{display:inline-flex;width:28px;height:28px;border-radius:50%;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:900;margin-left:-6px;border:2px solid #fff}
+.k1 .rw{min-height:43px}.k1 .tt{margin-bottom:8px}.k1 .seg{margin-bottom:6px}
+.sub{text-align:center;font-size:13px;font-weight:700;color:var(--mut);margin-top:8px}
+</style></head><body><main>
+<h1>ラウンドを始める画面　「今の形に、少しだけ足す」12案</h1>
+<p class="lead">今の白いリストはそのまま。そこに1つか2つだけ足して、シンプルすぎない形をさがしました。K1 は私のおすすめの合わせ技、K2〜K12 は足すものを1つずつ見せています。絵だけで、まだアプリには入っていません。</p>
+<div class="grid" id="g"></div>
+</main><script>
+var HD='<div class="hd"><img src="../mark.png" alt=""><div><b>GOLF SC.</b><small>SHORT COURSE SCORECARD</small></div></div>';
+var TABS='<div class="tabs"><span class="on"><i></i>記録</span><span><i></i>分析</span><span><i></i>履歴</span><span><i></i>コース</span></div>';
+var SEG='<div class="seg"><span class="on">くわしく記録</span><span>スコアカード</span></div>';
+var TT='<div class="tt">ラウンドを始める</div>';
+var C='日向シーサイドGC', CS='宮崎県・9H パー27', D='11月20日(金)', M='体操きんたろう', G='ニアピン', P='かまきり';
+var I={p:'<circle cx="11" cy="7" r="3.5"/><path d="M4 19c1-4 4-6 7-6s6 2 7 6"/>',d:'<rect x="3.5" y="5" width="15" height="13.5" rx="2.5"/><path d="M3.5 9.5h15M7.5 3v3.5M14.5 3v3.5"/>',f:'<path d="M7 19V3.5l9 3.5-9 3.5"/><ellipse cx="9" cy="19" rx="6" ry="1.6"/>',g:'<circle cx="11" cy="11" r="7.5"/><circle cx="11" cy="11" r="2.2"/>',m:'<circle cx="8" cy="8" r="3"/><circle cx="15.5" cy="9" r="2.4"/><path d="M2.5 18c.8-3.3 3-5 5.5-5s4.7 1.7 5.5 5M14 13.2c2.6-.3 4.6 1.3 5.5 4.3"/>',t:'<path d="M7 4h8v4a4 4 0 0 1-8 0zM7 5.5H4.5c0 2.5 1 4 3 4.3M15 5.5h2.5c0 2.5-1 4-3 4.3M11 12v4M7.5 18.5h7"/>'};
+function ic(k){return '<svg class="li" viewBox="0 0 22 22">'+I[k]+'</svg>';}
+function rw(l,v,c,pre){return '<div class="rw">'+(pre||'')+'<span class="l">'+l+'</span><span class="v">'+v+'</span>'+(c===0?'':'<span class="c">›</span>')+'</div>';}
+var CV=C+'<small>'+CS+'</small>';
+function base(o){o=o||{};var i=o.icons;return '<div class="gp">'+rw('名前',P,0,i?ic('p'):'')+rw('日付',D,1,i?ic('d'):'')+rw('コース',o.course||CV,1,i?ic('f'):'')+rw('グリーン',o.mg||'MG',0,i?ic('g'):'')+'</div>'+(o.mid||'')+'<div class="gp">'+rw('一緒に回る',o.mate||M,1,i?ic('m'):'')+rw('ゲーム',o.game||G,1,i?ic('t'):'')+'</div>';}
+var SEC1='<div class="sec"><b>ROUND</b><span>今日のラウンド</span></div>', SEC2='<div class="sec" style="margin-top:8px"><b>WITH</b><span>いっしょに</span></div>';
+var MGP='<span class="pl pg">MG</span>', GP='<span class="pl py">'+G+'</span>', AV='<span class="avs" style="background:#2F7DE1">体</span> <span style="margin-left:4px">'+M+'</span>';
+var WAVE='<svg viewBox="0 0 375 667" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;opacity:1"><g fill="none" stroke="#B4DCC6" stroke-width="2">'+[0,1,2,3,4,5,6].map(function(k){return '<path d="M-20 '+(210+k*62)+' Q90 '+(160+k*62)+' 190 '+(205+k*62)+' T400 '+(180+k*62)+'"/>';}).join('')+'</g></svg>';
+var V=[
+["K1 おすすめの合わせ技","英語の小見出し・細い線の絵・色の札（MG とゲーム）・緑の「始める」。足したのは色と小さな絵だけで、並びは今と同じ。",function(){return '<div class="k1">'+TT+SEG+SEC1+'<div class="gp">'+rw('名前',P,0,ic('p'))+rw('日付',D,1,ic('d'))+rw('コース',CV,1,ic('f'))+rw('グリーン',MGP,0,ic('g'))+'</div>'+SEC2+'<div class="gp">'+rw('一緒に回る',M,1,ic('m'))+rw('ゲーム',GP,1,ic('t'))+'</div><div class="go g">始める →</div></div>';}],
+["K2 英語の小見出しを足す","分析の画面（SCORE / SHOT / PUTT）と同じ、緑の英語の小見出しを2つ。アプリ全体の言葉づかいがそろう。",function(){return TT+SEG+SEC1+'<div class="gp">'+rw('名前',P,0)+rw('日付',D)+rw('コース',CV)+rw('グリーン','MG',0)+'</div>'+SEC2+'<div class="gp">'+rw('一緒に回る',M)+rw('ゲーム',G)+'</div><div class="go">始める →</div>';}],
+["K3 細い線の絵を足す","行の左に、緑の細い線の小さな絵。色の四角よりひかえめで、すっきりしたまま場所が分かる。",function(){return TT+SEG+base({icons:1})+'<div class="go">始める →</div>';}],
+["K4 値を色の札にする","MG は緑の札、ゲームは金の札、一緒に回る人は丸い頭文字つき。文字だけの行に、少し色が入る。",function(){return TT+SEG+base({mg:MGP,game:GP,mate:AV})+'<div class="go">始める →</div>';}],
+["K5 コースの行だけ大きく","いちばん大事なコースの行を、2行ぶんの高さに。このコースの自己ベストも小さく出す。",function(){return TT+SEG+'<div class="gp">'+rw('名前',P,0)+rw('日付',D)+'<div class="rw" style="min-height:78px;align-items:center">'+ic('f')+'<div style="flex:1"><div style="font-size:19px;font-weight:900;line-height:1.3">'+C+'</div><div class="mu" style="font-size:13px">'+CS+'</div></div><div style="text-align:right"><div class="n mu" style="font-size:12px;letter-spacing:.16em">BEST</div><b class="n" style="font-size:24px;line-height:1">28</b></div><span class="c">›</span></div>'+rw('グリーン','MG',0)+'</div><div class="gp">'+rw('一緒に回る',M)+rw('ゲーム',G)+'</div><div class="go">始める →</div>';}],
+["K6 緑の帯の見出しカード","リストの上に、緑の細い帯「TODAY 11.20 FRI」。記録中のホールカードと同じ緑で、つながりが出る。",function(){return TT+SEG+'<div class="gp"><div style="background:linear-gradient(110deg,#0E9F62,#12A5B8);color:#fff;padding:9px 14px;display:flex;justify-content:space-between;align-items:baseline"><span class="n" style="font-size:14px;letter-spacing:.22em;font-weight:700">TODAY</span><span class="n" style="font-size:19px;font-weight:700;letter-spacing:.04em">11.20 FRI</span></div>'+rw('名前',P,0)+rw('コース',CV)+rw('グリーン','MG',0)+'</div><div class="gp">'+rw('一緒に回る',M)+rw('ゲーム',G)+'</div><div class="go">始める →</div>';}],
+["K7 紙のカードにする","結果のカードと同じ、クリーム色の紙と緑の帯。項目はリストのまま。始まりと終わりが同じ紙になる。",function(){var st='border-top:1px solid #DDD8C5';return SEG+'<div style="background:#FBFAF4;border-radius:16px;overflow:hidden;box-shadow:0 8px 20px -12px rgba(0,0,0,.4);margin-bottom:12px"><div style="background:#0B6B44;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:flex-end"><b style="font-size:17px;font-weight:900">ラウンドを始める</b><span class="n" style="font-size:15px;font-weight:600">2026.11.20</span></div>'+[['名前',P,0],['コース',CV,1],['グリーン','MG',0],['一緒に回る',M,1],['ゲーム',G,1]].map(function(x,i){return '<div class="rw" style="'+(i?st:'border-top:0')+'"><span class="l" style="color:#5B665F">'+x[0]+'</span><span class="v">'+x[1]+'</span>'+(x[2]?'<span class="c">›</span>':'')+'</div>';}).join('')+'</div><div class="go" style="background:#0B6B44">始める →</div>';}],
+["K8 日付を大きな数字に","見出しのかわりに、日付を大きな数字で。数字の書体はスコアと同じ。文字だけで表情が出る。",function(){return '<div style="display:flex;align-items:flex-end;gap:10px;margin:2px 2px 10px"><b class="n" style="font-size:58px;line-height:.9;font-weight:700">11.20</b><div style="padding-bottom:4px"><div class="n" style="font-size:17px;letter-spacing:.2em;font-weight:700;color:var(--deep)">FRI</div><div style="font-size:14px;font-weight:700" class="mu">ラウンドを始める</div></div></div>'+SEG+'<div class="gp">'+rw('名前',P,0)+rw('コース',CV)+rw('グリーン','MG',0)+'</div><div class="gp">'+rw('一緒に回る',M)+rw('ゲーム',G)+'</div><div class="go">始める →</div>';}],
+["K9 「始める」を緑に＋ひとこと","ボタンを記録画面と同じ緑のグラデーションに。下に、今日の内容を1行でまとめる。",function(){return TT+SEG+base()+'<div class="go g">始める →</div><div class="sub">'+C+'・2人・'+G+'</div>';}],
+["K10 「このコースのあなた」を1行","リストの下に、前回とベストを小さく1行。数字が入ると、ただの入力画面でなくなる。",function(){return TT+SEG+base()+'<div class="go">始める →</div><div style="display:flex;justify-content:center;gap:18px;margin-top:12px"><span class="mu" style="font-size:13px;font-weight:700">このコース　前回 <b class="n" style="font-size:19px;color:var(--fg)">31</b></span><span class="mu" style="font-size:13px;font-weight:700">ベスト <b class="n" style="font-size:19px;color:#A8760A">28</b></span><span class="mu" style="font-size:13px;font-weight:700"><b class="n" style="font-size:19px;color:var(--fg)">12</b> 回</span></div>';}],
+["K11 うすい模様の背景","背景に、グリーンのうねりのような、うすい緑の線。リストは今のまま。画面に空気が入る。",function(){return WAVE+'<div style="position:relative;display:flex;flex-direction:column;flex:1">'+TT+SEG+base()+'<div class="go">始める →</div></div>';}],
+["K12 左に緑の線","2つのまとまりの左に、緑の太い線と小見出し。チーム戦の囲み（左に太い線）と同じ考え方。",function(){function g(t,rows){return '<div style="border-left:4px solid var(--turf);border-radius:4px 16px 16px 4px;background:#fff;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:10px;overflow:hidden"><div style="font-size:13px;font-weight:900;color:var(--deep);padding:8px 14px 0">'+t+'</div>'+rows+'</div>';}
+ return TT+SEG+g('今日のラウンド',rw('名前',P,0).replace('class="rw"','class="rw" style="border-top:0;min-height:42px"')+rw('日付',D)+rw('コース',C)+rw('グリーン','MG',0))+g('いっしょに',rw('一緒に回る',M).replace('class="rw"','class="rw" style="border-top:0;min-height:42px"')+rw('ゲーム',G))+'<div class="go">始める →</div>';}]
+];
+var h='';for(var i=0;i<V.length;i++)h+='<div class="item"><h3>'+V[i][0]+'</h3><p>'+V[i][1]+'</p><div class="ph"><div class="sc">'+HD+'<div class="bd" style="position:relative">'+V[i][2]()+'</div>'+TABS+'</div></div></div>';
+document.getElementById('g').innerHTML=h;
+</script></body></html>
