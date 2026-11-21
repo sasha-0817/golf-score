@@ -1333,6 +1333,13 @@ with sync_playwright() as pw:
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.courses": gc, "sc.favs": ["g1"], "sc.lastCourse": "\"g1\"", "sc.v2": 1}, offline=True)
     ga = pg.evaluate("(()=>{ const e=document.querySelector('#r-green'); if(!e||e.closest('[hidden]')) return null; const g=getComputedStyle(e); return [g.textAlignLast, g.direction, e.options.length]; })()")
     check("開始画面: グリーン（MG / SG）は、ほかの行と同じ右そろえ", ga is not None and ga[0] == "right" and ga[1] == "rtl" and ga[2] == 2 and not errs)
+    k1 = pg.evaluate("(()=>{ const q=x=>document.querySelector(x), e=q('#r-green'), r=e.getBoundingClientRect(), gb=getComputedStyle(q('.sl-go')); return [[...document.querySelectorAll('.sl-sec b')].map(x=>x.textContent).join(','), document.querySelectorAll('.sl-ic').length, Math.round(r.height), getComputedStyle(e).backgroundColor, gb.backgroundImage.includes('gradient'), document.querySelectorAll('.start-list .sl-row:not([hidden])').length]; })()")
+    check("開始画面（K1）: ROUND / WITH の小見出し・行ごとの細い線の絵・MG は緑の札（高さ28px）・「始める」は緑のグラデーション", k1[0] == "ROUND,WITH" and k1[1] == 6 and k1[2] == 28 and k1[3] == "rgb(11, 107, 68)" and k1[4] and k1[5] == 6)
+    pg.context.close()
+    gc1 = [{"id": "g2", "name": "グリーン1つ", "holes": [{"par": 3, "yards": 100}] * 9, "createdAt": 1}]
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.courses": gc1, "sc.favs": ["g2"], "sc.lastCourse": "\"g2\"", "sc.v2": 1}, offline=True)
+    k2 = pg.evaluate("(()=>{ const g=document.querySelector('#r-gwrap'), go=document.querySelector('.sl-go').getBoundingClientRect(), t=document.querySelector('nav.tabs').getBoundingClientRect(); return [!!g&&getComputedStyle(g).display==='none', document.querySelectorAll('.start-list .sl-row').length-document.querySelectorAll('.start-list .sl-row[hidden]').length, Math.round(go.bottom)<=Math.round(t.top)]; })()")
+    check("開始画面: グリーンが1つのコースでは「グリーン」の行は出ない（5行）。「始める」はタブの上に出る", k2[0] and k2[1] == 5 and k2[2] and not errs)
     pg.context.close()
     # 幅320px（iPhone の拡大表示）: カレンダーの土曜が切れない・「始める」が隠れたままにならない
     pg, errs = open_page(b, {**TL, "sc.mates": ["はなこ", "じろう", ""]}, offline=True)

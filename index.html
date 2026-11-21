@@ -2197,6 +2197,21 @@ header.top .sync[hidden]{display:none}
 /* 開始画面の「グリーン」（MG / SG）も、ほかの行と同じ右そろえ（select は text-align が効かないので、最後の行の寄せと書く向きで寄せる） */
 select.sl-in{text-align:right;text-align-last:right;direction:rtl}
 select.sl-in option{direction:ltr}
+
+/* 2026-12-06: 開始画面は K1（英語の小見出し・細い線の絵・色の札・緑の「始める」）。並びと行の数は今まで通り。グリーンは2つ以上あるコースのときだけ行が出る */
+.start-list .sl-h{margin-bottom:8px}
+.start-list .sl-seg{margin-bottom:6px}
+.sl-sec{display:flex;align-items:baseline;gap:7px;margin:4px 4px 5px}
+.sl-sec b{font:700 13px var(--f-num);letter-spacing:.2em;color:#0B6B44}
+.sl-sec span{font-size:13px;font-weight:700;color:var(--muted)}
+.start-list .sl-group{margin-bottom:6px}
+.start-list .sl-row{min-height:43px}
+.start-list .sl-in{height:42px}
+.sl-ic{width:22px;height:22px;flex:none;fill:none;stroke:#0B6B44;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.sl-pill-y{display:inline-flex;align-items:center;height:28px;padding:0 12px;border-radius:99px;background:#FFF1BF;color:#5A3E00;border:1px solid #E3A81A;font-size:14px;font-weight:900;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.start-list select.sl-pill-g,select.sl-pill-g{flex:none;width:auto;min-width:0;height:28px;padding:0 12px;margin-left:auto;margin-right:17px;border-radius:99px;background:#0B6B44;color:#fff;font-size:14px;font-weight:900;direction:rtl}
+.start-list select.sl-pill-g{height:28px;line-height:28px}
+.sl-go.sl-go-g{background:linear-gradient(110deg,#0E9F62,#12A5B8);color:#fff;margin-top:10px}
 </style>
 
 </head>
@@ -2324,7 +2339,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-02-1000";
+const BUILD = "2026-12-06-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2829,12 +2844,14 @@ function lastMates(){
   return TRY.set ? matePeople().filter(x=>x.sample).slice(0,3).map(x=>x.name) : [];
 }
 function matesList(){ const m=state.mates||LS.get("sc.mates",[]); return [0,1,2].map(i=>String((Array.isArray(m)?m[i]:"")||"")); }
+const SLI={p:'<circle cx="11" cy="7" r="3.5"/><path d="M4 19c1-4 4-6 7-6s6 2 7 6"/>',d:'<rect x="3.5" y="5" width="15" height="13.5" rx="2.5"/><path d="M3.5 9.5h15M7.5 3v3.5M14.5 3v3.5"/>',f:'<path d="M7 19V3.5l9 3.5-9 3.5"/><ellipse cx="9" cy="19" rx="6" ry="1.6"/>',g:'<circle cx="11" cy="11" r="7.5"/><circle cx="11" cy="11" r="2.2"/>',m:'<circle cx="8" cy="8" r="3"/><circle cx="15.5" cy="9" r="2.4"/><path d="M2.5 18c.8-3.3 3-5 5.5-5s4.7 1.7 5.5 5M14 13.2c2.6-.3 4.6 1.3 5.5 4.3"/>',t:'<path d="M7 4h8v4a4 4 0 0 1-8 0zM7 5.5H4.5c0 2.5 1 4 3 4.3M15 5.5h2.5c0 2.5-1 4-3 4.3M11 12v4M7.5 18.5h7"/>'};
+const slIc=k=>`<svg class="sl-ic" viewBox="0 0 22 22" aria-hidden="true">${SLI[k]}</svg>`;
 function coursePickField(){
   const all = pickableCourses();
   const favList = myCourses();
   const cur = all.find(c=>c.id===state.pick) || favList.find(c=>c.id===LS.get("sc.lastCourse","")) || favList[0] || null;
   state.pick = cur && cur.id;
-  return `<button class="sl-row sl-btn" data-act="open-pick"><input type="hidden" id="r-course" value="${cur?esc(cur.id):""}"><span class="sl-l">コース</span>${cur?`<span class="sl-v sl-name">${esc(cur.name)}<small>${esc(cur.area||cur.pref||"")}${cur.area||cur.pref?"・":""}${cur.holes.length}H パー${sum(cur.holes,h=>h.par)}</small></span>`:`<span class="sl-v sl-none">${favList.length?"タップして選ぶ":"タップして登録"}</span>`}<i aria-hidden="true">›</i></button>`;
+  return `<button class="sl-row sl-btn" data-act="open-pick"><input type="hidden" id="r-course" value="${cur?esc(cur.id):""}">${slIc("f")}<span class="sl-l">コース</span>${cur?`<span class="sl-v sl-name">${esc(cur.name)}<small>${esc(cur.area||cur.pref||"")}${cur.area||cur.pref?"・":""}${cur.holes.length}H パー${sum(cur.holes,h=>h.par)}</small></span>`:`<span class="sl-v sl-none">${favList.length?"タップして選ぶ":"タップして登録"}</span>`}<i aria-hidden="true">›</i></button>`;
 }
 /* コースの一覧（コース画面とラウンド開始で共通）。mode="pick" はタップで選ぶ、"edit" はタップで編集 */
 function courseRows(list, mode){
@@ -2879,18 +2896,20 @@ function viewRecord(){
     return `<div class="start-list">
       <h2 class="sl-h">ラウンドを始める</h2>
       <div class="sl-seg" role="group" aria-label="入力のしかた"><button data-act="im" data-v="hole" aria-pressed="${state.im==="hole"}">くわしく記録</button><button data-act="im" data-v="card" aria-pressed="${state.im==="card"}">スコアカード</button></div>
+      <div class="sl-sec"><b>ROUND</b><span>今日のラウンド</span></div>
       <div class="sl-group">
-        <label class="sl-row" for="r-player"><span class="sl-l">名前</span><input id="r-player" class="sl-in" value="${esc(state.sp!=null?state.sp:last)}" placeholder="名前を入れる" autocomplete="off" maxlength="8"></label>
-        <button class="sl-row sl-btn" data-act="open-cal"><input type="hidden" id="r-date" value="${state.sd||today()}"><span class="sl-l">日付</span><span class="sl-v">${jpDate(state.sd||today())}</span><i aria-hidden="true">›</i></button>
+        <label class="sl-row" for="r-player">${slIc("p")}<span class="sl-l">名前</span><input id="r-player" class="sl-in" value="${esc(state.sp!=null?state.sp:last)}" placeholder="名前を入れる" autocomplete="off" maxlength="8"></label>
+        <button class="sl-row sl-btn" data-act="open-cal"><input type="hidden" id="r-date" value="${state.sd||today()}">${slIc("d")}<span class="sl-l">日付</span><span class="sl-v">${jpDate(state.sd||today())}</span><i aria-hidden="true">›</i></button>
         ${coursePickField()}
-        <div class="sl-row" id="r-gwrap" hidden><label class="sl-l" for="r-green">グリーン</label><select id="r-green" class="sl-in"></select></div>
+        <div class="sl-row" id="r-gwrap" hidden>${slIc("g")}<label class="sl-l" for="r-green">グリーン</label><select id="r-green" class="sl-in sl-pill-g"></select></div>
       </div>
+      <div class="sl-sec"><b>WITH</b><span>いっしょに</span></div>
       <div class="sl-group">
-        <button class="sl-row sl-btn" data-act="open-mates"><span class="sl-l">一緒に回る</span><span class="sl-v ${mlist.length?"":"sl-none"}">${mlist.length?esc(mlist.join("・")):"なし"}</span><i aria-hidden="true">›</i></button>
-        <button class="sl-row sl-btn" data-act="open-game"><span class="sl-l">ゲーム</span><span class="sl-v ${state.game?"":"sl-none"}">${state.game?esc(GAMES[state.game].name):"なし"}</span><i aria-hidden="true">›</i></button>
+        <button class="sl-row sl-btn" data-act="open-mates">${slIc("m")}<span class="sl-l">一緒に回る</span><span class="sl-v ${mlist.length?"":"sl-none"}">${mlist.length?esc(mlist.join("・")):"なし"}</span><i aria-hidden="true">›</i></button>
+        <button class="sl-row sl-btn" data-act="open-game">${slIc("t")}<span class="sl-l">ゲーム</span><span class="sl-v ${state.game?"":"sl-none"}">${state.game?`<span class="sl-pill-y">${esc(GAMES[state.game].name)}</span>`:"なし"}</span><i aria-hidden="true">›</i></button>
       </div>
       <div class="err" id="r-err"></div>
-      <button class="sl-go" data-act="start">始める <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      <button class="sl-go sl-go-g" data-act="start">始める <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
       ${TRY.set?`<a class="try-link" href="design/try.html">お試し中（${[TRY.set&&(TRY.mates==="m25"?"M2＋M5":TRY.mates==="old"?"前の形":TRY.mates.toUpperCase())].filter(Boolean).join("・")}）　ほかの案を見る ›</a>`:""}
     </div>${state.sheet==="pick"?coursePickSheet():""}${state.sheet==="game"?gameSheet():""}${state.matesOpen?matesSheet():""}${state.calOpen?calSheet():""}`;
   }
