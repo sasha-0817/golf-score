@@ -41,6 +41,7 @@ def open_page(b, ls=None, dark=False, offline=False, repl=None, query=""):
     src = (src.replace("setTimeout(checkUpdate, 1500);", "").replace("setTimeout(maybeShowA2HS, 2500);", "")
               .replace("const state = {", "const state = window.state = {")
               .replace("function render(){", "window.render=render; function render(){")
+              .replace("function courseSplit(", "window.courseSplit=courseSplit; function courseSplit(")
               .replace("function skinsCalc(", "window.skinsCalc=skinsCalc; function skinsCalc(")
               .replace("function courseGreens(", "window.courseGreens=courseGreens; function courseGreens(")
               .replace("function pickableCourses(", "window.pickableCourses=pickableCourses; window.showPresets=()=>SHOW_PRESETS; function pickableCourses(")
@@ -1343,8 +1344,12 @@ with sync_playwright() as pw:
         cc = [{"id": "g3", "name": nm, "holes": [{"par": 3, "yards": 100}] * 9, "createdAt": 1}]
         pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.courses": cc, "sc.favs": ["g3"], "sc.lastCourse": "\"g3\"", "sc.v2": 1}, offline=True)
         cn = pg.evaluate("(()=>{ const e=document.querySelector('.sl-cn'), lh=parseFloat(getComputedStyle(e).lineHeight), t=e.innerHTML.split('<br>'); return [Math.round(e.getBoundingClientRect().height/lh), e.scrollWidth<=e.parentElement.clientWidth+1, t.length>1?Math.abs(t[0].length-t[1].length):0, parseFloat(getComputedStyle(e).fontSize)]; })()")
-        check(f"開始画面: コース名「{nm[:8]}…」は{want}行で収まり、1文字だけ次の行に落ちない（文字は14px以上）", cn[0] == want and cn[1] and cn[2] <= 1 and cn[3] >= 14 and not errs)
+        check(f"開始画面: コース名「{nm[:8]}…」は{want}行で収まり、1文字だけ次の行に落ちない（文字は14px以上）", cn[0] == want and cn[1] and cn[3] >= 14 and not errs)
         pg.context.close()
+    pg, errs = open_page(b, {"sc.v2": 1}, offline=True)
+    sp = pg.evaluate("""[["ファーツリーカントリークラブ","ファーツリー／カントリークラブ"],["日向シーサイドゴルフクラブ","日向シーサイド／ゴルフクラブ"],["直川カントリー倶楽部","直川／カントリー倶楽部"],["大野川ゴルフコース","大野川／ゴルフコース"],["東京相武CCショートコース","東京相武CC／ショートコース"],["光丘パブリックゴルフ場","光丘／パブリックゴルフ場"],["青梅リバーサイドパーク","青梅／リバーサイドパーク"],["ゴルフパートナー千葉ショートコース","ゴルフパートナー千葉／ショートコース"],["学園ゴルフセンター ショートコース","学園ゴルフセンター／ショートコース"],["そうぶファミリーゴルフ","そうぶ／ファミリーゴルフ"],["グリーンヒルズ","グリーン／ヒルズ"]].map(x=>[courseSplit(x[0]).slice(0,2).join("／"), x[1]])""")
+    check("開始画面: コース名の2行の切れ目は、言葉の区切り（カントリークラブ・ゴルフ場・ショートコースなど）。目印がなければまん中", all(x[0] == x[1] for x in sp))
+    pg.context.close()
     check("開始画面: グリーンが1つのコースでは「グリーン」の行は出ない（5行）。「始める」はタブの上に出る", k2[0] and k2[1] == 5 and k2[2] and not errs)
     pg.context.close()
     # 幅320px（iPhone の拡大表示）: カレンダーの土曜が切れない・「始める」が隠れたままにならない
