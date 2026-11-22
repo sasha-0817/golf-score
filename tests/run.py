@@ -1339,6 +1339,12 @@ with sync_playwright() as pw:
     gc1 = [{"id": "g2", "name": "グリーン1つ", "holes": [{"par": 3, "yards": 100}] * 9, "createdAt": 1}]
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.courses": gc1, "sc.favs": ["g2"], "sc.lastCourse": "\"g2\"", "sc.v2": 1}, offline=True)
     k2 = pg.evaluate("(()=>{ const g=document.querySelector('#r-gwrap'), go=document.querySelector('.sl-go').getBoundingClientRect(), t=document.querySelector('nav.tabs').getBoundingClientRect(); return [!!g&&getComputedStyle(g).display==='none', document.querySelectorAll('.start-list .sl-row').length-document.querySelectorAll('.start-list .sl-row[hidden]').length, Math.round(go.bottom)<=Math.round(t.top)]; })()")
+    for nm, want in [("ファーツリーカントリークラブ", 1), ("テストコースロング倶楽部カントリー", 2), ("とても長い名前のゴルフコースクラブ東九州カントリー倶楽部", 2)]:
+        cc = [{"id": "g3", "name": nm, "holes": [{"par": 3, "yards": 100}] * 9, "createdAt": 1}]
+        pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.courses": cc, "sc.favs": ["g3"], "sc.lastCourse": "\"g3\"", "sc.v2": 1}, offline=True)
+        cn = pg.evaluate("(()=>{ const e=document.querySelector('.sl-cn'), lh=parseFloat(getComputedStyle(e).lineHeight), t=e.innerHTML.split('<br>'); return [Math.round(e.getBoundingClientRect().height/lh), e.scrollWidth<=e.parentElement.clientWidth+1, t.length>1?Math.abs(t[0].length-t[1].length):0, parseFloat(getComputedStyle(e).fontSize)]; })()")
+        check(f"開始画面: コース名「{nm[:8]}…」は{want}行で収まり、1文字だけ次の行に落ちない（文字は14px以上）", cn[0] == want and cn[1] and cn[2] <= 1 and cn[3] >= 14 and not errs)
+        pg.context.close()
     check("開始画面: グリーンが1つのコースでは「グリーン」の行は出ない（5行）。「始める」はタブの上に出る", k2[0] and k2[1] == 5 and k2[2] and not errs)
     pg.context.close()
     # 幅320px（iPhone の拡大表示）: カレンダーの土曜が切れない・「始める」が隠れたままにならない
