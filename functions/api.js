@@ -40,7 +40,8 @@ const okId = (id) => typeof id === "string" && id.length > 0 && id.length <= 80;
 function mergeRound(oldR, newR) {
   if (!oldR) return newR;
   const out = { ...newR, ...oldR };
-  const oh = oldR.holes || [], nh = newR.holes || [];
+  const arr = (x) => (Array.isArray(x) ? x : []);   // 形のおかしいデータでも落ちない
+  const oh = arr(oldR.holes), nh = arr(newR.holes);
   out.holes = (oh.length >= nh.length ? oh : nh).map((_, i) => {
     const a = oh[i] || {}, b = nh[i] || {}, h = { ...b, ...a };
     for (const k of Object.keys(b)) if (h[k] == null || h[k] === "" || h[k] === false) { if (b[k] != null && b[k] !== "") h[k] = b[k]; }
@@ -94,7 +95,7 @@ export async function onRequestPost({ request, env }) {
     await setup(env.DB, T);
     const db = env.DB, now = Date.now();
     const putCourse = (c) => db.prepare(`INSERT INTO ${T.c} (id, data, updatedAt) VALUES (?1, ?2, ?3) ON CONFLICT(id) DO UPDATE SET data=?2, updatedAt=?3`).bind(c.id, JSON.stringify(c), now);
-    const putRound = (r) => db.prepare(`INSERT INTO ${T.r} (id, data, createdAt, updatedAt) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(id) DO UPDATE SET data=?2, updatedAt=?4`).bind(r.id, JSON.stringify(r), r.createdAt || now, now);
+    const putRound = (r) => db.prepare(`INSERT INTO ${T.r} (id, data, createdAt, updatedAt) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(id) DO UPDATE SET data=?2, updatedAt=?4`).bind(r.id, JSON.stringify(r), Number.isFinite(r.createdAt) ? r.createdAt : now, now);   // 数字でない createdAt は今の時刻（データベースに入れられず 500 になり、端末が送り続けるのを防ぐ）
     switch (body.action) {
       case "saveCourse":
         if (!body.course || !okId(body.course.id)) return json({ ok: false, error: "bad course" }, 400);
@@ -110,8 +111,9 @@ export async function onRequestPost({ request, env }) {
         await db.prepare(`DELETE FROM ${T.r} WHERE id=?1`).bind(body.id).run(); break;
       case "import": {
         // 引っ越し: 今までのスプレッドシート（＋端末に残っていたクラブなど）を丸ごと入れる。同じIDは空いている項目だけ埋める
-        const courses = (body.courses || []).filter((c) => c && okId(c.id));
-        const rounds = (body.rounds || []).filter((r) => r && okId(r.id));
+        const list = (x) => (Array.isArray(x) ? x : []);
+        const courses = list(body.courses).filter((c) => c && okId(c.id));
+        const rounds = list(body.rounds).filter((r) => r && okId(r.id));
         const have = {};
         for (let i = 0; i < rounds.length; i += 50) {
           const ids = rounds.slice(i, i + 50).map((r) => r.id);

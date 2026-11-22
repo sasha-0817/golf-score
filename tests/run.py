@@ -1125,6 +1125,36 @@ with sync_playwright() as pw:
     pg.set_input_files("#bk-file", bad); pg.wait_for_timeout(300)
     check("ファイルから読み込む: 関係ないファイルは「読み込めませんでした」で、何も変わらない", "読み込めませんでした" in pg.inner_text(".data-sheet") and pg.evaluate("state.rounds.length") == 2 and not errs)
     pg.context.close()
+    # 手で書きかえた（形のおかしい）ファイルを読みこんでも、画面に NaN・undefined が出ない（読みこむときに数字を整える）
+    pg, errs = open_page(b, {"sc.rounds": [bk_round(1, "たろう")], "sc.courses": bk_course, "sc.player": "\"たろう\"", "sc.v2": 1})
+    odd = bk_round(5, "たろう"); odd["holes"][2]["putts"] = None; odd["holes"][3]["putts"] = 1.5; odd["holes"][4]["putts"] = 99; odd["holes"][5]["club"] = {"a": 1}; odd["holes"][6]["strokes"] = 3.4; odd["holes"][7]["dir"] = 7; odd["createdAt"] = "abc"; odd["courseName"] = None
+    oddf = os.path.join(tempfile.mkdtemp(), "odd.json"); json.dump({"app": "GOLF SC.", "format": 1, "rounds": [odd, {"id": "x"}, None, 3], "courses": "x"}, open(oddf, "w", encoding="utf-8"))
+    C(pg, "nav.tabs [data-tab=history]"); pg.set_input_files("#bk-file", oddf); pg.wait_for_timeout(300); C(pg, "[data-act=data-ok]"); pg.wait_for_timeout(400)
+    r5 = pg.evaluate("state.rounds.find(r=>r.id==='bたろう5')")
+    pg.evaluate("document.querySelectorAll('[data-act=toggle-round]').forEach(e=>e.click())"); pg.wait_for_timeout(200); txt = pg.inner_text("body")
+    C(pg, "nav.tabs [data-tab=stats]"); pg.wait_for_timeout(300)
+    for v in ["shot", "putt"]: C(pg, f'[data-act=stat-tab][data-v="{v}"]'); pg.wait_for_timeout(300); txt += pg.inner_text("body")
+    check("ファイルから読み込む: 形のおかしい記録は数字を整えて入れる（パットは0〜打数、クラブは文字だけ）。画面に NaN・undefined が出ない",
+          r5 and [h["putts"] for h in r5["holes"][2:5]] == [0, 2, r5["holes"][4]["strokes"]] and r5["holes"][5]["club"] is None and r5["holes"][6]["strokes"] == 3 and r5["holes"][7]["dir"] is None and isinstance(r5["createdAt"], (int, float)) and pg.evaluate("state.rounds.length") == 2
+          and not any(k in txt for k in ["NaN", "undefined", "[object"]) and not errs)
+    pg.context.close()
+    # 開始画面を開いたまま日付が変わったら、アプリに戻ったときに今日の日付になる（前の日付のまま記録が始まっていた）
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.courses": bk_course, "sc.rounds": [], "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.v2": 1}, offline=True, repl={"const today = () => {": "const today = () => { if(window.__today) return window.__today;", "const LS = {": "const LS = window.LS = {"})
+    d0 = pg.evaluate("document.querySelector('#r-date').value")
+    pg.evaluate("window.__today='2031-01-02'; document.dispatchEvent(new Event('visibilitychange'))"); pg.wait_for_timeout(200)
+    d1 = pg.evaluate("document.querySelector('#r-date').value")
+    pg.evaluate("window.__today='2031-01-03'"); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    check("開始画面: 開いたまま日付が変わっても、戻ったときに表示が今日になり、始めたラウンドの日付も今日", d0 != d1 and d1 == "2031-01-02" and pg.evaluate("(state.draft||state.cdraft).date") == "2031-01-03" and not errs)
+    pg.context.close()
+    # スコアカード入力: マスを選んでいないときに「パットあり／なし」を押しても、エラーにならず切りかわる（でたらめ操作で見つかった）
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.courses": bk_course, "sc.rounds": [], "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.v2": 1}, offline=True, repl={"const LS = {": "const LS = window.LS = {"})
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    pg.evaluate("state.cdraft.sel=null; render()"); p0 = pg.inner_text("[data-act=cd-putts]"); C(pg, "[data-act=cd-putts]"); pg.wait_for_timeout(150)
+    check("スコアカード入力: マスを選んでいなくても「パットあり／なし」が切りかわる", pg.inner_text("[data-act=cd-putts]") != p0 and not errs)
+    # 端末に保存できなかったとき（保存領域がいっぱいなど）は、だまって消えずに知らせる
+    pg.evaluate("Storage.prototype.setItem=function(){ throw new Error('QuotaExceededError'); }; window.__r=LS.set('sc.rounds',[])"); pg.wait_for_timeout(200)
+    check("端末に保存できなかったときは、トーストで知らせる（設定などの小さな保存では出さない）", pg.evaluate("window.__r") is False and "保存できませんでした" in pg.inner_text("#toast") and not pg.evaluate("document.querySelector('#toast').hidden") and not errs)
+    pg.context.close()
 
     # 20. Web版（Cloudflare Pages + D1）: ローカルの代わりのサーバー（tests/cf-server.mjs）で本物の functions/api.js を動かす
     import subprocess, time
@@ -1218,6 +1248,10 @@ with sync_playwright() as pw:
             except urllib.error.HTTPError as e: return e.code
         check("サーバー: 大きすぎるラウンド（300KB超）は受け取らない", code(_json.dumps({"action": "saveRound", "round": {"id": "big", "x": "a" * 400000}}).encode()) == 400 and "big" not in [r["id"] for r in call("localhost")["rounds"]])
         check("サーバー: JSON が null でも落ちない（400）", code(b"null") == 400)
+        # 形のおかしいデータで 500 を返すと、端末がずっと送り直して、うしろの記録が送れなくなる → 受け取るか 400 で返す
+        odd_r = {"id": "odd-1", "player": "へんな人", "courseId": "c", "courseName": "C", "date": "2026-11-22", "createdAt": "abc", "holes": "x"}
+        check("サーバー: createdAt が数字でない・holes が配列でないラウンドでも落ちない（500 を返さない）", code(_json.dumps({"action": "saveRound", "round": odd_r}).encode()) == 200 and code(_json.dumps({"action": "import", "rounds": [{**odd_r, "holes": [{"par": 3}]}], "courses": "x"}).encode()) == 200 and code(_json.dumps({"action": "import", "rounds": {"length": 3}}).encode()) == 200)
+        call("localhost", {"action": "deleteRound", "id": "odd-1"})
         call("localhost", {"action": "deleteRound", "id": "pf-1"}); call("localhost", {"action": "deleteCourse", "id": "pf-c"})
         call(PREV, {"action": "saveRound", "round": {"id": "prev-r1", "player": "後輩", "courseId": "c", "courseName": "C", "date": "2026-11-09", "createdAt": 1, "holes": [{"par": 3, "strokes": 3, "putts": 2}]}})
         call(PREV, {"action": "saveCourse", "course": {"id": "prev-c1", "name": "プレビューのコース", "holes": [{"par": 3}]}})
