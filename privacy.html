@@ -29,7 +29,15 @@ tr:last-child td{border-bottom:0}
 a{color:#0E7A4E}
 .back{display:inline-block;margin-top:34px;padding:12px 22px;border-radius:999px;background:#0B1310;color:#fff;text-decoration:none;font-weight:700}
 small{color:#5B6661;font-size:14px}
-@media (max-width:480px){ th{white-space:normal;width:34%} }
+@media (max-width:600px){
+  table,tbody,tr,td{display:block;width:auto}
+  table{border:0;background:none;border-radius:0}
+  tr:first-child{display:none}
+  tr{background:#fff;border:1px solid #DDE3E0;border-radius:12px;margin:10px 0;padding:6px 0}
+  td{border:0;padding:6px 14px}
+  td:first-child{font-weight:700;font-size:16px;padding-top:10px}
+  td:not(:first-child)::before{content:attr(data-l);display:block;font-size:13px;font-weight:700;color:#5B6661}
+}
 </style>
 </head>
 <body>
@@ -57,12 +65,12 @@ small{color:#5B6661;font-size:14px}
 <h2>2. あつかう情報</h2>
 <table>
 <tr><th>情報</th><th>内容</th><th>保存される場所</th></tr>
-<tr><td>ラウンドの記録</td><td>名前の欄に入れた文字（ニックネーム可）、日付、コース名、ホールごとの打数・パット数・ショットの方向・使ったクラブ・OB・バンカーなど。一緒に回った人の名前と打数も含みます。</td><td>端末の中、サーバー（バックアップ）</td></tr>
-<tr><td>コースの情報</td><td>コース名、都道府県・市町村、ホールごとのパーとヤード。</td><td>端末の中、サーバー（バックアップ）</td></tr>
-<tr><td>アプリの設定</td><td>記録する項目、マイクラブ、前回えらんだコースやゲームなど。</td><td>端末の中だけ</td></tr>
-<tr><td>スコアカードの写真</td><td>コースを登録するときに「写真から入れる」を使った場合の写真。</td><td>読み取りのために送信します。運営者のサーバーには保存しません。</td></tr>
-<tr><td>お問い合わせの内容</td><td>お問い合わせフォームに書いた内容、アプリのバージョン、端末の種類。返信を希望するときは、メールアドレス。</td><td>Google フォーム（Google LLC）</td></tr>
-<tr><td>通信の記録</td><td>IP アドレス、アクセスした日時、ブラウザの種類など、通信のときに自動で送られる情報。</td><td>配信をになう事業者（下の「5.」）の設備</td></tr>
+<tr><td data-l="情報">ラウンドの記録</td><td data-l="内容">名前の欄に入れた文字（ニックネーム可）、日付、コース名、ホールごとの打数・パット数・ショットの方向・使ったクラブ・OB・バンカーなど。一緒に回った人の名前と打数も含みます。</td><td data-l="保存される場所">端末の中、サーバー（バックアップ）</td></tr>
+<tr><td data-l="情報">コースの情報</td><td data-l="内容">コース名、都道府県・市町村、ホールごとのパーとヤード。</td><td data-l="保存される場所">端末の中、サーバー（バックアップ）</td></tr>
+<tr><td data-l="情報">アプリの設定</td><td data-l="内容">記録する項目、マイクラブ、前回えらんだコースやゲームなど。</td><td data-l="保存される場所">端末の中だけ</td></tr>
+<tr><td data-l="情報">スコアカードの写真</td><td data-l="内容">コースを登録するときに「写真から入れる」を使った場合の写真。</td><td data-l="保存される場所">読み取りのために送信します。運営者のサーバーには保存しません。</td></tr>
+<tr><td data-l="情報">お問い合わせの内容</td><td data-l="内容">お問い合わせフォームに書いた内容、アプリのバージョン、端末の種類。返信を希望するときは、メールアドレス。</td><td data-l="保存される場所">Google フォーム（Google LLC）</td></tr>
+<tr><td data-l="情報">通信の記録</td><td data-l="内容">IP アドレス、アクセスした日時、ブラウザの種類など、通信のときに自動で送られる情報。</td><td data-l="保存される場所">配信をになう事業者（下の「5.」）の設備</td></tr>
 </table>
 <p>本アプリは、位置情報、連絡先、カメラロールの中身（えらんだ写真以外）、広告のための識別子を集めません。クッキー（Cookie）は、運営者からは使っていません。</p>
 
@@ -88,8 +96,8 @@ small{color:#5B6661;font-size:14px}
 <p>本アプリは、次の事業者のサービスを使って動いています。その範囲で、情報がこれらの事業者の設備であつかわれます。事業者のサーバーは日本の外（アメリカ合衆国など）にあることがあります。</p>
 <table>
 <tr><th>事業者</th><th>使っている目的</th><th>あつかわれる情報</th></tr>
-<tr><td>Cloudflare, Inc.（アメリカ）</td><td>アプリの配信、バックアップの保存、スコアカードの写真の読み取り（AI）、プログラムの部品の配信</td><td>ラウンドの記録、コースの情報、写真、通信の記録</td></tr>
-<tr><td>Google LLC（アメリカ）</td><td>文字のデザイン（フォント）の配信、お問い合わせフォーム</td><td>通信の記録、お問い合わせの内容</td></tr>
+<tr><td data-l="事業者">Cloudflare, Inc.（アメリカ）</td><td data-l="使っている目的">アプリの配信、バックアップの保存、スコアカードの写真の読み取り（AI）、プログラムの部品の配信</td><td data-l="あつかわれる情報">ラウンドの記録、コースの情報、写真、通信の記録</td></tr>
+<tr><td data-l="事業者">Google LLC（アメリカ）</td><td data-l="使っている目的">文字のデザイン（フォント）の配信、お問い合わせフォーム</td><td data-l="あつかわれる情報">通信の記録、お問い合わせの内容</td></tr>
 </table>
 <p>それぞれの事業者での情報のあつかいは、各社のプライバシーポリシーをご覧ください。</p>
 <ul>
