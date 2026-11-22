@@ -2215,6 +2215,9 @@ select.sl-in option{direction:ltr}
 
 /* コース名: 1行に収まるまで文字を小さく（16→14px）。入らないときはまん中で2行（1文字だけ次の行に落ちないように） */
 .sl-name .sl-cn{display:block;white-space:nowrap;line-height:1.3}
+.rename-sheet .rn-msg{font-size:15px;line-height:1.7;color:var(--muted,#5B6661);margin:-4px 0 14px;text-align:center}
+.rename-sheet button.rn-yes{background:#22A06B;color:#fff;border-color:#22A06B;font-weight:800}
+.rename-sheet button.rn-other{background:none;border:0;color:var(--muted,#5B6661);font-size:14px;text-decoration:underline;min-height:40px;margin-top:6px}
 </style>
 
 </head>
@@ -2345,7 +2348,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-10-1000";
+const BUILD = "2026-12-11-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2810,6 +2813,16 @@ const after = {};
 function jpDate(v){ const [y,m,d]=String(v).split("-").map(Number); if(!y||!m||!d) return "";
   const w="日月火水木金土"[new Date(y,m-1,d).getDay()]; return `${y===new Date().getFullYear()?"":y+"年"}${m}月${d}日(${w})`; }
 /* 日付のカレンダー（iPhone の標準のカレンダーは色や形を変えられないので、アプリの見た目で作る） */
+/* 名前を変えたとき: この端末の、前の名前の記録を新しい名前にする（サーバーのバックアップにも送り直す） */
+function renamePlayer(from, to){
+  const now=Date.now(); state.rounds.forEach(r=>{ if(r.player===from){ r.player=to; r.updatedAt=now; if(hasBackend) pending=pending.filter(x=>x.id!==r.id).concat([r]); } });
+  cache(); if(hasBackend){ LS.set("sc.pending",pending); backup(); }
+  const m=LS.get("sc.lastClubs",{}), o={}; Object.keys(m).forEach(k=>{ const i=k.indexOf("|"); o[k.slice(0,i)===from ? to+k.slice(i) : k]=m[k]; }); LS.set("sc.lastClubs",o);
+  LS.set("sc.player",to);
+}
+function renameSheet(){ const a=state.renameAsk;
+  return `<div class="sheet-back" data-act="rename-no"><div class="sheet rename-sheet" data-stop="1"><p>名前を「${esc(a.from)}」から「${esc(a.to)}」に変えますか？</p><div class="rn-msg">これまでの記録（${a.n}回）も「${esc(a.to)}」になります。</div>
+    <button class="rn-yes" data-act="rename-yes">変える</button><button data-act="rename-no">やめる</button><button class="rn-other" data-act="rename-other">別の人として始める（記録はそのまま）</button></div></div>`; }
 function calSheet(){
   const cur=state.sd||today(), t=today(), [y,m]=(state.calMonth||cur.slice(0,7)).split("-").map(Number), pad=x=>String(x).padStart(2,"0");
   const first=new Date(y,m-1,1).getDay(), n=new Date(y,m,0).getDate();
@@ -2969,7 +2982,7 @@ function viewRecord(){
       <div class="err" id="r-err"></div>
       <button class="sl-go sl-go-g" data-act="start">始める <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
       ${TRY.set?`<a class="try-link" href="design/try.html">お試し中（${[TRY.set&&(TRY.mates==="m25"?"M2＋M5":TRY.mates==="old"?"前の形":TRY.mates.toUpperCase())].filter(Boolean).join("・")}）　ほかの案を見る ›</a>`:""}
-    </div>${state.sheet==="pick"?coursePickSheet():""}${state.sheet==="game"?gameSheet():""}${state.matesOpen?matesSheet():""}${state.calOpen?calSheet():""}`;
+    </div>${state.sheet==="pick"?coursePickSheet():""}${state.sheet==="game"?gameSheet():""}${state.matesOpen?matesSheet():""}${state.calOpen?calSheet():""}${state.renameAsk?renameSheet():""}`;
   }
   return viewRecordDraft(d);
 }
@@ -3056,7 +3069,7 @@ function viewRecordDraft(d){
     if(v==null) return "";
     if(!(kind==="s" ? touchedS(d,who,hs) : touchedP(d,who,hs))) return `<div class="fc un" role="button" tabindex="0" data-k="${kind}" data-i="${who}" aria-label="${esc(pNames[who])}の${kind==="s"?"打数":"パット"}（未入力）。押したまま左右に動かして離すと入ります"><span>入力</span></div>`;
     const tone = kind==="s" ? (v===1?"hio":TONE(v-h.par)) : (v<=1?"birdie":v===2?"par":v===3?"bogey":"double");
-    const lab = kind==="s" ? TJ(v-h.par,v) : "";
+    const lab = kind==="s" ? TJ(v-h.par,v) : (v===0 && !who && h.strokes>=2 ? "CHIP IN" : "");   // 0パット（グリーンの外から入れた）はお祝い。1打（ホールインワン）は打数の方で HIO
     return `<div class="fc t-${tone}" role="button" tabindex="0" data-k="${kind}" data-i="${who}" aria-label="${esc(pNames[who])}の${kind==="s"?"打数":"パット"} ${v}。押したまま左右に動かして離すと変わります"><b>${v}</b>${lab?`<small>${lab}</small>`:""}</div>`; };
   const mcell = who => { const v=medalOf(who); return `<div class="fc fm ${v?"set":""}" role="button" tabindex="0" data-k="m" data-i="${who}" aria-label="${esc(pNames[who])}のメダル。押したまま左右に動かして離すと変わります">${v?medalSVG(v,30):"<span>—</span>"}</div>`; };
   const ncell = who => { const on=(d.pins||{})[state.hole]===who; return h.par===3 ? `<button class="fc fn ${on?"set":""}" data-act="pin-q" data-i="${who}" aria-pressed="${on}" aria-label="${esc(pNames[who])}がニアピン">${PINFLAG(on)}</button>` : `<span class="na">パー3のみ</span>`; };
@@ -3797,7 +3810,8 @@ function nassauCalc(rows, n, N){
   return {pts, res, half};
 }
 /* ラスベガス（4人）: 1・2人目がチームA、3・4人目がチームB。少ない打数を十の位、多い打数を一の位にした数を比べ、差がそのまま点数 */
-const vegasNum = (x,y) => { const [p,q]=[x,y].sort((a,b)=>a-b); return +(String(p)+String(q)); };
+const vegasNum = (x,y) => { const [p,q]=[x,y].map(v=>Math.min(v,9)).sort((a,b)=>a-b);   // 10打以上は9として数える（3けたになって点差が大きくなりすぎないように）
+  return +(String(p)+String(q)); };
 function vegasCalc(rows, n){
   const pts=[0,0], log=[];
   for(let i=0;i<n;i++){ const v=rows.map(r=>r[i]); if(v.some(x=>x==null)) break;
@@ -3941,7 +3955,7 @@ function rulesPop(k){
     opt=`<dl class="rp-words"><dt>前半</dt><dd>前の半分（9Hは1〜4H、18Hは1〜9H）</dd><dt>後半</dt><dd>残りのホール</dd><dt>ナッソー</dt><dd>生まれたゴルフ場（米国）の名前</dd></dl>`;
     ex=`<div class="sr-row3"><span>前半</span><span>たろう 13</span><span>はなこ <b class="w">12</b></span><span>はなこ 1pt</span></div><div class="sr-row3"><span>後半</span><span>たろう <b class="w">16</b></span><span>はなこ 18</span><span>たろう 1pt</span></div><div class="sr-row3"><span>トータル</span><span>たろう <b class="w">29</b></span><span>はなこ 30</span><span>たろう 1pt</span></div><div class="sr-sum">たろう 2pt　はなこ 1pt　→ <b>たろうの勝ち</b></div>`; }
   if(k==="vegas"){
-    list=`<li>1・2人目がチームA、3・4人目がチームB</li><li>2人の打数で<b>少ない方を十の位、多い方を一の位</b>にした数を作ります（3と5なら35）</li><li>数が小さいチームが<b>差の分だけ点数</b>をもらい、最後に点数が多いチームの勝ち</li>`;
+    list=`<li>1・2人目がチームA、3・4人目がチームB</li><li>2人の打数で<b>少ない方を十の位、多い方を一の位</b>にした数を作ります（3と5なら35。10打以上は9）</li><li>数が小さいチームが<b>差の分だけ点数</b>をもらい、最後に点数が多いチームの勝ち</li>`;
     ex=`<div class="sr-row2"><span>チームA</span><span>たろう 3・はなこ 5</span><b class="w">35</b></div><div class="sr-row2"><span>チームB</span><span>じろう 4・さぶろう 4</span><b>44</b></div><div class="sr-sum">44 − 35 = 9 → <b>チームAが9点</b></div>`; }
   if(k==="stable"){
     list=`<li>スコアに応じてホールごとに<b>ポイント</b>がもらえます</li><li><b>パー2点</b>・ボギー1点・ダボ以上0点・バーディ3点・イーグル4点</li><li><b>ポイントが一番多い人の勝ち</b>。大たたきしても0点で済みます</li>`;
@@ -4022,9 +4036,15 @@ document.addEventListener("click", async ev => {
     case "one-round": state.oneRound=b.dataset.id; state.trendSel=null; state.tab="stats"; LS.set("sc.tab","stats"); render(); window.scrollTo(0,0); break;
     case "one-off": { const id=state.oneRound; state.oneRound=null; state.trendSel=null; render(); window.scrollTo(0,0); break; }
     case "demo-on": state.demo=true; render(); break;
+    case "rename-yes": { const a=state.renameAsk; state.renameAsk=null; if(!a) break; renamePlayer(a.from, a.to); state.renameOk=a.to; render(); const st=$("[data-act=start]"); if(st) st.click(); break; }
+    case "rename-other": { const a=state.renameAsk; state.renameAsk=null; if(!a) break; state.renameOk=a.to; render(); const st=$("[data-act=start]"); if(st) st.click(); break; }
+    case "rename-no": { const a=state.renameAsk; state.renameAsk=null; if(a) state.sp=a.from; render(); break; }
     case "demo-off": state.demo=false; render(); break;
     case "start": {
-      const p=$("#r-player").value.trim(), cid=$("#r-course").value, dt=state.sd||today();   // 画面を開いたまま日付が変わっても、えらんでいなければ今日
+      const p=$("#r-player").value.trim(), cid=$("#r-course").value, dt=state.sd||today();
+      // 名前を変えて始めるとき: 今までの記録が「消えた」ように見えないよう、記録の名前も変えるかを聞く
+      { const last=LS.get("sc.player",""); if(p && last && p!==last && state.renameOk!==p && state.rounds.some(r=>r.player===last) && !state.rounds.some(r=>r.player===p)){ state.renameAsk={from:last, to:p, n:state.rounds.filter(r=>r.player===last).length}; render(); return; } }
+      state.renameOk=null;   // 画面を開いたまま日付が変わっても、えらんでいなければ今日
       if(!p){ $("#r-err").textContent="プレーヤーの名前を入れてください"; return; }
       if(!cid || cid==="__more"){ $("#r-err").textContent="コースを選んでください"; return; }
       let c=state.courses.find(x=>x.id===cid);

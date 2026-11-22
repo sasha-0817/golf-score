@@ -1151,6 +1151,32 @@ with sync_playwright() as pw:
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
     pg.evaluate("state.cdraft.sel=null; render()"); p0 = pg.inner_text("[data-act=cd-putts]"); C(pg, "[data-act=cd-putts]"); pg.wait_for_timeout(150)
     check("スコアカード入力: マスを選んでいなくても「パットあり／なし」が切りかわる", pg.inner_text("[data-act=cd-putts]") != p0 and not errs)
+    pg.context.close()
+    # 名前を変えて始めるとき: 今までの記録も新しい名前にするかを聞く（変えると、履歴から消えたように見えていた）
+    RN = {"sc.player": "\"たろう\"", "sc.courses": bk_course, "sc.rounds": [bk_round(1, "たろう"), bk_round(2, "たろう"), bk_round(3, "はなこ")], "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.lastClubs": {"たろう|c1|0": "7I", "はなこ|c1|0": "9I"}, "sc.v2": 1}
+    def rn_open():
+        pg, errs = open_page(b, RN, offline=True); pg.fill("#r-player", "太郎"); C(pg, "[data-act=start]"); pg.wait_for_timeout(250); return pg, errs
+    pg, errs = rn_open(); ask = pg.inner_text(".rename-sheet") if pg.query_selector(".rename-sheet") else ""
+    C(pg, "[data-act=rename-yes]"); pg.wait_for_timeout(400)
+    check("名前を変えて始める: 「これまでの記録（2回）も…」と聞き、「変える」で前の名前の記録・前回のクラブが新しい名前になって、ラウンドが始まる（ほかの人の記録はそのまま）",
+          "たろう" in ask and "太郎" in ask and "2回" in ask and sorted(pg.evaluate("state.rounds.map(r=>r.player)")) == sorted(["太郎", "太郎", "はなこ"]) and pg.evaluate("JSON.parse(localStorage.getItem('sc.player'))") == "太郎"
+          and pg.evaluate("(state.draft||state.cdraft.players[0]).player||state.cdraft.players[0].name") == "太郎" and pg.evaluate("JSON.parse(localStorage.getItem('sc.lastClubs'))") == {"太郎|c1|0": "7I", "はなこ|c1|0": "9I"} and pg.evaluate("JSON.parse(localStorage.getItem('sc.rounds')).filter(r=>r.player==='太郎').length") == 2 and not errs)
+    pg.context.close()
+    pg, errs = rn_open(); C(pg, "[data-act=rename-other]"); pg.wait_for_timeout(400)
+    check("名前を変えて始める: 「別の人として始める」は、記録の名前を変えずに始まる", sorted(pg.evaluate("state.rounds.map(r=>r.player)")) == sorted(["たろう", "たろう", "はなこ"]) and pg.evaluate("!!(state.draft||state.cdraft)") and not errs)
+    pg.context.close()
+    pg, errs = rn_open(); C(pg, "[data-act=rename-no]"); pg.wait_for_timeout(300)
+    check("名前を変えて始める: 「やめる」は始めずに、名前の欄を前の名前に戻す", not pg.evaluate("!!(state.draft||state.cdraft)") and pg.input_value("#r-player") == "たろう" and not pg.query_selector(".rename-sheet") and not errs)
+    pg.fill("#r-player", "はなこ"); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    check("名前を変えて始める: 新しい名前にすでに記録があるとき（一緒に回った人の名前など）は聞かずに始まる", not pg.query_selector(".rename-sheet") and pg.evaluate("!!(state.draft||state.cdraft)") and not errs)
+    pg.context.close()
+    # 0パット（チップイン）は、パットの数字の下に CHIP IN。ラスベガスは10打以上を9として数える
+    pg, errs = open_page(b, {**RN, "sc.inputMode": "\"hole\""}, offline=True, repl={"const LS = {": "const LS = window.LS = {"}); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    pg.evaluate("(()=>{ const h=state.draft.holes[0]; h.strokes=3; h.sT=true; h.putts=0; h.pT=true; render(); })()")
+    chip = pg.inner_text('.fc[data-k="p"][data-i="0"]')
+    pg.evaluate("(()=>{ const h=state.draft.holes[0]; h.putts=1; render(); })()")
+    check("記録画面: 0パットのときだけ、パットの下に CHIP IN と出る", "CHIP IN" in chip and "CHIP IN" not in pg.inner_text('.fc[data-k="p"][data-i="0"]') and not errs)
+    check("ラスベガス: 10打以上は9として数える（3と10は39。4と5の45との差で6点）", pg.evaluate("vegasCalc([[3],[10],[4],[5]],1).pts.join()") == "6,0" and pg.evaluate("vegasCalc([[10],[10],[4],[5]],1).pts.join()") == "0,54")
     # 端末に保存できなかったとき（保存領域がいっぱいなど）は、だまって消えずに知らせる
     pg.evaluate("Storage.prototype.setItem=function(){ throw new Error('QuotaExceededError'); }; window.__r=LS.set('sc.rounds',[])"); pg.wait_for_timeout(200)
     check("端末に保存できなかったときは、トーストで知らせる（設定などの小さな保存では出さない）", pg.evaluate("window.__r") is False and "保存できませんでした" in pg.inner_text("#toast") and not pg.evaluate("document.querySelector('#toast').hidden") and not errs)
