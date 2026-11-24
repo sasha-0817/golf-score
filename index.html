@@ -2218,6 +2218,8 @@ select.sl-in option{direction:ltr}
 .rename-sheet .rn-msg{font-size:15px;line-height:1.7;color:var(--muted,#5B6661);margin:-4px 0 14px;text-align:center}
 .rename-sheet button.rn-yes{background:#22A06B;color:#fff;border-color:#22A06B;font-weight:800}
 .rename-sheet button.rn-other{background:none;border:0;color:var(--muted,#5B6661);font-size:14px;text-decoration:underline;min-height:40px;margin-top:6px}
+.pt.snk{display:flex;align-items:center;justify-content:center;gap:2px}.pt.snk svg,.gtag.snk svg{display:inline-block;vertical-align:-4px}
+.rs-snk svg{display:block}
 </style>
 
 </head>
@@ -2337,7 +2339,7 @@ const state = {
   // スコアカード入力（紙と同じ表に最大4人分）の下書き。1ホールずつの下書きとは別に持つ
   cdraft: (d=>d && Array.isArray(d.holes) && d.holes.length && Array.isArray(d.players) && d.players.length && d.players.every(p=>p && Array.isArray(p.s) && Array.isArray(p.p) && p.s.length===d.holes.length) ? d : null)(LS.get("sc.cdraft", null)),
   im: LS.get("sc.inputMode","hole")==="card" ? "card" : "hole",
-  game: (g=>["ghost","skins","match","nassau","vegas","stable","peoria","olympic","team","teamsum","nearpin"].includes(g) ? g : "")(LS.get("sc.game","")),
+  game: (g=>["ghost","skins","match","nassau","vegas","stable","peoria","olympic","team","teamsum","nearpin","oneon","snake"].includes(g) ? g : "")(LS.get("sc.game","")),
   skinCarry: LS.get("sc.skinCarry", false)===true, // 同点のコインを次のホールへ持ち越すか（ルールのポップアップで選ぶ。初期はしない）
   hole: 0, // 下書きがあれば下で復元
   fPlayer: LS.get("sc.fPlayer", LS.get("sc.player","") || "all"), fCourse:"all", fRange:"all",
@@ -2348,7 +2350,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-11-1000";
+const BUILD = "2026-12-12-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2796,7 +2798,7 @@ function tryShow(){
   const N=+TRY.show, P9=[3,3,3,4,3,3,4,3,3], S=[[3,3,5,5,4,4,5,4,4],[4,4,3,4,3,5,5,2,3],[3,5,2,6,4,3,4,4,4],[3,3,4,3,3,4,5,5,4]], S2=[[4,3,3,5,3,4,6,3,2],[3,4,4,4,5,3,4,3,4],[5,3,3,4,3,2,5,4,3],[3,4,6,5,3,3,4,3,4]];
   const rs=["たろう","はなこ","じろう","ながいなまえさん"].map((n,k)=>({ id:"try"+k, card:true, player:n, courseId:"try", courseName:"見本のコース", date:today(), createdAt:k,
     holes:Array.from({length:N},(_,i)=>({par:P9[i%9], strokes:(i<9?S:S2)[k][i%9], putts:0, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null})) }));
-  state.result=rs[0]; state.resultGroup=rs; state.resultAll=true; state.resultGame=TRY.game||null; state.resultCarry=false; state.resultEx={medals:{},pins:{},hidden:null}; state.resultTry=true;
+  state.result=rs[0]; state.resultGroup=rs; state.resultAll=true; state.resultGame=TRY.game||null; state.resultCarry=false; state.resultEx={medals:{},pins:{},marks:{},hidden:null}; state.resultTry=true;
 }
 const after = {};
 
@@ -3056,13 +3058,13 @@ function viewRecordDraft(d){
   const pRows=[d.holes.map(x=>x.strokes), ...(d.mates||[]).map(m=>m.s)];
   let nG=0; d.holes.forEach((_,k)=>{ if(pNames.every((__,i)=>touchedS(d,i,k))) nG=k+1; });   // 全員が打数を入れたホールまでを、ゲームのポイントに数える
   const sk = d.game==="skins" ? skinsCalc(pRows, nG, !!d.carry) : null;   // 今のホールまで数える（入力したらすぐポイントが動く）
-  const gt = d.game && d.game!=="skins" ? gameTags(d.game, pRows, d.holes.map(x=>x.par), nG, N, {medals:d.medals, pins:d.pins, hole:state.hole}) : null;
+  const gt = d.game && d.game!=="skins" ? gameTags(d.game, pRows, d.holes.map(x=>x.par), nG, N, {medals:d.medals, pins:d.pins, marks:d.marks, hole:state.hole}) : null;
   const ptag = i => sk ? `<span class="skc ${sk.won[i]?"":"z"}">${coinSVG(12)}${sk.won[i]}</span>` : gt ? gt[i] : "";
   const parsAll=d.holes.map(x=>x.par);
-  const ptVal = i => isOlympic(d.game) ? olympicCalc(d.medals,PN).pts[i] : d.game==="nearpin" ? pinCalc(d.pins,PN,parsAll).won[i] : d.game==="skins" ? sk.won[i] : d.game==="nassau" ? nassauCalc(pRows,nG,N).pts[i] : d.game==="stable" ? stableCalc(pRows,parsAll,nG).pts[i] : null;
-  const ptCell = i => { if(d.game==="ghost") return `<div class="pt">${i===0&&ghost?`<b class="gd ${ghostDiff<0?"up":ghostDiff>0?"dn":"z"}">${ghostDiff>0?"+":ghostDiff<0?"−":"±"}${Math.abs(ghostDiff)}<i>打</i></b>`:""}</div>`; const n=ptVal(i); return n==null ? `<div class="pt">${ptag(i)}</div>` : d.game==="skins" ? `<div class="pt"><span class="skp">${coinSVG(26)}<b class="${n?"":"z"}">${n}</b></span></div>` : `<div class="pt"><b class="${n?"":"z"}">${n}</b></div>`; };
+  const ptVal = i => isOlympic(d.game) ? olympicCalc(d.medals,PN).pts[i] : d.game==="nearpin" ? pinCalc(d.pins,PN,parsAll).won[i] : isMarkGame(d.game) ? marksCalc(d.marks,PN,parsAll,d.game==="oneon").n[i] : d.game==="skins" ? sk.won[i] : d.game==="nassau" ? nassauCalc(pRows,nG,N).pts[i] : d.game==="stable" ? stableCalc(pRows,parsAll,nG).pts[i] : null;
+  const ptCell = i => { if(d.game==="ghost") return `<div class="pt">${i===0&&ghost?`<b class="gd ${ghostDiff<0?"up":ghostDiff>0?"dn":"z"}">${ghostDiff>0?"+":ghostDiff<0?"−":"±"}${Math.abs(ghostDiff)}<i>打</i></b>`:""}</div>`; const n=ptVal(i); return n==null ? `<div class="pt">${ptag(i)}</div>` : d.game==="skins" ? `<div class="pt"><span class="skp">${coinSVG(26)}<b class="${n?"":"z"}">${n}</b></span></div>` : d.game==="snake" ? `<div class="pt snk">${snakeHolder===i?SNAKE(true,22):""}<b class="${n?"":"z"}">${n}</b></div>` : `<div class="pt"><b class="${n?"":"z"}">${n}</b></div>`; };
   const teamOf = i => (GAMES[d.game]&&GAMES[d.game].type==="team"&&PN===4) ? (i<2?"A":"B") : "";   // チーム戦は 1・2人目=A（ネイビー）、3・4人目=B（ゴールド）
-  const gx = isOlympic(d.game) ? "m" : d.game==="nearpin" ? "n" : "";          // ゲームの入力の列（オリンピック=メダル / ニアピン）
+  const gx = isOlympic(d.game) ? "m" : d.game==="nearpin" ? "n" : d.game==="oneon" ? "o" : d.game==="snake" ? "k" : "";          // ゲームの入力の列（オリンピック=メダル / ニアピン）
   const gcls = d.game ? (gx ? "gtx" : "gtp") : "gt0";                          // 列の幅（ゲームなし / ポイントだけ / 入力＋ポイント）
   const medalOf = i => (((d.medals||{})[state.hole])||[])[i]||0;
   const fcell = (kind,who) => { const hs=state.hole, v = kind==="s" ? (who ? d.mates[who-1].s[hs] : h.strokes) : (who ? ((d.mates[who-1].p||[])[hs] ?? 2) : h.putts);
@@ -3073,12 +3075,16 @@ function viewRecordDraft(d){
     return `<div class="fc t-${tone}" role="button" tabindex="0" data-k="${kind}" data-i="${who}" aria-label="${esc(pNames[who])}の${kind==="s"?"打数":"パット"} ${v}。押したまま左右に動かして離すと変わります"><b>${v}</b>${lab?`<small>${lab}</small>`:""}</div>`; };
   const mcell = who => { const v=medalOf(who); return `<div class="fc fm ${v?"set":""}" role="button" tabindex="0" data-k="m" data-i="${who}" aria-label="${esc(pNames[who])}のメダル。押したまま左右に動かして離すと変わります">${v?medalSVG(v,30):"<span>—</span>"}</div>`; };
   const ncell = who => { const on=(d.pins||{})[state.hole]===who; return h.par===3 ? `<button class="fc fn ${on?"set":""}" data-act="pin-q" data-i="${who}" aria-pressed="${on}" aria-label="${esc(pNames[who])}がニアピン">${PINFLAG(on)}</button>` : `<span class="na">パー3のみ</span>`; };
+  // ワンオン（パー3で1打で乗せた人）・スネーク（3パットした人）: 当てはまる人を何人でも押す
+  const qcell = who => { const on=(((d.marks||{})[state.hole])||[]).includes(who); if(d.game==="oneon" && h.par!==3) return `<span class="na">パー3のみ</span>`;
+    return `<button class="fc fn ${on?"set":""}" data-act="mark-q" data-i="${who}" aria-pressed="${on}" aria-label="${esc(pNames[who])}が${d.game==="oneon"?"ワンオン":"3パット"}">${d.game==="oneon"?ONFLAG(on):SNAKE(on)}</button>`; };
+  const snakeHolder = d.game==="snake" ? marksCalc(d.marks,PN,parsAll,false).holder : -1;
   const ghost = d.game==="ghost" ? ghostBest(d.player,d.courseId,N,d.id) : null;
   const gStr = k => ghost && ghost.holes[k] ? ghost.holes[k].strokes : null;
   let ghostDiff=0; if(ghost) for(let k=0;k<N;k++){ if(touchedS(d,0,k) && gStr(k)!=null) ghostDiff += d.holes[k].strokes-gStr(k); }   // ゴルフのスコアと同じ向き: ゴーストより少ない打数なら −（勝ち）、多ければ ＋（負け）
   const ghostRow = d.game==="ghost" ? `<div class="frow ${gcls} ghostrow"><div class="mn"><span>ゴースト</span>${ghost?`<small>ベスト ${roundTotals(ghost).score}</small>`:""}</div>${ghost?(()=>{ const gs=gStr(state.hole); return `<div class="gc t-${gs===1?"hio":TONE(gs-h.par)}"><b>${gs}</b><small>${TJ(gs-h.par,gs)}</small></div>`; })():`<div class="gc"><b>—</b></div>`}<span></span><div class="pt"><span class="na">${ghost?"":"ベストなし"}</span></div></div>` : "";
-  const scoreBlock = `<div class="fhead ${gcls}"><span></span><span>打数</span><span>${F.putts?"パット":""}</span>${gx?`<span>${gx==="m"?"メダル":"ニアピン"}</span>`:""}${d.game?`<span>${d.game==="ghost"?"差":"ポイント"}</span>`:""}</div>`
-    + (()=>{ const rowH=(i,noPt)=>`<div class="frow ${gcls} ${i===0?"me":""}"><div class="mn"><span class="${[...String(dupLabel(pNames,i))].length>=5?"long":""}">${esc(dupLabel(pNames,i))}</span></div>${fcell("s",i)}${F.putts&&i===0?fcell("p",0):"<span></span>"}${gx==="m"?mcell(i):gx==="n"?ncell(i):""}${d.game&&!noPt?ptCell(i):""}</div>`;
+  const scoreBlock = `<div class="fhead ${gcls}"><span></span><span>打数</span><span>${F.putts?"パット":""}</span>${gx?`<span>${({m:"メダル",n:"ニアピン",o:"ワンオン",k:"3パット"})[gx]}</span>`:""}${d.game?`<span>${d.game==="ghost"?"差":"ポイント"}</span>`:""}</div>`
+    + (()=>{ const rowH=(i,noPt)=>`<div class="frow ${gcls} ${i===0?"me":""}"><div class="mn"><span class="${[...String(dupLabel(pNames,i))].length>=5?"long":""}">${esc(dupLabel(pNames,i))}</span></div>${fcell("s",i)}${F.putts&&i===0?fcell("p",0):"<span></span>"}${gx==="m"?mcell(i):gx==="n"?ncell(i):gx?qcell(i):""}${d.game&&!noPt?ptCell(i):""}</div>`;
       if(teamOf(0)){ const tv=i=>String(gt&&gt[i]||"").replace(/<[^>]+>/g,"").replace(/^[AB]\s*/,"").replace(/[勝打]|pt$/g,"");   // チーム戦: 2人を1つの囲みに入れ、右に値を1つだけ（A・Bの文字は色で分かる）
         return [0,2].map(i=>`<div class="tgrp team${teamOf(i)}"><div class="tpt ${String(tv(i)).length>=4?"l4":""}">${esc(tv(i))}</div>${rowH(i,true)}${rowH(i+1,true)}</div>`).join(""); }
       return pNames.map((n,i)=>rowH(i)).join(""); })() + ghostRow;
@@ -3171,7 +3177,7 @@ async function cardFinish(b, early){
   try{ await Promise.all(rs.map(r=>store.saveRound(r))); state.saving=false; }
   catch(e){ state.saving=false; render(); writeErr(e); return; }
   state.cdraft=null; saveCDraft(); state.confirm=null; state.tab="history"; LS.set("sc.tab","history");
-  state.fPlayer=rs[0].player; LS.set("sc.fPlayer",rs[0].player); state.openRound=rs[0].id; state.result=rs[0]; state.resultGroup=rs.length>1?rs:null; state.resultAll=rs.length>1; state.resultGame=rs.length>1?cd.game:null; state.resultCarry=!!cd.carry; state.resultEx={medals:cd.medals||{}, pins:cd.pins||{}, hidden:isPeoria(cd.game)?peoriaHidden(idxC.length):null}; render();
+  state.fPlayer=rs[0].player; LS.set("sc.fPlayer",rs[0].player); state.openRound=rs[0].id; state.result=rs[0]; state.resultGroup=rs.length>1?rs:null; state.resultAll=rs.length>1; state.resultGame=rs.length>1?cd.game:null; state.resultCarry=!!cd.carry; state.resultEx={medals:cd.medals||{}, pins:cd.pins||{}, marks:cd.marks||{}, hidden:isPeoria(cd.game)?peoriaHidden(idxC.length):null}; render();
 }
 function cdHole(cd){ if(cd.sel) return cd.sel.h; let i=0; while(i<cd.holes.length && cd.players.every(p=>p.s[i]!=null)) i++; return Math.min(i,cd.holes.length-1); }   // 見ているホール（選択中のマス、なければ次に入れるホール）
 function viewCard(cd){
@@ -3204,7 +3210,7 @@ function viewCard(cd){
         padSub=rp(nPadR).map(()=>pw===2?`<th class="c-s pad"></th><th class="pad"></th>`:`<th class="c-s pad"></th>`).join(""), padTd=rp(nPadR).map(()=>`<td class="c-s pad"></td>${pw===2?`<td class="c-p pad"></td>`:""}`).join(""),
         padSp=nPad?`<td class="pad" colspan="${nPad*pw}"></td>`:"";
   const nDone = (()=>{ let i=0; while(i<N && cd.players.every(p=>p.s[i]!=null)) i++; return i; })();
-  const gtc = cd.game && cd.game!=="skins" && cd.game!=="ghost" && !isPeoria(cd.game) ? gameTags(cd.game, cd.players.map(p=>p.s), cd.holes.map(x=>x.par), nDone, N, {medals:cd.medals, pins:cd.pins, hole:-1}) : null;
+  const gtc = cd.game && cd.game!=="skins" && cd.game!=="ghost" && !isPeoria(cd.game) ? gameTags(cd.game, cd.players.map(p=>p.s), cd.holes.map(x=>x.par), nDone, N, {medals:cd.medals, pins:cd.pins, marks:cd.marks, hole:-1}) : null;
   const isTeamG = teamG;
   const tv = i => String(gtc&&gtc[i]||"").replace(/<[^>]+>/g,"").replace(/^[AB]\s*/,"").replace(/[勝打]|pt$/g,"");   // チーム戦は A/B の文字や単位を出さない
   const gameRow = gtc ? `<tr class="skr gr"><td colspan="2" class="ft">ポイント</td>${isTeamG ? [0,2].map(i=>`<td class="c-s tm tm${i?"B":"A"}" colspan="${cwOf(i)+cwOf(i+1)}">${esc(tv(i))}</td>`).join("") : gtc.map((t,i)=>`<td class="c-s" colspan="${cwOf(i)}">${t}</td>`).join("")}${padSp}</tr>` : "";
@@ -3215,8 +3221,9 @@ function viewCard(cd){
   // 計の下に、人ごとのゲーム入力（オリンピック=メダルをフリック、ニアピン=旗をタップ）。見ているホールの分
   const gh = cdHole(cd), gb = 0;
   const padSpB = b => nPad?`<td class="pad" style="bottom:${b}px" colspan="${nPad*pw}"></td>`:"";
-  const inputRow = (isOlympic(cd.game)||cd.game==="nearpin") ? `<tr class="gin"><td colspan="2" class="ft" style="bottom:${gb}px">${gh+1}H<small class="blk">${isOlympic(cd.game)?"メダル":"ニアピン"}</small></td>${cd.players.map((p,i)=>{
+  const inputRow = (isOlympic(cd.game)||cd.game==="nearpin"||isMarkGame(cd.game)) ? `<tr class="gin"><td colspan="2" class="ft" style="bottom:${gb}px">${gh+1}H<small class="blk">${isOlympic(cd.game)?"メダル":cd.game==="oneon"?"ワンオン":cd.game==="snake"?"3パット":"ニアピン"}</small></td>${cd.players.map((p,i)=>{
       let c; if(isOlympic(cd.game)){ const v=(((cd.medals||{})[gh])||[])[i]||0; c=`<div class="fc fm ${v?"set":""}" role="button" tabindex="0" data-k="m" data-i="${i}" aria-label="${esc(p.name)}の${gh+1}Hのメダル。押したまま左右に動かして離すと変わります">${v?medalSVG(v,28):"<span>—</span>"}</div>`; }
+      else if(cd.game==="snake" || (cd.game==="oneon" && cd.holes[gh].par===3)){ const on=(((cd.marks||{})[gh])||[]).includes(i); c=`<button class="fc fn ${on?"set":""}" data-act="cd-mark" data-i="${i}" aria-pressed="${on}" aria-label="${esc(p.name)}が${cd.game==="oneon"?"ワンオン":"3パット"}">${cd.game==="oneon"?ONFLAG(on):SNAKE(on)}</button>`; }
       else if(cd.holes[gh].par!==3) c=`<span class="na">—</span>`;
       else { const on=(cd.pins||{})[gh]===i; c=`<button class="fc fn ${on?"set":""}" data-act="cd-pin" data-i="${i}" aria-pressed="${on}" aria-label="${esc(p.name)}がニアピン">${PINFLAG(on)}</button>`; }
       return `<td class="c-s gin-c" colspan="${cwOf(i)}" style="bottom:${gb}px">${c}</td>`; }).join("")}${padSpB(gb)}</tr>` : "";
@@ -3739,6 +3746,8 @@ const GAMES = {
   peoria: { name:"新ペリア", eng:"NEW PERIA", n:"2〜4人", min:2, max:4, desc:"ハンデで誰でも勝てる", type:"solo" },
   team:   { name:"ベストボール", eng:"BEST BALL", n:"4人のみ", min:4, max:4, desc:"2人の良い方で勝負", type:"team" },
   nearpin:{ name:"ニアピン", eng:"NEAREST THE PIN", n:"2〜4人", min:2, max:4, desc:"ピンに近い人がコイン", type:"solo" },
+  oneon:{ name:"ワンオン", eng:"ONE ON", n:"2〜4人", min:2, max:4, desc:"1打で乗せたら1点", type:"solo" },
+  snake:{ name:"スネーク", eng:"SNAKE", n:"2〜4人", min:2, max:4, desc:"3パットでヘビが移る", type:"solo" },
   peoriateam:{ name:"新ペリア（チーム）", eng:"NEW PERIA TEAM", n:"4人のみ", min:4, max:4, desc:"2人のネットの合計で勝負", type:"team" },
   olympicteam:{ name:"オリンピック（チーム）", eng:"OLYMPIC TEAM", n:"4人のみ", min:4, max:4, desc:"2人のメダルの点数で勝負", type:"team" },
   teamsum:{ name:"合計スコア", eng:"TEAM TOTAL", n:"4人のみ", min:4, max:4, desc:"2人の合計スコアで勝負", type:"team" },
@@ -3746,7 +3755,7 @@ const GAMES = {
 };
 // 並びは日本の仲間内でよく遊ばれる順（オーナー指定。おおよそ）。ナッソーは日本ではほぼ使われないが、海外（特にアメリカ）では定番なので一番下に残す
 /* 上に個人戦、下にチーム戦。それぞれの中はよく遊ばれる順 */
-const GAME_KEYS = ["ghost","peoria","olympic","nearpin","skins","match","stable","nassau","vegas","teamsum","team"];
+const GAME_KEYS = ["ghost","peoria","olympic","nearpin","oneon","skins","snake","match","stable","nassau","vegas","teamsum","team"];
 /* オリンピックの「メダル」ボタンの案内（初めての1回だけ。一度押したら二度と出ない） */
 const medalTip = () => !LS.get("sc.medalTip", false);
 /* 吹き出しはホールカード（はみ出しを隠している）の外に出すため、画面に固定してボタンの真下に置く */
@@ -3775,6 +3784,8 @@ const GAME_ILL = {
   peoria: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${[[10,22,"#1F3A68"],[28,14,"#F2B01E"],[46,22,"#1F3A68"]].map(([x,y,c])=>`<circle cx="${x}" cy="${y}" r="8.5" fill="${c}"/><text x="${x}" y="${y+4}" text-anchor="middle" font-size="11" font-weight="900" fill="#fff">?</text>`).join("")}<path d="M6 38h44" stroke="#1F3A68" stroke-width="3" stroke-linecap="round"/></svg></span>`,
   olympic: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${medalSVG(3,19,{x:1,y:21})}${medalSVG(2,19,{x:36,y:21})}${medalSVG(4,28,{x:14,y:0})}</svg></span>`,
   nearpin: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><ellipse cx="28" cy="35" rx="24" ry="7" fill="#7FCB8A"/><ellipse cx="28" cy="35" rx="15" ry="4.4" fill="#5DB56B"/><path d="M28 34V5" stroke="#1F3A68" stroke-width="2" stroke-linecap="round"/><path d="M28 5l14 5-14 5z" fill="#E5484D"/><ellipse cx="28" cy="35" rx="2.6" ry="1.2" fill="#1F3A68"/><circle cx="37" cy="34" r="3.2" fill="#fff" stroke="#9AA7B4" stroke-width=".8"/></svg></span>`,
+  oneon: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><ellipse cx="28" cy="33" rx="25" ry="9" fill="#7FCB8A"/><ellipse cx="28" cy="33" rx="16" ry="5.6" fill="#5DB56B"/><path d="M38 31V8" stroke="#1F3A68" stroke-width="2" stroke-linecap="round"/><path d="M38 8l-12 4.500 12 4.500z" fill="#E5484D"/><circle cx="20" cy="31" r="4" fill="#fff" stroke="#1F3A68" stroke-width="1.200"/><circle cx="13" cy="12" r="8" fill="#F2B01E"/><text x="13" y="16.500" text-anchor="middle" font-size="12" font-weight="900" fill="#fff" font-family="Barlow Condensed,sans-serif">1</text></svg></span>`,
+  snake: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><path d="M8 34c7 6 14-2 10-9s2-15 11-12 6 12 12 11 7-8 4-12" fill="none" stroke="#2E9E5B" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 34c7 6 14-2 10-9s2-15 11-12 6 12 12 11 7-8 4-12" fill="none" stroke="#F2B01E" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 7"/><circle cx="44.500" cy="11" r="5.500" fill="#2E9E5B"/><circle cx="46.300" cy="9.800" r="1.300" fill="#fff"/><path d="M48 6l4-4M49.500 3.500l3 .500" stroke="#E5484D" stroke-width="1.600" stroke-linecap="round"/></svg></span>`,
   peoriateam: ()=>GAME_ILL.peoria(),
   olympicteam: ()=>GAME_ILL.olympic(),
   teamsum: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${[[0,"#1F3A68","#fff"],[30,"#F2B01E","#1F3A68"]].map(([x,c,f])=>`<rect x="${x+1}" y="9" width="25" height="26" rx="6" fill="${c}"/>${[x+6.5,x+20.5].map(cx=>`<circle cx="${cx}" cy="17.5" r="2.6" fill="${f}"/><path d="M${cx-3.6} 27.5c0-3.4 1.6-5.6 3.6-5.6s3.6 2.2 3.6 5.6z" fill="${f}"/>`).join("")}<path d="M${x+11.2} 22h4.6M${x+13.5} 19.7v4.6" stroke="${f}" stroke-width="1.8" stroke-linecap="round"/>`).join("")}</svg></span>`,
@@ -3863,6 +3874,7 @@ function peoriaCalc(rows, pars, hidden){ const N=pars.length, par=pars.reduce((a
 /* 記録中に名前の下へ出す小さな表示（スキンズは別で、コインの数） */
 function gameTags(game, rows, pars, n, N, ex={}){
   if(game==="nearpin"){ const x=pinCalc(ex.pins, rows.length, pars); return x.won.map(n=>`<span class="gtag ${n?"":"z"}">${n}</span>`); }
+  if(isMarkGame(game)){ const x=marksCalc(ex.marks, rows.length, pars, game==="oneon"); return x.n.map((n,i)=>`<span class="gtag ${n?"":"z"} ${game==="snake"&&x.holder===i?"snk":""}">${game==="snake"&&x.holder===i?SNAKE(true,20):""}${n}</span>`); }
   if(game==="olympicteam" && rows.length===4){ const x=olympicCalc(ex.medals, 4), t=[x.pts[0]+x.pts[1], x.pts[2]+x.pts[3]], cur=(ex.medals||{})[ex.hole]||[]; return [0,1,2,3].map(i=>`<span class="gtag t${i>>1}">${cur[i]?medalSVG(cur[i],12):""}${"AB"[i>>1]} ${t[i>>1]}pt</span>`); }
   if(game==="olympic"){ const x=olympicCalc(ex.medals, rows.length), cur=(ex.medals||{})[ex.hole]||[]; return x.pts.map((p,i)=>`<span class="gtag ${p?"":"z"}">${cur[i]?medalSVG(cur[i],12):""}${p}</span>`); }
   if(game==="match" && rows.length===2){ const m=matchCalc(rows,n,N); return [0,1].map(k=>{ const t=m.st(k); return `<span class="gtag ${t.endsWith("勝")?"up":t.endsWith("負")?"dn":""}">${t}</span>`; }); }
@@ -3895,6 +3907,10 @@ function gameResult(game, rows, pars, N, names, order, ex={}){
     return box(`<div class="pe-hid"><span>隠しホール</span>${ex.hidden.map((h,i)=>`<i style="animation-delay:${(i*0.18).toFixed(2)}s">${h+1}</i>`).join("")}</div>`
       + [0,1].map(k=>line(`チーム${"AB"[k]}`, t[k].toFixed(1), w===k, `<small class="rs-sub">${names[k*2]} ${x[k*2].net.toFixed(1)}・${names[k*2+1]} ${x[k*2+1].net.toFixed(1)}</small>`)).join("")
       + `<div class="rs-sum">${w<0?"引き分け":`ネットの合計で チーム${"AB"[w]} の勝ち`}</div>`); }
+  if(game==="oneon"){ const x=marksCalc(ex.marks, rows.length, pars, true), mx=Math.max(...x.n), top=x.n.filter(v=>v===mx).length;
+    return box([...order].sort((a,b)=>x.n[b]-x.n[a]).map(k=>line(names[k], `${x.n[k]}点`, mx>0&&x.n[k]===mx)).join("") + `<div class="rs-sum">${mx<=0?"ワンオンなし（引き分け）":top>1?"引き分け":`${names[x.n.indexOf(mx)]} の勝ち`}</div>`); }
+  if(game==="snake"){ const x=marksCalc(ex.marks, rows.length, pars, false);
+    return box(order.map(k=>line(names[k], `${x.n[k]}回`, false, x.holder===k?`<span class="rs-snk">${SNAKE(true,20)}</span>`:"")).join("") + `<div class="rs-sum">${x.holder<0?"3パットなし（引き分け）":`最後にスネークを持っていた ${names[x.holder]} の負け`}</div>`, "3パットの回数"); }
   if(game==="nearpin"){ const x=pinCalc(ex.pins, rows.length, pars), mx=Math.max(...x.won);
     return box([...order].sort((a,b)=>x.won[b]-x.won[a]).map(k=>line(names[k], `${x.won[k]}枚`, mx>0&&x.won[k]===mx, Array.from({length:x.won[k]>8?7:x.won[k]},()=>coinSVG(15)).join("")+(x.won[k]>8?`<i class="rs-more">…</i>`:""))).join("")); }
   if(game==="olympicteam" && rows.length===4){ const x=olympicCalc(ex.medals, 4), t=[x.pts[0]+x.pts[1], x.pts[2]+x.pts[3]], w=t[0]===t[1]?-1:t[0]>t[1]?0:1;
@@ -3929,6 +3945,14 @@ function gameSheet(){
     </div></div>${state.rulesOpen?rulesPop(state.rulesOpen):""}`;
 }
 /* オリンピックのメダル入力（ホールごと。1つのメダルは1人だけ。もう一度押すと外れる） */
+/* ワンオン・スネーク: marks={ホール番号:[人の番号…（押した順）]}。ワンオンはパー3だけ数える。スネークは、いちばん後ろのホールで最後に押された人がヘビを持つ */
+const isMarkGame = g => g==="oneon" || g==="snake";
+const toggleMark = (a,i) => { a=Array.isArray(a)?a.slice():[]; return a.includes(i) ? a.filter(x=>x!==i) : a.concat([i]); };
+function marksCalc(marks, P, pars, par3Only){ const n=Array(P).fill(0); let holder=-1, last=-1;
+  Object.entries(marks||{}).forEach(([h,a])=>{ if(par3Only && pars && pars[+h]!==3) return; a=(Array.isArray(a)?a:[]).filter(i=>i>=0&&i<P); a.forEach(i=>n[i]++); if(a.length && +h>=last){ last=+h; holder=a[a.length-1]; } });
+  return {n, holder}; }
+const ONFLAG = on => `<svg class="pinflag ${on?"on":""}" viewBox="0 0 30 30" width="27" height="27" aria-hidden="true"><ellipse cx="15" cy="21" rx="13" ry="6" fill="#5DB56B"/><path d="M20 20V5" stroke="#1F3A68" stroke-width="1.800" stroke-linecap="round"/><path d="M20 5l-8 3 8 3z" fill="#E5484D"/><circle cx="10.500" cy="20.500" r="3.200" fill="#fff" stroke="#1F3A68" stroke-width="1"/></svg>`;
+const SNAKE = (on, sz=27) => `<svg class="pinflag ${on?"on":""}" viewBox="0 0 30 30" width="${sz}" height="${sz}" aria-hidden="true"><path d="M4 23c4 4 8-1 6-5s1-9 6-8 3 7 7 7 4-5 2-8" fill="none" stroke="#2E9E5B" stroke-width="4.200" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24.600" cy="8.200" r="3.400" fill="#2E9E5B"/><circle cx="25.700" cy="7.400" r=".900" fill="#fff"/><path d="M27 5l2.200-2.200" stroke="#E5484D" stroke-width="1.200" stroke-linecap="round"/></svg>`;
 /* ニアピン: ホールごとに、グリーンに乗った人で一番ピンに近い1人がコイン1枚（誰も乗らなければなし）。pins={ホール番号:人の番号} */
 const PINFLAG = on => `<svg class="pinflag ${on?"on":""}" viewBox="0 0 30 30" width="27" height="27" aria-hidden="true"><defs><linearGradient id="pfg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF7A7A"/><stop offset="1" stop-color="#D6303B"/></linearGradient></defs><ellipse cx="15" cy="25.500" rx="14.500" ry="4.200" fill="#6CC47A"/><ellipse cx="15" cy="25.500" rx="9.500" ry="2.600" fill="#4FA85F"/><ellipse cx="11.500" cy="25.500" rx="2.600" ry="1.100" fill="#1F3A68"/><path d="M11.5 26V3.5" stroke="#1F3A68" stroke-width="2.2" stroke-linecap="round"/><path d="M12.7 4.100C15.600 3.200 18.600 5 21.500 4.300L19.800 7.400 21.500 10.500C18.600 11.200 15.600 9.400 12.700 10.300z" fill="url(#pfg)" stroke="#A81F2A" stroke-width=".9" stroke-linejoin="round"/><circle cx="22.500" cy="24.500" r="2.500" fill="#fff" stroke="#9AA7B4" stroke-width=".9"/></svg>`;
 /* パー3のホールだけ数える（パー4・5はニアピンなし） */
@@ -3969,6 +3993,12 @@ function rulesPop(k){
   if(k==="nearpin"){
     list=`<li><b>パー3のホール</b>で、グリーンに乗った人のうち<b>一番ピンに近い人</b>がコイン${coinSVG(14)}1枚</li><li><b>パー4・5のホールはなし</b>。誰も乗らなかったホールもなし。「ニアピン」ボタン（パー3だけ出ます）で1人選びます</li><li><b>コインが一番多い人の勝ち</b></li>`;
     ex=`<div class="sr-row2"><span>1H</span><span>はなこ が一番近い</span><b>${coinSVG(18)}</b></div><div class="sr-row2"><span>2H</span><span>誰も乗らなかった</span><b class="sr-none">なし</b></div><div class="sr-row2"><span>3H</span><span>たろう が一番近い</span><b>${coinSVG(18)}</b></div><div class="sr-sum">はなこ 1枚・たろう 1枚 → 引き分け</div>`; }
+  if(k==="oneon"){
+    list=`<li><b>パー3のホール</b>で、<b>1打でグリーンに乗せた人</b>に1点（何人でももらえます）</li><li>乗った人の「ワンオン」ボタンを押します（パー3だけ出ます）</li><li><b>点が一番多い人の勝ち</b></li>`;
+    ex=`<div class="sr-row2"><span>1H</span><span>たろう・はなこ が乗った</span><b>各1点</b></div><div class="sr-row2"><span>2H</span><span>誰も乗らなかった</span><b class="sr-none">なし</b></div><div class="sr-row2"><span>3H</span><span>たろう が乗った</span><b>1点</b></div><div class="sr-sum">たろう 2点・はなこ 1点 → <b>たろうの勝ち</b></div>`; }
+  if(k==="snake"){
+    list=`<li><b>3パット以上</b>した人が、スネーク（ヘビ）を持ちます</li><li>次にだれかが3パットすると、<b>スネークはその人に移ります</b>。3パットした人の「3パット」ボタンを押します</li><li><b>最後にスネークを持っていた人の負け</b></li>`;
+    ex=`<div class="sr-row2"><span>2H</span><span>はなこ が3パット → はなこへ</span><b>${SNAKE(true,24)}</b></div><div class="sr-row2"><span>5H</span><span>たろう が3パット → たろうへ</span><b>${SNAKE(true,24)}</b></div><div class="sr-row2"><span>9H</span><span>3パットなし（たろうのまま）</span><b class="sr-none">—</b></div><div class="sr-sum">最後に持っていた <b>たろうの負け</b></div>`; }
   if(k==="peoriateam"){
     list=`<li>1・2人目がチームA、3・4人目がチームB（名前を入れる順で組み分け）</li><li>新ペリアと同じく、保存したあと<b>くじで隠しホール</b>を選び、1人ずつネットを出します</li><li><b>2人のネットの合計が少ないチームの勝ち</b></li>`;
     ex=`<div class="sr-row2"><span>チームA</span><span>たろう 26.8・はなこ 27.6</span><b class="w">54.4</b></div><div class="sr-row2"><span>チームB</span><span>じろう 27.2・さぶろう 28.0</span><b>55.2</b></div><div class="sr-sum"><b>チームAの勝ち</b></div>`; }
@@ -4074,6 +4104,8 @@ document.addEventListener("click", async ev => {
     }
     case "hole": mark_entered(); state.slide = +b.dataset.i>state.hole?"l":"r"; state.hole=+b.dataset.i; saveDraft(); render(); break;
      case "open-card": state.sheet="card"; render(); break;
+    case "mark-q": { const hh=state.hole, i=+b.dataset.i; d.marks=d.marks||{}; d.marks[hh]=toggleMark(d.marks[hh], i); if(!d.marks[hh].length) delete d.marks[hh]; saveDraft(); render(); break; }
+    case "cd-mark": { const cd=state.cdraft; if(!cd) break; const hh=cdHole(cd), i=+b.dataset.i; cd.marks=cd.marks||{}; cd.marks[hh]=toggleMark(cd.marks[hh], i); if(!cd.marks[hh].length) delete cd.marks[hh]; saveCDraft(); render(); break; }
     case "pin-q": { const hh=state.hole, i=+b.dataset.i; d.pins=d.pins||{}; if(d.pins[hh]===i) delete d.pins[hh]; else d.pins[hh]=i; saveDraft(); render(); break; }
     case "prev": mark_entered(); state.slide="r"; state.hole--; saveDraft(); render(); break;
     case "next": mark_entered(); state.slide="l"; state.hole++; saveDraft(); render(); window.scrollTo({top:0}); break;
@@ -4095,7 +4127,7 @@ document.addEventListener("click", async ev => {
       const mr=(!d.editing && Array.isArray(d.mates)) ? d.mates.map((m,k)=>({ id:uid(), card:true, player:m.name, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:r.createdAt+k+1, ...(partial?{nos:idxF.map(i=>i+1)}:{}),
         holes:idxF.map(i=>({par:d.holes[i].par, strokes:m.s[i], putts:0, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null})) })) : [];
       try{ await Promise.all([r,...mr].map(x=>store.saveRound(x))); state.saving=false;
-        state.draft=null; saveDraft(); state.tab="history"; LS.set("sc.tab","history"); state.fPlayer=r.player; state.openRound=r.id; state.result=r; state.resultGroup=mr.length?[r,...mr]:null; state.resultAll=mr.length>0; state.resultGame=mr.length?d.game:null; state.resultGhost=d.game==="ghost"?(g=>g?{best:roundTotals(g).score}:null)(partial?null:ghostBest(d.player,d.courseId,d.holes.length,r.id)):null; state.resultCarry=!!d.carry; state.resultEx={medals:d.medals||{}, pins:d.pins||{}, hidden:isPeoria(d.game)?peoriaHidden(idxF.length):null}; render(); }
+        state.draft=null; saveDraft(); state.tab="history"; LS.set("sc.tab","history"); state.fPlayer=r.player; state.openRound=r.id; state.result=r; state.resultGroup=mr.length?[r,...mr]:null; state.resultAll=mr.length>0; state.resultGame=mr.length?d.game:null; state.resultGhost=d.game==="ghost"?(g=>g?{best:roundTotals(g).score}:null)(partial?null:ghostBest(d.player,d.courseId,d.holes.length,r.id)):null; state.resultCarry=!!d.carry; state.resultEx={medals:d.medals||{}, pins:d.pins||{}, marks:d.marks||{}, hidden:isPeoria(d.game)?peoriaHidden(idxF.length):null}; render(); }
       catch(e){ state.saving=false; render(); writeErr(e); }
       break;
     }

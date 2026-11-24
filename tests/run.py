@@ -357,7 +357,7 @@ with sync_playwright() as pw:
     C(pg, '[data-act=set-carry][data-v="1"]'); C(pg, '[data-act=set-carry][data-v="0"]'); C(pg, ".rp-x")
     check("× でポップアップを閉じてゲーム選択に戻る", pg.query_selector(".rp") is None and pg.query_selector(".game-sheet") is not None)
     ty = pg.evaluate("[...document.querySelectorAll('.game-sheet .gm-sec, .game-sheet .gm-card')].map(e=>e.classList.contains('gm-sec')?'#'+e.textContent:e.dataset.v).join()")
-    check("ゲームの一覧は上に個人戦、下にチーム戦（見出しつき）", ty.startswith(",#SOLO個人戦,ghost,peoria,olympic,nearpin,skins") and "#TEAMチーム戦2対2・4人で,vegas,teamsum,team" in ty and ty.index("nassau") < ty.index("#TEAM"))
+    check("ゲームの一覧は上に個人戦、下にチーム戦（見出しつき）", ty.startswith(",#SOLO個人戦,ghost,peoria,olympic,nearpin,oneon,skins,snake") and "#TEAMチーム戦2対2・4人で,vegas,teamsum,team" in ty and ty.index("nassau") < ty.index("#TEAM"))
     nm = pg.evaluate("[...document.querySelectorAll('.game-sheet .gm-h b')].map(b=>b.textContent).join()")
     check("チーム戦の中のゲーム名は「ベストボール」「合計スコア」（見出しと同じ名前にしない）", "ベストボール" in nm and "合計スコア" in nm and "チーム戦" not in nm)
     check("決定ボタンはない（選ぶと自動で戻る）", pg.query_selector(".game-sheet .gm-ok") is None)
@@ -401,13 +401,13 @@ with sync_playwright() as pw:
     check("ラスベガスの計算（35と44で9点）", vg == "9,0")
     tm = pg.evaluate("(()=>{ const x=teamCalc([[3,4],[5,3],[4,4],[4,5]],2); return x.won.join(); })()")
     check("チーム戦の計算（良い方のスコアで比べる）", tm == "2,0")
-    check("ゲームの並び（個人戦をよく遊ばれる順→チーム戦）", pg.evaluate("GAME_KEYS_ORDER()") == "ghost,peoria,olympic,nearpin,skins,match,stable,nassau,vegas,teamsum,team")
+    check("ゲームの並び（個人戦をよく遊ばれる順→チーム戦）", pg.evaluate("GAME_KEYS_ORDER()") == "ghost,peoria,olympic,nearpin,oneon,skins,snake,match,stable,nassau,vegas,teamsum,team")
     ts = pg.evaluate("(()=>{ const x=teamSumCalc([[3,4],[5,3],[4,4],[4,5]],2); return [x.tot.join(), x.done]; })()")
     check("合計スコアの計算（2人の打数の合計どうし）", ts == ["15,17", 2])
     sf = pg.evaluate("(()=>stableCalc([[3,2,4,5],[5,3,3,2]],[3,3,3,3],4).pts.join())()")
     check("ステーブルフォードの計算（パー2・バーディ3・ボギー1・ダボ0）", sf == "6,7")
     C(pg, "[data-act=open-game]")
-    check("ゲーム選択に11のゲーム（ゴーストを含む）・4人用は2人のとき薄い", pg.evaluate("document.querySelectorAll('.gm-card').length") == 12 and pg.query_selector(".gm-card.na[data-v=vegas]") is not None)
+    check("ゲーム選択に13のゲーム（ゴーストを含む）・4人用は2人のとき薄い", pg.evaluate("document.querySelectorAll('.gm-card').length") == 14 and pg.query_selector(".gm-card.na[data-v=vegas]") is not None)
     C(pg, "[data-act=pick-game][data-v=vegas]")
     check("人数が合わないゲームは選べない", pg.evaluate("state.game") != "vegas")
     C(pg, "[data-act=pick-game][data-v=match]")
@@ -1177,6 +1177,36 @@ with sync_playwright() as pw:
     pg.evaluate("(()=>{ const h=state.draft.holes[0]; h.putts=1; render(); })()")
     check("記録画面: 0パットのときだけ、パットの下に CHIP IN と出る", "CHIP IN" in chip and "CHIP IN" not in pg.inner_text('.fc[data-k="p"][data-i="0"]') and not errs)
     check("ラスベガス: 10打以上は9として数える（3と10は39。4と5の45との差で6点）", pg.evaluate("vegasCalc([[3],[10],[4],[5]],1).pts.join()") == "6,0" and pg.evaluate("vegasCalc([[10],[10],[4],[5]],1).pts.join()") == "0,54")
+    pg.context.close()
+    # ワンオン（パー3で1打で乗せた人に1点・何人でも）とスネーク（3パットした人にヘビが移り、最後に持っていた人の負け）
+    c93 = [{"id": "c1", "name": "テストC", "holes": [{"par": 3}, {"par": 4}, {"par": 3}], "createdAt": 1}]
+    GM = {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "じろう", ""], "sc.courses": c93, "sc.rounds": [], "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.v2": 1}
+    def fill3(pg): pg.evaluate("(()=>{ const d=state.draft; d.holes.forEach(h=>{ h.strokes=h.par; h.sT=true; h.putts=2; h.pT=true; }); d.mates.forEach(m=>{ m.s=d.holes.map(h=>h.par+1); m.t=d.holes.map(()=>true); }); render(); })()")
+    pg, errs = open_page(b, {**GM, "sc.game": "\"oneon\"", "sc.inputMode": "\"hole\""}, offline=True, repl={"function marksCalc(": "window.marksCalc=marksCalc; function marksCalc("})
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300); fill3(pg)
+    C(pg, '[data-act=mark-q][data-i="0"]'); C(pg, '[data-act=mark-q][data-i="1"]')
+    pg.evaluate("state.hole=1; render()"); par4 = pg.evaluate("document.querySelectorAll('[data-act=mark-q]').length")
+    pg.evaluate("state.hole=2; render()"); C(pg, '[data-act=mark-q][data-i="0"]'); C(pg, '[data-act=mark-q][data-i="2"]'); C(pg, '[data-act=mark-q][data-i="2"]')
+    pts = pg.evaluate("[...document.querySelectorAll('.frow .pt b')].map(e=>e.textContent).join()")
+    C(pg, "[data-act=finish]"); pg.wait_for_timeout(600); res = pg.inner_text(".rc-game") if pg.query_selector(".rc-game") else ""
+    check("ワンオン: パー3だけボタンが出て、乗った人を何人でも押せる（もう一度押すと外れる）。点は 2・1・0 で、結果に「たろう の勝ち」",
+          par4 == 0 and pts == "2,1,0" and "ワンオン" in res and "たろう の勝ち" in res and pg.evaluate("marksCalc({0:[0,1],1:[0],2:[0]},3,[3,4,3],true).n.join()") == "2,1,0" and not errs)
+    pg.context.close()
+    pg, errs = open_page(b, {**GM, "sc.game": "\"snake\"", "sc.inputMode": "\"hole\""}, offline=True, repl={"function marksCalc(": "window.marksCalc=marksCalc; function marksCalc("})
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300); fill3(pg)
+    C(pg, '[data-act=mark-q][data-i="1"]'); h1 = pg.evaluate("[...document.querySelectorAll('.frow')].findIndex(r=>r.querySelector('.pt.snk svg'))")
+    pg.evaluate("state.hole=1; render()"); n4 = pg.evaluate("document.querySelectorAll('[data-act=mark-q]').length"); C(pg, '[data-act=mark-q][data-i="2"]'); C(pg, '[data-act=mark-q][data-i="0"]')
+    h2 = pg.evaluate("[...document.querySelectorAll('.frow')].findIndex(r=>r.querySelector('.pt.snk svg'))")
+    pg.evaluate("state.hole=2; render()"); C(pg, "[data-act=finish]"); pg.wait_for_timeout(600); res = pg.inner_text(".rc-game") if pg.query_selector(".rc-game") else ""
+    check("スネーク: どのホールでも押せて、3パットした人にヘビが移る（同じホールはあとに押した人）。結果に「たろう の負け」と回数",
+          n4 == 3 and h1 == 1 and h2 == 0 and "スネーク" in res and "たろう の負け" in res and pg.evaluate("marksCalc({0:[1],1:[2,0]},3,[3,4,3],false).holder") == 0 and pg.evaluate("marksCalc({},3,[3,4,3],false).holder") == -1 and not errs)
+    pg.context.close()
+    for g, lab in [("oneon", "ワンオン"), ("snake", "3パット")]:
+        pg, errs = open_page(b, {**GM, "sc.game": json.dumps(g), "sc.inputMode": "\"card\""}, offline=True); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+        row = pg.inner_text("tr.gin"); C(pg, '[data-act=cd-mark][data-i="1"]'); C(pg, '[data-act=cd-mark][data-i="0"]')
+        check(f"スコアカード入力（{lab}）: 計の下に人ごとのボタンが出て、押すと点が入る", lab in row and pg.evaluate("JSON.stringify(state.cdraft.marks)") == '{"0":[1,0]}' and [x.strip() for x in pg.inner_text("tr.skr.gr").split("\t")[1:4]] == ["1", "1", "0"] and not errs)
+        pg.context.close()
+    pg, errs = open_page(b, {"sc.v2": 1}, offline=True, repl={"const LS = {": "const LS = window.LS = {"})
     # 端末に保存できなかったとき（保存領域がいっぱいなど）は、だまって消えずに知らせる
     pg.evaluate("Storage.prototype.setItem=function(){ throw new Error('QuotaExceededError'); }; window.__r=LS.set('sc.rounds',[])"); pg.wait_for_timeout(200)
     check("端末に保存できなかったときは、トーストで知らせる（設定などの小さな保存では出さない）", pg.evaluate("window.__r") is False and "保存できませんでした" in pg.inner_text("#toast") and not pg.evaluate("document.querySelector('#toast').hidden") and not errs)
