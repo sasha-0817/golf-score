@@ -2383,7 +2383,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-18-1000";
+const BUILD = "2026-12-19-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3452,14 +3452,14 @@ function clubTable(rs, kind){
   return `<div class="map-sub">${kind==="p3"?"パーオン率（パー3）":"フェアウェイキープ率（パー4・5）"}</div>
     <div class="clubs2 ${kind}">${cl.map(c=>{ const x=m[c], r=rate(x), mk=Object.keys(x.miss).sort((a,b)=>x.miss[b]-x.miss[a])[0];
       return `<div class="cb-row"><b class="cb-n">${esc(c)}</b><span class="cb-bar"><i style="width:${r}%"></i></span><span class="cb-v">${fmtPct(r)}<small>%</small></span>
-        <span class="cb-tag">${c===best?`<span class="ctag good">得意</span>`:c===worst?`<span class="ctag bad">苦手</span>`:""}</span><span class="cb-sub">${x.n}回${mk&&ML[mk]?`・ミスは${ML[mk]}が多い`:""}</span></div>`; }).join("")}
+        <span class="cb-sub">${x.n}回${mk&&ML[mk]?`・ミスは${ML[mk]}が多い`:""}</span></div>`; }).join("")}
     </div>`;
 }
 function clubPanel(rs){
   const t3 = clubTable(rs,"p3"), t4 = clubTable(rs,"p4");
-  if(!t3 && !t4) return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別</span></div><p class="muted" style="font-size:13px;margin:0">記録する項目で「使用クラブ」をONにすると、クラブごとのパーオン率・フェアウェイキープ率や得意・苦手がここに出ます。</p></div>`;
+  if(!t3 && !t4) return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別</span></div><p class="muted" style="font-size:13px;margin:0">記録する項目で「使用クラブ」をONにすると、クラブごとのパーオン率・フェアウェイキープ率がここに出ます。</p></div>`;
   return `<div class="panel"><div class="sec"><em>CLUB</em><span>クラブ別</span></div>${t3}${t4}
-    <p class="muted cs-note">ティーショットに使ったクラブ別。得意・苦手は3回以上打ったクラブで比べています。</p></div>`;
+    <p class="muted cs-note">ティーショットに使ったクラブ別です。</p></div>`;
 }
 /* 割合は横棒の一覧で（引き出し線つきのドーナツはごちゃつくので 2026-10-26 にやめた）。0回の項目は出さない。回数は出さない */
 function barsPanel(title, segs, headVal, headUnit, headLbl, headTones){

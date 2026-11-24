@@ -881,7 +881,7 @@ with sync_playwright() as pw:
     check("方向の十字の割合は整数で、5マスの合計が100になる（パー3）／4マスの合計が100（パー4・5）", sm(".heat.p3 .ht b") == 100 and sm(".heat.fw .ht b") == 100)
     check("方向の十字は横幅がコンパクト（260px以下）", pg.evaluate("document.querySelector('.heat').getBoundingClientRect().width") <= 260)
     cb = pg.evaluate("(()=>{const r=document.querySelector('.clubs2 .cb-row'); if(!r) return null; const b=r.querySelector('.cb-bar').getBoundingClientRect(); return [Math.round(b.width), document.querySelectorAll('.club-tbl').length]})()")
-    check("クラブ別: 棒は横に長く（150px以上）、表ではなく1クラブ1行の棒", cb is None or (cb[0] >= 150 and cb[1] == 0))
+    check("クラブ別: 棒は横に長く（150px以上）、表ではなく1クラブ1行の棒（得意・苦手の札は出さない）", cb is None or (cb[0] >= 150 and cb[1] == 0 and pg.evaluate("document.querySelectorAll('.clubs2 .ctag').length") == 0))
     check("割合に小数点は出さない（リング・クラブ別など）", pg.evaluate("!/\\d\\.\\d+\\s*%/.test(document.querySelector('#main').innerText)"))
     C(pg, "[data-act=stat-tab][data-v=score]"); pg.wait_for_timeout(300)
     check("スコアの内訳の割合は整数で、合計が100になる", sm(".bk .bk-row b") == 100)
