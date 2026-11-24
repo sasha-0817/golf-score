@@ -2253,6 +2253,26 @@ select.sl-in option{direction:ltr}
 .cb-tag{line-height:1}.cb-tag .ctag{margin:0;font-size:13px!important;padding:1px 6px}
 .cb-sub{grid-column:2/4;font-size:13px!important;color:var(--muted)}
 .panel .clubs2+.map-sub{margin-top:20px}
+
+/* 2026-12-20: スコアカード入力のゲームの行のホール・練習ラウンド・全ラウンドの点の図 */
+.cdt tr.ghr td.hn{background:#F2B01E;color:#3A2A00;border-radius:8px}
+.cdt td.hn[data-act]{cursor:pointer}
+.cdt td button{position:relative}
+.cdt .gmk{position:absolute;right:1px;top:1px;width:15px;height:15px;object-fit:contain;pointer-events:none}
+.cdt .gmk.dot{width:8px;height:8px;border-radius:50%;background:#F2B01E;right:3px;top:3px}
+.cdt tfoot tr.gin td.ft{color:#7A5200}
+.prac-tag{display:inline-block;font-style:normal;font-size:13px;font-weight:700;padding:0 7px;margin-right:6px;border-radius:999px;background:var(--soft);color:var(--muted);vertical-align:1px}
+.prac-box{display:flex;flex-direction:column;gap:2px}
+.prac-box span{font-size:13px;color:var(--muted)}
+.prac-box .memo-btn{color:var(--muted);font-weight:500}
+.prac-box.on .memo-btn{color:var(--turf);font-weight:700}
+.alld .sec{display:flex;align-items:baseline}.alld-n{margin-left:auto;font:600 14px var(--f-num);color:var(--muted)}
+.alld-svg{display:block;width:100%;height:auto;margin-top:6px}
+.alld-svg line{stroke:var(--line);stroke-width:1}.alld-svg line.z{stroke:var(--q-par);stroke-width:1.5}
+.alld-svg text{font:600 11px var(--f-num);fill:var(--muted)}.alld-svg text.d{font-size:10px}
+.alld-svg polyline{fill:none;stroke:#22A06B;stroke-opacity:.35;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+.alld-svg circle{fill:#22A06B}
+.alld-note{font-size:13px!important;margin:6px 0 0}
 </style>
 
 </head>
@@ -2383,7 +2403,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-19-1000";
+const BUILD = "2026-12-20-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2775,7 +2795,7 @@ function fillStars(){
 }
 function resultOverlay(r){
   const t=roundTotals(r); const s=computeStats([r]);
-  const others = state.rounds.filter(x=>x.player===r.player && x.courseId===r.courseId && x.id!==r.id);
+  const others = state.rounds.filter(x=>x.player===r.player && x.courseId===r.courseId && x.id!==r.id && !x.practice);
   const flag = others.length && t.diff < Math.min(...others.map(x=>roundTotals(x).diff)) ? "COURSE BEST!" : "";
   const n = k => s.dist[k];
   const [y,m,d] = r.date.split("-");
@@ -3229,7 +3249,8 @@ function viewCard(cd){
   const teamG = cd.players.length===4 && GAMES[cd.game] && GAMES[cd.game].type==="team", tcl = i => teamG ? (i<2?"tA":"tB") : "";   // チーム戦: 1・2人目=A（紺）、3・4人目=B（金）の列を色で囲う
   const cell=(h,i,k)=>{ const pl=cd.players[i], v=k==="s"?pl.s[h]:pl.p[h];
     const inner = v==null ? "" : k==="s" ? `<span class="mk3 m-${v===1?"hio":TONE(v-cd.holes[h].par)}">${v}</span>` : `<span class="cp ${v>=3?"bad":""}">${v}</span>`;
-    return `<td class="c-${k} ${isSel(h,i,k)?"sel":""} ${tcl(i)}"><button data-act="cd-cell" data-h="${h}" data-i="${i}" data-k="${k}" aria-label="${esc(pl.name)} ${h+1}番 ${k==="s"?"打数":"パット"}${v!=null?" "+v:""}">${inner}</button></td>`; };
+    const gm = k==="s" && (isOlympic(cd.game) ? ((((cd.medals||{})[h])||[])[i]||0)>0 : cd.game==="nearpin" ? (cd.pins||{})[h]===i : isMarkGame(cd.game) ? (((cd.marks||{})[h])||[]).includes(i) : false);   // このホールでゲームの印が付いた人（表の中に小さく出す）
+    return `<td class="c-${k} ${isSel(h,i,k)?"sel":""} ${tcl(i)}"><button data-act="cd-cell" data-h="${h}" data-i="${i}" data-k="${k}" aria-label="${esc(pl.name)} ${h+1}番 ${k==="s"?"打数":"パット"}${v!=null?" "+v:""}">${inner}${gm?(cd.game==="snake"?`<img class="gmk" src="snake.png?v=1" alt="">`:`<i class="gmk dot"></i>`):""}</button></td>`; };
   const subt=(i,idx)=>{ const pl=cd.players[i], hs=idx.filter(h=>pl.s[h]!=null); if(!hs.length) return {s:"",d:""};
     const sc=hs.reduce((a,h)=>a+pl.s[h],0), par=hs.reduce((a,h)=>a+cd.holes[h].par,0), pt=hs.filter(h=>pl.p[h]!=null).reduce((a,h)=>a+pl.p[h],0);
     return {s:sc, d:toPar(sc-par), p:hs.some(h=>pl.p[h]!=null)?pt:""}; };
@@ -3261,7 +3282,7 @@ function viewCard(cd){
   const skinRow = skc ? `<tr class="skr"><td colspan="2" class="ft">ポイント${cd.carry?`<small class="blk">次${skc.pot}枚</small>`:""}</td>${cd.players.map((p,i)=>`<td class="c-s" colspan="${cwOf(i)}"><span class="skp">${coinSVG(24)}<b>${skc.won[i]}</b></span></td>`).join("")}${padSp}</tr>` : "";
   const colg=`<colgroup><col class="h"><col class="par">${cd.players.map((p,i)=>`<col class="s">${cdP(i)?`<col class="p">`:""}`).join("")}${gCol}${padCols}</colgroup>`;
   // 計の下に、人ごとのゲーム入力（オリンピック=メダルをフリック、ニアピン=旗をタップ）。見ているホールの分
-  const gh = cdHole(cd), gb = 0;
+  const gh = cdHole(cd), gb = 0, hasGin = isOlympic(cd.game)||cd.game==="nearpin"||isMarkGame(cd.game);
   const padSpB = b => nPad?`<td class="pad" style="bottom:${b}px" colspan="${nPad*pw}"></td>`:"";
   const inputRow = (isOlympic(cd.game)||cd.game==="nearpin"||isMarkGame(cd.game)) ? `<tr class="gin"><td colspan="2" class="ft" style="bottom:${gb}px">${gh+1}H<small class="blk">${isOlympic(cd.game)?"メダル":cd.game==="oneon"?"ワンオン":cd.game==="snake"?"3パット":"ニアピン"}</small></td>${cd.players.map((p,i)=>{
       let c; if(isOlympic(cd.game)){ const v=(((cd.medals||{})[gh])||[])[i]||0; c=`<div class="fc fm ${v?"set":""}" role="button" tabindex="0" data-k="m" data-i="${i}" aria-label="${esc(p.name)}の${gh+1}Hのメダル。押したまま左右に動かして離すと変わります">${v?medalSVG(v,28):"<span>—</span>"}</div>`; }
@@ -3282,7 +3303,7 @@ function viewCard(cd){
     <div class="cd-scroll"><table class="cdt ${pOn?"wp":""}">${colg}
       <thead><tr><th rowspan="${pOn?2:1}">H</th><th rowspan="${pOn?2:1}">PAR</th>${cd.players.map((p,i)=>`<th class="nm ${tcl(i)} ${[...String(dupLabel(cd.players.map(x=>x.name),i))].length>=5?"long":""}" colspan="${cwOf(i)}">${esc(dupLabel(cd.players.map(x=>x.name),i))}</th>`).join("")}${gTh}${padTh}</tr>
       ${pOn?`<tr class="sub">${cd.players.map((p,i)=>cdP(i)?`<th class="c-s ${tcl(i)}">打数</th><th class="ptl ${tcl(i)}">PUTT</th>`:`<th class="c-s ${tcl(i)}">打数</th>`).join("")}${gSub}${padSub}</tr>`:""}</thead>
-      <tbody>${rows.map(h=>`<tr><td class="hn">${h+1}</td><td class="pr">${cd.holes[h].par}</td>${cd.players.map((p,i)=>cell(h,i,"s")+(cdP(i)?cell(h,i,"p"):"")).join("")}${gTd(h)}${padTd}</tr>`).join("")}</tbody>
+      <tbody>${rows.map(h=>`<tr class="${hasGin&&h===gh?"ghr":""}"><td class="hn" ${hasGin?`data-act="cd-gh" data-h="${h}" role="button" aria-label="${h+1}番ホールのゲームを入れる"`:""}>${h+1}</td><td class="pr">${cd.holes[h].par}</td>${cd.players.map((p,i)=>cell(h,i,"s")+(cdP(i)?cell(h,i,"p"):"")).join("")}${gTd(h)}${padTd}</tr>`).join("")}</tbody>
       <tfoot>${two?foot(half?"IN":"OUT",rows,"",FH)+foot("計",all,"all",0):foot("計",all,"",0)}</tfoot></table></div>
     ${(inputRow||skinRow||gameRow||ghostRows)?`<div class="cd-game"><table class="cdt cdg ${pOn?"wp":""}">${colg}<tfoot>${inputRow}${skinRow}${gameRow}${ghostRows}</tfoot></table></div>`:""}
     <div class="cd-pad">
@@ -3367,9 +3388,25 @@ const DIST_SEGS = s => [["ホールインワン","hio","--q-hio"],["イーグル
 const trendFull = () => filteredRounds().filter(r=>!r.nos);
 const trendSameLen = () => new Set(trendFull().map(r=>r.holes.length)).size<=1;
 const trendTotalOn = () => trendSameLen() && (state.trendTotal ?? (state.fCourse!=="all"));   // 打数への切りかえは、回ったホール数がそろっているときだけ
+/* これまでの全ラウンド: 1ラウンド1つの点を、横に動かさず1画面に収める（15回より多いときだけ。多くなるほど点は小さくなる）。うすい線は前後の回をならした流れ */
+function allDots(){
+  const rs=trendFull(); if(rs.length<=15) return "";
+  const perH=!trendSameLen(), v=rs.map(r=>{ const t=roundTotals(r); return perH ? t.diff/r.holes.length : t.diff; }), n=v.length;
+  const W=320,H=150,L=34,R=8,T=10,B=22, lo=Math.floor(Math.min(...v)), hi=Math.ceil(Math.max(...v)), span=Math.max(1,hi-lo);
+  const X=i=>L+(W-L-R)*(n===1?.5:i/(n-1)), Y=y=>T+(H-T-B)*(1-(y-lo)/span), rad=Math.max(1.5,Math.min(4,110/n));
+  const k=Math.max(2,Math.round(n/12)), sm=v.map((_,i)=>{ const a=v.slice(Math.max(0,i-k),Math.min(n,i+k+1)); return a.reduce((p,c)=>p+c,0)/a.length; });
+  const fmt=y=>perH?(y>0?"+":y<0?"−":"±")+Math.abs(y):toPar(y), step=span<=4?1:span<=10?2:span<=24?5:10, ticks=[]; for(let y=Math.ceil(lo/step)*step;y<=hi;y+=step) ticks.push(y);
+  const md=r=>{ const [y,m,d]=(r.date||"").split("-"); return `${+y}/${+m}/${+d}`; };
+  return `<div class="panel alld"><div class="sec"><em>ALL</em><span>これまでの全ラウンド</span><small class="alld-n">${n}回</small></div>
+    <svg class="alld-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="これまでの全ラウンドの対パー">${ticks.map(y=>`<line x1="${L}" x2="${W-R}" y1="${Y(y).toFixed(1)}" y2="${Y(y).toFixed(1)}" class="${y===0?"z":""}"/><text x="${L-6}" y="${(Y(y)+4).toFixed(1)}" text-anchor="end">${fmt(y)}</text>`).join("")}
+      <polyline points="${sm.map((y,i)=>X(i).toFixed(1)+","+Y(y).toFixed(1)).join(" ")}"/>${v.map((y,i)=>`<circle cx="${X(i).toFixed(1)}" cy="${Y(y).toFixed(1)}" r="${rad.toFixed(1)}"/>`).join("")}
+      <text x="${L}" y="${H-5}" class="d">${md(rs[0])}</text><text x="${W-R}" y="${H-5}" text-anchor="end" class="d">${md(rs[n-1])}</text></svg>
+    <p class="muted alld-note">点が1ラウンド（${perH?"1ホールあたりの対パー":"対パー"}）。下にあるほど良いスコアです。</p></div>`;
+}
 function filteredRounds(){
   let rs = rounds().slice().sort(byDate);
   if(state.oneRound){ const r=rs.find(x=>x.id===state.oneRound); if(r) return [r]; state.oneRound=null; }
+  rs = rs.filter(r=>!r.practice);   // 練習ラウンドは分析に入れない
   if(state.fPlayer!=="all") rs = rs.filter(r=>r.player===state.fPlayer);
   if(state.fCourse!=="all") rs = rs.filter(r=>r.courseId===state.fCourse);
   if(state.fRange!=="all") rs = rs.slice(-Number(state.fRange));
@@ -3404,7 +3441,7 @@ function viewStats(){
   <div class="panel"><div class="sec"><em>RECENT</em><span>直近3ラウンド</span></div><div class="recent">${rs.slice(-3).reverse().map(r=>{ const t=roundTotals(r); const [y,m,d]=r.date.split("-");
       return `<div class="rr"><div class="rd"><small>${+m}/${+d}</small><b>${t.score}<i>(${toPar(t.diff)})</i></b></div><div class="rh">${r.holes.map(h=>`<span class="mk4 m-${TONEH(h)}" title="${h.strokes}"></span>`).join("")}</div></div>`; }).join("")}</div>
     <div class="mk-legend"><span><i class="mk4 m-eagle"></i>−2</span><span><i class="mk4 m-birdie"></i>−1</span><span><i class="mk4 m-par"></i>±0</span><span><i class="mk4 m-bogey"></i>+1</span><span><i class="mk4 m-double"></i>+2</span><span><i class="mk4 m-triple"></i>+3以上</span></div></div>
-  ${state.oneRound?"":`<div class="panel"><div class="sec"><em>TREND</em><span>スコアの推移</span>${trendSameLen()?`<div class="seg2" role="group" aria-label="表示">${[["diff","対パー"],["total","打数"]].map(([k,l])=>`<button data-act="trend-mode" data-v="${k}" aria-pressed="${(k==="total")===trendTotalOn()}">${l}</button>`).join("")}</div>`:""}</div><p class="trend-cap"></p><div class="tbox"><div class="tbox-ax"><canvas id="ch-score-ax" aria-hidden="true"></canvas></div><div class="tbox-sc"><div class="tbox-in"><canvas id="ch-score" aria-label="スコア推移"></canvas></div></div><div class="tbox-ref"><canvas id="ch-score-ref" aria-hidden="true"></canvas></div></div>${s.nPartial?`<p class="muted note-partial">途中で終わった${s.nPartial}回は含めていません</p>`:""}</div>`}
+  ${state.oneRound?"":`<div class="panel"><div class="sec"><em>TREND</em><span>スコアの推移</span>${trendSameLen()?`<div class="seg2" role="group" aria-label="表示">${[["diff","対パー"],["total","打数"]].map(([k,l])=>`<button data-act="trend-mode" data-v="${k}" aria-pressed="${(k==="total")===trendTotalOn()}">${l}</button>`).join("")}</div>`:""}</div><p class="trend-cap"></p><div class="tbox"><div class="tbox-ax"><canvas id="ch-score-ax" aria-hidden="true"></canvas></div><div class="tbox-sc"><div class="tbox-in"><canvas id="ch-score" aria-label="スコア推移"></canvas></div></div><div class="tbox-ref"><canvas id="ch-score-ref" aria-hidden="true"></canvas></div></div>${s.nPartial?`<p class="muted note-partial">途中で終わった${s.nPartial}回は含めていません</p>`:""}</div>${allDots()}`}
   ${barsPanel("スコアの内訳",DIST_SEGS(s),fmtPct(s.parOrBetter),"%","パー以内",["--q-hio","--q-eagle","--q-birdie","--q-par"])}
 
 `:""}
@@ -3642,10 +3679,11 @@ function viewHistory(){
     return `${mh}<div class="rcard">
       <button data-act="toggle-round" data-id="${r.id}" aria-expanded="${open}">
         <div class="day"><b>${+m}/${+d}</b><small>${wd}</small></div>
-        <div class="mid"><div class="cname">${esc(r.courseName)}</div><div class="strip">${r.holes.map(h=>`<i class="q-${TONEH(h)}"></i>`).join("")}</div></div>
+        <div class="mid"><div class="cname">${r.practice?`<i class="prac-tag">練習</i>`:""}${esc(r.courseName)}</div><div class="strip">${r.holes.map(h=>`<i class="q-${TONEH(h)}"></i>`).join("")}</div></div>
         <div class="sc-tot"><b><span class="st-n">${t.score}</span><small>(${toPar(t.diff)})</small></b></div>
       </button>
-      ${open?`<div class="detail">${tables}${legend}${roundMates(r)}${state.demo?"":`<div class="memo-box">${r.memo?`<p class="memo-t">${esc(r.memo)}</p>`:""}<button class="memo-btn" data-act="memo-open" data-id="${r.id}">${r.memo?"メモを直す":"＋ メモを書く"}</button></div>`}
+      ${open?`<div class="detail">${tables}${legend}${roundMates(r)}${state.demo?"":`<div class="memo-box">${r.memo?`<p class="memo-t">${esc(r.memo)}</p>`:""}<button class="memo-btn" data-act="memo-open" data-id="${r.id}">${r.memo?"メモを直す":"＋ メモを書く"}</button></div>
+        <div class="prac-box ${r.practice?"on":""}">${r.practice?`<span>練習ラウンドです。分析と自己ベストには入れていません。</span>`:""}<button class="memo-btn" data-act="prac-toggle" data-id="${r.id}">${r.practice?"ふつうのラウンドに戻す":"練習ラウンドにする（分析に入れない）"}</button></div>`}
         <button class="btn small one-go" data-act="one-round" data-id="${r.id}">このラウンドの分析を見る ›</button>
         ${state.demo?"":`<div class="actions">${conf?`<span class="muted" style="font-size:13px;align-self:center">このラウンドを削除しますか？</span><button class="btn small" data-act="cancel-confirm">やめる</button><button class="btn small danger" data-act="del-round" data-id="${r.id}">削除する</button>`:`<button class="btn small" data-act="edit-round" data-id="${r.id}">編集</button><button class="btn small" data-act="ask-del-round" data-id="${r.id}">削除</button>`}</div>`}
       </div>`:""}
@@ -3814,7 +3852,7 @@ let coinN=0;
 const coinSVG = (sz=14, cls="") => { const i=++coinN; return `<svg class="coin ${cls}" viewBox="0 0 24 24" width="${sz}" height="${sz}" aria-hidden="true"><defs><radialGradient id="cgf${i}" cx="34%" cy="26%" r="82%"><stop offset="0" stop-color="#FFF6B8"/><stop offset=".42" stop-color="#FFCB2E"/><stop offset="1" stop-color="#D68A06"/></radialGradient><linearGradient id="cgr${i}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE98A"/><stop offset=".5" stop-color="#E8A417"/><stop offset="1" stop-color="#A85F00"/></linearGradient></defs><circle cx="12" cy="12" r="11.2" fill="url(#cgr${i})"/><circle cx="12" cy="12" r="9" fill="url(#cgf${i})" stroke="#B86E00" stroke-opacity=".55" stroke-width=".6"/><circle cx="12" cy="12" r="7.4" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width=".8"/><path d="M12 6.8l1.5 3.1 3.4.5-2.5 2.4.6 3.4-3-1.6-3 1.6.6-3.4-2.5-2.4 3.4-.5z" fill="#C27C00" stroke="#FFE7A0" stroke-opacity=".7" stroke-width=".5" stroke-linejoin="round"/><path d="M5.6 9.6a7.2 7.2 0 0 1 5.4-4.1" fill="none" stroke="#fff" stroke-opacity=".9" stroke-width="1.5" stroke-linecap="round"/></svg>`; };
 /* ゲームのイラスト（小さなSVG。紺と金） */
 /* ゴースト: 同じコースの、自分の過去のベスト（対パーが一番良いラウンド。同じなら新しい方）。ホール数が同じものだけ */
-function ghostBest(player,courseId,N,exId){ const rs=state.rounds.filter(r=>r.player===player&&r.courseId===courseId&&r.id!==exId&&r.holes&&r.holes.length===N); if(!rs.length) return null;
+function ghostBest(player,courseId,N,exId){ const rs=state.rounds.filter(r=>r.player===player&&r.courseId===courseId&&r.id!==exId&&!r.practice&&r.holes&&r.holes.length===N); if(!rs.length) return null;
   return rs.reduce((a,r)=>{ const da=roundTotals(a).diff, dr=roundTotals(r).diff; return (dr<da||(dr===da&&(r.date||"")>(a.date||"")))?r:a; }); }
 const GAME_ILL = {
   ghost: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><g fill="#1F3A68"><g opacity=".26"><circle cx="38" cy="11.500" r="6.500"/><path d="M25 35c0-9 5.500-14.500 13-14.500S51 26 51 35z"/></g><circle cx="21" cy="14" r="7.500"/><path d="M6.500 41c0-10.500 6.500-17 14.500-17s14.500 6.500 14.500 17z"/></g></svg></span>`,
@@ -4163,8 +4201,8 @@ document.addEventListener("click", async ev => {
         for(let i=0;i<d.holes.length;i++) for(let j=0;j<1+(d.mates||[]).length;j++) if(!touchedS(d,j,i)){ state.hole=i; saveDraft(); render(); toast(`${j?d.mates[j-1].name:d.player}の${i+1}Hの打数がまだです`); return; }
         if(fields().putts && d.holes.some(x=>x.pT===true)){ const i=d.holes.findIndex(x=>x.pT!==true); if(i>=0){ state.hole=i; saveDraft(); render(); toast(`パットが${i+1}Hで抜けています（全部入れるか、全部「入力」のままにしてください）`); return; } } }
       const anyP = d.editing || (fields().putts && idxF.some(i=>d.holes[i].pT===true));   // 編集のときは、パットの設定がOFFでも、もとのパットを消さない
-      const oldMemo = d.editing ? (state.rounds.find(x=>x.id===d.id)||{}).memo : null;
-      const r={ id:d.id, player:d.player, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:d.createdAt||Date.now(), ...(oldMemo?{memo:oldMemo}:{}),
+      const oldR = d.editing ? (state.rounds.find(x=>x.id===d.id)||{}) : {}, oldMemo = oldR.memo;
+      const r={ id:d.id, player:d.player, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:d.createdAt||Date.now(), ...(oldMemo?{memo:oldMemo}:{}), ...(oldR.practice?{practice:true}:{}),
         ...(partial?{nos:idxF.map(i=>i+1)}:(d.editing&&Array.isArray(d.nos)&&d.nos.length===d.holes.length?{nos:d.nos}:{})),   // 途中で終わったラウンドを編集しても、ホール番号は残す
         holes:idxF.map(i=>d.holes[i]).map(x=>({par:x.par, strokes:x.strokes, putts:anyP?x.putts:0, dir:x.dir, bunker:!!x.bunker, ob:evs(x,"ob").length>0, pen:evs(x,"pen").length>0, tee:x.tee||null, club:x.club||null, aim:x.aim||null, dirOn:x.dirOn||null, teeOn:x.teeOn||null})) };
       state.saving=true; render(); rememberClubs(r);
@@ -4199,6 +4237,7 @@ document.addEventListener("click", async ev => {
     case "set-carry": state.skinCarry=b.dataset.v==="1"; LS.set("sc.skinCarry",state.skinCarry); render(); break;
     case "close-game": state.sheet=null; state.rulesOpen=null; render(); break;
     case "im": state.im=b.dataset.v; LS.set("sc.inputMode",state.im); render(); break;
+    case "cd-gh": { const cd=state.cdraft; if(!cd) break; cd.gh=+b.dataset.h; saveCDraft(); render(); break; }   // ホール番号を押すと、ゲームの行がそのホールになる（前のホールを直すとき）
     case "cd-cell": { const cd=state.cdraft; cd.sel={h:+b.dataset.h, i:+b.dataset.i, k:b.dataset.k}; cd.gh=cd.sel.h; saveCDraft(); render(); break; }
     case "cd-key": cardKey(b.dataset.v); break;
     case "cd-half": { const cd=state.cdraft; cd.half=+b.dataset.v; cd.sel={h:cd.half*9, i:0, k:"s"}; cd.gh=cd.sel.h; saveCDraft(); render(); break; }
@@ -4254,6 +4293,7 @@ document.addEventListener("click", async ev => {
     case "bk-close": state.bkMenu=false; render(); break;
     case "memo-open": state.memoId=b.dataset.id; render(); { const t=document.getElementById("memo-in"); if(t){ t.focus(); t.setSelectionRange(t.value.length,t.value.length); } } break;
     case "memo-close": state.memoId=null; render(); break;
+    case "prac-toggle": { const r=state.rounds.find(x=>x.id===b.dataset.id); if(!r) break; if(r.practice) delete r.practice; else r.practice=true; store.saveRound(r); toast(r.practice?"練習ラウンドにしました（分析に入れません）":"ふつうのラウンドに戻しました"); break; }
     case "memo-save": { const r=state.rounds.find(x=>x.id===state.memoId), t=document.getElementById("memo-in"); state.memoId=null;
       if(r && t){ const v=t.value.trim().slice(0,MEMO_MAX); if(v) r.memo=v; else delete r.memo; if(state.result && state.result.id===r.id) state.result=r; store.saveRound(r); toast(v?"メモを保存しました":"メモを消しました"); } else render(); break; }
     case "file-save": state.bkMenu=false; render(); await fileSave(); break;

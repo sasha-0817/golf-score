@@ -880,6 +880,9 @@ with sync_playwright() as pw:
     sm = lambda sel: pg.evaluate("s=>[...document.querySelectorAll(s)].map(e=>parseInt(e.textContent)).reduce((a,b)=>a+b,0)", sel)
     check("方向の十字の割合は整数で、5マスの合計が100になる（パー3）／4マスの合計が100（パー4・5）", sm(".heat.p3 .ht b") == 100 and sm(".heat.fw .ht b") == 100)
     check("方向の十字は横幅がコンパクト（260px以下）", pg.evaluate("document.querySelector('.heat').getBoundingClientRect().width") <= 260)
+    pg.evaluate("state.statTab='score'; render()"); ad = pg.evaluate("[document.querySelectorAll('.alld-svg circle').length, (()=>{const e=document.querySelector('.alld-svg'); return e?e.getBoundingClientRect().width<=document.documentElement.clientWidth:false})()]")
+    check("分析: 15回より多いと「これまでの全ラウンド」（1ラウンド1つの点、横に動かさず1画面）", ad[0] == 60 and ad[1])
+    pg.evaluate("state.statTab='shot'; render()")
     cb = pg.evaluate("(()=>{const r=document.querySelector('.clubs2 .cb-row'); if(!r) return null; const b=r.querySelector('.cb-bar').getBoundingClientRect(); return [Math.round(b.width), document.querySelectorAll('.club-tbl').length]})()")
     check("クラブ別: 棒は横に長く（150px以上）、表ではなく1クラブ1行の棒（得意・苦手の札は出さない）", cb is None or (cb[0] >= 150 and cb[1] == 0 and pg.evaluate("document.querySelectorAll('.clubs2 .ctag').length") == 0))
     check("割合に小数点は出さない（リング・クラブ別など）", pg.evaluate("!/\\d\\.\\d+\\s*%/.test(document.querySelector('#main').innerText)"))
@@ -1224,6 +1227,25 @@ with sync_playwright() as pw:
         cells = pg.evaluate("[...document.querySelectorAll('tr.skr.gr td.c-s')].slice(0,3).map(e=>e.querySelector('svg,img')?'S':e.textContent.trim())")
         check(f"スコアカード入力（{lab}）: 計の下に人ごとのボタンが出て、押すと入る", lab in row and pg.evaluate("JSON.stringify(state.cdraft.marks)") == want and cells == (["1", "1", "0"] if g == "oneon" else ["S", "", ""]) and ("スネーク" in pg.inner_text("tr.skr.gr") if g == "snake" else True) and not errs)
         pg.context.close()
+    # スコアカード入力: ゲームの行がどのホールかを表の中で示し（ホール番号に色）、ホール番号を押すと前のホールのゲームを直せる。印は表の中にも小さく出る
+    pg, errs = open_page(b, {**GM, "sc.game": "\"snake\"", "sc.inputMode": "\"card\"", "sc.fields": {"putts": False}}, offline=True); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    for v in "333444": C(pg, f'[data-act=cd-key][data-v="{v}"]')
+    hl1 = pg.evaluate("[...document.querySelectorAll('.cdt tbody tr')].findIndex(r=>r.classList.contains('ghr'))")
+    C(pg, '[data-act=cd-gh][data-h="0"]'); C(pg, '[data-act=cd-mark][data-i="1"]')
+    hl0 = pg.evaluate("[...document.querySelectorAll('.cdt tbody tr')].findIndex(r=>r.classList.contains('ghr'))")
+    check("スコアカード入力: ゲームの行のホールは番号に色が付き、番号を押すと前のホールを直せる。印は表の中にも出る",
+          hl1 == 1 and hl0 == 0 and pg.evaluate("JSON.stringify(state.cdraft.marks)") == '{"0":[1]}' and pg.evaluate("document.querySelectorAll('.cdt tbody tr:first-child .gmk').length") == 1 and pg.inner_text("tr.gin td.ft").startswith("1H") and not errs)
+    pg.context.close()
+    # 練習ラウンド: 履歴で印を付けると、分析・自己ベスト・ゴーストに入らない（履歴には「練習」の札つきで出る）
+    PR = [{"id": f"p{i}", "player": "たろう", "courseId": "c1", "courseName": "テストコース", "date": f"2026-10-{10+i:02d}", "createdAt": 1000 + i,
+           "holes": [{"par": 3, "strokes": 3 if i else 2, "putts": 1} for _ in range(3)]} for i in range(3)]
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.rounds": PR, "sc.courses": c93, "sc.tab": "\"history\"", "sc.v2": 1}, offline=True, repl={"function ghostBest(": "window.ghostBest=ghostBest; window.filteredRounds=filteredRounds; function ghostBest("})
+    pg.evaluate("state.openRound='p0'; render()"); C(pg, "[data-act=prac-toggle]"); pg.wait_for_timeout(200)
+    pr = pg.evaluate("[state.rounds.find(r=>r.id==='p0').practice===true, filteredRounds().map(r=>r.id).join(), ghostBest('たろう','c1',3,'x').id, !!document.querySelector('.rcard .prac-tag')]")
+    C(pg, "[data-act=prac-toggle]"); pg.wait_for_timeout(200)
+    check("練習ラウンド: 印を付けると分析とゴーストから外れ、履歴に「練習」の札。もう一度押すと戻る",
+          pr[0] and pr[1] == "p1,p2" and pr[2] != "p0" and pr[3] and pg.evaluate("filteredRounds().length") == 3 and pg.evaluate("ghostBest('たろう','c1',3,'x').id") == "p0" and not errs)
+    pg.context.close()
     # スコアカード入力: 最後の人の打数を入れて選択が次のホールへ進んでも、ゲームの行（メダルなど）は今入れたホールのまま。次のホールの数字を入れたら、そちらに移る
     pg, errs = open_page(b, {**GM, "sc.game": "\"olympic\"", "sc.inputMode": "\"card\"", "sc.fields": {"putts": False}}, offline=True); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
     for v in ["3", "4", "3"]: C(pg, f'[data-act=cd-key][data-v="{v}"]')
