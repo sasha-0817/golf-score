@@ -880,6 +880,8 @@ with sync_playwright() as pw:
     sm = lambda sel: pg.evaluate("s=>[...document.querySelectorAll(s)].map(e=>parseInt(e.textContent)).reduce((a,b)=>a+b,0)", sel)
     check("方向の十字の割合は整数で、5マスの合計が100になる（パー3）／4マスの合計が100（パー4・5）", sm(".heat.p3 .ht b") == 100 and sm(".heat.fw .ht b") == 100)
     check("方向の十字は横幅がコンパクト（260px以下）", pg.evaluate("document.querySelector('.heat').getBoundingClientRect().width") <= 260)
+    cb = pg.evaluate("(()=>{const r=document.querySelector('.clubs2 .cb-row'); if(!r) return null; const b=r.querySelector('.cb-bar').getBoundingClientRect(); return [Math.round(b.width), document.querySelectorAll('.club-tbl').length]})()")
+    check("クラブ別: 棒は横に長く（150px以上）、表ではなく1クラブ1行の棒", cb is None or (cb[0] >= 150 and cb[1] == 0))
     check("割合に小数点は出さない（リング・クラブ別など）", pg.evaluate("!/\\d\\.\\d+\\s*%/.test(document.querySelector('#main').innerText)"))
     C(pg, "[data-act=stat-tab][data-v=score]"); pg.wait_for_timeout(300)
     check("スコアの内訳の割合は整数で、合計が100になる", sm(".bk .bk-row b") == 100)
@@ -1063,7 +1065,7 @@ with sync_playwright() as pw:
     mo = pg.evaluate("(()=>{ const e=document.querySelector('.rc-game .rs-c'), m=e.querySelector('.rs-more'), a=e.firstElementChild.getBoundingClientRect(), r=m.getBoundingClientRect(); return [r.top<a.bottom && r.bottom>a.top, e.getBoundingClientRect().height<=a.height+8, getComputedStyle(document.querySelector('.paper .rc-logo b')).color]; })()")
     check("結果: コインの「…」はコインと同じ行（下の行に落ちない）", mo[0] and mo[1])
     check("結果: 紙のカードの右下の GOLF SC. は、上のロゴと同じ黒（緑にしない）", mo[2] == "rgb(11, 19, 16)")
-    check("結果画面の下: 色つきの主ボタン1つ・白い枠の副ボタン（全員分・スコア入力に戻る）・文字だけの「閉じる」の3段", btn[0] and btn[1] and btn[2] and btn[3] in ("rgba(0, 0, 0, 0)", "transparent") and not btn[4] and btn[5] == 1)   # 「みんな」の表示では、副ボタンは「全員分をまとめて保存」だけ（1人ずつの表示では「スコア入力に戻る」も並ぶ）
+    check("結果画面の下: 色つきの主ボタン1つ・白い枠の副ボタン（全員分・スコア入力に戻る）・文字だけの「閉じる」の3段", btn[0] and btn[1] and btn[2] and btn[3] in ("rgba(0, 0, 0, 0)", "transparent") and not btn[4] and btn[5] == 2)   # 「みんな」の表示では、副ボタンは「全員分をまとめて保存」だけ（1人ずつの表示では「スコア入力に戻る」も並ぶ）
     pg.context.close()
 
     # 新しい端末には、サーバーにあるほかの人の記録が入らない（名前なし・同じ名前のどちらでも）
@@ -1194,6 +1196,7 @@ with sync_playwright() as pw:
     pg.context.close()
     pg, errs = open_page(b, {**GM, "sc.game": "\"snake\"", "sc.inputMode": "\"hole\""}, offline=True, repl={"function marksCalc(": "window.marksCalc=marksCalc; function marksCalc("})
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300); fill3(pg)
+    check("スネーク: 3パットのボタンはチェックの印（ヘビが横に2つ並ばない）", pg.evaluate("document.querySelectorAll('[data-act=mark-q] .tick').length") == 3 and pg.evaluate("document.querySelectorAll('[data-act=mark-q] img').length") == 0)
     C(pg, '[data-act=mark-q][data-i="1"]'); h1 = pg.evaluate("[...document.querySelectorAll('.frow')].findIndex(r=>r.querySelector('.pt.snk img'))")
     pg.evaluate("state.hole=1; render()"); n4 = pg.evaluate("document.querySelectorAll('[data-act=mark-q]').length"); C(pg, '[data-act=mark-q][data-i="2"]'); C(pg, '[data-act=mark-q][data-i="0"]')
     h2 = pg.evaluate("[...document.querySelectorAll('.frow')].findIndex(r=>r.querySelector('.pt.snk img'))")
@@ -1204,6 +1207,13 @@ with sync_playwright() as pw:
     C(pg2, "[data-act=open-rules][data-v=snake]"); pg2.wait_for_timeout(200); rt = pg2.inner_text(".rp"); pg2.context.close()
     check("スネーク: 一覧の絵はほかのゲームと同じ高さ。ルールは「ヘビを持ちます」で、ボタンの説明は書かない",
           ih[0] == ih[1] and ih[0] > 0 and "ヘビを持ちます" in rt and "ボタンを押します" not in rt and "あとの人を押す" not in rt)
+    tick = pg.evaluate("[!!document.querySelector('.rc-game .rs-lose img'), document.querySelectorAll('.rc-game .rs-row img').length]")
+    C(pg, "[data-act=memo-open]"); pg.wait_for_timeout(150); pg.fill("#memo-in", "風が強かった"); C(pg, "[data-act=memo-save]"); pg.wait_for_timeout(200)
+    memo1 = pg.evaluate("state.rounds.filter(r=>r.memo==='風が強かった').map(r=>r.player).join()")
+    C(pg, "[data-act=close-result]"); pg.wait_for_timeout(300)
+    hist = pg.inner_text(".rcard .detail") if pg.query_selector(".rcard .detail") else ""
+    check("結果のスネークは、負けた人を大きく1つ（名前の行にヘビは置かない）。メモは自分のラウンドに付き、履歴に出る。履歴に、いっしょに回った人と打数",
+          tick == [True, 0] and memo1 == "たろう" and "風が強かった" in hist and "いっしょに回った人" in hist and "はなこ" in hist and "メモを直す" in hist and not errs)
     check("スネーク: どのホールでも押せて、3パットした人にヘビが移る（同じホールはあとに押した人）。結果に「たろう の負け」と回数",
           n4 == 3 and h1 == 1 and h2 == 0 and "スネーク" in res and "たろう の負け" in res and pg.evaluate("marksCalc({0:[1],1:[2,0]},3,[3,4,3],false).holder") == 0 and pg.evaluate("marksCalc({},3,[3,4,3],false).holder") == -1 and not errs)
     pg.context.close()

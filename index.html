@@ -2223,6 +2223,36 @@ select.sl-in option{direction:ltr}
 .snk-img{object-fit:contain}.gm-ill img{display:block}.game-sheet .gm-ill img{width:auto;height:28px}.rp .sr-row2 b img{display:block;flex:none}
 .rp .sr-row2 b.sr-pt{font:700 14px/1 var(--f-body);white-space:nowrap}
 .badge.b-chip{background:#F2B01E;color:#3A2A00}
+
+/* 2026-12-18: 3パットのチェック・スネークの結果・履歴の同伴者とメモ・クラブ別の棒 */
+.fc.fn .tick{display:block;margin:auto}
+.rs-lose{display:flex;align-items:center;gap:12px;padding:6px 2px 8px}
+.rs-lose img{flex:none;display:block}
+.rs-lose b{display:block;font-size:17px;font-weight:900;line-height:1.3}
+.rs-lose small{display:block;font-size:13px;color:#5B665F;font-weight:500}
+.rs-lose.none{font-size:15px;font-weight:700;justify-content:center}
+.rs-cap{font-size:13px;color:#5B665F;border-top:1px solid rgba(0,0,0,.1);padding-top:8px;margin-top:2px}
+.rmates{border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.rm-h{font-size:13px;color:var(--muted);margin-bottom:4px}
+.rm-row{display:flex;justify-content:space-between;align-items:baseline;padding:3px 0;font-size:15px}
+.rm-row b{font:700 18px var(--f-num)}.rm-row b small{font:500 13px var(--f-num);color:var(--muted);margin-left:3px}
+.memo-box{display:flex;flex-direction:column;gap:6px}
+.memo-t{margin:0;padding:10px 12px;border-radius:12px;background:var(--soft);font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.memo-btn{align-self:flex-start;background:none;border:0;padding:6px 2px;font-size:14px;font-weight:700;color:var(--turf)}
+.memo-back{z-index:400}
+.memo-sheet textarea{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;font:500 16px/1.6 var(--f-body);resize:none;background:#fff;color:inherit}
+.memo-sheet textarea:focus{outline:none;border-color:var(--turf)}
+.sheet.memo-sheet button.memo-ok{background:var(--turf);color:#fff;border-color:var(--turf)}
+.clubs2{display:flex;flex-direction:column;gap:12px;margin-top:8px}
+.cb-row{display:grid;grid-template-columns:44px 1fr 52px;column-gap:10px;row-gap:2px;align-items:center}
+.cb-n{font:700 16px var(--f-body)}
+.cb-bar{height:14px;border-radius:7px;background:var(--soft);overflow:hidden}
+.cb-bar i{display:block;height:100%;border-radius:7px;background:var(--c-gir)}
+.clubs2.p4 .cb-bar i{background:var(--c-bon)}
+.cb-v{font:700 20px var(--f-num);text-align:right}.cb-v small{font-size:13px;margin-left:1px}
+.cb-tag{line-height:1}.cb-tag .ctag{margin:0;font-size:13px!important;padding:1px 6px}
+.cb-sub{grid-column:2/4;font-size:13px!important;color:var(--muted)}
+.panel .clubs2+.map-sub{margin-top:20px}
 </style>
 
 </head>
@@ -2353,7 +2383,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-17-1000";
+const BUILD = "2026-12-18-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2611,6 +2641,13 @@ function backupBar(){
   if(state.demo) return "";
   return `<div class="bk-bar"><span id="bk-line">${esc(backupLine().replace("最後にバックアップした日時: ","最後のバックアップ "))}</span><button class="btn small" data-act="bk-open">バックアップ</button><input type="file" id="bk-file" accept=".json,application/json,text/plain" hidden></div>`;
 }
+/* いっしょに回った人（同じ日・同じコースで、保存が1分以内のラウンド）と、ラウンドのメモ */
+function roundGroup(r){ return state.rounds.filter(x=>x.id!==r.id && x.player && x.date===r.date && x.courseId===r.courseId && Math.abs((x.createdAt||0)-(r.createdAt||0))<60000).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)); }
+function roundMates(r){ const g=roundGroup(r); if(!g.length) return "";
+  return `<div class="rmates"><div class="rm-h">いっしょに回った人</div>${g.map(x=>{ const t=roundTotals(x); return `<div class="rm-row"><span>${esc(x.player)}</span><b>${t.score}<small>(${toPar(t.diff)})</small></b></div>`; }).join("")}</div>`; }
+const MEMO_MAX = 200;
+function memoSheet(){ const r=state.rounds.find(x=>x.id===state.memoId); if(!r) return "";
+  return `<div class="sheet-back memo-back" data-act="memo-close"><div class="sheet memo-sheet" data-stop="1"><p>メモ</p><textarea id="memo-in" maxlength="${MEMO_MAX}" rows="4" placeholder="天気・調子・気づいたことなど">${esc(r.memo||"")}</textarea><button class="memo-ok" data-act="memo-save">保存する</button><button data-act="memo-close">やめる</button></div></div>`; }
 function bkSheet(){
   return `<div class="sheet-back" data-act="bk-close"><div class="sheet data-sheet" data-stop="1"><p>バックアップ</p><div class="ds-msg">${esc(backupLine())}</div>
     <button data-act="file-save">記録をファイルに保存</button><button data-act="file-pick">ファイルから読み込む</button>${hasBackend?`<button data-act="restore">バックアップから戻す</button>`:""}<button data-act="bk-close">閉じる</button></div></div>`;
@@ -2718,6 +2755,7 @@ function render(){
     if(state.tab==="record" && !cut && de.scrollHeight-window.innerHeight<=110) de.classList.add("noscroll"); }
   if(state.result){ m.insertAdjacentHTML("beforeend", resultOverlay(state.result)); if(state.resultOpen) m.querySelector(".result-back").classList.add("still"); state.resultOpen=true; fillStars(); }
   else state.resultOpen=false; // 描き直すたびに出てくるアニメーションをくり返すと点滅して見えるので、2回目からは止める
+  if(state.memoId) m.insertAdjacentHTML("beforeend", memoSheet());
 }
 // COURSE BEST のキラキラ（金と白の4つ角の星）。文字のない空き（大きなスコアの右〜スコアカードの上）に置き、画面ではゆっくり点滅させる。
 // 画像保存では onclone でアニメーションを止めるので、同じ星がそのまま止まった絵として写る。
@@ -2765,7 +2803,7 @@ function resultOverlay(r){
     ${(state.resultGroup||[]).length>1?(()=>{ const g=state.resultGroup, nm=g.map(x=>x.player);
       return `<div class="rc-who" role="group" aria-label="だれのリザルト"><button data-act="result-all" aria-pressed="${!!state.resultAll}">みんな</button>${g.map((x,k)=>`<button data-act="result-pick" data-id="${esc(x.id)}" aria-pressed="${!state.resultAll&&x.id===r.id}">${esc(dupLabel(nm,k))}</button>`).join("")}</div>`; })():""}
     <div class="rc-actions"><button class="rc-save" data-act="save-card">画像を保存・送る</button></div>
-    <div class="rc-actions rc-sub">${(state.resultGroup||[]).length>1?`<button class="rc-2nd" data-act="save-all">全員分をまとめて保存</button>`:""}${(state.resultAll&&(state.resultGroup||[]).length>1)||state.resultTry?"":`<button class="rc-2nd" data-act="back-to-input">スコア入力に戻る</button>`}</div>
+    <div class="rc-actions rc-sub">${(state.resultGroup||[]).length>1?`<button class="rc-2nd" data-act="save-all">全員分をまとめて保存</button>`:""}${(state.resultAll&&(state.resultGroup||[]).length>1)||state.resultTry?"":`<button class="rc-2nd" data-act="back-to-input">スコア入力に戻る</button>`}${(()=>{ if(state.resultTry) return ""; const mr=(state.resultGroup||[r]).find(x=>x.player===me())||r, sv=state.rounds.find(x=>x.id===mr.id); return sv?`<button class="rc-2nd" data-act="memo-open" data-id="${esc(sv.id)}">${sv.memo?"メモを直す":"メモを書く"}</button>`:""; })()}</div>
     <button class="rc-close" data-act="close-result">閉じる</button>
   </div></div>`;
 }
@@ -3080,7 +3118,7 @@ function viewRecordDraft(d){
   const ncell = who => { const on=(d.pins||{})[state.hole]===who; return h.par===3 ? `<button class="fc fn ${on?"set":""}" data-act="pin-q" data-i="${who}" aria-pressed="${on}" aria-label="${esc(pNames[who])}がニアピン">${PINFLAG(on)}</button>` : `<span class="na">パー3のみ</span>`; };
   // ワンオン（パー3で1打で乗せた人）・スネーク（3パットした人）: 当てはまる人を何人でも押す
   const qcell = who => { const on=(((d.marks||{})[state.hole])||[]).includes(who); if(d.game==="oneon" && h.par!==3) return `<span class="na">パー3のみ</span>`;
-    return `<button class="fc fn ${on?"set":""}" data-act="mark-q" data-i="${who}" aria-pressed="${on}" aria-label="${esc(pNames[who])}が${d.game==="oneon"?"ワンオン":"3パット"}">${d.game==="oneon"?ONFLAG(on):SNAKE(on)}</button>`; };
+    return `<button class="fc fn ${on?"set":""}" data-act="mark-q" data-i="${who}" aria-pressed="${on}" aria-label="${esc(pNames[who])}が${d.game==="oneon"?"ワンオン":"3パット"}">${d.game==="oneon"?ONFLAG(on):TICK(on)}</button>`; };
   const snakeHolder = d.game==="snake" ? marksCalc(d.marks,PN,parsAll,false).holder : -1;
   const ghost = d.game==="ghost" ? ghostBest(d.player,d.courseId,N,d.id) : null;
   const gStr = k => ghost && ghost.holes[k] ? ghost.holes[k].strokes : null;
@@ -3227,7 +3265,7 @@ function viewCard(cd){
   const padSpB = b => nPad?`<td class="pad" style="bottom:${b}px" colspan="${nPad*pw}"></td>`:"";
   const inputRow = (isOlympic(cd.game)||cd.game==="nearpin"||isMarkGame(cd.game)) ? `<tr class="gin"><td colspan="2" class="ft" style="bottom:${gb}px">${gh+1}H<small class="blk">${isOlympic(cd.game)?"メダル":cd.game==="oneon"?"ワンオン":cd.game==="snake"?"3パット":"ニアピン"}</small></td>${cd.players.map((p,i)=>{
       let c; if(isOlympic(cd.game)){ const v=(((cd.medals||{})[gh])||[])[i]||0; c=`<div class="fc fm ${v?"set":""}" role="button" tabindex="0" data-k="m" data-i="${i}" aria-label="${esc(p.name)}の${gh+1}Hのメダル。押したまま左右に動かして離すと変わります">${v?medalSVG(v,28):"<span>—</span>"}</div>`; }
-      else if(cd.game==="snake" || (cd.game==="oneon" && cd.holes[gh].par===3)){ const on=(((cd.marks||{})[gh])||[]).includes(i); c=`<button class="fc fn ${on?"set":""}" data-act="cd-mark" data-i="${i}" aria-pressed="${on}" aria-label="${esc(p.name)}が${cd.game==="oneon"?"ワンオン":"3パット"}">${cd.game==="oneon"?ONFLAG(on):SNAKE(on)}</button>`; }
+      else if(cd.game==="snake" || (cd.game==="oneon" && cd.holes[gh].par===3)){ const on=(((cd.marks||{})[gh])||[]).includes(i); c=`<button class="fc fn ${on?"set":""}" data-act="cd-mark" data-i="${i}" aria-pressed="${on}" aria-label="${esc(p.name)}が${cd.game==="oneon"?"ワンオン":"3パット"}">${cd.game==="oneon"?ONFLAG(on):TICK(on)}</button>`; }
       else if(cd.holes[gh].par!==3) c=`<span class="na">—</span>`;
       else { const on=(cd.pins||{})[gh]===i; c=`<button class="fc fn ${on?"set":""}" data-act="cd-pin" data-i="${i}" aria-pressed="${on}" aria-label="${esc(p.name)}がニアピン">${PINFLAG(on)}</button>`; }
       return `<td class="c-s gin-c" colspan="${cwOf(i)}" style="bottom:${gb}px">${c}</td>`; }).join("")}${padSpB(gb)}</tr>` : "";
@@ -3412,10 +3450,10 @@ function clubTable(rs, kind){
   let best = ok.length>1 ? ok.reduce((a,c)=>rate(m[c])>rate(m[a])?c:a) : null, worst = ok.length>1 ? ok.reduce((a,c)=>rate(m[c])<rate(m[a])?c:a) : null;
   if(best===worst){ best=null; worst=null; }
   return `<div class="map-sub">${kind==="p3"?"パーオン率（パー3）":"フェアウェイキープ率（パー4・5）"}</div>
-    <table class="cs-tbl club-tbl"><tr><th></th><th>クラブ</th><th>回数</th><th>${kind==="p3"?"パーオン率":"FWキープ率"}</th><th>多いミス</th></tr>
-    ${cl.map(c=>{ const x=m[c], r=rate(x), mk=Object.keys(x.miss).sort((a,b)=>x.miss[b]-x.miss[a])[0];
-      return `<tr><td class="tg">${c===best?`<span class="ctag good">得意</span>`:c===worst?`<span class="ctag bad">苦手</span>`:""}</td><td><b>${esc(c)}</b></td><td>${x.n}</td><td><span class="rt"><span class="cs-bar"><i style="width:${r}%"></i></span><span class="rv">${fmtPct(r)}%</span></span></td><td>${mk&&ML[mk]?ML[mk]:"—"}</td></tr>`; }).join("")}
-    </table>`;
+    <div class="clubs2 ${kind}">${cl.map(c=>{ const x=m[c], r=rate(x), mk=Object.keys(x.miss).sort((a,b)=>x.miss[b]-x.miss[a])[0];
+      return `<div class="cb-row"><b class="cb-n">${esc(c)}</b><span class="cb-bar"><i style="width:${r}%"></i></span><span class="cb-v">${fmtPct(r)}<small>%</small></span>
+        <span class="cb-tag">${c===best?`<span class="ctag good">得意</span>`:c===worst?`<span class="ctag bad">苦手</span>`:""}</span><span class="cb-sub">${x.n}回${mk&&ML[mk]?`・ミスは${ML[mk]}が多い`:""}</span></div>`; }).join("")}
+    </div>`;
 }
 function clubPanel(rs){
   const t3 = clubTable(rs,"p3"), t4 = clubTable(rs,"p4");
@@ -3607,7 +3645,7 @@ function viewHistory(){
         <div class="mid"><div class="cname">${esc(r.courseName)}</div><div class="strip">${r.holes.map(h=>`<i class="q-${TONEH(h)}"></i>`).join("")}</div></div>
         <div class="sc-tot"><b><span class="st-n">${t.score}</span><small>(${toPar(t.diff)})</small></b></div>
       </button>
-      ${open?`<div class="detail">${tables}${legend}
+      ${open?`<div class="detail">${tables}${legend}${roundMates(r)}${state.demo?"":`<div class="memo-box">${r.memo?`<p class="memo-t">${esc(r.memo)}</p>`:""}<button class="memo-btn" data-act="memo-open" data-id="${r.id}">${r.memo?"メモを直す":"＋ メモを書く"}</button></div>`}
         <button class="btn small one-go" data-act="one-round" data-id="${r.id}">このラウンドの分析を見る ›</button>
         ${state.demo?"":`<div class="actions">${conf?`<span class="muted" style="font-size:13px;align-self:center">このラウンドを削除しますか？</span><button class="btn small" data-act="cancel-confirm">やめる</button><button class="btn small danger" data-act="del-round" data-id="${r.id}">削除する</button>`:`<button class="btn small" data-act="edit-round" data-id="${r.id}">編集</button><button class="btn small" data-act="ask-del-round" data-id="${r.id}">削除</button>`}</div>`}
       </div>`:""}
@@ -3914,7 +3952,7 @@ function gameResult(game, rows, pars, N, names, order, ex={}){
   if(game==="oneon"){ const x=marksCalc(ex.marks, rows.length, pars, true), mx=Math.max(...x.n), top=x.n.filter(v=>v===mx).length;
     return box([...order].sort((a,b)=>x.n[b]-x.n[a]).map(k=>line(names[k], `${x.n[k]}点`, mx>0&&x.n[k]===mx)).join("") + `<div class="rs-sum">${mx<=0?"ワンオンなし（引き分け）":top>1?"引き分け":`${names[x.n.indexOf(mx)]} の勝ち`}</div>`); }
   if(game==="snake"){ const x=marksCalc(ex.marks, rows.length, pars, false);
-    return box(order.map(k=>line(names[k], `${x.n[k]}回`, false, x.holder===k?`<span class="rs-snk">${SNAKE(true,20)}</span>`:"")).join("") + `<div class="rs-sum">${x.holder<0?"3パットなし（引き分け）":`最後にヘビを持っていた ${names[x.holder]} の負け`}</div>`, "ヘビを持った回数"); }
+    return box((x.holder<0 ? `<div class="rs-lose none">3パットなし（引き分け）</div>` : `<div class="rs-lose">${SNAKE(true,40)}<div><b>${names[x.holder]} の負け</b><small>最後にヘビを持っていた人</small></div></div>`) + `<div class="rs-cap">3パットの回数</div>` + order.map(k=>line(names[k], `${x.n[k]}回`, false, "")).join("")); }
   if(game==="nearpin"){ const x=pinCalc(ex.pins, rows.length, pars), mx=Math.max(...x.won);
     return box([...order].sort((a,b)=>x.won[b]-x.won[a]).map(k=>line(names[k], `${x.won[k]}枚`, mx>0&&x.won[k]===mx, Array.from({length:x.won[k]>8?7:x.won[k]},()=>coinSVG(15)).join("")+(x.won[k]>8?`<i class="rs-more">…</i>`:""))).join("")); }
   if(game==="olympicteam" && rows.length===4){ const x=olympicCalc(ex.medals, 4), t=[x.pts[0]+x.pts[1], x.pts[2]+x.pts[3]], w=t[0]===t[1]?-1:t[0]>t[1]?0:1;
@@ -3955,6 +3993,7 @@ const toggleMark = (a,i,one) => { a=Array.isArray(a)?a.slice():[]; return a.incl
 function marksCalc(marks, P, pars, par3Only){ const n=Array(P).fill(0); let holder=-1, last=-1;
   Object.entries(marks||{}).forEach(([h,a])=>{ if(par3Only && pars && pars[+h]!==3) return; a=(Array.isArray(a)?a:[]).filter(i=>i>=0&&i<P); a.forEach(i=>n[i]++); if(a.length && +h>=last){ last=+h; holder=a[a.length-1]; } });
   return {n, holder}; }
+const TICK = on => `<svg class="tick ${on?"on":""}" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 7.8" fill="none" stroke="${on?"#7A5200":"#B9C2BD"}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const ONFLAG = on => `<svg class="pinflag ${on?"on":""}" viewBox="0 0 30 30" width="27" height="27" aria-hidden="true"><ellipse cx="15" cy="21" rx="13" ry="6" fill="#5DB56B"/><path d="M20 20V5" stroke="#1F3A68" stroke-width="1.800" stroke-linecap="round"/><path d="M20 5l-8 3 8 3z" fill="#E5484D"/><circle cx="10.500" cy="20.500" r="3.200" fill="#fff" stroke="#1F3A68" stroke-width="1"/></svg>`;
 const SNAKE = (on, sz=27) => `<img class="pinflag snk-img ${on?"on":""}" src="snake.png?v=1" width="${sz}" height="${sz}" alt="" aria-hidden="true">`;
 /* ニアピン: ホールごとに、グリーンに乗った人で一番ピンに近い1人がコイン1枚（誰も乗らなければなし）。pins={ホール番号:人の番号} */
@@ -4124,7 +4163,8 @@ document.addEventListener("click", async ev => {
         for(let i=0;i<d.holes.length;i++) for(let j=0;j<1+(d.mates||[]).length;j++) if(!touchedS(d,j,i)){ state.hole=i; saveDraft(); render(); toast(`${j?d.mates[j-1].name:d.player}の${i+1}Hの打数がまだです`); return; }
         if(fields().putts && d.holes.some(x=>x.pT===true)){ const i=d.holes.findIndex(x=>x.pT!==true); if(i>=0){ state.hole=i; saveDraft(); render(); toast(`パットが${i+1}Hで抜けています（全部入れるか、全部「入力」のままにしてください）`); return; } } }
       const anyP = d.editing || (fields().putts && idxF.some(i=>d.holes[i].pT===true));   // 編集のときは、パットの設定がOFFでも、もとのパットを消さない
-      const r={ id:d.id, player:d.player, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:d.createdAt||Date.now(),
+      const oldMemo = d.editing ? (state.rounds.find(x=>x.id===d.id)||{}).memo : null;
+      const r={ id:d.id, player:d.player, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:d.createdAt||Date.now(), ...(oldMemo?{memo:oldMemo}:{}),
         ...(partial?{nos:idxF.map(i=>i+1)}:(d.editing&&Array.isArray(d.nos)&&d.nos.length===d.holes.length?{nos:d.nos}:{})),   // 途中で終わったラウンドを編集しても、ホール番号は残す
         holes:idxF.map(i=>d.holes[i]).map(x=>({par:x.par, strokes:x.strokes, putts:anyP?x.putts:0, dir:x.dir, bunker:!!x.bunker, ob:evs(x,"ob").length>0, pen:evs(x,"pen").length>0, tee:x.tee||null, club:x.club||null, aim:x.aim||null, dirOn:x.dirOn||null, teeOn:x.teeOn||null})) };
       state.saving=true; render(); rememberClubs(r);
@@ -4212,6 +4252,10 @@ document.addEventListener("click", async ev => {
     case "del-round": state.confirm=null; await store.delRound(b.dataset.id); toast("削除しました"); break;
     case "bk-open": state.bkMenu=true; render(); break;
     case "bk-close": state.bkMenu=false; render(); break;
+    case "memo-open": state.memoId=b.dataset.id; render(); { const t=document.getElementById("memo-in"); if(t){ t.focus(); t.setSelectionRange(t.value.length,t.value.length); } } break;
+    case "memo-close": state.memoId=null; render(); break;
+    case "memo-save": { const r=state.rounds.find(x=>x.id===state.memoId), t=document.getElementById("memo-in"); state.memoId=null;
+      if(r && t){ const v=t.value.trim().slice(0,MEMO_MAX); if(v) r.memo=v; else delete r.memo; if(state.result && state.result.id===r.id) state.result=r; store.saveRound(r); toast(v?"メモを保存しました":"メモを消しました"); } else render(); break; }
     case "file-save": state.bkMenu=false; render(); await fileSave(); break;
     case "file-pick": { const f=$("#bk-file"); if(f) f.click(); break; }
     case "restore": state.bkMenu=false; state.dataAsk={ kind:"restore", step:"name", name:LS.get("sc.player","") }; render(); break;
