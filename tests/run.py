@@ -1198,6 +1198,12 @@ with sync_playwright() as pw:
     pg.evaluate("state.hole=1; render()"); n4 = pg.evaluate("document.querySelectorAll('[data-act=mark-q]').length"); C(pg, '[data-act=mark-q][data-i="2"]'); C(pg, '[data-act=mark-q][data-i="0"]')
     h2 = pg.evaluate("[...document.querySelectorAll('.frow')].findIndex(r=>r.querySelector('.pt.snk img'))")
     pg.evaluate("state.hole=2; render()"); C(pg, "[data-act=finish]"); pg.wait_for_timeout(600); res = pg.inner_text(".rc-game") if pg.query_selector(".rc-game") else ""
+    pg2, errs2 = open_page(b, {**GM, "sc.game": "\"snake\""}, offline=True)
+    C(pg2, "[data-act=open-game]"); pg2.wait_for_timeout(200)
+    ih = pg2.evaluate("(()=>{const g=k=>{const x=document.querySelector(`.gm-card[data-v=${k}] .gm-ill>*`); return x?Math.round(x.getBoundingClientRect().height):-1}; return [g('snake'),g('nearpin')]})()")
+    C(pg2, "[data-act=open-rules][data-v=snake]"); pg2.wait_for_timeout(200); rt = pg2.inner_text(".rp"); pg2.context.close()
+    check("スネーク: 一覧の絵はほかのゲームと同じ高さ。ルールは「ヘビを持ちます」で、ボタンの説明は書かない",
+          ih[0] == ih[1] and ih[0] > 0 and "ヘビを持ちます" in rt and "ボタンを押します" not in rt and "あとの人を押す" not in rt)
     check("スネーク: どのホールでも押せて、3パットした人にヘビが移る（同じホールはあとに押した人）。結果に「たろう の負け」と回数",
           n4 == 3 and h1 == 1 and h2 == 0 and "スネーク" in res and "たろう の負け" in res and pg.evaluate("marksCalc({0:[1],1:[2,0]},3,[3,4,3],false).holder") == 0 and pg.evaluate("marksCalc({},3,[3,4,3],false).holder") == -1 and not errs)
     pg.context.close()

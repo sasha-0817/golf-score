@@ -2220,7 +2220,7 @@ select.sl-in option{direction:ltr}
 .rename-sheet button.rn-other{background:none;border:0;color:var(--muted,#5B6661);font-size:14px;text-decoration:underline;min-height:40px;margin-top:6px}
 .pt.snk{display:flex;align-items:center;justify-content:center;gap:2px}.pt.snk img,.gtag.snk img{display:inline-block;vertical-align:-4px}
 .rs-snk img{display:block}
-.snk-img{object-fit:contain}.gm-ill img{display:block}.game-sheet .gm-ill img{width:38px;height:36px}.rp .sr-row2 b img{display:block;flex:none}
+.snk-img{object-fit:contain}.gm-ill img{display:block}.game-sheet .gm-ill img{width:auto;height:28px}.rp .sr-row2 b img{display:block;flex:none}
 .rp .sr-row2 b.sr-pt{font:700 14px/1 var(--f-body);white-space:nowrap}
 .badge.b-chip{background:#F2B01E;color:#3A2A00}
 </style>
@@ -2353,7 +2353,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-16-1000";
+const BUILD = "2026-12-17-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3751,7 +3751,7 @@ const GAMES = {
   team:   { name:"ベストボール", eng:"BEST BALL", n:"4人のみ", min:4, max:4, desc:"2人の良い方で勝負", type:"team" },
   nearpin:{ name:"ニアピン", eng:"NEAREST THE PIN", n:"2〜4人", min:2, max:4, desc:"ピンに近い人がコイン", type:"solo" },
   oneon:{ name:"ワンオン", eng:"ONE ON", n:"2〜4人", min:2, max:4, desc:"1打で乗せたら1点", type:"solo" },
-  snake:{ name:"スネーク", eng:"SNAKE", n:"2〜4人", min:2, max:4, desc:"3パットでヘビが移る", type:"solo" },
+  snake:{ name:"スネーク", eng:"SNAKE", n:"2〜4人", min:2, max:4, desc:"最後の3パットが負け", type:"solo" },
   peoriateam:{ name:"新ペリア（チーム）", eng:"NEW PERIA TEAM", n:"4人のみ", min:4, max:4, desc:"2人のネットの合計で勝負", type:"team" },
   olympicteam:{ name:"オリンピック（チーム）", eng:"OLYMPIC TEAM", n:"4人のみ", min:4, max:4, desc:"2人のメダルの点数で勝負", type:"team" },
   teamsum:{ name:"合計スコア", eng:"TEAM TOTAL", n:"4人のみ", min:4, max:4, desc:"2人の合計スコアで勝負", type:"team" },
@@ -3914,7 +3914,7 @@ function gameResult(game, rows, pars, N, names, order, ex={}){
   if(game==="oneon"){ const x=marksCalc(ex.marks, rows.length, pars, true), mx=Math.max(...x.n), top=x.n.filter(v=>v===mx).length;
     return box([...order].sort((a,b)=>x.n[b]-x.n[a]).map(k=>line(names[k], `${x.n[k]}点`, mx>0&&x.n[k]===mx)).join("") + `<div class="rs-sum">${mx<=0?"ワンオンなし（引き分け）":top>1?"引き分け":`${names[x.n.indexOf(mx)]} の勝ち`}</div>`); }
   if(game==="snake"){ const x=marksCalc(ex.marks, rows.length, pars, false);
-    return box(order.map(k=>line(names[k], `${x.n[k]}回`, false, x.holder===k?`<span class="rs-snk">${SNAKE(true,20)}</span>`:"")).join("") + `<div class="rs-sum">${x.holder<0?"3パットなし（引き分け）":`最後にスネークを持っていた ${names[x.holder]} の負け`}</div>`, "スネークを持った回数"); }
+    return box(order.map(k=>line(names[k], `${x.n[k]}回`, false, x.holder===k?`<span class="rs-snk">${SNAKE(true,20)}</span>`:"")).join("") + `<div class="rs-sum">${x.holder<0?"3パットなし（引き分け）":`最後にヘビを持っていた ${names[x.holder]} の負け`}</div>`, "ヘビを持った回数"); }
   if(game==="nearpin"){ const x=pinCalc(ex.pins, rows.length, pars), mx=Math.max(...x.won);
     return box([...order].sort((a,b)=>x.won[b]-x.won[a]).map(k=>line(names[k], `${x.won[k]}枚`, mx>0&&x.won[k]===mx, Array.from({length:x.won[k]>8?7:x.won[k]},()=>coinSVG(15)).join("")+(x.won[k]>8?`<i class="rs-more">…</i>`:""))).join("")); }
   if(game==="olympicteam" && rows.length===4){ const x=olympicCalc(ex.medals, 4), t=[x.pts[0]+x.pts[1], x.pts[2]+x.pts[3]], w=t[0]===t[1]?-1:t[0]>t[1]?0:1;
@@ -4001,8 +4001,8 @@ function rulesPop(k){
     list=`<li><b>パー3のホール</b>で、<b>1打でグリーンに乗せた人</b>に1点（何人でももらえます）</li><li>乗った人の「ワンオン」ボタンを押します（パー3だけ出ます）</li><li><b>点が一番多い人の勝ち</b></li>`;
     ex=`<div class="sr-row2"><span>1H</span><span>たろう・はなこ が乗った</span><b class="sr-pt">各1点</b></div><div class="sr-row2"><span>2H</span><span>誰も乗らなかった</span><b class="sr-none">なし</b></div><div class="sr-row2"><span>3H</span><span>たろう が乗った</span><b class="sr-pt">1点</b></div><div class="sr-sum">たろう 2点・はなこ 1点 → <b>たろうの勝ち</b></div>`; }
   if(k==="snake"){
-    list=`<li><b>3パット以上</b>した人が、スネーク（ヘビ）を持ちます</li><li>次にだれかが3パットすると、<b>スネークはその人に移ります</b>。3パットした人の「3パット」ボタンを押します</li><li><b>最後にスネークを持っていた人の負け</b></li>`;
-    ex=`<div class="sr-row2"><span>2H</span><span>はなこ が3パット → はなこへ</span><b>${SNAKE(true,26)}</b></div><div class="sr-row2"><span>5H</span><span>たろう が4パット → たろうへ</span><b>${SNAKE(true,26)}</b></div><div class="sr-row2"><span>8H</span><span>2人が3パット → あとの人を押す</span><b>${SNAKE(true,26)}</b></div><div class="sr-sum"><b>最後に持っていた人の負け</b>（4パットも同じ）</div>`; }
+    list=`<li><b>3パット以上</b>した人が、ヘビを持ちます</li><li>次にだれかが3パットすると、<b>ヘビはその人に移ります</b></li><li><b>最後にヘビを持っていた人の負け</b></li>`;
+    ex=`<div class="sr-row2"><span>2H</span><span>はなこ が3パット → 持つ</span><b>${SNAKE(true,26)}</b></div><div class="sr-row2"><span>5H</span><span>たろう が4パット → 移る</span><b>${SNAKE(true,26)}</b></div><div class="sr-row2"><span>9H</span><span>最後まで たろう → 負け</span><b>${SNAKE(true,26)}</b></div><div class="sr-sum">同じホールで2人が3パットしたら、<b>あとにパットした人</b>が持ちます</div>`; }
   if(k==="peoriateam"){
     list=`<li>1・2人目がチームA、3・4人目がチームB（名前を入れる順で組み分け）</li><li>新ペリアと同じく、保存したあと<b>くじで隠しホール</b>を選び、1人ずつネットを出します</li><li><b>2人のネットの合計が少ないチームの勝ち</b></li>`;
     ex=`<div class="sr-row2"><span>チームA</span><span>たろう 26.8・はなこ 27.6</span><b class="w">54.4</b></div><div class="sr-row2"><span>チームB</span><span>じろう 27.2・さぶろう 28.0</span><b>55.2</b></div><div class="sr-sum"><b>チームAの勝ち</b></div>`; }
