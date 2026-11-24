@@ -2295,6 +2295,10 @@ body[data-tab=stats] #main .alld-lg span{font-size:13px}
 .alld-svg circle.rec{fill:#F2B01E;stroke:#B07A00;stroke-width:1}
 .alld-lg .ln{background:#E0A100;height:3px}
 .cdt tbody tr.ghr td.hn{font-weight:900}
+
+/* 2026-12-23: 全ラウンドの図は「直近5回の平均」のうすい緑の線（金の階段はやめた） */
+.alld-svg polyline{stroke:#22A06B;stroke-opacity:.35;stroke-width:5}
+.alld-lg .ln{background:rgba(34,160,107,.35);height:5px}
 </style>
 
 </head>
@@ -2425,7 +2429,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-22-1000";
+const BUILD = "2026-12-23-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3416,15 +3420,14 @@ function allDots(){
   const perH=!trendSameLen(), tot=trendTotalOn(), v=rs.map(r=>{ const t=roundTotals(r); return tot ? t.score : perH ? t.diff/r.holes.length : t.diff; }), n=v.length;
   const W=320,H=156,L=36,R=8,T=10,B=24, lo=Math.floor(Math.min(...v)), hi=Math.ceil(Math.max(...v)), span=Math.max(1,hi-lo);
   const X=i=>L+(W-L-R)*(n===1?.5:i/(n-1)), Y=y=>T+(H-T-B)*(1-(y-lo)/span), rad=Math.max(1.5,Math.min(4,110/n));
-  const best=[]; v.forEach((y,i)=>best.push(i?Math.min(best[i-1],y):y)); const isRec=v.map((y,i)=>i>0&&y<best[i-1]);   // その時点までの自己ベスト（階段）と、更新した回
-  const stair=best.map((b,i)=>(i?X(i).toFixed(1)+","+Y(best[i-1]).toFixed(1)+" ":"")+X(i).toFixed(1)+","+Y(b).toFixed(1)).join(" ");
+  const sm=v.map((_,i)=>{ const w=v.slice(Math.max(0,i-4),i+1); return w.reduce((p,c)=>p+c,0)/w.length; });   // その回と、その前の4回（直近5回）の平均
   const fmt=y=>tot?String(y):perH?(y>0?"+":y<0?"−":"±")+Math.abs(y):toPar(y), step=span<=4?1:span<=10?2:span<=24?5:10, ticks=[]; for(let y=Math.ceil(lo/step)*step;y<=hi;y+=step) ticks.push(y);
   const md=r=>{ const [y,m,d]=(r.date||"").split("-"); return `${+y}/${+m}/${+d}`; };
   return `<div class="panel alld"><div class="sec"><em>ALL</em><span>これまでの全ラウンド</span><small class="alld-n">${n}回</small></div>
     <svg class="alld-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="これまでの全ラウンドの${tot?"打数":"対パー"}">${ticks.map(y=>`<line x1="${L}" x2="${W-R}" y1="${Y(y).toFixed(1)}" y2="${Y(y).toFixed(1)}" class="${!tot&&y===0?"z":""}"/><text x="${L-6}" y="${(Y(y)+4.5).toFixed(1)}" text-anchor="end">${fmt(y)}</text>`).join("")}
-      <polyline points="${stair}"/>${v.map((y,i)=>`<circle class="${isRec[i]?"rec":""}" cx="${X(i).toFixed(1)}" cy="${Y(y).toFixed(1)}" r="${(isRec[i]?rad+1.5:rad).toFixed(1)}"/>`).join("")}
+      <polyline points="${sm.map((y,i)=>X(i).toFixed(1)+","+Y(y).toFixed(1)).join(" ")}"/>${v.map((y,i)=>`<circle cx="${X(i).toFixed(1)}" cy="${Y(y).toFixed(1)}" r="${rad.toFixed(1)}"/>`).join("")}
       <text x="${L}" y="${H-5}" class="d">${md(rs[0])}</text><text x="${W-R}" y="${H-5}" text-anchor="end" class="d">${md(rs[n-1])}</text></svg>
-    <div class="alld-lg"><span><i class="dot"></i>1ラウンドの${tot?"打数":perH?"1ホールあたりの対パー":"対パー"}</span><span><i class="ln"></i>自己ベスト（金の点＝更新した回）</span></div></div>`;
+    <div class="alld-lg"><span><i class="dot"></i>1ラウンドの${tot?"打数":perH?"1ホールあたりの対パー":"対パー"}</span><span><i class="ln"></i>直近5回の平均</span></div></div>`;
 }
 function filteredRounds(){
   let rs = rounds().slice().sort(byDate);
