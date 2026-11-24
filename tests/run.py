@@ -153,7 +153,7 @@ with sync_playwright() as pw:
     C(pg, "nav.tabs [data-tab=courses]"); cid = pg.evaluate("state.courses[0].id")
     C(pg, f'[data-act=edit-course][data-id="{cid}"]')
     check("コース編集で2グリーンが残る", pg.evaluate("state.courseEdit.two"))
-    C(pg, "[data-act=save-course]"); pg.wait_for_timeout(300)
+    C(pg, "[data-act=save-course]"); pg.wait_for_timeout(300); C(pg, "[data-act=save-course][data-ok]"); pg.wait_for_timeout(150)
     check("保存後も yards2 が残る", pg.evaluate("!!__db.courses[0].holes[0].yards2"))
     C(pg, "nav.tabs [data-tab=history]")
     C(pg, "[data-act=ask-del-round]") or (C(pg, "[data-act=toggle-round]") and C(pg, "[data-act=ask-del-round]"))
@@ -663,8 +663,7 @@ with sync_playwright() as pw:
     pg.fill("#c-g0", "A"); pg.fill("#c-g1", "B"); pg.fill("#c-g2", "C")
     for i in range(9):
         pg.fill(f"#yd-{i}", str(100 + i)); pg.fill(f"[data-ydk='{i},1']", str(110 + i)); pg.fill(f"[data-ydk='{i},2']", str(120 + i))
-    pg.fill("#c-pref", "宮崎県") if False else None
-    C(pg, "[data-act=save-course]"); pg.wait_for_timeout(400)
+    C(pg, "[data-act=save-course]"); pg.wait_for_timeout(400); C(pg, "[data-act=save-course][data-ok]"); pg.wait_for_timeout(150)
     cs = pg.evaluate("state.courses.find(c=>c.name==='三パターン場')")
     check("ヤードのパターン: 保存すると yards・yards2・yards3 と名前 A,B,C が残る", cs and cs["holes"][0].get("yards3") == 120 and cs["holes"][0].get("yards2") == 110 and cs["holes"][0].get("gn") == ["A", "B", "C"])
     check("ヤードのパターン: 保存後に開き直すと3つのまま", pg.evaluate("(()=>{const c=state.courses.find(c=>c.name==='三パターン場'); return courseGreens(c).join()})()") == "A,B,C")
@@ -996,7 +995,7 @@ with sync_playwright() as pw:
     pg.context.close()
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.v2": 1, "sc.presets": "0"})
     txt = pg.inner_text(".panel.empty")
-    check("コースがないときの案内: 説明文が正しく、ボタンは黒い丸ボタン（緑のグラデーションではない）", "コースの名前と、ホールごとのパーを入れると" in txt and pg.evaluate("(()=>{const e=document.querySelector('[data-act=goto-courses]'); return e.classList.contains('sl-go') && getComputedStyle(e).backgroundImage==='none'})()") and not errs)
+    check("コースがないときの案内: 説明文が正しく、ボタンは黒い丸ボタン（緑のグラデーションではない）", "コース名と各ホールのパーだけ" in txt and pg.evaluate("(()=>{const e=document.querySelector('[data-act=goto-courses]'); return e.classList.contains('sl-go') && getComputedStyle(e).backgroundImage==='none'})()") and not errs)
     pg.context.close()
 
     # 19p. 端末が本体・サーバーはバックアップ（2026-11-16 のバグ出しで見つかった不具合のチェック）
@@ -1236,6 +1235,21 @@ with sync_playwright() as pw:
     check("スコアカード入力: ゲームの行のホールは番号に色が付き、番号を押すと前のホールを直せる。印は表の中にも出る",
           hl1 == 1 and hl0 == 0 and pg.evaluate("JSON.stringify(state.cdraft.marks)") == '{"0":[1]}' and pg.evaluate("document.querySelectorAll('.cdt tbody tr:first-child .gmk').length") == 1 and pg.inner_text("tr.gin td.ft").startswith("1H") and not errs)
     pg.context.close()
+    # コース登録: 県・市の欄はない。ヤードが空のまま保存すると、止めて「ヤードを入れる／このまま保存する」を聞く
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.rounds": [], "sc.courses": [], "sc.tab": "\"courses\"", "sc.v2": 1}, offline=True)
+    C(pg, "[data-act=new-course]"); pg.wait_for_timeout(300); nopref = pg.query_selector("#c-pref") is None and pg.query_selector("#c-area") is None
+    pg.evaluate("state.courseEdit.name='ヤードなしコース'"); C(pg, "[data-act=save-course]"); pg.wait_for_timeout(200)
+    ask = pg.query_selector(".yask") is not None and pg.evaluate("!!state.courseEdit")
+    C(pg, "[data-act=yask-back]"); back = pg.query_selector(".yask") is None and pg.evaluate("!!state.courseEdit")
+    C(pg, "[data-act=save-course]"); pg.wait_for_timeout(200); C(pg, "[data-act=save-course][data-ok]"); pg.wait_for_timeout(300)
+    check("コース登録: 県・市の欄なし。ヤードが空なら保存の前に聞き、「このまま保存する」で保存できる", nopref and ask and back and pg.evaluate("!state.courseEdit && state.courses.some(c=>c.name==='ヤードなしコース')") and not errs)
+    pg.context.close()
+    # ラウンドがないとき: 分析の2つのボタンは同じ幅。分析と履歴は別の文
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.rounds": [], "sc.courses": c93, "sc.tab": "\"stats\"", "sc.v2": 1}, offline=True)
+    bw = pg.evaluate("[...document.querySelectorAll('.empty-b .btn')].map(e=>Math.round(e.getBoundingClientRect().width))"); t1 = pg.inner_text(".panel.empty strong")
+    C(pg, "nav.tabs [data-tab=history]"); t2 = pg.inner_text(".panel.empty strong")
+    check("ラウンドがないとき: 分析のボタン2つは同じ幅。分析と履歴の見出しは別", len(bw) == 2 and bw[0] == bw[1] and t1 != t2 and not errs)
+    pg.context.close()
     # 練習ラウンド: 履歴で印を付けると、分析・自己ベスト・ゴーストに入らない（履歴には「練習」の札つきで出る）
     PR = [{"id": f"p{i}", "player": "たろう", "courseId": "c1", "courseName": "テストコース", "date": f"2026-10-{10+i:02d}", "createdAt": 1000 + i,
            "holes": [{"par": 3, "strokes": 3 if i else 2, "putts": 1} for _ in range(3)]} for i in range(3)]
@@ -1322,9 +1336,9 @@ with sync_playwright() as pw:
         pg.evaluate("ocrApplyRes({cols:['Back'],holes:[[null],[null],[57],[70],[55],[63],[78],[89],[94]].map((y,i)=>({hole:i+1,par:3,yards:y})),totals:{par:27,yards:[702],first:[null],second:[null]}})"); pg.wait_for_timeout(300)
         check("写真読み取り: 抜けが2か所なら空欄の赤い枠", pg.input_value("#yd-0") == "" and pg.evaluate("document.querySelector('#yd-0').classList.contains('need')"))
         # 保存: 赤い枠が残っていたら、1回目は止めて確認を促し、2回目で保存する
-        pg.evaluate("state.courseEdit.name='テスト写真コース'"); C(pg, "[data-act=save-course]"); pg.wait_for_timeout(300)
+        pg.evaluate("state.courseEdit.name='テスト写真コース'"); C(pg, "[data-act=save-course]"); pg.wait_for_timeout(300); C(pg, "[data-act=save-course][data-ok]"); pg.wait_for_timeout(150)
         check("写真読み取り: 赤い枠が残ったまま保存を押すと、1回目はエラーで確認を促す", pg.evaluate("!!state.courseEdit") and "赤い枠" in pg.inner_text("#c-err"))
-        C(pg, "[data-act=save-course]"); pg.wait_for_timeout(500)
+        C(pg, "[data-act=save-course]"); pg.wait_for_timeout(500); C(pg, "[data-act=save-course][data-ok]"); pg.wait_for_timeout(150)
         check("写真読み取り: もう一度押すと保存される", pg.evaluate("!state.courseEdit"))
         C(pg, "[data-act=new-course]"); pg.wait_for_timeout(500)
         pg.evaluate("ocrApplyRes({cols:['L','R'],holes:[[97,95],[65,63],[null,123],[68,66],[101,118],[65,60],[85,76],[92,110],[103,120]].map((y,i)=>({hole:i+1,par:3,yards:y})),totals:{par:27,yards:[null,null],first:[null,null],second:[null,null]}})"); pg.wait_for_timeout(300)

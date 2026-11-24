@@ -2273,6 +2273,27 @@ select.sl-in option{direction:ltr}
 .alld-svg polyline{fill:none;stroke:#22A06B;stroke-opacity:.35;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
 .alld-svg circle{fill:#22A06B}
 .alld-note{font-size:13px!important;margin:6px 0 0}
+
+/* 2026-12-21 */
+.yask{border:1.5px solid #F2B01E;background:color-mix(in srgb,#F2B01E 10%,var(--paper));border-radius:14px;padding:12px 14px;margin:6px 0 4px}
+.yask b{display:block;font-size:15px}.yask p{margin:4px 0 10px;font-size:14px;line-height:1.6;color:var(--muted)}
+.yask-b{display:flex;gap:8px}.yask-b .btn{flex:1;min-height:46px;padding-left:4px;padding-right:4px}
+.empty-b{margin:14px auto 0;display:flex;flex-direction:column;gap:8px;width:min(260px,100%)}
+.empty-b .btn{width:100%}
+.cdt tbody tr.ghr td{background:color-mix(in srgb,#F2B01E 13%,var(--rec-surface))}
+.cdt tbody tr.ghr td.hn{background:#F2B01E}
+.cd-game .cdt tfoot tr.gin td{background:color-mix(in srgb,#F2B01E 13%,var(--rec-surface))}
+.cdt td.sel button{background:color-mix(in srgb,#22A06B 14%,transparent);box-shadow:inset 0 0 0 2px #22A06B}
+.cdt tfoot tr.gin td.ft{font-weight:900;font-size:17px}
+.alld-svg text{font-size:12.5px}.alld-svg text.d{font-size:11.5px}
+.alld-lg{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:6px;font-size:13px;color:var(--muted)}
+body[data-tab=stats] #main .alld-lg span{font-size:13px}
+.alld-lg span{display:inline-flex;align-items:center;gap:6px}
+.alld-lg .dot{width:8px;height:8px;border-radius:50%;background:#22A06B}
+.alld-lg .ln{width:22px;height:5px;border-radius:3px;background:rgba(34,160,107,.35)}
+.prac-note{margin:0;font-size:13px;color:var(--muted)}
+.rcard .actions .prac-b{margin-right:auto}
+.rcard .actions .prac-b.on{border-color:var(--turf);color:var(--turf)}
 </style>
 
 </head>
@@ -2403,7 +2424,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-20-1000";
+const BUILD = "2026-12-21-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3023,7 +3044,7 @@ function viewRecord(){
   }
   if(!d){
     if(state.mode==="connecting") return `<div class="panel empty">読み込み中…</div>`;
-    if(!pickableCourses().length) return `<div class="panel empty"><strong>まずコースを登録しましょう</strong>コースの名前と、ホールごとのパーを入れると、ラウンドの記録を始められます。${state.ocrReady?"<br>スコアカードの写真から入れることもできます。":""}<button class="sl-go sm" data-act="goto-courses">コースを登録する</button></div>`;
+    if(!pickableCourses().length) return `<div class="panel empty"><strong>はじめに、回るコースを登録します</strong>入れるのは、コース名と各ホールのパーだけです。${state.ocrReady?"<br>スコアカードの写真からも入れられます。":""}<button class="sl-go sm" data-act="goto-courses">コースを登録する</button></div>`;
     const last = LS.get("sc.player","");
     const pl = players();
     const mlist=matesList().map(x=>x.trim()).filter(Boolean);
@@ -3391,17 +3412,17 @@ const trendTotalOn = () => trendSameLen() && (state.trendTotal ?? (state.fCourse
 /* これまでの全ラウンド: 1ラウンド1つの点を、横に動かさず1画面に収める（15回より多いときだけ。多くなるほど点は小さくなる）。うすい線は前後の回をならした流れ */
 function allDots(){
   const rs=trendFull(); if(rs.length<=15) return "";
-  const perH=!trendSameLen(), v=rs.map(r=>{ const t=roundTotals(r); return perH ? t.diff/r.holes.length : t.diff; }), n=v.length;
-  const W=320,H=150,L=34,R=8,T=10,B=22, lo=Math.floor(Math.min(...v)), hi=Math.ceil(Math.max(...v)), span=Math.max(1,hi-lo);
+  const perH=!trendSameLen(), tot=trendTotalOn(), v=rs.map(r=>{ const t=roundTotals(r); return tot ? t.score : perH ? t.diff/r.holes.length : t.diff; }), n=v.length;
+  const W=320,H=156,L=36,R=8,T=10,B=24, lo=Math.floor(Math.min(...v)), hi=Math.ceil(Math.max(...v)), span=Math.max(1,hi-lo);
   const X=i=>L+(W-L-R)*(n===1?.5:i/(n-1)), Y=y=>T+(H-T-B)*(1-(y-lo)/span), rad=Math.max(1.5,Math.min(4,110/n));
   const k=Math.max(2,Math.round(n/12)), sm=v.map((_,i)=>{ const a=v.slice(Math.max(0,i-k),Math.min(n,i+k+1)); return a.reduce((p,c)=>p+c,0)/a.length; });
-  const fmt=y=>perH?(y>0?"+":y<0?"−":"±")+Math.abs(y):toPar(y), step=span<=4?1:span<=10?2:span<=24?5:10, ticks=[]; for(let y=Math.ceil(lo/step)*step;y<=hi;y+=step) ticks.push(y);
+  const fmt=y=>tot?String(y):perH?(y>0?"+":y<0?"−":"±")+Math.abs(y):toPar(y), step=span<=4?1:span<=10?2:span<=24?5:10, ticks=[]; for(let y=Math.ceil(lo/step)*step;y<=hi;y+=step) ticks.push(y);
   const md=r=>{ const [y,m,d]=(r.date||"").split("-"); return `${+y}/${+m}/${+d}`; };
   return `<div class="panel alld"><div class="sec"><em>ALL</em><span>これまでの全ラウンド</span><small class="alld-n">${n}回</small></div>
-    <svg class="alld-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="これまでの全ラウンドの対パー">${ticks.map(y=>`<line x1="${L}" x2="${W-R}" y1="${Y(y).toFixed(1)}" y2="${Y(y).toFixed(1)}" class="${y===0?"z":""}"/><text x="${L-6}" y="${(Y(y)+4).toFixed(1)}" text-anchor="end">${fmt(y)}</text>`).join("")}
+    <svg class="alld-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="これまでの全ラウンドの${tot?"打数":"対パー"}">${ticks.map(y=>`<line x1="${L}" x2="${W-R}" y1="${Y(y).toFixed(1)}" y2="${Y(y).toFixed(1)}" class="${!tot&&y===0?"z":""}"/><text x="${L-6}" y="${(Y(y)+4.5).toFixed(1)}" text-anchor="end">${fmt(y)}</text>`).join("")}
       <polyline points="${sm.map((y,i)=>X(i).toFixed(1)+","+Y(y).toFixed(1)).join(" ")}"/>${v.map((y,i)=>`<circle cx="${X(i).toFixed(1)}" cy="${Y(y).toFixed(1)}" r="${rad.toFixed(1)}"/>`).join("")}
       <text x="${L}" y="${H-5}" class="d">${md(rs[0])}</text><text x="${W-R}" y="${H-5}" text-anchor="end" class="d">${md(rs[n-1])}</text></svg>
-    <p class="muted alld-note">点が1ラウンド（${perH?"1ホールあたりの対パー":"対パー"}）。下にあるほど良いスコアです。</p></div>`;
+    <div class="alld-lg"><span><i class="dot"></i>1ラウンドの${tot?"打数":perH?"1ホールあたりの対パー":"対パー"}</span><span><i class="ln"></i>前後の回をならした流れ</span></div></div>`;
 }
 function filteredRounds(){
   let rs = rounds().slice().sort(byDate);
@@ -3414,9 +3435,9 @@ function filteredRounds(){
 }
 function viewStats(){
   const all = rounds();
-  const demoBand = state.demo ? `<div class="demo-band">デモデータを表示中です（保存はされていません）<button class="btn small" data-act="demo-off">自分のデータに戻る</button></div>` : "";
+  const demoBand = state.demo ? `<div class="demo-band">サンプルデータを表示中です（保存はされていません）<button class="btn small" data-act="demo-off">自分のデータに戻る</button></div>` : "";
   if(!all.length){
-    return `<div class="panel empty"><strong>まだラウンドがありません</strong>ラウンドを保存すると、パーオン率やパットの割合、ミスの傾向がここに出ます。<div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn primary" data-act="goto-record">ラウンドを記録する</button><button class="btn" data-act="demo-on">デモデータで見てみる</button></div></div>`;
+    return `<div class="panel empty"><strong>まだ分析できるラウンドがありません</strong>ラウンドを保存すると、スコアの推移やパーオン率、パットの割合がここに出ます。<div class="empty-b"><button class="btn primary" data-act="goto-record">ラウンドを記録する</button><button class="btn" data-act="demo-on">サンプルデータで見てみる</button></div></div>`;
   }
   state.fPlayer = me();
   if(!all.some(r=>r.player===state.fPlayer)) return `${demoBand}<button class="demo-link" data-act="demo-on">サンプルデータ（60ラウンド）で見てみる ›</button><div class="panel empty"><strong>まだ${esc(state.fPlayer)}さんのラウンドがありません</strong>ラウンドを保存すると、ここに分析が出ます。</div>`;
@@ -3649,9 +3670,9 @@ after.stats = () => {
 /* ----- 履歴 ----- */
 function mark(h){ return `<span class="mk3 m-${TONEH(h)}">${h.strokes}</span>`; }
 function viewHistory(){
-  const demoBand = state.demo ? `<div class="demo-band">デモデータを表示中です（保存はされていません）<button class="btn small" data-act="demo-off">自分のデータに戻る</button></div>` : "";
+  const demoBand = state.demo ? `<div class="demo-band">サンプルデータを表示中です（保存はされていません）<button class="btn small" data-act="demo-off">自分のデータに戻る</button></div>` : "";
   const all = rounds();
-  if(!all.length) return backupBar() + (state.mode==="connecting"?`<div class="panel empty">読み込み中…</div>`:`<div class="panel empty"><strong>まだラウンドがありません</strong>「記録」タブからラウンドを始めましょう。</div>`);
+  if(!all.length) return backupBar() + (state.mode==="connecting"?`<div class="panel empty">読み込み中…</div>`:`<div class="panel empty"><strong>まだラウンドの記録がありません</strong>保存したラウンドが、新しい順にここに並びます。</div>`);
   state.fPlayer = me();
   const mine = all.filter(r=>r.player===state.fPlayer);
   const hcs = (()=>{ const m=new Map(); mine.forEach(r=>{ if(r.courseId && !m.has(r.courseId)){ const c=courses().find(x=>x.id===r.courseId); m.set(r.courseId, (c&&c.name)||r.courseName||"（名前なし）"); } }); return [...m].map(([id,name])=>({id,name})).sort((a,b)=>a.name.localeCompare(b.name,"ja")); })();
@@ -3683,9 +3704,9 @@ function viewHistory(){
         <div class="sc-tot"><b><span class="st-n">${t.score}</span><small>(${toPar(t.diff)})</small></b></div>
       </button>
       ${open?`<div class="detail">${tables}${legend}${roundMates(r)}${state.demo?"":`<div class="memo-box">${r.memo?`<p class="memo-t">${esc(r.memo)}</p>`:""}<button class="memo-btn" data-act="memo-open" data-id="${r.id}">${r.memo?"メモを直す":"＋ メモを書く"}</button></div>
-        <div class="prac-box ${r.practice?"on":""}">${r.practice?`<span>練習ラウンドです。分析と自己ベストには入れていません。</span>`:""}<button class="memo-btn" data-act="prac-toggle" data-id="${r.id}">${r.practice?"ふつうのラウンドに戻す":"練習ラウンドにする（分析に入れない）"}</button></div>`}
+        ${r.practice?`<p class="prac-note">練習ラウンドです。分析と自己ベストには入れていません。</p>`:""}`}
         <button class="btn small one-go" data-act="one-round" data-id="${r.id}">このラウンドの分析を見る ›</button>
-        ${state.demo?"":`<div class="actions">${conf?`<span class="muted" style="font-size:13px;align-self:center">このラウンドを削除しますか？</span><button class="btn small" data-act="cancel-confirm">やめる</button><button class="btn small danger" data-act="del-round" data-id="${r.id}">削除する</button>`:`<button class="btn small" data-act="edit-round" data-id="${r.id}">編集</button><button class="btn small" data-act="ask-del-round" data-id="${r.id}">削除</button>`}</div>`}
+        ${state.demo?"":`<div class="actions">${conf?`<span class="muted" style="font-size:13px;align-self:center">このラウンドを削除しますか？</span><button class="btn small" data-act="cancel-confirm">やめる</button><button class="btn small danger" data-act="del-round" data-id="${r.id}">削除する</button>`:`<button class="btn small prac-b ${r.practice?"on":""}" data-act="prac-toggle" data-id="${r.id}" aria-pressed="${!!r.practice}">${r.practice?"練習をやめる":"練習にする"}</button><button class="btn small" data-act="edit-round" data-id="${r.id}">編集</button><button class="btn small" data-act="ask-del-round" data-id="${r.id}">削除</button>`}</div>`}
       </div>`:""}
     </div>`;
   }).join("");
@@ -3755,10 +3776,6 @@ function viewCourses(){
       </div>
       <div class="row" style="margin:12px 0 8px;justify-content:space-between;align-items:center"><span class="muted" style="font-size:13px">合計パー <b class="num" style="font-size:18px;color:var(--fg)">${sum(e.holes,h=>h.par)}</b></span>
         <span style="display:flex;gap:6px"><button class="btn small" data-act="allpar" data-p="3">全部パー3</button><button class="btn small" data-act="allpar" data-p="4">全部パー4</button></span></div>
-      <div class="row" style="margin:-2px 0 10px">
-        <div class="field" style="flex:0 1 150px"><label for="c-pref">都道府県</label><select id="c-pref"><option value="">選ぶ</option>${PREFS.map(p=>`<option ${p===e.pref?"selected":""}>${p}</option>`).join("")}</select></div>
-        <div class="field"><label for="c-area">市町村</label><input id="c-area" value="${esc(e.area||"")}" placeholder="例：宮崎市"></div>
-      </div>
       <div class="field np-field"><label>ヤードのパターン<small>（グリーンやティーが複数あるとき）</small></label><div class="npseg" role="group" aria-label="ヤードのパターン数">${[1,2,3,4].map(n=>`<button data-act="set-np" data-n="${n}" aria-pressed="${(e.np||1)===n}">${n===1?"なし":n+"つ"}</button>`).join("")}</div></div>
       ${(e.np||1)>1?`<div class="row gnames">${Array.from({length:e.np},(_,k)=>`<div class="field"><label for="c-g${k}">${k+1}つ目の名前</label><input id="c-g${k}" maxlength="6" value="${esc(e.gn[k])}"></div>`).join("")}</div>`:""}
       <div class="par-grid">${e.holes.map((h,i)=>`<div class="par-cell ${needP(h)?"need":""}"><div class="h">${i+1}H</div>
@@ -3766,6 +3783,7 @@ function viewCourses(){
         <input type="number" inputmode="numeric" class="${needY(h,0)?"need":""}" id="yd-${i}" data-yd="${i}" value="${h.yards||""}" placeholder="${(e.np||1)>1?esc(e.gn[0])+" ヤード":"ヤード"}" aria-label="${i+1}番ホールのヤード">
         ${Array.from({length:(e.np||1)-1},(_,j)=>`<input type="number" inputmode="numeric" class="${needY(h,j+1)?"need":""}" data-ydk="${i},${j+1}" value="${h[YK[j+1]]||""}" placeholder="${esc(e.gn[j+1])} ヤード" aria-label="${i+1}番ホールの${esc(e.gn[j+1])}のヤード">`).join("")}</div>`).join("")}</div>
       <div class="err" id="c-err"></div>
+      ${e.yAsk?`<div class="yask"><b>ヤードが入っていないホールがあります</b><p>ヤードは記録画面に出すための数字です。入れなくても記録と分析はできます。あとから入れることもできます。</p><div class="yask-b"><button class="btn" data-act="yask-back">ヤードを入れる</button><button class="btn primary" data-act="save-course" data-ok="1">このまま保存する</button></div></div>`:""}
       <div class="navrow"><button class="btn" data-act="cancel-course">キャンセル</button><button class="btn primary" data-act="save-course">保存する</button></div>
       ${ocrSheet()}
       ${state.holesSheet?holesSheet():""}
@@ -4316,10 +4334,12 @@ document.addEventListener("click", async ev => {
     case "cancel-course": state.courseEdit=null; render(); break;
     case "allpar": state.courseEdit.holes.forEach(x=>x.par=+b.dataset.p); render(); break;
     case "setpar": { const hh=state.courseEdit.holes[+b.dataset.i]; hh.par=+b.dataset.p; if(hh._n) hh._n.p=false; render(); break; }
+    case "yask-back": { const e=state.courseEdit; if(e){ e.yAsk=false; render(); } break; }
     case "save-course": {
       const e=state.courseEdit;
       if(!e.name.trim()){ $("#c-err").textContent="コース名を入れてください"; return; }
       if(!e.warned && e.holes.some(h=>needP(h)||(h._n&&h._n.y.some(Boolean)))){ e.warned=true; $("#c-err").textContent="赤い枠のところを、スコアカードで確かめてください。このままでよければ、もう一度「保存する」を押してください。"; const r=document.querySelector(".par-grid .need"); if(r) r.scrollIntoView({block:"center",behavior:"smooth"}); return; }
+      if(!e.yOk && !b.dataset.ok && e.holes.some(h=>!h.yards)){ e.yAsk=true; render(); const y=document.querySelector(".yask"); if(y) y.scrollIntoView({block:"center"}); return; }
       const c={ id:e.id, name:e.name.trim(), holes:e.holes.map(x=>{ const o={par:x.par, yards:x.yards||null}; for(let k=1;k<(e.np||1);k++) if(x[YK[k]]) o[YK[k]]=x[YK[k]]; return o; }), createdAt:e.createdAt||Date.now() };
       if((e.np||1)>1 && c.holes.some(x=>YK.slice(1).some(k=>x[k]))) c.holes[0].gn=e.gn.slice(0,e.np).map((n,i)=>n||GN_DEF[i]);
       if(e.pref) c.holes[0].pref=e.pref; if(e.area) c.holes[0].area=e.area;
