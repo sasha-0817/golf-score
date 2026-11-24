@@ -1208,6 +1208,14 @@ with sync_playwright() as pw:
         cells = pg.evaluate("[...document.querySelectorAll('tr.skr.gr td.c-s')].slice(0,3).map(e=>e.querySelector('svg')?'S':e.textContent.trim())")
         check(f"スコアカード入力（{lab}）: 計の下に人ごとのボタンが出て、押すと入る", lab in row and pg.evaluate("JSON.stringify(state.cdraft.marks)") == want and cells == (["1", "1", "0"] if g == "oneon" else ["S", "", ""]) and ("スネーク" in pg.inner_text("tr.skr.gr") if g == "snake" else True) and not errs)
         pg.context.close()
+    # スコアカード入力: 最後の人の打数を入れて選択が次のホールへ進んでも、ゲームの行（メダルなど）は今入れたホールのまま。次のホールの数字を入れたら、そちらに移る
+    pg, errs = open_page(b, {**GM, "sc.game": "\"olympic\"", "sc.inputMode": "\"card\"", "sc.fields": {"putts": False}}, offline=True); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    for v in ["3", "4", "3"]: C(pg, f'[data-act=cd-key][data-v="{v}"]')
+    a1 = (pg.evaluate("state.cdraft.sel.h"), pg.inner_text("tr.gin td.ft").split()[0])
+    C(pg, "[data-act=cd-key][data-v='4']"); a2 = pg.inner_text("tr.gin td.ft").split()[0]
+    C(pg, "[data-act=cd-cell][data-h='0'][data-i='1'][data-k='s']"); a3 = pg.inner_text("tr.gin td.ft").split()[0]
+    check("スコアカード入力: 全員の打数を入れたあとも、ゲームの行は入れ終わったホール（1H）のまま。次のホールを入れ始めると2Hに移り、前のホールのマスを押すと戻る", a1 == (1, "1H") and a2 == "2H" and a3 == "1H" and not errs)
+    pg.context.close()
     pg, errs = open_page(b, {"sc.v2": 1}, offline=True, repl={"const LS = {": "const LS = window.LS = {"})
     # 端末に保存できなかったとき（保存領域がいっぱいなど）は、だまって消えずに知らせる
     pg.evaluate("Storage.prototype.setItem=function(){ throw new Error('QuotaExceededError'); }; window.__r=LS.set('sc.rounds',[])"); pg.wait_for_timeout(200)
