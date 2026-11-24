@@ -1,8 +1,8 @@
 /* GOLF SC. service worker — 電波がなくても開けるようにする */
-const CACHE = "golfsc-v5";
+const CACHE = "golfsc-v6";
 const CORE = [
   "./", "./index.html", "./manifest.webmanifest",
-  "./icon.png", "./icon-192.png", "./icon-512.png", "./mark.png", "./ball.png",
+  "./icon.png", "./icon-192.png", "./icon-512.png", "./mark.png", "./ball.png", "./snake.png?v=1",
   "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js",
   "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js",
 ];

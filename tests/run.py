@@ -1194,9 +1194,9 @@ with sync_playwright() as pw:
     pg.context.close()
     pg, errs = open_page(b, {**GM, "sc.game": "\"snake\"", "sc.inputMode": "\"hole\""}, offline=True, repl={"function marksCalc(": "window.marksCalc=marksCalc; function marksCalc("})
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300); fill3(pg)
-    C(pg, '[data-act=mark-q][data-i="1"]'); h1 = pg.evaluate("[...document.querySelectorAll('.frow')].findIndex(r=>r.querySelector('.pt.snk svg'))")
+    C(pg, '[data-act=mark-q][data-i="1"]'); h1 = pg.evaluate("[...document.querySelectorAll('.frow')].findIndex(r=>r.querySelector('.pt.snk img'))")
     pg.evaluate("state.hole=1; render()"); n4 = pg.evaluate("document.querySelectorAll('[data-act=mark-q]').length"); C(pg, '[data-act=mark-q][data-i="2"]'); C(pg, '[data-act=mark-q][data-i="0"]')
-    h2 = pg.evaluate("[...document.querySelectorAll('.frow')].findIndex(r=>r.querySelector('.pt.snk svg'))")
+    h2 = pg.evaluate("[...document.querySelectorAll('.frow')].findIndex(r=>r.querySelector('.pt.snk img'))")
     pg.evaluate("state.hole=2; render()"); C(pg, "[data-act=finish]"); pg.wait_for_timeout(600); res = pg.inner_text(".rc-game") if pg.query_selector(".rc-game") else ""
     check("スネーク: どのホールでも押せて、3パットした人にヘビが移る（同じホールはあとに押した人）。結果に「たろう の負け」と回数",
           n4 == 3 and h1 == 1 and h2 == 0 and "スネーク" in res and "たろう の負け" in res and pg.evaluate("marksCalc({0:[1],1:[2,0]},3,[3,4,3],false).holder") == 0 and pg.evaluate("marksCalc({},3,[3,4,3],false).holder") == -1 and not errs)
@@ -1205,7 +1205,7 @@ with sync_playwright() as pw:
         pg, errs = open_page(b, {**GM, "sc.game": json.dumps(g), "sc.inputMode": "\"card\""}, offline=True); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
         row = pg.inner_text("tr.gin"); C(pg, '[data-act=cd-mark][data-i="1"]'); C(pg, '[data-act=cd-mark][data-i="0"]')
         want = '{"0":[1,0]}' if g == "oneon" else '{"0":[0]}'   # スネークは1ホールに1人だけ（あとに押した人に移る）
-        cells = pg.evaluate("[...document.querySelectorAll('tr.skr.gr td.c-s')].slice(0,3).map(e=>e.querySelector('svg')?'S':e.textContent.trim())")
+        cells = pg.evaluate("[...document.querySelectorAll('tr.skr.gr td.c-s')].slice(0,3).map(e=>e.querySelector('svg,img')?'S':e.textContent.trim())")
         check(f"スコアカード入力（{lab}）: 計の下に人ごとのボタンが出て、押すと入る", lab in row and pg.evaluate("JSON.stringify(state.cdraft.marks)") == want and cells == (["1", "1", "0"] if g == "oneon" else ["S", "", ""]) and ("スネーク" in pg.inner_text("tr.skr.gr") if g == "snake" else True) and not errs)
         pg.context.close()
     # スコアカード入力: 最後の人の打数を入れて選択が次のホールへ進んでも、ゲームの行（メダルなど）は今入れたホールのまま。次のホールの数字を入れたら、そちらに移る

@@ -2218,8 +2218,9 @@ select.sl-in option{direction:ltr}
 .rename-sheet .rn-msg{font-size:15px;line-height:1.7;color:var(--muted,#5B6661);margin:-4px 0 14px;text-align:center}
 .rename-sheet button.rn-yes{background:#22A06B;color:#fff;border-color:#22A06B;font-weight:800}
 .rename-sheet button.rn-other{background:none;border:0;color:var(--muted,#5B6661);font-size:14px;text-decoration:underline;min-height:40px;margin-top:6px}
-.pt.snk{display:flex;align-items:center;justify-content:center;gap:2px}.pt.snk svg,.gtag.snk svg{display:inline-block;vertical-align:-4px}
-.rs-snk svg{display:block}
+.pt.snk{display:flex;align-items:center;justify-content:center;gap:2px}.pt.snk img,.gtag.snk img{display:inline-block;vertical-align:-4px}
+.rs-snk img{display:block}
+.snk-img{object-fit:contain}.gm-ill img{display:block}.game-sheet .gm-ill img{width:38px;height:36px}.rp .sr-row2 b img{display:block;flex:none}
 .rp .sr-row2 b.sr-pt{font:700 14px/1 var(--f-body);white-space:nowrap}
 .badge.b-chip{background:#F2B01E;color:#3A2A00}
 </style>
@@ -2352,7 +2353,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-15-1000";
+const BUILD = "2026-12-16-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3788,7 +3789,7 @@ const GAME_ILL = {
   olympic: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${medalSVG(3,19,{x:1,y:21})}${medalSVG(2,19,{x:36,y:21})}${medalSVG(4,28,{x:14,y:0})}</svg></span>`,
   nearpin: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><ellipse cx="28" cy="35" rx="24" ry="7" fill="#7FCB8A"/><ellipse cx="28" cy="35" rx="15" ry="4.4" fill="#5DB56B"/><path d="M28 34V5" stroke="#1F3A68" stroke-width="2" stroke-linecap="round"/><path d="M28 5l14 5-14 5z" fill="#E5484D"/><ellipse cx="28" cy="35" rx="2.6" ry="1.2" fill="#1F3A68"/><circle cx="37" cy="34" r="3.2" fill="#fff" stroke="#9AA7B4" stroke-width=".8"/></svg></span>`,
   oneon: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><ellipse cx="28" cy="33" rx="25" ry="9" fill="#7FCB8A"/><ellipse cx="28" cy="33" rx="16" ry="5.6" fill="#5DB56B"/><path d="M38 31V8" stroke="#1F3A68" stroke-width="2" stroke-linecap="round"/><path d="M38 8l-12 4.500 12 4.500z" fill="#E5484D"/><circle cx="20" cy="31" r="4" fill="#fff" stroke="#1F3A68" stroke-width="1.200"/><circle cx="13" cy="12" r="8" fill="#F2B01E"/><text x="13" y="16.500" text-anchor="middle" font-size="12" font-weight="900" fill="#fff" font-family="Barlow Condensed,sans-serif">1</text></svg></span>`,
-  snake: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44"><ellipse cx="28" cy="37" rx="20" ry="6" fill="#2E9E5B"/><ellipse cx="28" cy="35.600" rx="12.500" ry="3" fill="#1F7F47"/><path d="M28 4C17 4 11.500 11 13.500 19.500c1.200 5 6 7 7.500 11.500l1 5h12l1-5c1.500-4.500 6.300-6.500 7.500-11.500C44.500 11 39 4 28 4z" fill="#2E9E5B"/><path d="M28 13c-4.200 0-6 3.600-5.200 8 .700 4 3 6.500 3.400 12.500l.300 2.500h3l.300-2.500c.400-6 2.700-8.500 3.400-12.500.800-4.400-1-8-5.200-8z" fill="#fff"/><path d="M24 22h8M24.600 25.500h6.800M25.500 29h5M26 32.500h4" stroke="#1F7F47" stroke-width="1.300" stroke-linecap="round"/><path d="M21.500 9.500c2-4 11-4 13 0 .600 4-2.500 7.500-6.500 8-4-.500-7.100-4-6.500-8z" fill="#1F7F47"/><path d="M23.800 10.600l3 1.300M32.200 10.600l-3 1.300" stroke="#F2B01E" stroke-width="1.7" stroke-linecap="round"/><path d="M28 17.500v3M28 20.500l-1.500 1.800M28 20.500l1.500 1.800" stroke="#E5484D" stroke-width="1.100" stroke-linecap="round" fill="none"/></svg></span>`,
+  snake: ()=>`<span class="gm-ill"><img class="snk-img" src="snake.png?v=1" width="46" height="44" alt=""></span>`,   // オーナーが選んだコブラの絵（snake.png。Gemini で作った画像から切り出した）
   peoriateam: ()=>GAME_ILL.peoria(),
   olympicteam: ()=>GAME_ILL.olympic(),
   teamsum: ()=>`<span class="gm-ill"><svg viewBox="0 0 56 44" width="56" height="44">${[[0,"#1F3A68","#fff"],[30,"#F2B01E","#1F3A68"]].map(([x,c,f])=>`<rect x="${x+1}" y="9" width="25" height="26" rx="6" fill="${c}"/>${[x+6.5,x+20.5].map(cx=>`<circle cx="${cx}" cy="17.5" r="2.6" fill="${f}"/><path d="M${cx-3.6} 27.5c0-3.4 1.6-5.6 3.6-5.6s3.6 2.2 3.6 5.6z" fill="${f}"/>`).join("")}<path d="M${x+11.2} 22h4.6M${x+13.5} 19.7v4.6" stroke="${f}" stroke-width="1.8" stroke-linecap="round"/>`).join("")}</svg></span>`,
@@ -3955,7 +3956,7 @@ function marksCalc(marks, P, pars, par3Only){ const n=Array(P).fill(0); let hold
   Object.entries(marks||{}).forEach(([h,a])=>{ if(par3Only && pars && pars[+h]!==3) return; a=(Array.isArray(a)?a:[]).filter(i=>i>=0&&i<P); a.forEach(i=>n[i]++); if(a.length && +h>=last){ last=+h; holder=a[a.length-1]; } });
   return {n, holder}; }
 const ONFLAG = on => `<svg class="pinflag ${on?"on":""}" viewBox="0 0 30 30" width="27" height="27" aria-hidden="true"><ellipse cx="15" cy="21" rx="13" ry="6" fill="#5DB56B"/><path d="M20 20V5" stroke="#1F3A68" stroke-width="1.800" stroke-linecap="round"/><path d="M20 5l-8 3 8 3z" fill="#E5484D"/><circle cx="10.500" cy="20.500" r="3.200" fill="#fff" stroke="#1F3A68" stroke-width="1"/></svg>`;
-const SNAKE = (on, sz=27) => `<svg class="pinflag ${on?"on":""}" viewBox="0 -6 56 56" width="${sz}" height="${sz}" aria-hidden="true"><ellipse cx="28" cy="37" rx="20" ry="6" fill="#2E9E5B"/><ellipse cx="28" cy="35.600" rx="12.500" ry="3" fill="#1F7F47"/><path d="M28 4C17 4 11.500 11 13.500 19.500c1.200 5 6 7 7.500 11.500l1 5h12l1-5c1.500-4.500 6.300-6.500 7.500-11.500C44.500 11 39 4 28 4z" fill="#2E9E5B"/><path d="M28 13c-4.200 0-6 3.600-5.200 8 .700 4 3 6.500 3.400 12.500l.300 2.500h3l.300-2.500c.400-6 2.700-8.500 3.400-12.500.800-4.400-1-8-5.200-8z" fill="#fff"/><path d="M21.500 9.500c2-4 11-4 13 0 .600 4-2.500 7.500-6.500 8-4-.500-7.100-4-6.500-8z" fill="#1F7F47"/><path d="M23.800 10.600l3 1.300M32.200 10.600l-3 1.300" stroke="#F2B01E" stroke-width="2.2" stroke-linecap="round"/></svg>`;   // 小さいボタン用（しま模様と舌は省く）
+const SNAKE = (on, sz=27) => `<img class="pinflag snk-img ${on?"on":""}" src="snake.png?v=1" width="${sz}" height="${sz}" alt="" aria-hidden="true">`;
 /* ニアピン: ホールごとに、グリーンに乗った人で一番ピンに近い1人がコイン1枚（誰も乗らなければなし）。pins={ホール番号:人の番号} */
 const PINFLAG = on => `<svg class="pinflag ${on?"on":""}" viewBox="0 0 30 30" width="27" height="27" aria-hidden="true"><defs><linearGradient id="pfg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF7A7A"/><stop offset="1" stop-color="#D6303B"/></linearGradient></defs><ellipse cx="15" cy="25.500" rx="14.500" ry="4.200" fill="#6CC47A"/><ellipse cx="15" cy="25.500" rx="9.500" ry="2.600" fill="#4FA85F"/><ellipse cx="11.500" cy="25.500" rx="2.600" ry="1.100" fill="#1F3A68"/><path d="M11.5 26V3.5" stroke="#1F3A68" stroke-width="2.2" stroke-linecap="round"/><path d="M12.7 4.100C15.600 3.200 18.600 5 21.500 4.300L19.800 7.400 21.500 10.500C18.600 11.200 15.600 9.400 12.700 10.300z" fill="url(#pfg)" stroke="#A81F2A" stroke-width=".9" stroke-linejoin="round"/><circle cx="22.500" cy="24.500" r="2.500" fill="#fff" stroke="#9AA7B4" stroke-width=".9"/></svg>`;
 /* パー3のホールだけ数える（パー4・5はニアピンなし） */
