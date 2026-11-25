@@ -2299,6 +2299,14 @@ body[data-tab=stats] #main .alld-lg span{font-size:13px}
 /* 2026-12-23: 全ラウンドの図は「直近5回の平均」のうすい緑の線（金の階段はやめた） */
 .alld-svg polyline{stroke:#22A06B;stroke-opacity:.35;stroke-width:5}
 .alld-lg .ln{background:rgba(34,160,107,.35);height:5px}
+
+/* 2026-12-24: 開始画面の「練習として回る」 */
+.sl-prac .sl-v{display:flex;align-items:center;justify-content:flex-end;gap:8px;overflow:visible}
+.sl-pn{font-size:13px;font-weight:500;color:var(--muted)}
+.sl-sw{flex:none;position:relative;width:44px;height:26px;border-radius:13px;background:#D5DAD7;transition:background .15s}
+.sl-sw::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+.sl-sw.on{background:var(--turf)}.sl-sw.on::after{transform:translateX(18px)}
+.rec-who .prac-tag{vertical-align:2px}
 </style>
 
 </head>
@@ -2429,7 +2437,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-23-1000";
+const BUILD = "2026-12-24-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2822,7 +2830,7 @@ function fillStars(){
 function resultOverlay(r){
   const t=roundTotals(r); const s=computeStats([r]);
   const others = state.rounds.filter(x=>x.player===r.player && x.courseId===r.courseId && x.id!==r.id && !x.practice);
-  const flag = others.length && t.diff < Math.min(...others.map(x=>roundTotals(x).diff)) ? "COURSE BEST!" : "";
+  const flag = !r.practice && others.length && t.diff < Math.min(...others.map(x=>roundTotals(x).diff)) ? "COURSE BEST!" : "";
   const n = k => s.dist[k];
   const [y,m,d] = r.date.split("-");
   const best = flag==="COURSE BEST!";
@@ -3004,7 +3012,7 @@ function fitCourseName(){
   if(!fits()){ const sp=courseSplit(name); e.innerHTML=esc(sp[0])+"<br>"+esc(sp[1]); e.style.fontSize="15px";
     if(!fits()){ e.textContent=name; e.style.whiteSpace="normal"; e.style.fontSize="14px"; e.style.wordBreak="break-all"; } }
 }
-const SLI={p:'<circle cx="11" cy="7" r="3.5"/><path d="M4 19c1-4 4-6 7-6s6 2 7 6"/>',d:'<rect x="3.5" y="5" width="15" height="13.5" rx="2.5"/><path d="M3.5 9.5h15M7.5 3v3.5M14.5 3v3.5"/>',f:'<path d="M7 19V3.5l9 3.5-9 3.5"/><ellipse cx="9" cy="19" rx="6" ry="1.6"/>',g:'<circle cx="11" cy="11" r="7.5"/><circle cx="11" cy="11" r="2.2"/>',m:'<circle cx="8" cy="8" r="3"/><circle cx="15.5" cy="9" r="2.4"/><path d="M2.5 18c.8-3.3 3-5 5.5-5s4.7 1.7 5.5 5M14 13.2c2.6-.3 4.6 1.3 5.5 4.3"/>',t:'<path d="M7 4h8v4a4 4 0 0 1-8 0zM7 5.5H4.5c0 2.5 1 4 3 4.3M15 5.5h2.5c0 2.5-1 4-3 4.3M11 12v4M7.5 18.5h7"/>'};
+const SLI={r:'<path d="M4 18.5h14M6 15l8.5-8.5 2.5 2.5L8.5 17.5 5.5 18z"/>',p:'<circle cx="11" cy="7" r="3.5"/><path d="M4 19c1-4 4-6 7-6s6 2 7 6"/>',d:'<rect x="3.5" y="5" width="15" height="13.5" rx="2.5"/><path d="M3.5 9.5h15M7.5 3v3.5M14.5 3v3.5"/>',f:'<path d="M7 19V3.5l9 3.5-9 3.5"/><ellipse cx="9" cy="19" rx="6" ry="1.6"/>',g:'<circle cx="11" cy="11" r="7.5"/><circle cx="11" cy="11" r="2.2"/>',m:'<circle cx="8" cy="8" r="3"/><circle cx="15.5" cy="9" r="2.4"/><path d="M2.5 18c.8-3.3 3-5 5.5-5s4.7 1.7 5.5 5M14 13.2c2.6-.3 4.6 1.3 5.5 4.3"/>',t:'<path d="M7 4h8v4a4 4 0 0 1-8 0zM7 5.5H4.5c0 2.5 1 4 3 4.3M15 5.5h2.5c0 2.5-1 4-3 4.3M11 12v4M7.5 18.5h7"/>'};
 const slIc=k=>`<svg class="sl-ic" viewBox="0 0 22 22" aria-hidden="true">${SLI[k]}</svg>`;
 function coursePickField(){
   const all = pickableCourses();
@@ -3067,6 +3075,7 @@ function viewRecord(){
       <div class="sl-group">
         <button class="sl-row sl-btn" data-act="open-mates">${slIc("m")}<span class="sl-l">一緒に回る</span><span class="sl-v ${mlist.length?"":"sl-none"}">${mlist.length?esc(mlist.join("・")):"なし"}</span><i aria-hidden="true">›</i></button>
         <button class="sl-row sl-btn" data-act="open-game">${slIc("t")}<span class="sl-l">ゲーム</span><span class="sl-v ${state.game?"":"sl-none"}">${state.game?`<span class="sl-pill-y">${esc(GAMES[state.game].name)}</span>`:"なし"}</span><i aria-hidden="true">›</i></button>
+        <button class="sl-row sl-btn sl-prac" data-act="prac-next" role="switch" aria-checked="${!!state.pracNext}">${slIc("r")}<span class="sl-l">練習として回る</span><span class="sl-v"><small class="sl-pn">分析に入れない</small><i class="sl-sw ${state.pracNext?"on":""}" aria-hidden="true"></i></span></button>
       </div>
       <div class="err" id="r-err"></div>
       <button class="sl-go sl-go-g" data-act="start">始める <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
@@ -3188,7 +3197,7 @@ function viewRecordDraft(d){
   return `<div class="rec rec2 ${multi?"multi":""} ${fields().tracer?"":"no-tracer"}">
     <div class="rec-top">
       <button class="icon-btn" data-act="ask-discard" aria-label="記録を閉じる">${ICON.x}</button>
-      <div class="rec-who"><b>${esc(d.player)}${(d.mates||[]).length?`<small> ほか${d.mates.length}人</small>`:""}</b><span>${esc(d.courseName)}・${esc(d.date.slice(5).replace("-","/"))}${d.editing?"・編集中":""}</span></div>
+      <div class="rec-who"><b>${d.practice?`<i class="prac-tag">練習</i>`:""}${esc(d.player)}${(d.mates||[]).length?`<small> ほか${d.mates.length}人</small>`:""}</b><span>${esc(d.courseName)}・${esc(d.date.slice(5).replace("-","/"))}${d.editing?"・編集中":""}</span></div>
       ${d.game?`<button class="icon-btn rule-btn" data-act="open-rules" data-v="${d.game}" aria-label="ゲームのルール">ルール</button>`:""}
       <button class="icon-btn card-btn" data-act="open-card" aria-label="スコアカードを見る"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16M15 4v16"/></svg></button>
       <button class="icon-btn gear-btn" data-act="open-fields" aria-label="記録する項目の設定">${ICON.gear}</button>
@@ -3258,7 +3267,7 @@ async function cardFinish(b, early){
   const miss=early?null:cardMissing(cd); if(miss){ cd.sel=miss.sel; if(cd.holes.length>9) cd.half=miss.sel.h<9?0:1; saveCDraft(); render(); toast(miss.msg); return; }
   const pOn=fields().putts, now=Date.now();
   const rs=cd.players.map((pl,k)=>{ const withP = cdP(k) && idxC.every(h=>pl.p[h]!=null); // パットを書かなかった人は putts 0（＝記録なし）で送る
-    return { id:k?uid():cd.id, card:true, player:pl.name, courseId:cd.courseId, courseName:cd.courseName, date:cd.date, createdAt:now+k, ...(partial?{nos:idxC.map(i=>i+1)}:{}),
+    return { id:k?uid():cd.id, card:true, player:pl.name, courseId:cd.courseId, courseName:cd.courseName, date:cd.date, createdAt:now+k, ...(cd.practice?{practice:true}:{}), ...(partial?{nos:idxC.map(i=>i+1)}:{}),
       holes:idxC.map(i=>({par:cd.holes[i].par, strokes:pl.s[i], putts:withP?pl.p[i]:0, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null})) }; });
   if(state.saving) return; state.saving=true; render();
   try{ await Promise.all(rs.map(r=>store.saveRound(r))); state.saving=false; }
@@ -3322,7 +3331,7 @@ function viewCard(cd){
   return `<div class="cd ${(inputRow||skinRow||gameRow||ghostRows)?"wg":""}">
     <div class="rec-top">
       <button class="icon-btn" data-act="ask-discard" aria-label="記録を閉じる">${ICON.x}</button>
-      <div class="rec-who"><b>${esc(cd.courseName)}</b></div>
+      <div class="rec-who"><b>${cd.practice?`<i class="prac-tag">練習</i>`:""}${esc(cd.courseName)}</b></div>
       ${cd.game?`<button class="cd-pt cd-rule" data-act="open-rules" data-v="${cd.game}">ルール</button>`:""}<button class="cd-pt" data-act="cd-putts" aria-pressed="${pOn}">パット${pOn?"あり":"なし"}</button>
     </div>
     ${two?`<div class="cd-tabs" role="group" aria-label="前半・後半">${["OUT 1–9","IN 10–"+N].map((l,k)=>`<button data-act="cd-half" data-v="${k}" aria-pressed="${half===k}">${l}</button>`).join("")}</div>`:""}
@@ -3411,7 +3420,11 @@ const PUTT_SEGS = s => [["チップイン",0,"--q-eagle"],["1パット",1,"--q-b
   .map(([label,k,tone])=>({label, n:s.putt[k], tone})).filter(x=>x.n>0);
 const DIST_SEGS = s => [["ホールインワン","hio","--q-hio"],["イーグル","eagle","--q-eagle"],["バーディ","birdie","--q-birdie"],["パー","par","--q-par"],["ボギー","bogey","--q-bogey"],["ダブルボギー","double","--q-double"],["トリプル以上","triple","--q-triple"]]
   .map(([label,k,tone])=>({label, n:s.dist[k], tone})).filter(x=>x.n>0);
-const trendFull = () => filteredRounds().filter(r=>!r.nos);
+const trendAllFull = () => filteredRounds().filter(r=>!r.nos);
+// ホール数のちがうラウンド（9Hと18Hなど）は同じ図に入れない: いちばん回数の多いホール数（同じ回数なら多い方）だけを使う
+const trendLen = () => { const c={}; trendAllFull().forEach(r=>{ c[r.holes.length]=(c[r.holes.length]||0)+1; }); let best=0; Object.keys(c).forEach(k=>{ if(c[k]>(c[best]||0) || (c[k]===c[best] && +k>best)) best=+k; }); return best; };
+const trendFull = () => { const L=trendLen(); return trendAllFull().filter(r=>r.holes.length===L); };
+const trendOther = () => trendAllFull().length - trendFull().length;
 const trendSameLen = () => new Set(trendFull().map(r=>r.holes.length)).size<=1;
 const trendTotalOn = () => trendSameLen() && (state.trendTotal ?? (state.fCourse!=="all"));   // 打数への切りかえは、回ったホール数がそろっているときだけ
 /* これまでの全ラウンド: 1ラウンド1つの点を、横に動かさず1画面に収める（15回より多いときだけ。多くなるほど点は小さくなる）。うすい線は前後の回をならした流れ */
@@ -3467,7 +3480,7 @@ function viewStats(){
   <div class="panel"><div class="sec"><em>RECENT</em><span>直近3ラウンド</span></div><div class="recent">${rs.slice(-3).reverse().map(r=>{ const t=roundTotals(r); const [y,m,d]=r.date.split("-");
       return `<div class="rr"><div class="rd"><small>${+m}/${+d}</small><b>${t.score}<i>(${toPar(t.diff)})</i></b></div><div class="rh">${r.holes.map(h=>`<span class="mk4 m-${TONEH(h)}" title="${h.strokes}"></span>`).join("")}</div></div>`; }).join("")}</div>
     <div class="mk-legend"><span><i class="mk4 m-eagle"></i>−2</span><span><i class="mk4 m-birdie"></i>−1</span><span><i class="mk4 m-par"></i>±0</span><span><i class="mk4 m-bogey"></i>+1</span><span><i class="mk4 m-double"></i>+2</span><span><i class="mk4 m-triple"></i>+3以上</span></div></div>
-  ${state.oneRound?"":`<div class="panel"><div class="sec"><em>TREND</em><span>スコアの推移</span>${trendSameLen()?`<div class="seg2" role="group" aria-label="表示">${[["diff","対パー"],["total","打数"]].map(([k,l])=>`<button data-act="trend-mode" data-v="${k}" aria-pressed="${(k==="total")===trendTotalOn()}">${l}</button>`).join("")}</div>`:""}</div><p class="trend-cap"></p><div class="tbox"><div class="tbox-ax"><canvas id="ch-score-ax" aria-hidden="true"></canvas></div><div class="tbox-sc"><div class="tbox-in"><canvas id="ch-score" aria-label="スコア推移"></canvas></div></div><div class="tbox-ref"><canvas id="ch-score-ref" aria-hidden="true"></canvas></div></div>${s.nPartial?`<p class="muted note-partial">途中で終わった${s.nPartial}回は含めていません</p>`:""}</div>${allDots()}`}
+  ${state.oneRound?"":`<div class="panel"><div class="sec"><em>TREND</em><span>スコアの推移</span>${trendSameLen()?`<div class="seg2" role="group" aria-label="表示">${[["diff","対パー"],["total","打数"]].map(([k,l])=>`<button data-act="trend-mode" data-v="${k}" aria-pressed="${(k==="total")===trendTotalOn()}">${l}</button>`).join("")}</div>`:""}</div><p class="trend-cap"></p><div class="tbox"><div class="tbox-ax"><canvas id="ch-score-ax" aria-hidden="true"></canvas></div><div class="tbox-sc"><div class="tbox-in"><canvas id="ch-score" aria-label="スコア推移"></canvas></div></div><div class="tbox-ref"><canvas id="ch-score-ref" aria-hidden="true"></canvas></div></div>${s.nPartial?`<p class="muted note-partial">途中で終わった${s.nPartial}回は含めていません</p>`:""}${trendOther()?`<p class="muted note-partial">${trendLen()}ホールのラウンドだけ（ほかのホール数の${trendOther()}回は含めていません）</p>`:""}</div>${allDots()}`}
   ${barsPanel("スコアの内訳",DIST_SEGS(s),fmtPct(s.parOrBetter),"%","パー以内",["--q-hio","--q-eagle","--q-birdie","--q-par"])}
 
 `:""}
@@ -4173,6 +4186,7 @@ document.addEventListener("click", async ev => {
     case "rename-other": { const a=state.renameAsk; state.renameAsk=null; if(!a) break; state.renameOk=a.to; render(); const st=$("[data-act=start]"); if(st) st.click(); break; }
     case "rename-no": { const a=state.renameAsk; state.renameAsk=null; if(a) state.sp=a.from; render(); break; }
     case "demo-off": state.demo=false; render(); break;
+    case "prac-next": state.pracNext=!state.pracNext; render(); break;
     case "start": {
       const p=$("#r-player").value.trim(), cid=$("#r-course").value, dt=state.sd||today();
       // 名前を変えて始めるとき: 今までの記録が「消えた」ように見えないよう、記録の名前も変えるかを聞く
@@ -4195,14 +4209,15 @@ document.addEventListener("click", async ev => {
       const mates=matesList().map(x=>x.trim()).filter(Boolean); LS.set("sc.mates",[0,1,2].map(i=>mates[i]||"")); state.mates=null; state.matesOpen=false; state.calOpen=false;
       if(state.game==="ghost" && gameFits("ghost",1+mates.length) && !ghostFor(cid,p)){ toast("このコースの過去の記録がないので、今回はゲームなしで記録します"); state.game=""; LS.set("sc.game",""); }
       if(state.game && !gameFits(state.game, 1+mates.length)) toast(`${GAMES[state.game].name}は${GAMES[state.game].n.replace("のみ","")}で遊ぶゲームなので、今回はゲームなしで記録します`);
+      const prac=!!state.pracNext; state.pracNext=false;   // 練習は、ラウンドごとに選ぶ（前回のまま残さない）
       if(state.im==="card"){
         const names=[p,...mates];
         const N=c.holes.length;
-        state.cdraft={ id:uid(), card:true, courseId:c.id, courseName:c.name, date:dt, holes:c.holes.map(x=>({par:x.par})), players:names.map(n=>({name:n, s:Array(N).fill(null), p:Array(N).fill(null)})), sel:{h:0,i:0,k:"s"}, game: gameFits(state.game, 1+mates.length) && state.game ? state.game : null, carry: !!state.skinCarry };
+        state.cdraft={ id:uid(), card:true, courseId:c.id, courseName:c.name, date:dt, holes:c.holes.map(x=>({par:x.par})), players:names.map(n=>({name:n, s:Array(N).fill(null), p:Array(N).fill(null)})), sel:{h:0,i:0,k:"s"}, game: gameFits(state.game, 1+mates.length) && state.game ? state.game : null, carry: !!state.skinCarry, ...(prac?{practice:true}:{}) };
         saveCDraft(); render(); break; }
       const gs=courseGreens(c), gi=gs ? (+($("#r-green")||{}).value||0) : 0;
       state.draft={ id:uid(), player:p, courseId:c.id, courseName:c.name, date:dt, gn:gs, holes:c.holes.map(x=>({par:x.par, yards:(gi&&x[YK[gi]])?x[YK[gi]]:(x.yards||null), ys:gs?gs.map((_,k)=>x[YK[k]]||null):null, gi, strokes:x.par, putts:2, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null, entered:false, sT:false, pT:false})),
-        mates: mates.map(n=>({name:n, s:c.holes.map(x=>x.par), p:c.holes.map(()=>2), t:[], pt:[]})), game: gameFits(state.game, 1+mates.length) && state.game ? state.game : null, carry: !!state.skinCarry }; // 同伴者は打数だけ（パーから増減）
+        mates: mates.map(n=>({name:n, s:c.holes.map(x=>x.par), p:c.holes.map(()=>2), t:[], pt:[]})), game: gameFits(state.game, 1+mates.length) && state.game ? state.game : null, carry: !!state.skinCarry, ...(prac?{practice:true}:{}) }; // 同伴者は打数だけ（パーから増減）
       state.hole=0; saveDraft(); render(); break;
     }
     case "hole": mark_entered(); state.slide = +b.dataset.i>state.hole?"l":"r"; state.hole=+b.dataset.i; saveDraft(); render(); break;
@@ -4224,11 +4239,11 @@ document.addEventListener("click", async ev => {
         if(fields().putts && d.holes.some(x=>x.pT===true)){ const i=d.holes.findIndex(x=>x.pT!==true); if(i>=0){ state.hole=i; saveDraft(); render(); toast(`パットが${i+1}Hで抜けています（全部入れるか、全部「入力」のままにしてください）`); return; } } }
       const anyP = d.editing || (fields().putts && idxF.some(i=>d.holes[i].pT===true));   // 編集のときは、パットの設定がOFFでも、もとのパットを消さない
       const oldR = d.editing ? (state.rounds.find(x=>x.id===d.id)||{}) : {}, oldMemo = oldR.memo;
-      const r={ id:d.id, player:d.player, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:d.createdAt||Date.now(), ...(oldMemo?{memo:oldMemo}:{}), ...(oldR.practice?{practice:true}:{}),
+      const r={ id:d.id, player:d.player, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:d.createdAt||Date.now(), ...(oldMemo?{memo:oldMemo}:{}), ...(oldR.practice||d.practice?{practice:true}:{}),
         ...(partial?{nos:idxF.map(i=>i+1)}:(d.editing&&Array.isArray(d.nos)&&d.nos.length===d.holes.length?{nos:d.nos}:{})),   // 途中で終わったラウンドを編集しても、ホール番号は残す
         holes:idxF.map(i=>d.holes[i]).map(x=>({par:x.par, strokes:x.strokes, putts:anyP?x.putts:0, dir:x.dir, bunker:!!x.bunker, ob:evs(x,"ob").length>0, pen:evs(x,"pen").length>0, tee:x.tee||null, club:x.club||null, aim:x.aim||null, dirOn:x.dirOn||null, teeOn:x.teeOn||null})) };
       state.saving=true; render(); rememberClubs(r);
-      const mr=(!d.editing && Array.isArray(d.mates)) ? d.mates.map((m,k)=>({ id:uid(), card:true, player:m.name, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:r.createdAt+k+1, ...(partial?{nos:idxF.map(i=>i+1)}:{}),
+      const mr=(!d.editing && Array.isArray(d.mates)) ? d.mates.map((m,k)=>({ id:uid(), card:true, ...(d.practice?{practice:true}:{}), player:m.name, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:r.createdAt+k+1, ...(partial?{nos:idxF.map(i=>i+1)}:{}),
         holes:idxF.map(i=>({par:d.holes[i].par, strokes:m.s[i], putts:0, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null})) })) : [];
       try{ await Promise.all([r,...mr].map(x=>store.saveRound(x))); state.saving=false;
         state.draft=null; saveDraft(); state.tab="history"; LS.set("sc.tab","history"); state.fPlayer=r.player; state.openRound=r.id; state.result=r; state.resultGroup=mr.length?[r,...mr]:null; state.resultAll=mr.length>0; state.resultGame=mr.length?d.game:null; state.resultGhost=d.game==="ghost"?(g=>g?{best:roundTotals(g).score}:null)(partial?null:ghostBest(d.player,d.courseId,d.holes.length,r.id)):null; state.resultCarry=!!d.carry; state.resultEx={medals:d.medals||{}, pins:d.pins||{}, marks:d.marks||{}, hidden:isPeoria(d.game)?peoriaHidden(idxF.length):null}; render(); }

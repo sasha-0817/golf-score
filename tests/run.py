@@ -752,7 +752,7 @@ with sync_playwright() as pw:
     pg, errs = open_page(b, {"sc.rounds": rs2, "sc.player": "\"たろう\"", "sc.tab": "\"stats\""}, offline=True)
     pg.wait_for_timeout(500)
     check("分析: ホール数が混ざっても青いカードは出ない", pg.query_selector(".hero-stat") is None)
-    check("推移: ホール数が混ざると、打数／対パーの切りかえは出ない", pg.query_selector("[data-act=trend-mode]") is None)
+    check("推移: ホール数が混ざるときは、いちばん多いホール数（18H）だけを図にして、切りかえも出る。外した回数を書く", pg.query_selector("[data-act=trend-mode]") is not None and "18ホールのラウンドだけ" in pg.inner_text("#main") and "1回は含めていません" in pg.inner_text("#main"))
     check("平均（混在）: エラーなし", not errs); pg.context.close()
     # ゴースト × スコアカード入力: ゴーストの打数（見ているホール）とここまでの差が出る
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": [], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"ghost\"", "sc.rounds": g1, "sc.fields": ALL}, offline=True)
@@ -983,7 +983,7 @@ with sync_playwright() as pw:
 
     # 19u. 日付（右寄せの値＋アプリの見た目のカレンダー）・コースがないときの案内
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": ["はなこ", "", ""], "sc.courses": cst, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.v2": 1, "sc.fields": dict(NONE)})
-    rights = pg.evaluate("[...document.querySelectorAll('.sl-row')].map(r=>r.querySelector('.sl-v')).filter(Boolean).map(e=>Math.round(e.getBoundingClientRect().right))")
+    rights = pg.evaluate("[...document.querySelectorAll('.sl-row:not(.sl-prac)')].map(r=>r.querySelector('.sl-v')).filter(Boolean).map(e=>Math.round(e.getBoundingClientRect().right))")
     C(pg, "[data-act=open-cal]"); pg.wait_for_timeout(100)
     cal = pg.evaluate("({days:document.querySelectorAll('.cal-d').length, on:[...document.querySelectorAll('.cal-d.on')].map(e=>e.textContent), today:document.querySelectorAll('.cal-d.today').length, ttl:document.querySelector('.cal-h b').textContent})")
     C(pg, "[data-act=cal-go]:last-of-type") or C(pg, ".cal-nav[aria-label='次の月']"); pg.wait_for_timeout(100)
@@ -1248,6 +1248,20 @@ with sync_playwright() as pw:
     C(pg, "nav.tabs [data-tab=history]"); t2 = pg.inner_text(".panel.empty strong")
     check("ラウンドがないとき: 分析のボタン2つは同じ幅。分析と履歴の見出しは別", len(bw) == 2 and bw[0] == bw[1] and t1 != t2 and not errs)
     pg.context.close()
+    # 開始画面の「練習として回る」: ONで始めると練習ラウンドとして保存され、分析に入らない。次のラウンドではOFFに戻る
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.rounds": [], "sc.courses": c93, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.inputMode": "\"card\"", "sc.fields": {"putts": False}, "sc.v2": 1}, offline=True, repl={"function ghostBest(": "window.filteredRounds=filteredRounds; function ghostBest("})
+    C(pg, "[data-act=prac-next]"); sw = pg.evaluate("document.querySelector('.sl-sw').classList.contains('on')")
+    pg.set_viewport_size({"width": 375, "height": 627}); pg.wait_for_timeout(200)
+    fit = pg.evaluate("document.querySelector('[data-act=start]').getBoundingClientRect().bottom <= document.querySelector('nav.tabs').getBoundingClientRect().top")
+    pg.set_viewport_size({"width": 375, "height": 667})
+    C(pg, "[data-act=start]"); pg.wait_for_timeout(300); tag = pg.query_selector(".rec-who .prac-tag") is not None
+    for v in "333": C(pg, f'[data-act=cd-key][data-v="{v}"]')
+    C(pg, "[data-act=cd-finish]"); pg.wait_for_timeout(700); C(pg, "[data-act=close-result]"); pg.wait_for_timeout(200)
+    saved = pg.evaluate("[state.rounds.length, state.rounds[0].practice===true, filteredRounds().length]")
+    C(pg, "nav.tabs [data-tab=record]"); pg.wait_for_timeout(200); off = pg.evaluate("document.querySelector('.sl-sw') && !document.querySelector('.sl-sw').classList.contains('on')")
+    check("開始画面の「練習として回る」: ONで始めると記録中に「練習」の札、保存は練習ラウンド（分析に入らない）。次はOFFに戻る。高さ627pxでも「始める」が見える",
+          sw and fit and tag and saved == [1, True, 0] and off and not errs)
+    pg.context.close()
     # 練習ラウンド: 履歴で印を付けると、分析・自己ベスト・ゴーストに入らない（履歴には「練習」の札つきで出る）
     PR = [{"id": f"p{i}", "player": "たろう", "courseId": "c1", "courseName": "テストコース", "date": f"2026-10-{10+i:02d}", "createdAt": 1000 + i,
            "holes": [{"par": 3, "strokes": 3 if i else 2, "putts": 1} for _ in range(3)]} for i in range(3)]
@@ -1485,7 +1499,7 @@ with sync_playwright() as pw:
     ga = pg.evaluate("(()=>{ const e=document.querySelector('#r-green'); if(!e||e.closest('[hidden]')) return null; const g=getComputedStyle(e); return [g.textAlignLast, g.direction, e.options.length]; })()")
     check("開始画面: グリーン（MG / SG）は、ほかの行と同じ右そろえ", ga is not None and ga[0] == "right" and ga[1] == "rtl" and ga[2] == 2 and not errs)
     k1 = pg.evaluate("(()=>{ const q=x=>document.querySelector(x), e=q('#r-green'), r=e.getBoundingClientRect(), gb=getComputedStyle(q('.sl-go')); return [[...document.querySelectorAll('.sl-sec b')].map(x=>x.textContent).join(','), document.querySelectorAll('.sl-ic').length, Math.round(r.height), getComputedStyle(e).backgroundColor, gb.backgroundImage.includes('gradient'), document.querySelectorAll('.start-list .sl-row:not([hidden])').length]; })()")
-    check("開始画面（K1）: ROUND / WITH の小見出し・行ごとの細い線の絵・MG は緑の札（高さ28px）・「始める」は緑のグラデーション", k1[0] == "ROUND,WITH" and k1[1] == 6 and k1[2] == 28 and k1[3] == "rgb(11, 107, 68)" and k1[4] and k1[5] == 6)
+    check("開始画面（K1）: ROUND / WITH の小見出し・行ごとの細い線の絵・MG は緑の札（高さ28px）・「始める」は緑のグラデーション", k1[0] == "ROUND,WITH" and k1[1] == 7 and k1[2] == 28 and k1[3] == "rgb(11, 107, 68)" and k1[4] and k1[5] == 7)
     pg.context.close()
     gc1 = [{"id": "g2", "name": "グリーン1つ", "holes": [{"par": 3, "yards": 100}] * 9, "createdAt": 1}]
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.courses": gc1, "sc.favs": ["g2"], "sc.lastCourse": "\"g2\"", "sc.v2": 1}, offline=True)
@@ -1500,7 +1514,7 @@ with sync_playwright() as pw:
     sp = pg.evaluate("""[["ファーツリーカントリークラブ","ファーツリー／カントリークラブ"],["日向シーサイドゴルフクラブ","日向シーサイド／ゴルフクラブ"],["直川カントリー倶楽部","直川／カントリー倶楽部"],["大野川ゴルフコース","大野川／ゴルフコース"],["東京相武CCショートコース","東京相武CC／ショートコース"],["光丘パブリックゴルフ場","光丘パブリック／ゴルフ場"],["青梅リバーサイドパーク","青梅／リバーサイドパーク"],["ゴルフパートナー千葉ショートコース","ゴルフパートナー／千葉ショートコース"],["学園ゴルフセンター ショートコース","学園ゴルフセンター／ショートコース"],["そうぶファミリーゴルフ","そうぶ／ファミリーゴルフ"],["グリーンヒルズ","グリーン／ヒルズ"],["東京相武カントリークラブショートコース","東京相武カントリークラブ／ショートコース"],["本宮パークカントリークラブ","本宮パーク／カントリークラブ"],["ゴルフステーション高山","ゴルフステーション／高山"],["シーサイドゴルフガーデン","シーサイド／ゴルフガーデン"],["つま恋リゾート彩の郷ゴルフ練習場","つま恋リゾート／彩の郷ゴルフ練習場"],["知多スポーツクラブトップス","知多スポーツクラブ／トップス"],["旭ヶ丘ゴルフリゾート","旭ヶ丘／ゴルフリゾート"]].map(x=>[courseSplit(x[0]).slice(0,2).join("／"), x[1]])""")
     check("開始画面: コース名の2行の切れ目は、言葉の区切り（カントリークラブ・ゴルフ場・ショートコースなど）。目印がなければまん中", all(x[0] == x[1] for x in sp))
     pg.context.close()
-    check("開始画面: グリーンが1つのコースでは「グリーン」の行は出ない（5行）。「始める」はタブの上に出る", k2[0] and k2[1] == 5 and k2[2] and not errs)
+    check("開始画面: グリーンが1つのコースでは「グリーン」の行は出ない（6行）。「始める」はタブの上に出る", k2[0] and k2[1] == 6 and k2[2] and not errs)
     pg.context.close()
     # 幅320px（iPhone の拡大表示）: カレンダーの土曜が切れない・「始める」が隠れたままにならない
     pg, errs = open_page(b, {**TL, "sc.mates": ["はなこ", "じろう", ""]}, offline=True)
