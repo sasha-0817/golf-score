@@ -2311,6 +2311,14 @@ body[data-tab=stats] #main .alld-lg span{font-size:13px}
 /* 2026-12-25: 練習の行は ROUND のまとまりに。説明は行の中の小さな文 */
 .sl-prac .sl-l small{display:block;font-size:13px;font-weight:500;color:var(--muted);white-space:normal;line-height:1.3}
 .sl-prac .sl-l{white-space:normal}
+
+/* 2026-12-26: スコアカード入力は9ホールなら上下に動かさず収める／ホール番号はボタン（iPhoneで確実に押せる）／コブラの影なし／練習の説明は薄く */
+.cd-scroll.fit .cdt tbody td button{height:var(--cdh)!important}
+.cd-scroll.still{overflow:hidden}.cd-scroll{overscroll-behavior:contain}
+.cdt td.hn button.hbtn{font:inherit;color:inherit;letter-spacing:inherit}
+.snk-img.pinflag.on{filter:none}
+.cd-game tr.skr td.ft{color:#8A5F00!important;font-weight:800}
+.sl-prac .sl-l small{color:color-mix(in srgb,var(--muted) 80%,transparent)}
 </style>
 
 </head>
@@ -2441,7 +2449,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-25-1000";
+const BUILD = "2026-12-26-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3342,7 +3350,7 @@ function viewCard(cd){
     <div class="cd-scroll"><table class="cdt ${pOn?"wp":""}">${colg}
       <thead><tr><th rowspan="${pOn?2:1}">H</th><th rowspan="${pOn?2:1}">PAR</th>${cd.players.map((p,i)=>`<th class="nm ${tcl(i)} ${[...String(dupLabel(cd.players.map(x=>x.name),i))].length>=5?"long":""}" colspan="${cwOf(i)}">${esc(dupLabel(cd.players.map(x=>x.name),i))}</th>`).join("")}${gTh}${padTh}</tr>
       ${pOn?`<tr class="sub">${cd.players.map((p,i)=>cdP(i)?`<th class="c-s ${tcl(i)}">打数</th><th class="ptl ${tcl(i)}">PUTT</th>`:`<th class="c-s ${tcl(i)}">打数</th>`).join("")}${gSub}${padSub}</tr>`:""}</thead>
-      <tbody>${rows.map(h=>`<tr class="${hasGin&&h===gh?"ghr":""}"><td class="hn" ${hasGin?`data-act="cd-gh" data-h="${h}" role="button" aria-label="${h+1}番ホールのゲームを入れる"`:""}>${h+1}</td><td class="pr">${cd.holes[h].par}</td>${cd.players.map((p,i)=>cell(h,i,"s")+(cdP(i)?cell(h,i,"p"):"")).join("")}${gTd(h)}${padTd}</tr>`).join("")}</tbody>
+      <tbody>${rows.map(h=>`<tr class="${hasGin&&h===gh?"ghr":""}"><td class="hn">${hasGin?`<button class="hbtn" data-act="cd-gh" data-h="${h}" aria-label="${h+1}番ホールのゲームを入れる">${h+1}</button>`:h+1}</td><td class="pr">${cd.holes[h].par}</td>${cd.players.map((p,i)=>cell(h,i,"s")+(cdP(i)?cell(h,i,"p"):"")).join("")}${gTd(h)}${padTd}</tr>`).join("")}</tbody>
       <tfoot>${two?foot(half?"IN":"OUT",rows,"",FH)+foot("計",all,"all",0):foot("計",all,"",0)}</tfoot></table></div>
     ${(inputRow||skinRow||gameRow||ghostRows)?`<div class="cd-game"><table class="cdt cdg ${pOn?"wp":""}">${colg}<tfoot>${inputRow}${skinRow}${gameRow}${ghostRows}</tfoot></table></div>`:""}
     <div class="cd-pad">
@@ -3354,7 +3362,13 @@ function viewCard(cd){
     ${state.confirm==="discard"?`<div class="sheet-back" data-act="cancel-confirm"><div class="sheet" data-stop="1"><p>ラウンドを中断しますか？</p>${earlyBtn("cd-finish-early", cd.holes.filter((_,i)=>cd.players.every(p=>p.s[i]!=null)).length, cd.holes.length, false)}<button data-act="cd-pause">中断してホームへ（あとで続きから）</button><button data-act="cancel-confirm">入力に戻る</button><button class="danger quiet" data-act="cd-discard">記録を破棄する</button></div></div>`:""}
   </div>`;
 }
-function cardAfter(){ const c=$(".cdt td.sel"), box=$(".cd-scroll"); if(!c||!box) return;
+function cardFit(){   // 9ホールは、画面が低くても上下に動かさずに収める（行の高さを縮める。収まらないほど低いときだけ中で動く）
+  const box=$(".cd-scroll"); if(!box) return; const bt=box.querySelectorAll("tbody tr"), b0=box.querySelector("tbody td button"); if(!bt.length||!b0) return;
+  const extra=box.scrollHeight-box.clientHeight;
+  if(extra>1){ const h0=b0.offsetHeight, nh=Math.max(24,h0-Math.ceil(extra/bt.length)); box.style.setProperty("--cdh",nh+"px"); box.classList.add("fit"); }
+  box.classList.toggle("still", box.scrollHeight-box.clientHeight<=1); }
+if(!window.__cdFitBound){ window.__cdFitBound=1; window.addEventListener("resize",()=>{ if(state.cdraft && !state.cdraft.paused) render(); }); }
+function cardAfter(){ cardFit(); const c=$(".cdt td.sel"), box=$(".cd-scroll"); if(!c||!box) return;
   const cb=c.getBoundingClientRect(), bb=box.getBoundingClientRect(), head=(box.querySelector("thead")||{}).offsetHeight||0, foot=(box.querySelector("tfoot")||{}).offsetHeight||0;
   if(cb.top<bb.top+head) box.scrollTop-= (bb.top+head-cb.top); else if(cb.bottom>bb.bottom-foot) box.scrollTop+= (cb.bottom-(bb.bottom-foot)); }
 /* くわしく記録の途中でも見られるスコアカード（自分＋同伴者、今のホールまで） */

@@ -1236,6 +1236,15 @@ with sync_playwright() as pw:
     check("スコアカード入力: ゲームの行のホールは番号に色が付き、番号を押すと前のホールを直せる。印は表の中にも出る",
           hl1 == 1 and hl0 == 0 and pg.evaluate("JSON.stringify(state.cdraft.marks)") == '{"0":[1]}' and pg.evaluate("document.querySelectorAll('.cdt tbody tr:first-child .gmk').length") == 1 and pg.inner_text("tr.gin td.ft").startswith("1H") and not errs)
     pg.context.close()
+    # スコアカード入力（9ホール）: 画面が低くても表は上下に動かず収まる。ホール番号は本物のボタンで、押すとゲームの行がそのホールになる
+    c9h = [{"id": "c1", "name": "九ホール", "holes": [{"par": 3}] * 9, "createdAt": 1}]
+    pg, errs = open_page(b, {**GM, "sc.courses": c9h, "sc.game": "\"snake\"", "sc.inputMode": "\"card\""}, offline=True); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    pg.set_viewport_size({"width": 375, "height": 600}); pg.wait_for_timeout(300); C(pg, '[data-act=cd-key][data-v="4"]')
+    fit = pg.evaluate("(()=>{const e=document.querySelector('.cd-scroll');return e.scrollHeight-e.clientHeight})()")
+    pg.locator('button.hbtn[data-h="2"]').click(); pg.wait_for_timeout(200)
+    hl = pg.evaluate("[...document.querySelectorAll('.cdt tbody tr')].findIndex(r=>r.classList.contains('ghr'))")
+    check("スコアカード入力（9H）: 高さ600pxでも表は動かず収まる。ホール番号（ボタン）を押すとゲームの行が動く", fit <= 1 and hl == 2 and pg.evaluate("document.documentElement.classList.contains('noscroll')") and not errs)
+    pg.context.close()
     # コース登録: 県・市の欄はない。ヤードが空でも、聞かずにそのまま保存できる
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.rounds": [], "sc.courses": [], "sc.tab": "\"courses\"", "sc.v2": 1}, offline=True)
     C(pg, "[data-act=new-course]"); pg.wait_for_timeout(300); nopref = pg.query_selector("#c-pref") is None and pg.query_selector("#c-area") is None
