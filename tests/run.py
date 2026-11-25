@@ -251,6 +251,8 @@ with sync_playwright() as pw:
     rs = pg.evaluate("__db.rounds.map(r=>({p:r.player,s:r.holes.reduce((a,h)=>a+h.strokes,0),pt:r.holes.reduce((a,h)=>a+h.putts,0),n:r.holes.length}))")
     check("スコアカード: 4人分が別々のラウンドで保存", sorted(x["p"] for x in rs) == sorted(["たろう", "はなこ", "じろう", "さぶろう"]) and all(x["n"] == 9 for x in rs))
     check("スコアカード: パットを書かなかった人は putts 0（記録なし）", {x["p"]: x["pt"] > 0 for x in rs} == {"たろう": True, "はなこ": False, "じろう": False, "さぶろう": False})
+    check("みんなのリザルト: 名前が2行の人がいても、順位の丸・合計の数字は全員同じ高さ",
+          pg.evaluate("new Set([...document.querySelectorAll('table.v1 .v1c .rc-rk')].map(e=>Math.round(e.getBoundingClientRect().top))).size") == 1 and pg.evaluate("new Set([...document.querySelectorAll('table.v1 .v1c b')].map(e=>Math.round(e.getBoundingClientRect().top))).size") == 1)
     check("スコアカード: 保存後はみんなのリザルト（順位は縦の表の見出しに・全員のスコア）", pg.query_selector(".grp-card") is not None and pg.evaluate("document.querySelectorAll('table.v1 .v1c').length") == 4)
     check("スコアカード: リザルトで「みんな」＋4人を切りかえられる", pg.evaluate("document.querySelectorAll('.rc-who button').length") == 5 and C(pg, '.rc-who button:nth-child(3)') and pg.evaluate("state.result.player") == "はなこ")
     check("リザルト: 2回目からは出てくるアニメーションをくり返さない（点滅しない）", "still" in pg.evaluate("document.querySelector('.result-back').className"))
@@ -1244,6 +1246,12 @@ with sync_playwright() as pw:
     pg.locator('button.hbtn[data-h="2"]').click(); pg.wait_for_timeout(200)
     hl = pg.evaluate("[...document.querySelectorAll('.cdt tbody tr')].findIndex(r=>r.classList.contains('ghr'))")
     check("スコアカード入力（9H）: 高さ600pxでも表は動かず収まる。ホール番号（ボタン）を押すとゲームの行が動く", fit <= 1 and hl == 2 and pg.evaluate("document.documentElement.classList.contains('noscroll')") and not errs)
+    pg.context.close()
+    # スコアカード入力: 長い名前（2行）の見出しは高さに余裕があり切れない。チーム戦のポイントはA・Bで色が分かれる
+    pg, errs = open_page(b, {**GM, "sc.mates": ["体操きんたろう", "たろう", "川越大生"], "sc.game": "\"vegas\"", "sc.inputMode": "\"card\""}, offline=True); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+    hh = pg.evaluate("[...document.querySelectorAll('.cdt thead th.nm')].map(e=>[Math.round(e.getBoundingClientRect().height), e.scrollHeight<=e.clientHeight+1])")
+    bgs = pg.evaluate("[...document.querySelectorAll('.cd-game tr.skr td.c-s')].map(e=>getComputedStyle(e).backgroundColor)")
+    check("スコアカード入力: 長い名前の見出しは高さ40px以上で切れない。チーム戦のポイントはA・Bで色がちがう", all(h[0] >= 40 and h[1] for h in hh) and len(bgs) == 2 and bgs[0] != bgs[1] and not errs)
     pg.context.close()
     # コース登録: 県・市の欄はない。ヤードが空でも、聞かずにそのまま保存できる
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.rounds": [], "sc.courses": [], "sc.tab": "\"courses\"", "sc.v2": 1}, offline=True)

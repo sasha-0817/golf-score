@@ -2319,6 +2319,17 @@ body[data-tab=stats] #main .alld-lg span{font-size:13px}
 .snk-img.pinflag.on{filter:none}
 .cd-game tr.skr td.ft{color:#8A5F00!important;font-weight:800}
 .sl-prac .sl-l small{color:color-mix(in srgb,var(--muted) 80%,transparent)}
+
+/* 2026-12-27: 結果の順位の丸は同じ高さに／推移の文字はグラフと同じ書体／スコアカード入力の長い名前は高さに余裕／ポイントの行は白地にうすい金（チームはA紺・B金） */
+.rc-sc table.v1 tr.v1head td.v1c{vertical-align:top}
+.alld-svg text{font-family:var(--f-body);font-weight:400}
+.cd.hasl .cdt thead th.nm{height:42px}.cd.hasl .cdt thead tr.sub th{top:42px}
+.cd.hasl .cdt thead th.nm.long{max-height:none;font-size:14px;line-height:1.2}
+.cd-game .cdt tfoot tr.gin td{background:color-mix(in srgb,#F2B01E 9%,#fff)}
+.cd-game .cdt tfoot tr.skr td.c-s,.cd-game .cdt tfoot tr.skr td.ft{background:color-mix(in srgb,#F2B01E 20%,#fff);color:#8A5F00}
+.cd-game .cdt tfoot tr.skr td.c-s b{color:#8A5F00;opacity:1}
+.cd-game .cdt tfoot tr.skr td.c-s.tmA{background:color-mix(in srgb,#1F3A68 12%,#fff);color:#1F3A68}
+.cd-game .cdt tfoot tr.skr td.c-s.tmB{background:color-mix(in srgb,#F2B01E 28%,#fff);color:#8A5F00}
 </style>
 
 </head>
@@ -2449,7 +2460,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-26-1000";
+const BUILD = "2026-12-27-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3340,7 +3351,7 @@ function viewCard(cd){
   const done=cd.players.every(p=>p.s.every(x=>x!=null)); // 打数が全部入ったら保存ボタンを出す（パットの抜けは押したときに案内）
   const key=(v,lab,dis)=>`<button data-act="cd-key" data-v="${v}" ${dis?"disabled":""} aria-label="${lab}">${lab}</button>`;
   const ks = sel ? sel.k : "s";
-  return `<div class="cd ${(inputRow||skinRow||gameRow||ghostRows)?"wg":""}">
+  return `<div class="cd ${(inputRow||skinRow||gameRow||ghostRows)?"wg":""} ${cd.players.some(p=>[...String(p.name)].length>=5)?"hasl":""}">
     <div class="rec-top">
       <button class="icon-btn" data-act="ask-discard" aria-label="記録を閉じる">${ICON.x}</button>
       <div class="rec-who"><b>${cd.practice?`<i class="prac-tag">練習</i>`:""}${esc(cd.courseName)}</b></div>
