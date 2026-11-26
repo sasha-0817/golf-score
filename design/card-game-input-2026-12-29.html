@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>スコアカード入力のゲームの入れ方 10案</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+:root{--fb:"Zen Kaku Gothic New",sans-serif;--fn:"Barlow Condensed",sans-serif;--line:#DDE3DE;--mut:#6B756F;--fg:#12201A;--gold:#F2B01E;--turf:#22A06B}
+*{box-sizing:border-box}body{margin:0;background:#F4F6F4;color:var(--fg);font-family:var(--fb);padding:20px 16px 40px}
+h1{font-size:22px;margin:0 0 4px}p.lead{margin:0 0 18px;color:var(--mut);font-size:14px;max-width:900px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:26px 20px;max-width:1500px}
+.card h2{font-size:17px;margin:0 0 2px;display:flex;gap:8px;align-items:center}
+.card h2 b{font:700 15px var(--fn);background:var(--fg);color:#fff;border-radius:8px;padding:2px 8px;letter-spacing:.04em}
+.card h2 em{font-style:normal;font-size:12px;background:#FFE9A8;color:#6A4A00;border-radius:999px;padding:1px 8px}
+.card p{margin:0 0 8px;font-size:13px;color:var(--mut);line-height:1.5;min-height:58px}
+.ph{width:340px;background:#EEF1EE;border-radius:24px;padding:10px;border:1px solid #CBD3CD;position:relative;overflow:hidden}
+.top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.top i{width:32px;height:32px;border-radius:50%;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-style:normal;font-size:15px}
+.top b{flex:1;font-size:15px}.top span{font-size:12px;font-weight:700;background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 10px;color:var(--mut)}
+.box{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th,td{border-bottom:1px solid var(--line);text-align:center;padding:0;height:27px}
+th{background:#EEF2EE;font-size:13px;font-weight:700;height:30px}th.s{font:600 11px var(--fn);color:var(--mut);height:16px}
+td,th{border-left:1px solid var(--line)}tr>:first-child{border-left:0}
+td.h{font:700 17px var(--fn)}td.p{font:600 16px var(--fn);color:var(--mut)}td.c{font:700 17px var(--fn)}
+col.h{width:26px}col.p{width:30px}col.m{width:27px}col.e{width:34px}
+tr.cur td{background:#FDF3DC}tr.ft td{background:#EEF2EE;font:700 17px var(--fn);height:30px;border-bottom:0}tr.ft td.l{font:700 13px var(--fb)}
+td.sel{box-shadow:inset 0 0 0 2px var(--turf);background:#E1F3EA!important}
+.mk{display:inline-grid;place-items:center;width:21px;height:21px;line-height:1}
+.mk.bi{border:2px solid #2F6FE0;border-radius:50%;color:#2F6FE0}.mk.bo{border:2px solid #F08A24;border-radius:3px;color:#F08A24}
+.mk.ea{border:2px solid #1F3A8A;border-radius:50%;color:#1F3A8A;box-shadow:0 0 0 2px #fff,0 0 0 3.5px #1F3A8A;width:17px;height:17px;font-size:14px}
+.md{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;font:700 12px var(--fn);font-style:normal;color:#fff;box-shadow:inset 0 0 0 2px rgba(255,255,255,.45);vertical-align:middle}
+.md.m1{background:#7A848C}.md.m2{background:#C27A44}.md.m3{background:#AEB6BF}.md.m4{background:#E5B01E}.md.m5{background:#4FC3EC}
+.md.sm{width:15px;height:15px;font-size:10px;box-shadow:none}.md.lg{width:30px;height:30px;font-size:17px}
+.md.no{background:#fff;color:#B3BBB5;box-shadow:inset 0 0 0 1.5px #C9D1CB;border-radius:50%}
+.slot{display:inline-grid;place-items:center;width:18px;height:18px;border:1.5px dashed #C0C8C2;border-radius:50%;color:#B3BBB5;font:700 12px var(--fn);font-style:normal;vertical-align:middle}
+.two{display:inline-flex;align-items:center;gap:4px}
+.keys{margin-top:8px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:7px;display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.keys b{height:38px;border-radius:10px;background:#EEF1EE;border:1px solid var(--line);display:grid;place-items:center;font:700 19px var(--fn)}
+.keys b.j{font:700 13px var(--fb)}.keys.fade{opacity:.35}
+.pan{margin-top:8px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:9px 10px}
+.pan h4{margin:0 0 6px;font-size:14px;display:flex;align-items:center;gap:6px}.pan h4 small{font-weight:500;color:var(--mut);font-size:12px}
+.pan h4 b{font:700 15px var(--fn);background:#FDE7AE;color:#6A4A00;border-radius:6px;padding:0 6px}
+.prow{display:flex;align-items:center;gap:6px;padding:4px 0;border-top:1px solid #EEF1EE}.prow:first-of-type{border-top:0}
+.prow span{flex:1;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden}
+.opt{display:flex;gap:4px}.opt i{font-style:normal}
+.opt .md,.opt .x{width:28px;height:28px;font-size:15px;opacity:.38}.opt .on{opacity:1;box-shadow:0 0 0 2px #fff,0 0 0 4px var(--fg)}
+.opt .x{display:inline-grid;place-items:center;border-radius:50%;background:#EEF1EE;color:var(--mut);font:700 13px var(--fb)}
+.go{margin-top:8px;height:38px;border-radius:999px;background:var(--fg);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+.go.g{background:linear-gradient(90deg,#22A06B,#1F9AA0)}
+.grow{margin-top:8px;display:grid;grid-template-columns:56px repeat(4,1fr);background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.grow>div{display:grid;place-items:center;height:40px;border-left:1px solid var(--line);font:700 18px var(--fn)}.grow>div:first-child,.grow>div:nth-child(5n+1){border-left:0}
+.grow .l{font:700 12px var(--fb);color:#8A5F00;line-height:1.15;text-align:center}.grow .l b{display:block;font:700 15px var(--fn)}
+.grow.inp>div{background:#FEF8E8}.grow .pt{background:#FDEFC8;color:#8A5F00;border-top:1px solid var(--line)}
+.btn{display:inline-grid;place-items:center;min-width:44px;height:30px;border-radius:8px;border:1.5px solid #D9C27A;background:#fff}
+.btn.e{border-color:var(--line);color:#B3BBB5}
+.pop{position:absolute;background:#fff;border-radius:14px;box-shadow:0 8px 26px rgba(0,0,0,.28);padding:8px;display:flex;gap:6px;z-index:5}
+.pop:after{content:"";position:absolute;left:var(--ax,50%);bottom:-7px;width:14px;height:14px;background:#fff;transform:rotate(45deg)}
+.pop.up:after{bottom:auto;top:-7px}
+.dim{position:absolute;inset:0;background:rgba(10,20,15,.42);z-index:3}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:12px 14px 14px;z-index:4}
+.sheet h4{margin:0 0 8px;font-size:15px}.sheet h4 small{font-weight:500;color:var(--mut);font-size:12px;margin-left:6px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:#E3E8E4;border-radius:10px;padding:3px;margin-bottom:8px}
+.tabs b{height:30px;display:grid;place-items:center;border-radius:8px;font-size:13px;color:var(--mut)}.tabs b.on{background:#fff;color:var(--fg)}
+.hand{position:absolute;font-size:22px;z-index:6;filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))}
+.note{font-size:12px;color:var(--mut);margin:6px 2px 0}
+.acc td{background:#FEF8E8;height:auto;padding:6px 4px;border-left:0}
+.big{background:#fff;border:2px solid var(--gold);border-radius:14px;margin:6px 0;padding:8px}
+.big h4{margin:0 0 6px;font-size:14px;display:flex;gap:8px;align-items:baseline}.big h4 b{font:700 20px var(--fn)}.big h4 small{color:var(--mut);font-weight:500}
+.bgr{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.bgr>div{background:#F6F8F6;border-radius:10px;padding:5px 2px;text-align:center}
+.bgr small{display:block;font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden}.bgr b{display:block;font:700 24px var(--fn);line-height:1.2}
+.pal{display:flex;gap:8px;justify-content:center;padding:4px 0}
+.pal .md{width:38px;height:38px;font-size:20px}.pal .on{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--fg)}
+tr.tg td.c{background:#FFF6DA;box-shadow:inset 0 0 0 1.5px #E9C866}
+</style></head><body>
+<h1>スコアカード入力：ゲーム（メダルなど）の入れ方 10案</h1>
+<p class="lead">例はオリンピック（メダル）。ニアピン・スネークは「1人を選ぶだけ」なので、同じ形でもっと単純になります。今の形は、下の「5H メダル」のマスを押したまま左右に動かす入力で、表の中は金色の点だけ（どのメダルか分からない）。</p>
+<div class="grid" id="g"></div>
+<script>
+const PAR=[3,3,3,4,3,3,4,3,3], NM=["かまきり","体操きんたろう","たろう","川越大生"], NS=["かまきり","体操…","たろう","川越大生"];
+const S=[[4,4,4,4,4],[2,3,4,3,2],[3,2,4,2,4],[2,2,3,3,2]];
+const M=[[0,2,1,4],[3,0,4,0],[0,0,2,3],[1,3,5,4],[2,1,0,4]];
+const PT=[5,3,8,16], TOT=[20,14,15,12];
+const md=(v,c="")=>v?`<i class="md m${v} ${c}">${v===5?"◆":v}</i>`:"";
+const mk=(s,par)=>{ const d=s-par; return d<=-2?`<span class="mk ea">${s}</span>`:d===-1?`<span class="mk bi">${s}</span>`:d===1?`<span class="mk bo">${s}</span>`:s; };
+const keys=(c="")=>`<div class="keys ${c}">${[1,2,3,4,5,6,7,8,9].map(n=>`<b>${n}</b>`).join("")}<b>10+</b><b style="opacity:.3">0</b><b class="j">消す</b></div>`;
+const mkeys=()=>`<div class="keys">${[["なし","j"],[1],[2],[3],[4],[5]].map(([v,c])=>c?`<b class="j">${v}</b>`:`<b>${md(v,"lg")}</b>`).join("")}</div>`;
+const hdr=(x="")=>`<div class="top"><i>×</i><b>ファーツリー…</b><span>ルール</span>${x}</div>`;
+function table(o={}){
+  const cur=o.cur??4, done=o.done??5;
+  const colg=`<col class="h"><col class="p">`+NM.map(()=>`<col>${o.mcol?`<col class="m">`:""}`).join("")+(o.end?`<col class="e">`:"");
+  const head=`<tr><th${o.mcol?' rowspan="2"':""}>H</th><th${o.mcol?' rowspan="2"':""} style="font-size:11px">PAR</th>${NM.map((n,i)=>`<th${o.mcol?' colspan="2"':""} style="font-size:${n.length>4?11:13}px;line-height:1.1">${n}</th>`).join("")}${o.end?`<th${o.mcol?' rowspan="2"':""} style="font-size:10px">${o.end}</th>`:""}</tr>`
+    +(o.mcol?`<tr>${NM.map(()=>`<th class="s">打数</th><th class="s">${o.mcol}</th>`).join("")}</tr>`:"");
+  let rows="";
+  for(let h=0;h<9;h++){
+    const tds=NM.map((_,p)=>{ const s=h<done?S[p][h]:null, m=h<done?M[h][p]:0;
+      let c = s==null?"":mk(s,PAR[h]); if(o.cell) c=o.cell(h,p,s,m,c);
+      const cls=(o.sel&&o.sel[0]===h&&o.sel[1]===p&&!o.sel[2])?" sel":"";
+      let x=`<td class="c${cls}">${c}</td>`;
+      if(o.mcol){ const cls2=(o.sel&&o.sel[0]===h&&o.sel[1]===p&&o.sel[2])?" sel":""; x+=`<td class="c${cls2}">${s==null?"":(o.mcell?o.mcell(h,p,m):md(m,"sm"))}</td>`; }
+      return x; }).join("");
+    rows+=`<tr class="${h===cur&&!o.nocur?"cur":""} ${o.tg===h?"tg":""}"><td class="h">${h+1}</td><td class="p">${PAR[h]}</td>${tds}${o.end?`<td>${o.endCell?o.endCell(h):""}</td>`:""}</tr>`;
+    if(o.after) rows+=o.after(h)||"";
+  }
+  const ft=`<tr class="ft"><td class="l" colspan="2">計 29</td>${TOT.map(t=>`<td${o.mcol?' colspan="2"':""}>${t}</td>`).join("")}${o.end?"<td></td>":""}</tr>`
+   +(o.pts?`<tr class="ft"><td class="l" colspan="2" style="color:#8A5F00;background:#FDEFC8">ポイント</td>${PT.map(t=>`<td${o.mcol?' colspan="2"':""} style="color:#8A5F00;background:#FDEFC8">${t}</td>`).join("")}${o.end?'<td style="background:#FDEFC8"></td>':""}</tr>`:"");
+  return `<div class="box"><table><colgroup>${colg}</colgroup>${head}${rows}${ft}</table></div>`;
+}
+const ptsRow=()=>`<div class="grow"><div class="l pt" style="border-top:0">ポイント</div>${PT.map(t=>`<div class="pt" style="border-top:0">${t}</div>`).join("")}</div>`;
+const opt=(v)=>`<div class="opt"><i class="x ${v===0?"on":""}">なし</i>${[1,2,3,4,5].map(k=>`<i class="md m${k} ${v===k?"on":""}">${k===5?"◆":k}</i>`).join("")}</div>`;
+const prows=(h)=>NM.map((n,p)=>`<div class="prow"><span>${n}</span>${opt(M[h][p])}</div>`).join("");
+
+const V=[
+ {t:"メダルの列を足す",rec:1,d:"パットの列と同じ考え方。人ごとに「打数｜メダル」の2マス。打数を入れると隣のメダルのマスへ進み、下のキーがメダルに変わる（なければ「なし」）。入れた場所にそのまま残る。",
+  h:()=>hdr()+table({mcol:"メダル",sel:[4,2,1],pts:1,mcell:(h,p,m)=>h===4&&p===2?"":h===4&&p===3?"":md(m,"sm"),cell:(h,p,s,m,c)=>h===4&&p===3?"":c})+mkeys()+`<div class="note">打数 → メダル → 次の人、の順に自動で進む</div>`},
+ {t:"マスの中にメダル",d:"列は増やさず、打数の右にメダルの小さな丸。今のホールは点線の丸（＋）が出ていて、押すとその場に選択肢が開く。どのメダルか表で分かる。",
+  h:()=>hdr()+table({pts:1,cell:(h,p,s,m,c)=>s==null?"":`<span class="two">${c}${m?md(m,"sm"):h===4?`<i class="slot">＋</i>`:`<i style="width:15px"></i>`}</span>`})+keys("fade")
+   +`<div class="pop" style="left:108px;top:150px;--ax:62%"><i class="md no lg">—</i>${[1,2,3,4,5].map(k=>md(k,"lg")).join("")}</div><div class="hand" style="left:218px;top:205px">👆</div>`},
+ {t:"ホールが終わったら聞く",rec:1,d:"4人目の打数を入れた瞬間、数字キーの場所が「5Hのメダルは？」に変わる。人ごとにボタンを押すだけ（フリックなし）。「次のホールへ」で数字キーに戻る。入れ忘れが起きにくい。",
+  h:()=>hdr()+table({pts:1,cell:(h,p,s,m,c)=>s==null?"":`<span class="two">${c}${m?md(m,"sm"):`<i style="width:15px"></i>`}</span>`})
+   +`<div class="pan"><h4><b>5H</b>メダルは？<small>1パットで入れた人</small></h4>${prows(4)}<div class="go g">次のホールへ →</div></div>`},
+ {t:"キーの上にメダルの行",d:"数字キーのすぐ上に、選んでいる人のメダルのボタンが並ぶ。打数を入れる→（あれば）メダルを押す、を同じ場所で。メダルを押さなければ次の人へ。",
+  h:()=>hdr()+table({sel:[4,1],pts:1,cell:(h,p,s,m,c)=>s==null?"":`<span class="two">${c}${m?md(m,"sm"):`<i style="width:15px"></i>`}</span>`})
+   +`<div class="pan" style="padding:7px 10px"><div class="prow"><span>体操きんたろう の 5H</span>${opt(1)}</div></div>`+keys()},
+ {t:"ホール番号を押すとシート",d:"表はスコアだけ（メダルは小さく表示）。ホール番号（か右端のメダルの印）を押すと、下から「5Hのメダル」が開いて4人分をまとめて入れる。直しもここから。",
+  h:()=>hdr()+table({end:"メダル",pts:1,endCell:h=>h<5?`<i class="md m4 sm" style="opacity:${h===4?1:.55}">›</i>`:"",cell:(h,p,s,m,c)=>s==null?"":`<span class="two">${c}${m?md(m,"sm"):`<i style="width:15px"></i>`}</span>`})+keys()
+   +`<div class="dim"></div><div class="sheet"><h4>5H のメダル<small>1パットで入れた人だけ</small></h4>${prows(4)}<div class="go">決定</div></div>`},
+ {t:"行の下に開く",d:"今のホールの行のすぐ下に、メダルを入れる行が開く（1ホール分だけ）。入力する場所と表の行がつながって見える。次のホールへ進むと閉じて、メダルは打数の横に小さく残る。",
+  h:()=>hdr()+table({pts:1,cell:(h,p,s,m,c)=>s==null?"":h===4?c:`<span class="two">${c}${m?md(m,"sm"):`<i style="width:15px"></i>`}</span>`,
+    after:h=>h===4?`<tr class="acc"><td colspan="2" style="font:700 11px var(--fb);color:#8A5F00">メダル</td>${M[4].map(m=>`<td><span class="btn ${m?"":"e"}">${m?md(m):"—"}</span></td>`).join("")}</tr>`:""})+keys()
+   +`<div class="pop up" style="left:96px;top:262px;--ax:30%"><i class="md no lg">—</i>${[1,2,3,4,5].map(k=>md(k,"lg")).join("")}</div>`},
+ {t:"メダルを選んで、人を押す",d:"下にメダルが5つ並ぶ。メダルを押す→もらった人のマスを押す、の2タップ（スタンプを押す感じ）。今のホールの行が光って「ここを押す」と分かる。",
+  h:()=>hdr()+table({tg:4,nocur:1,pts:1,cell:(h,p,s,m,c)=>s==null?"":`<span class="two">${c}${m?md(m,"sm"):`<i style="width:15px"></i>`}</span>`})
+   +`<div class="pan"><h4><b>5H</b>メダルを選んで、人のマスを押す</h4><div class="pal">${[5,4,3,2,1].map(k=>`<i class="md m${k} ${k===4?"on":""}">${k===5?"◆":k}</i>`).join("")}</div></div><div class="hand" style="left:290px;top:200px">👆</div>`},
+ {t:"スコア／メダルの切りかえ",d:"上に「スコア｜メダル」の切りかえ。メダルの表は同じ並びで、マスを押してメダルのキーで入れる（数字と同じ打ち方）。表が2枚になるので、行ったり来たりは増える。",
+  h:()=>hdr()+`<div class="tabs"><b>スコア</b><b class="on">メダル</b></div>`+table({sel:[4,2],pts:1,cell:(h,p,s,m)=>s==null?"":m?md(m):`<span style="color:#C3CAC5">—</span>`})+mkeys()},
+ {t:"今のホールを大きく",d:"今のホールだけ大きなカードになる（くわしく記録に近い形）。人ごとに打数とメダルのボタンが上下に並ぶ。前後のホールは細い行のまま。1ホールに集中できるが、紙の表らしさは減る。",
+  h:()=>hdr()+`<div class="box"><table><colgroup><col class="h"><col class="p"><col><col><col><col></colgroup><tr><th>H</th><th style="font-size:11px">PAR</th>${NM.map(n=>`<th style="font-size:${n.length>4?11:13}px;line-height:1.1">${n}</th>`).join("")}</tr>${[0,1,2,3].map(h=>`<tr><td class="h">${h+1}</td><td class="p">${PAR[h]}</td>${NM.map((_,p)=>`<td class="c"><span class="two">${mk(S[p][h],PAR[h])}${M[h][p]?md(M[h][p],"sm"):`<i style="width:15px"></i>`}</span></td>`).join("")}</tr>`).join("")}</table></div>
+   <div class="big"><h4><b>5H</b><small>PAR 3</small></h4><div class="bgr">${NM.map((n,p)=>`<div><small>${NS[p]}</small><b>${mk(S[p][4],3)}</b><span class="btn ${M[4][p]?"":"e"}" style="margin-top:4px">${M[4][p]?md(M[4][p]):"メダル"}</span></div>`).join("")}</div></div>
+   <div class="box"><table><colgroup><col class="h"><col class="p"><col><col><col><col></colgroup>${[5,6].map(h=>`<tr><td class="h">${h+1}</td><td class="p">${PAR[h]}</td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td></tr>`).join("")}<tr class="ft"><td class="l" colspan="2">計 29</td>${TOT.map(t=>`<td>${t}</td>`).join("")}</tr></table></div>`+keys()},
+ {t:"今の形を直す（小さな変更）",d:"下の「5H メダル」の行はそのまま。変えるのは3つ：①押したまま動かす→押すと上に選択肢が開く ②表の金色の点→本物のメダルの絵 ③行名を「5Hのメダル ▸ 番号を押すと別のホール」に。",
+  h:()=>hdr()+table({cell:(h,p,s,m,c)=>s==null?"":`<span class="two">${c}${m?md(m,"sm"):`<i style="width:15px"></i>`}</span>`})
+   +`<div class="grow inp"><div class="l"><b>5H</b>メダル</div>${M[4].map(m=>`<div><span class="btn ${m?"":"e"}">${m?md(m):"—"}</span></div>`).join("")}${`<div class="l pt">ポイント</div>`+PT.map(t=>`<div class="pt">${t}</div>`).join("")}</div>`+keys("fade")
+   +`<div class="pop" style="left:116px;top:318px;--ax:66%"><i class="md no lg">—</i>${[1,2,3,4,5].map(k=>md(k,"lg")).join("")}</div><div class="hand" style="left:246px;top:392px">👆</div>`},
+];
+document.getElementById("g").innerHTML=V.map((v,i)=>`<div class="card"><h2><b>G${i+1}</b>${v.t}${v.rec?"<em>おすすめ</em>":""}</h2><p>${v.d}</p><div class="ph">${v.h()}</div></div>`).join("");
+</script></body></html>
