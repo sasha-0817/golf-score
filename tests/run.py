@@ -1253,6 +1253,12 @@ with sync_playwright() as pw:
     bgs = pg.evaluate("[...document.querySelectorAll('.cd-game tr.skr td.c-s')].map(e=>getComputedStyle(e).backgroundColor)")
     check("スコアカード入力: 長い名前の見出しは高さ40px以上で切れない。チーム戦のポイントはA・Bで色がちがう", all(h[0] >= 40 and h[1] for h in hh) and len(bgs) == 2 and bgs[0] != bgs[1] and not errs)
     pg.context.close()
+    # みんなのリザルト: 名前が2行になっても、合計の数字は全員同じ高さ
+    pg, errs = open_page(b, {"sc.v2": 1}, offline=True, query="?show=9"); pg.wait_for_timeout(800)
+    pg.evaluate("document.querySelectorAll('table.v1 .v1n')[1].textContent='体操きんたろう'")
+    check("みんなのリザルト: 名前が2行の人がいても、合計の数字・順位の丸は全員同じ高さ",
+          pg.evaluate("new Set([...document.querySelectorAll('table.v1 .v1c b')].map(e=>Math.round(e.getBoundingClientRect().top))).size") == 1 and pg.evaluate("new Set([...document.querySelectorAll('table.v1 .v1c .rc-rk')].map(e=>Math.round(e.getBoundingClientRect().top))).size") == 1 and not errs)
+    pg.context.close()
     # コース登録: 県・市の欄はない。ヤードが空でも、聞かずにそのまま保存できる
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.rounds": [], "sc.courses": [], "sc.tab": "\"courses\"", "sc.v2": 1}, offline=True)
     C(pg, "[data-act=new-course]"); pg.wait_for_timeout(300); nopref = pg.query_selector("#c-pref") is None and pg.query_selector("#c-area") is None
