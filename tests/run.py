@@ -1309,6 +1309,29 @@ with sync_playwright() as pw:
     check("練習ラウンド: 印を付けると分析とゴーストから外れ、履歴に「練習」の札。もう一度押すと戻る",
           pr[0] and pr[1] == "p1,p2" and pr[2] != "p0" and pr[3] and pg.evaluate("filteredRounds().length") == 3 and pg.evaluate("ghostBest('たろう','c1',3,'x').id") == "p0" and not errs)
     pg.context.close()
+    # 履歴: 結果カードと同じ紙の表（9ホールは横にスクロールせず全部見える）。練習ラウンドはスイッチ。スコアカードで記録したラウンドの編集はスコアカード入力で開き、保存してもメモ・練習の印・idが残る
+    HR = [{"id": "e1", "card": True, "memo": "メモ", "practice": True, "player": "たろう", "courseId": "c1", "courseName": "テストコース", "date": "2026-10-10", "createdAt": 1000,
+           "holes": [{"par": 3, "strokes": 4 if i == 0 else 3, "putts": 0} for i in range(9)]},
+          {"id": "e2", "player": "たろう", "courseId": "c1", "courseName": "テストコース", "date": "2026-10-11", "createdAt": 1001,
+           "holes": [{"par": 3, "strokes": 3, "putts": 1} for _ in range(9)]}]
+    c9h = [{"id": "c1", "name": "テストコース", "holes": [{"par": 3} for _ in range(9)], "createdAt": 1}]
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.rounds": HR, "sc.courses": c9h, "sc.tab": "\"history\"", "sc.v2": 1}, offline=True)
+    pg.evaluate("state.openRound='e1'; render()")
+    ht = pg.evaluate("(()=>{const t=document.querySelector('.hist-paper table.half'); if(!t) return null; const w=t.closest('.detail').getBoundingClientRect(); const cs=[...t.querySelectorAll('tr.h td')].map(e=>e.getBoundingClientRect()); return {n:cs.length, ok:cs.every(r=>r.left>=w.left-1&&r.right<=w.right+1), sw:document.documentElement.scrollWidth<=innerWidth}})()")
+    sw = pg.evaluate("(()=>{const b=document.querySelector('.rcard .prac-b'); return b && b.getAttribute('role')==='switch' && b.getAttribute('aria-checked')==='true' && !!b.querySelector('.sl-sw.on') && b.textContent.trim()==='練習ラウンド'})()")
+    check("履歴: 結果カードと同じ紙の表で、9ホール全部が枠の中に収まる（計の列も）。練習ラウンドはスイッチ（文字は「練習ラウンド」だけ）",
+          ht and ht["n"] == 11 and ht["ok"] and ht["sw"] and sw and not pg.query_selector(".prac-note") and not errs)
+    C(pg, "[data-act=edit-round][data-id=e1]"); pg.wait_for_timeout(300)
+    ce = pg.evaluate("!!state.cdraft && state.cdraft.editing===true && !state.draft && state.cdraft.players[0].s[0]===4 && !!document.querySelector('.cdt')")
+    C(pg, "[data-act=cd-cell][data-h='0'][data-i='0'][data-k='s']"); C(pg, "[data-act=cd-key][data-v='3']"); pg.wait_for_timeout(200)
+    C(pg, "[data-act=cd-finish]"); pg.wait_for_timeout(700)
+    sv = pg.evaluate("(()=>{const rs=state.rounds.filter(r=>r.id==='e1'); return [state.rounds.length, rs.length, rs[0].holes[0].strokes, rs[0].memo, rs[0].practice===true, rs[0].card===true]})()")
+    check("スコアカードで記録したラウンドを編集すると、スコアカード入力で開く。保存すると同じラウンドが直り、メモ・練習の印は残る（増えない）",
+          ce and sv == [2, 1, 3, "メモ", True, True] and not errs)
+    pg.evaluate("state.result=null; state.tab='history'; render()")
+    C(pg, "[data-act=toggle-round][data-id=e2]"); pg.wait_for_timeout(100); C(pg, "[data-act=edit-round][data-id=e2]"); pg.wait_for_timeout(300)
+    check("詳しい入力で記録したラウンドの編集は、今まで通り詳しい入力で開く", pg.evaluate("!!state.draft && state.draft.editing===true && !state.cdraft") and not errs)
+    pg.context.close()
     # スコアカード入力: 最後の人の打数を入れて選択が次のホールへ進んでも、ゲームの行（メダルなど）は今入れたホールのまま。次のホールの数字を入れたら、そちらに移る
     pg, errs = open_page(b, {**GM, "sc.game": "\"olympic\"", "sc.inputMode": "\"card\"", "sc.fields": {"putts": False}}, offline=True); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
     for v in ["3", "4", "3"]: C(pg, f'[data-act=cd-key][data-v="{v}"]')
