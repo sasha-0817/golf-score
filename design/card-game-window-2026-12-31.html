@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>スコアカード入力のゲームの入れ方 10案</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+:root{--fb:"Zen Kaku Gothic New",sans-serif;--fn:"Barlow Condensed",sans-serif;--line:#DDE3DE;--mut:#6B756F;--fg:#12201A;--gold:#F2B01E;--turf:#22A06B}
+*{box-sizing:border-box}body{margin:0;background:#F4F6F4;color:var(--fg);font-family:var(--fb);padding:20px 16px 40px}
+h1{font-size:22px;margin:0 0 4px}p.lead{margin:0 0 18px;color:var(--mut);font-size:14px;max-width:900px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:26px 20px;max-width:1500px}
+.card h2{font-size:17px;margin:0 0 2px;display:flex;gap:8px;align-items:center}
+.card h2 b{font:700 15px var(--fn);background:var(--fg);color:#fff;border-radius:8px;padding:2px 8px;letter-spacing:.04em}
+.card h2 em{font-style:normal;font-size:12px;background:#FFE9A8;color:#6A4A00;border-radius:999px;padding:1px 8px}
+.card p{margin:0 0 8px;font-size:13px;color:var(--mut);line-height:1.5;min-height:58px}
+.ph{width:340px;background:#EEF1EE;border-radius:24px;padding:10px;border:1px solid #CBD3CD;position:relative;overflow:hidden}
+.top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.top i{width:32px;height:32px;border-radius:50%;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-style:normal;font-size:15px}
+.top b{flex:1;font-size:15px}.top span{font-size:12px;font-weight:700;background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 10px;color:var(--mut)}
+.box{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th,td{border-bottom:1px solid var(--line);text-align:center;padding:0;height:27px}
+th{background:#EEF2EE;font-size:13px;font-weight:700;height:30px}th.s{font:600 11px var(--fn);color:var(--mut);height:16px}
+td,th{border-left:1px solid var(--line)}tr>:first-child{border-left:0}
+td.h{font:700 17px var(--fn)}td.p{font:600 16px var(--fn);color:var(--mut)}td.c{font:700 17px var(--fn)}
+col.h{width:26px}col.p{width:30px}col.m{width:27px}col.e{width:34px}
+tr.cur td{background:#FDF3DC}tr.ft td{background:#EEF2EE;font:700 17px var(--fn);height:30px;border-bottom:0}tr.ft td.l{font:700 13px var(--fb)}
+td.sel{box-shadow:inset 0 0 0 2px var(--turf);background:#E1F3EA!important}
+.mk{display:inline-grid;place-items:center;width:21px;height:21px;line-height:1}
+.mk.bi{border:2px solid #2F6FE0;border-radius:50%;color:#2F6FE0}.mk.bo{border:2px solid #F08A24;border-radius:3px;color:#F08A24}
+.mk.ea{border:2px solid #1F3A8A;border-radius:50%;color:#1F3A8A;box-shadow:0 0 0 2px #fff,0 0 0 3.5px #1F3A8A;width:17px;height:17px;font-size:14px}
+.md{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;font:700 12px var(--fn);font-style:normal;color:#fff;box-shadow:inset 0 0 0 2px rgba(255,255,255,.45);vertical-align:middle}
+.md.m1{background:#7A848C}.md.m2{background:#C27A44}.md.m3{background:#AEB6BF}.md.m4{background:#E5B01E}.md.m5{background:#4FC3EC}
+.md.sm{width:15px;height:15px;font-size:10px;box-shadow:none}.md.lg{width:30px;height:30px;font-size:17px}
+.md.no{background:#fff;color:#B3BBB5;box-shadow:inset 0 0 0 1.5px #C9D1CB;border-radius:50%}
+.slot{display:inline-grid;place-items:center;width:18px;height:18px;border:1.5px dashed #C0C8C2;border-radius:50%;color:#B3BBB5;font:700 12px var(--fn);font-style:normal;vertical-align:middle}
+.two{display:inline-flex;align-items:center;gap:4px}
+.keys{margin-top:8px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:7px;display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.keys b{height:38px;border-radius:10px;background:#EEF1EE;border:1px solid var(--line);display:grid;place-items:center;font:700 19px var(--fn)}
+.keys b.j{font:700 13px var(--fb)}.keys.fade{opacity:.35}
+.pan{margin-top:8px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:9px 10px}
+.pan h4{margin:0 0 6px;font-size:14px;display:flex;align-items:center;gap:6px}.pan h4 small{font-weight:500;color:var(--mut);font-size:12px}
+.pan h4 b{font:700 15px var(--fn);background:#FDE7AE;color:#6A4A00;border-radius:6px;padding:0 6px}
+.prow{display:flex;align-items:center;gap:6px;padding:4px 0;border-top:1px solid #EEF1EE}.prow:first-of-type{border-top:0}
+.prow span{flex:1;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden}
+.opt{display:flex;gap:4px}.opt i{font-style:normal}
+.opt .md,.opt .x{width:28px;height:28px;font-size:15px;opacity:.38}.opt .on{opacity:1;box-shadow:0 0 0 2px #fff,0 0 0 4px var(--fg)}
+.opt .x{display:inline-grid;place-items:center;border-radius:50%;background:#EEF1EE;color:var(--mut);font:700 13px var(--fb)}
+.go{margin-top:8px;height:38px;border-radius:999px;background:var(--fg);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+.go.g{background:linear-gradient(90deg,#22A06B,#1F9AA0)}
+.grow{margin-top:8px;display:grid;grid-template-columns:56px repeat(4,1fr);background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.grow>div{display:grid;place-items:center;height:40px;border-left:1px solid var(--line);font:700 18px var(--fn)}.grow>div:first-child,.grow>div:nth-child(5n+1){border-left:0}
+.grow .l{font:700 12px var(--fb);color:#8A5F00;line-height:1.15;text-align:center}.grow .l b{display:block;font:700 15px var(--fn)}
+.grow.inp>div{background:#FEF8E8}.grow .pt{background:#FDEFC8;color:#8A5F00;border-top:1px solid var(--line)}
+.btn{display:inline-grid;place-items:center;min-width:44px;height:30px;border-radius:8px;border:1.5px solid #D9C27A;background:#fff}
+.btn.e{border-color:var(--line);color:#B3BBB5}
+.pop{position:absolute;background:#fff;border-radius:14px;box-shadow:0 8px 26px rgba(0,0,0,.28);padding:8px;display:flex;gap:6px;z-index:5}
+.pop:after{content:"";position:absolute;left:var(--ax,50%);bottom:-7px;width:14px;height:14px;background:#fff;transform:rotate(45deg)}
+.pop.up:after{bottom:auto;top:-7px}
+.dim{position:absolute;inset:0;background:rgba(10,20,15,.42);z-index:3}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:12px 14px 14px;z-index:4}
+.sheet h4{margin:0 0 8px;font-size:15px}.sheet h4 small{font-weight:500;color:var(--mut);font-size:12px;margin-left:6px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:#E3E8E4;border-radius:10px;padding:3px;margin-bottom:8px}
+.tabs b{height:30px;display:grid;place-items:center;border-radius:8px;font-size:13px;color:var(--mut)}.tabs b.on{background:#fff;color:var(--fg)}
+.hand{position:absolute;font-size:22px;z-index:6;filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))}
+.note{font-size:12px;color:var(--mut);margin:6px 2px 0}
+.acc td{background:#FEF8E8;height:auto;padding:6px 4px;border-left:0}
+.big{background:#fff;border:2px solid var(--gold);border-radius:14px;margin:6px 0;padding:8px}
+.big h4{margin:0 0 6px;font-size:14px;display:flex;gap:8px;align-items:baseline}.big h4 b{font:700 20px var(--fn)}.big h4 small{color:var(--mut);font-weight:500}
+.bgr{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.bgr>div{background:#F6F8F6;border-radius:10px;padding:5px 2px;text-align:center}
+.bgr small{display:block;font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden}.bgr b{display:block;font:700 24px var(--fn);line-height:1.2}
+.pal{display:flex;gap:8px;justify-content:center;padding:4px 0}
+.pal .md{width:38px;height:38px;font-size:20px}.pal .on{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--fg)}
+tr.tg td.c{background:#FFF6DA;box-shadow:inset 0 0 0 1.5px #E9C866}
+
+.ph{height:600px}
+.ov{position:absolute;left:10px;right:10px;z-index:5;background:#fff}
+.ov .gh{display:flex;align-items:center;gap:8px;padding:6px 10px;min-height:32px}.ov .gh b{font-size:15px}.ov .gh i{font-style:normal;margin-left:auto;background:linear-gradient(90deg,#22A06B,#1F9AA0);color:#fff;border-radius:999px;padding:5px 14px;font-weight:800;font-size:13px}
+.gtab{width:100%;border-collapse:collapse;table-layout:fixed}.gtab td{height:50px;text-align:center;border-left:1px solid var(--line);background:#FEF8E8;padding:0}.gtab td:first-child,.gtab td.l{border-left:0;font:700 19px var(--fn);color:#8A5F00;background:#FDEFC8}
+.gtab .btn{min-width:0;width:calc(100% - 8px);height:40px}
+.hdl{width:38px;height:4px;border-radius:2px;background:#C9D1CB;margin:6px auto 0}
+.scrim{position:absolute;inset:0;background:rgba(10,20,15,.35);z-index:3}
+.tip{position:absolute;z-index:5;width:12px;height:12px;background:#fff;transform:rotate(45deg);border-left:1px solid #12201A;border-top:1px solid #12201A}
+.dk{background:#12201A!important;color:#fff}.dk .gtab td{background:#1D2D25;border-color:#2C4036;color:#F2B01E}.dk .gtab td.l{background:#243A2F}.dk .gtab .btn{background:#12201A;border-color:#3A5446}
+.seg2{display:grid;grid-template-columns:1fr 1fr;background:#E3E8E4;border-radius:10px;padding:3px;margin:6px 8px}.seg2 b{height:28px;display:grid;place-items:center;border-radius:8px;font-size:13px;color:var(--mut)}.seg2 b.on{background:#fff;color:var(--fg)}
+</style></head><body>
+<h1>ゲーム入力ウィンドウの出し方 10案</h1>
+<p class="lead">中身はどれも同じ（人の列は上の表と同じ幅・メダルを押したまま動かして選ぶ）。変えるのは「ウィンドウの出方」だけです。W1 が今の形（浮き出して影）。</p>
+<div class="grid" id="g"></div>
+<script>
+const PAR=[3,3,3,4,3,3,4,3,3], NM=["かまきり","体操きんたろう","たろう","川越大生"], NS=["かまきり","体操…","たろう","川越大生"];
+const S=[[4,4,4,4,4],[2,3,4,3,2],[3,2,4,2,4],[2,2,3,3,2]];
+const M=[[0,2,1,4],[3,0,4,0],[0,0,2,3],[1,3,5,4],[2,1,0,4]];
+const PT=[5,3,8,16], TOT=[20,14,15,12];
+const md=(v,c="")=>v?`<i class="md m${v} ${c}">${v===5?"◆":v}</i>`:"";
+const mk=(s,par)=>{ const d=s-par; return d<=-2?`<span class="mk ea">${s}</span>`:d===-1?`<span class="mk bi">${s}</span>`:d===1?`<span class="mk bo">${s}</span>`:s; };
+const keys=(c="")=>`<div class="keys ${c}">${[1,2,3,4,5,6,7,8,9].map(n=>`<b>${n}</b>`).join("")}<b>10+</b><b style="opacity:.3">0</b><b class="j">消す</b></div>`;
+const mkeys=()=>`<div class="keys">${[["なし","j"],[1],[2],[3],[4],[5]].map(([v,c])=>c?`<b class="j">${v}</b>`:`<b>${md(v,"lg")}</b>`).join("")}</div>`;
+const hdr=(x="")=>`<div class="top"><i>×</i><b>ファーツリー…</b><span>ルール</span>${x}</div>`;
+function table(o={}){
+  const cur=o.cur??4, done=o.done??5;
+  const colg=`<col class="h"><col class="p">`+NM.map(()=>`<col>${o.mcol?`<col class="m">`:""}`).join("")+(o.end?`<col class="e">`:"");
+  const head=`<tr><th${o.mcol?' rowspan="2"':""}>H</th><th${o.mcol?' rowspan="2"':""} style="font-size:11px">PAR</th>${NM.map((n,i)=>`<th${o.mcol?' colspan="2"':""} style="font-size:${n.length>4?11:13}px;line-height:1.1">${n}</th>`).join("")}${o.end?`<th${o.mcol?' rowspan="2"':""} style="font-size:10px">${o.end}</th>`:""}</tr>`
+    +(o.mcol?`<tr>${NM.map(()=>`<th class="s">打数</th><th class="s">${o.mcol}</th>`).join("")}</tr>`:"");
+  let rows="";
+  for(let h=0;h<9;h++){
+    const tds=NM.map((_,p)=>{ const s=h<done?S[p][h]:null, m=h<done?M[h][p]:0;
+      let c = s==null?"":mk(s,PAR[h]); if(o.cell) c=o.cell(h,p,s,m,c);
+      const cls=(o.sel&&o.sel[0]===h&&o.sel[1]===p&&!o.sel[2])?" sel":"";
+      let x=`<td class="c${cls}">${c}</td>`;
+      if(o.mcol){ const cls2=(o.sel&&o.sel[0]===h&&o.sel[1]===p&&o.sel[2])?" sel":""; x+=`<td class="c${cls2}">${s==null?"":(o.mcell?o.mcell(h,p,m):md(m,"sm"))}</td>`; }
+      return x; }).join("");
+    rows+=`<tr class="${h===cur&&!o.nocur?"cur":""} ${o.tg===h?"tg":""}"><td class="h">${h+1}</td><td class="p">${PAR[h]}</td>${tds}${o.end?`<td>${o.endCell?o.endCell(h):""}</td>`:""}</tr>`;
+    if(o.after) rows+=o.after(h)||"";
+  }
+  const ft=`<tr class="ft"><td class="l" colspan="2">計 29</td>${TOT.map(t=>`<td${o.mcol?' colspan="2"':""}>${t}</td>`).join("")}${o.end?"<td></td>":""}</tr>`
+   +(o.pts?`<tr class="ft"><td class="l" colspan="2" style="color:#8A5F00;background:#FDEFC8">ポイント</td>${PT.map(t=>`<td${o.mcol?' colspan="2"':""} style="color:#8A5F00;background:#FDEFC8">${t}</td>`).join("")}${o.end?'<td style="background:#FDEFC8"></td>':""}</tr>`:"");
+  return `<div class="box"><table><colgroup>${colg}</colgroup>${head}${rows}${ft}</table></div>`;
+}
+const ptsRow=()=>`<div class="grow"><div class="l pt" style="border-top:0">ポイント</div>${PT.map(t=>`<div class="pt" style="border-top:0">${t}</div>`).join("")}</div>`;
+const opt=(v)=>`<div class="opt"><i class="x ${v===0?"on":""}">なし</i>${[1,2,3,4,5].map(k=>`<i class="md m${k} ${v===k?"on":""}">${k===5?"◆":k}</i>`).join("")}</div>`;
+const prows=(h)=>NM.map((n,p)=>`<div class="prow"><span>${n}</span>${opt(M[h][p])}</div>`).join("");
+
+
+const NAMES4=["かまきり","体操きんたろう","たろう","川越大生"];
+const gcells=()=>[2,4,0,3].map(v=>`<td><span class="btn ${v?"":"e"}">${v?md(v,"lg"):"—"}</span></td>`).join("");
+const gtab=(lead)=>`<table class="gtab"><colgroup><col style="width:26px"><col style="width:30px"><col><col><col><col></colgroup><tr><td colspan="2" class="l">${lead||"5H"}</td>${gcells()}</tr></table>`;
+const hd=(t="メダル",btn="決定")=>`<div class="gh"><b>${t}</b><i>${btn}</i></div>`;
+const base=()=>hdr()+table({pts:1,cell:(h,p,s,m,c)=>s==null?"":`<span class="two">${c}${m?md(m,"sm"):`<i style="width:15px"></i>`}</span>`});
+const V=[
+ {t:"今の形（浮き出して影）",d:"数字キーの場所にぴったり重なる。濃い枠と影で浮いて見える。",h:()=>base()+keys("fade")+`<div class="ov" style="bottom:10px;height:108px;border:1px solid #12201A;border-radius:16px;box-shadow:0 -8px 22px rgba(0,0,0,.2)">${hd()}${gtab()}</div>`},
+ {t:"影なし・フラット",d:"同じ位置で、影も濃い枠もなし。キーと同じ細い線の白い面。静かで軽い。",h:()=>base()+keys("fade")+`<div class="ov" style="bottom:10px;height:108px;border:1px solid var(--line);border-radius:16px">${hd()}${gtab()}</div>`},
+ {t:"下から出るシート（つまみ付き）",d:"画面の下から出るシート。上につまみ、まわりを少し暗くする。ほかのシートと同じ作法。",h:()=>base()+keys("fade")+`<div class="scrim"></div><div class="ov" style="left:0;right:0;bottom:0;border-radius:20px 20px 0 0;height:142px;padding-bottom:6px"><div class="hdl"></div>${hd()}${gtab()}</div>`},
+ {t:"行から出る吹き出し",d:"いま入れているホールの行のすぐ下に、矢印つきで開く。どの行の入力か一目で分かる。",h:()=>base()+keys()+`<div class="tip" style="left:58px;top:222px"></div><div class="ov" style="top:226px;border:1px solid #12201A;border-radius:14px;box-shadow:0 8px 20px rgba(0,0,0,.2)">${hd()}${gtab()}</div>`},
+ {t:"上の帯（名前つき）",d:"画面の上に降りる帯。名前の行と入力の行を1つにまとめるので、表の名前を見なくていい。",h:()=>base()+keys()+`<div class="ov" style="top:10px;border-radius:16px;box-shadow:0 8px 22px rgba(0,0,0,.2);border:1px solid #12201A"><table class="gtab"><colgroup><col style="width:56px"><col><col><col><col></colgroup><tr><td class="l" style="height:34px;font-size:13px;background:#fff">${"5H"}</td>${NAMES4.map(n=>`<td style="height:34px;background:#fff;font:700 12px var(--fb);line-height:1.1">${n.length>4?n.slice(0,4)+"…":n}</td>`).join("")}</tr><tr><td class="l">メダル</td>${gcells()}</tr></table><div class="gh" style="justify-content:flex-end">${hd("","決定").replace('<b></b>',"")}</div></div>`},
+ {t:"キーの場所に埋め込み（タブ）",d:"重ねず、キーと同じ場所・同じ面に。「数字｜メダル」の切りかえタブで行き来する。浮かないので一番おとなしい。",h:()=>base()+`<div class="pan" style="padding:0 0 8px"><div class="seg2"><b>数字</b><b class="on">メダル</b></div>${gtab()}</div>`},
+ {t:"中央のダイアログ",d:"画面のまん中に小さなカード。背景は暗くする。大きく目立つが、表がかなり隠れる。",h:()=>base()+keys()+`<div class="scrim"></div><div class="ov" style="left:14px;right:14px;top:250px;border-radius:18px;box-shadow:0 12px 30px rgba(0,0,0,.35)">${hd("5H メダル")}${gtab()}<div style="height:8px"></div></div>`},
+ {t:"その行がふくらむ",d:"今のホールの行の下に、行がそのままふくらんで入力欄になる。表の一部に見える（下は少しずれる）。",h:()=>hdr()+table({pts:1,cell:(h,p,s,m,c)=>s==null?"":`<span class="two">${c}${m?md(m,"sm"):`<i style="width:15px"></i>`}</span>`,after:h=>h===4?`<tr class="acc"><td colspan="2" style="font:700 12px var(--fb);color:#8A5F00;background:#FDEFC8;height:50px">メダル</td>${[2,4,0,3].map(v=>`<td style="background:#FEF8E8;height:50px"><span class="btn ${v?"":"e"}" style="width:calc(100% - 6px);min-width:0;height:40px">${v?md(v,"lg"):"—"}</span></td>`).join("")}</tr>`:""})+keys()},
+ {t:"横から出る",d:"数字キーが左にずれて、右から入力の面がスライドして重なる。キーが少し見えているので「戻れる」と分かる。",h:()=>base()+`<div style="position:relative;height:132px;margin-top:8px"><div class="keys" style="margin:0;width:60%;opacity:.6">${[1,2,3,4,5,6].map(n=>`<b>${n}</b>`).join("")}</div><div class="ov" style="left:36%;right:0;top:0;bottom:0;border:1px solid #12201A;border-radius:16px 0 0 16px;box-shadow:-10px 0 20px rgba(0,0,0,.2);background:#fff;overflow:hidden"><div class="gh" style="padding:4px 8px"><b style="font-size:13px">メダル</b><i style="padding:4px 10px">決定</i></div><table class="gtab"><tr>${[2,4].map(v=>`<td style="height:40px"><span class="btn" style="width:calc(100% - 6px);height:32px">${md(v,"sm")}</span></td>`).join("")}</tr><tr>${[0,3].map(v=>`<td style="height:40px"><span class="btn ${v?"":"e"}" style="width:calc(100% - 6px);height:32px">${v?md(v,"sm"):"—"}</span></td>`).join("")}</tr></table></div></div>`},
+ {t:"細い帯（キーは見えたまま）",d:"表とキーの間に、細い1行の帯が出る。キーは隠れないので、打数を直すのもそのまま。いちばん場所をとらない。",h:()=>base()+`<div style="margin-top:8px;background:#fff;border:1px solid #12201A;border-radius:12px;overflow:hidden"><table class="gtab"><colgroup><col style="width:26px"><col style="width:30px"><col><col><col><col></colgroup><tr><td colspan="2" class="l" style="height:42px">5H</td>${[2,4,0,3].map(v=>`<td style="height:42px"><span class="btn ${v?"":"e"}" style="height:34px">${v?md(v,"sm"):"—"}</span></td>`).join("")}</tr></table></div>`+keys()},
+];
+document.getElementById("g").innerHTML=V.map((v,i)=>`<div class="card"><h2><b>W${i+1}</b>${v.t}</h2><p>${v.d}</p><div class="ph">${v.h()}</div></div>`).join("");
+</script></body></html>

@@ -2339,8 +2339,7 @@ body[data-tab=stats] #main .alld-lg span{font-size:13px}
 /* 2026-12-31: ゲーム入力は、数字キーの場所に重ねる帯（上の表と同じ列の幅。メダルは押したまま動かして選ぶ） */
 .cd-pad{position:relative}
 .cd-pad.gp-on>*:not(.gp-over){visibility:hidden}
-.gp-over{position:absolute;left:-1px;right:-1px;top:-1px;bottom:-1px;z-index:6;background:var(--rec-surface);border:1px solid var(--rec-fg);border-radius:16px;padding:6px 0 0;box-shadow:0 -8px 22px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:6px;animation:gpUp .18s ease-out}
-@keyframes gpUp{from{transform:translateY(14px);opacity:.4}to{transform:none;opacity:1}}
+.gp-over{position:absolute;left:-1px;right:-1px;top:-1px;bottom:-1px;z-index:6;background:var(--rec-surface);border:1px solid var(--rec-fg);border-radius:16px;padding:6px 0 0;box-shadow:0 -8px 22px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:6px}
 .gp-h{display:flex;align-items:center;gap:8px;padding:0 10px;min-height:30px}.gp-h span{font-weight:800;font-size:15px;white-space:nowrap}
 .gp-ok{margin-left:auto;flex:0 0 auto;height:30px;padding:0 14px;border-radius:999px;border:0;background:linear-gradient(90deg,#22A06B,#1F9AA0);color:#fff;font:800 14px var(--f-body);cursor:pointer;touch-action:manipulation}
 .gp-over .cd-game{border-width:1px 0 0;border-radius:0 0 15px 15px;flex:1 1 auto;display:flex}.gp-over .cd-game table{height:100%}
@@ -2476,7 +2475,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-31-1000";
+const BUILD = "2026-12-32-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
