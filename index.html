@@ -2336,16 +2336,16 @@ body[data-tab=stats] #main .alld-lg span{font-size:13px}
 
 /* 2026-12-30: スコアカード入力のゲーム入力は「パネル」（数字キーの場所に出る。表の中は増やさない） */
 .cdt td.hn button.hbtn.has{position:relative}.cdt td.hn button.hbtn.has:after{content:"";position:absolute;right:2px;top:5px;width:7px;height:7px;border-radius:50%;background:#F2B01E}
-.gp{display:flex;flex-direction:column;gap:4px}
-.gp-h{display:flex;align-items:center;gap:8px;padding:0 2px;min-height:32px}.gp-h b{font:700 20px var(--f-num);color:#8A5F00}.gp-h span{font-weight:800;font-size:15px}.gp-h small{color:var(--rec-muted);font-size:13px;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.gp-h span{white-space:nowrap}
-.gp-row{display:flex;align-items:center;gap:6px}.gp-row>span{flex:0 0 70px;font-weight:700;font-size:14px;line-height:1.1;overflow:hidden;word-break:break-all;max-height:32px}
-.gp-opt{flex:1;display:flex;gap:4px;justify-content:flex-end}
-.gp-opt button{width:38px;height:33px;border-radius:12px;border:1.5px solid var(--rec-line);background:var(--rec-raise);display:grid;place-items:center;padding:0;font:700 13px var(--f-body);color:var(--rec-muted);cursor:pointer;touch-action:manipulation}
-.gp-opt button.gp-x{width:46px}.gp-opt button svg{display:block}.gp-opt button.on{border-color:var(--rec-fg);background:#FFF3CC;box-shadow:0 0 0 2px var(--rec-fg)}.gp-opt button.gp-x.on{background:#fff;color:var(--rec-fg)}
-.gp-who{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}.gp-who button{height:40px;border-radius:12px;border:1.5px solid var(--rec-line);background:var(--rec-raise);font:700 15px var(--f-body);color:var(--rec-fg);cursor:pointer;touch-action:manipulation}
-.gp-who button.on{border-color:var(--rec-fg);background:#FFF3CC;box-shadow:0 0 0 2px var(--rec-fg)}
-.gp-na{margin:2px 2px 4px;font-size:14px;color:var(--rec-muted)}
-.gp-ok{margin-left:auto;flex:0 0 auto;height:32px;padding:0 14px;border-radius:999px;border:0;background:linear-gradient(90deg,#22A06B,#1F9AA0);color:#fff;font:800 14px var(--f-body);cursor:pointer;touch-action:manipulation}
+/* 2026-12-31: ゲーム入力は、数字キーの場所に重ねる帯（上の表と同じ列の幅。メダルは押したまま動かして選ぶ） */
+.cd-pad{position:relative}
+.cd-pad.gp-on>*:not(.gp-over){visibility:hidden}
+.gp-over{position:absolute;left:-1px;right:-1px;top:-1px;bottom:-1px;z-index:6;background:var(--rec-surface);border:1px solid var(--rec-fg);border-radius:16px;padding:6px 0 0;box-shadow:0 -8px 22px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:6px;animation:gpUp .18s ease-out}
+@keyframes gpUp{from{transform:translateY(14px);opacity:.4}to{transform:none;opacity:1}}
+.gp-h{display:flex;align-items:center;gap:8px;padding:0 10px;min-height:30px}.gp-h span{font-weight:800;font-size:15px;white-space:nowrap}
+.gp-ok{margin-left:auto;flex:0 0 auto;height:30px;padding:0 14px;border-radius:999px;border:0;background:linear-gradient(90deg,#22A06B,#1F9AA0);color:#fff;font:800 14px var(--f-body);cursor:pointer;touch-action:manipulation}
+.gp-over .cd-game{border-width:1px 0 0;border-radius:0 0 15px 15px;flex:1 1 auto;display:flex}.gp-over .cd-game table{height:100%}
+.gp-over .cdt tfoot tr.gin td{background:color-mix(in srgb,#F2B01E 9%,#fff);border-bottom:0}
+.gp-over td.gp-hn{font:700 20px var(--f-num);color:#8A5F00;background:color-mix(in srgb,#F2B01E 16%,#fff)!important}
 </style>
 
 </head>
@@ -2476,7 +2476,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-30-1000";
+const BUILD = "2026-12-31-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3275,24 +3275,8 @@ function cdNext(cd){
   if(h>=cd.holes.length){ cd.sel=null; return; }
   cd.sel={h,i,k}; if(cd.holes.length>9) cd.half = h<9?0:1;
 }
-/* スコアカード入力のゲーム（メダル・ニアピン・スネーク）: 表の中には書かず、数字キーの場所に出る「パネル」で入れる。
-   開くとき: ①そのホールの全員の打数が入った直後（自動）②表のホール番号を押したとき（見直し・前のホールの直し） */
-function gamePanel(cd, h){
-  const P=cd.players.length, par=cd.holes[h].par, g=cd.game, nm=i=>esc(dupLabel(cd.players.map(x=>x.name),i));
-  let body="", n=0;
-  const head=(t,sub)=>`<div class="gp-h"><b>${h+1}H</b><span>${t}</span><small>${sub||""}</small><button class="gp-ok" data-act="cd-gp-ok">${n?"決定":"なしで次へ"}</button></div>`;
-  if(isOlympic(g)){
-    const vals=[1,2,3,4].filter(v=>v>4-P).concat([5]), arr=((cd.medals||{})[h]||[]), cur=i=>arr[i]||0; n=arr.filter(x=>x>0).length;
-    body=head("メダルは？","1パットで入れた人")+Array.from({length:P},(_,i)=>`<div class="gp-row"><span>${nm(i)}</span><div class="gp-opt"><button class="gp-x ${cur(i)?"":"on"}" data-act="cd-medal" data-i="${i}" data-v="0" aria-label="${esc(cd.players[i].name)}はメダルなし">なし</button>${vals.map(v=>`<button class="gp-m ${cur(i)===v?"on":""}" data-act="cd-medal" data-i="${i}" data-v="${v}" aria-label="${esc(cd.players[i].name)}に${MEDALS[v].n}">${medalSVG(v,30)}</button>`).join("")}</div></div>`).join("");
-  } else if(g==="nearpin"){
-    const cur=(cd.pins||{})[h]; n=cur!=null?1:0;
-    body=head("ニアピンは？",par===3?"いちばんピンに近い人":"パー3だけ")+(par===3?`<div class="gp-who">${Array.from({length:P},(_,i)=>`<button class="${cur===i?"on":""}" data-act="cd-pin" data-i="${i}">${nm(i)}</button>`).join("")}</div>`:`<p class="gp-na">パー3のホールだけです</p>`);
-  } else {
-    const cur=((cd.marks||{})[h])||[]; n=cur.length;
-    body=head(g==="snake"?"3パットした人は？":"ワンオンした人は？","")+(g==="oneon"&&par!==3?`<p class="gp-na">パー3のホールだけです</p>`:`<div class="gp-who">${Array.from({length:P},(_,i)=>`<button class="${cur.includes(i)?"on":""}" data-act="cd-mark" data-i="${i}">${nm(i)}</button>`).join("")}</div>`);
-  }
-  return `<div class="gp">${body}</div>`;
-}
+/* スコアカード入力のゲーム（メダル・ニアピン・スネーク）: 表の中には書かず、数字キーの場所に「重ねて」出る入力の帯（viewCard の gpOver）で入れる。
+   開くとき: ①そのホールの全員の打数が入った直後（自動）②表のホール番号を押したとき（見直し・前のホールの直し）。人の列は上の表と同じ幅でそろう */
 function cardKey(v){
   const cd=state.cdraft, sel=cd&&cd.sel; if(!sel) return;
   const pl=cd.players[sel.i], h=sel.h; cd.gh=h; cd.gAsk=null; const wasS=pl.s[h];
@@ -3388,7 +3372,17 @@ function viewCard(cd){
   const gAsk = hasGin && Number.isInteger(cd.gAsk) && cd.gAsk>=0 && cd.gAsk<cd.holes.length ? cd.gAsk : null;   // いま「ゲームの入力」を開いているホール（なければ数字キー）
   const gDone = h => isOlympic(cd.game) ? (((cd.medals||{})[h])||[]).some(x=>x>0) : cd.game==="nearpin" ? (cd.pins||{})[h]!=null : isMarkGame(cd.game) ? (((cd.marks||{})[h])||[]).length>0 : false;
   const padSpB = b => nPad?`<td class="pad" style="bottom:${b}px" colspan="${nPad*pw}"></td>`:"";
-  const inputRow = "";   // ゲームの入力は、下のパネル（gamePanel）で。表と計の下は点数だけ
+  const inputRow = "";   // ゲームの入力は、数字キーの上に重ねる帯（gpOver）で。表と計の下は点数だけ
+  const gpOver = gAsk===null ? "" : (()=>{ const g=cd.game, h=gAsk, par=cd.holes[h].par;
+    const cells=cd.players.map((p,i)=>{ let c;
+      if(isOlympic(g)){ const v=(((cd.medals||{})[h])||[])[i]||0; c=`<div class="fc fm ${v?"set":""}" role="button" tabindex="0" data-k="m" data-i="${i}" aria-label="${esc(p.name)}の${h+1}Hのメダル。押したまま左右に動かして離すと変わります">${v?medalSVG(v,28):"<span>—</span>"}</div>`; }
+      else if(g==="snake" || (g==="oneon" && par===3)){ const on=(((cd.marks||{})[h])||[]).includes(i); c=`<button class="fc fn ${on?"set":""}" data-act="cd-mark" data-i="${i}" aria-pressed="${on}" aria-label="${esc(p.name)}が${g==="oneon"?"ワンオン":"3パット"}">${g==="oneon"?ONFLAG(on):TICK(on)}</button>`; }
+      else if(par!==3) c=`<span class="na">—</span>`;
+      else { const on=(cd.pins||{})[h]===i; c=`<button class="fc fn ${on?"set":""}" data-act="cd-pin" data-i="${i}" aria-pressed="${on}" aria-label="${esc(p.name)}がニアピン">${PINFLAG(on)}</button>`; }
+      return `<td class="c-s gin-c" colspan="${cwOf(i)}">${c}</td>`; }).join("");
+    const n = isOlympic(g) ? (((cd.medals||{})[h])||[]).filter(x=>x>0).length : g==="nearpin" ? ((cd.pins||{})[h]!=null?1:0) : (((cd.marks||{})[h])||[]).length;
+    const title = isOlympic(g)?"メダル":g==="oneon"?"ワンオン":g==="snake"?"3パットした人":"ニアピン";
+    return `<div class="gp-over" data-stop="1"><div class="gp-h"><span>${title}</span><button class="gp-ok" data-act="cd-gp-ok">${n?"決定":"なしで次へ"}</button></div><div class="cd-game"><table class="cdt cdg ${pOn?"wp":""}">${colg}<tfoot><tr class="gin"><td colspan="2" class="ft gp-hn">${h+1}H</td>${cells}${padSpB(0)}</tr></tfoot></table></div></div>`; })();
   const done=cd.players.every(p=>p.s.every(x=>x!=null)); // 打数が全部入ったら保存ボタンを出す（パットの抜けは押したときに案内）
   const key=(v,lab,dis)=>`<button data-act="cd-key" data-v="${v}" ${dis?"disabled":""} aria-label="${lab}">${lab}</button>`;
   const ks = sel ? sel.k : "s";
@@ -3405,8 +3399,9 @@ function viewCard(cd){
       <tbody>${rows.map(h=>`<tr class="${hasGin&&gAsk!=null&&h===gAsk?"ghr":""}"><td class="hn">${hasGin?`<button class="hbtn ${gDone(h)?"has":""}" data-act="cd-gh" data-h="${h}" aria-label="${h+1}番ホールのゲームを入れる">${h+1}</button>`:h+1}</td><td class="pr">${cd.holes[h].par}</td>${cd.players.map((p,i)=>cell(h,i,"s")+(cdP(i)?cell(h,i,"p"):"")).join("")}${gTd(h)}${padTd}</tr>`).join("")}</tbody>
       <tfoot>${two?foot(half?"IN":"OUT",rows,"",FH)+foot("計",all,"all",0):foot("計",all,"",0)}</tfoot></table></div>
     ${(inputRow||skinRow||gameRow||ghostRows)?`<div class="cd-game"><table class="cdt cdg ${pOn?"wp":""}">${colg}<tfoot>${inputRow}${skinRow}${gameRow}${ghostRows}</tfoot></table></div>`:""}
-    <div class="cd-pad">
-      ${gAsk!=null?gamePanel(cd,gAsk):`${sel?"":`<div class="cd-lbl"><span>${done?"全部入りました。保存しましょう":"マスをタップして入力"}</span></div>`}
+    <div class="cd-pad ${gAsk!==null?"gp-on":""}">
+      ${gpOver}
+      ${`${sel?"":`<div class="cd-lbl"><span>${done?"全部入りました。保存しましょう":"マスをタップして入力"}</span></div>`}
       ${sel||!done?`<div class="cd-keys">${[1,2,3,4,5,6,7,8,9].map(n=>key(n,String(n),!sel || (ks==="p" && n>9))).join("")}${key("10","10+",!sel||ks==="p")}${key("0","0",!sel||ks==="s")}${key("del","消す",!sel)}</div>`:""}
       ${done?`<button class="cd-save ${state.saving?"busy":""}" data-act="cd-finish" ${state.saving?"disabled":""}>${state.saving?`<i class="spin"></i>保存中…`:`ラウンドを保存${cd.players.length>1?`（${cd.players.length}人分）`:""}`}</button>`:""}`}
     </div>
@@ -4345,8 +4340,6 @@ document.addEventListener("click", async ev => {
     case "close-game": state.sheet=null; state.rulesOpen=null; render(); break;
     case "im": state.im=b.dataset.v; LS.set("sc.inputMode",state.im); render(); break;
     case "cd-gh": { const cd=state.cdraft; if(!cd) break; const h=+b.dataset.h; cd.gh=h; cd.gAsk = cd.gAsk===h ? null : h; saveCDraft(); render(); break; }   // ホール番号: そのホールのゲームの入力を開く（もう一度で閉じる）
-    case "cd-medal": { const cd=state.cdraft; if(!cd||cd.gAsk==null) break; const hh=cd.gAsk, P=cd.players.length, i=+b.dataset.i, v=+b.dataset.v; cd.medals=cd.medals||{}; const arr=(cd.medals[hh]||Array(P).fill(0)).slice();
-      const same=arr[i]===v; if(v>0) arr.forEach((x,k)=>{ if(x===v) arr[k]=0; }); arr[i]= same ? 0 : v; cd.medals[hh]=arr; /* 同じメダルは1ホール1人（別の人に付けると移る）。もう一度押すと外れる */ if(!arr.some(x=>x>0)) delete cd.medals[hh]; saveCDraft(); render(); break; }
     case "cd-gp-ok": { const cd=state.cdraft; if(!cd) break; cd.gAsk=null; saveCDraft(); render(); break; }   // ホール番号を押すと、ゲームの行がそのホールになる（前のホールを直すとき）
     case "cd-cell": { const cd=state.cdraft; cd.sel={h:+b.dataset.h, i:+b.dataset.i, k:b.dataset.k}; cd.gh=cd.sel.h; cd.gAsk=null; saveCDraft(); render(); break; }
     case "cd-key": cardKey(b.dataset.v); break;
