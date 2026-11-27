@@ -464,7 +464,7 @@ with sync_playwright() as pw:
     check("オリンピック: メダルの右にポイントの数字だけ", pg.evaluate("[...document.querySelectorAll('.frow .pt b')].map(e=>e.textContent).join()") == "0,4")
     walk(pg)
     C(pg, "[data-act=finish]"); pg.wait_for_timeout(900)
-    check("オリンピック: リザルトに点数とメダル", pg.query_selector(".rc-game .md-c") is not None)
+    check("オリンピック: リザルトは列固定の表（メダルの列は全員同じ位置・点数あり）", pg.evaluate("(()=>{const t=document.querySelector('.rc-game .oly-t'); if(!t) return false; const h=[...t.querySelectorAll('thead th')].length; return h>=3 && [...t.querySelectorAll('tbody tr')].every(r=>r.children.length===h) && t.querySelectorAll('td.p b').length>0 && t.getBoundingClientRect().right<=t.closest('.rc-game').getBoundingClientRect().right+1})()"))
     pg.context.close()
     pg, errs2 = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": ["はなこ", "", ""], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"peoria\""}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)

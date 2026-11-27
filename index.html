@@ -2347,6 +2347,7 @@ body[data-tab=stats] #main .alld-lg span{font-size:13px}
 .gp-over .cd-game{border-width:1px 0 0;border-radius:0;flex:1 1 auto;display:flex}.gp-over .cd-game table{height:100%}
 .gp-over .cdt tfoot tr.gin td{background:color-mix(in srgb,#F2B01E 9%,#fff);border-bottom:0}
 .gp-over td.gp-hn{font:700 20px var(--f-num);color:#8A5F00;background:color-mix(in srgb,#F2B01E 16%,#fff)!important}
+.oly-t{width:100%;border-collapse:collapse;table-layout:fixed}.oly-t th,.oly-t td{padding:5px 0;text-align:center}.oly-t th.n,.oly-t td.n{text-align:left;width:92px;font-weight:700;font-size:14px;line-height:1.25;word-break:break-all}.oly-t th.p,.oly-t td.p{width:56px;text-align:right;white-space:nowrap}.oly-t th svg{display:block;margin:0 auto}.oly-t tbody tr{border-top:1px solid #e6e0cc}.oly-t td.c{font:700 18px var(--f-num)}.oly-t td.c.z{color:#c9c9c9;font-weight:400}.oly-t td.p b{font:800 21px var(--f-num)}.oly-t td.p small{font:600 12px var(--f-num);color:#888;margin-left:1px}.oly-t tr.top td.p b{color:#B8860B}
 </style>
 
 </head>
@@ -2477,7 +2478,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-33-1000";
+const BUILD = "2026-12-34-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -4103,8 +4104,9 @@ function gameResult(game, rows, pars, N, names, order, ex={}){
       <div class="pe-row pe-head"><span></span><span>合計</span><span>ハンデ</span><span>ネット</span></div>`
       + ord.map(k=>`<div class="pe-row ${x[k].net===best?"top":""}"><span class="rs-n">${names[k]}</span><span>${x[k].gross}</span><span>−${x[k].hc.toFixed(1)}</span><b>${x[k].net.toFixed(1)}</b></div>`).join("")
       + `<div class="rs-sum">ネット ${best.toFixed(1)} の ${ord.filter(k=>x[k].net===best).map(k=>names[k]).join("・")} が優勝</div>`); }
-  if(game==="olympic"){ const x=olympicCalc(ex.medals, rows.length), mx=Math.max(...x.pts);
-    return box([...order].sort((a,b)=>x.pts[b]-x.pts[a]).map(k=>line(names[k], `${x.pts[k]}pt`, mx>0&&x.pts[k]===mx, [5,4,3,2,1].filter(v=>x.cnt[k][v]).map(v=>`<span class="md-c">${medalSVG(v,15)}${x.cnt[k][v]>1?`×${x.cnt[k][v]}`:""}</span>`).join(""))).join("")); }
+  if(game==="olympic"){ const x=olympicCalc(ex.medals, rows.length), mx=Math.max(...x.pts), P=rows.length, cols=[5,4,3,2,1].filter(v=>v>(P===4?0:P===3?1:3)||x.cnt.some(c=>c[v]));
+    return box(`<table class="oly-t"><thead><tr><th class="n"></th>${cols.map(v=>`<th>${medalSVG(v,20)}</th>`).join("")}<th class="p"></th></tr></thead><tbody>`
+      + [...order].sort((a,b)=>x.pts[b]-x.pts[a]).map(k=>`<tr class="${mx>0&&x.pts[k]===mx?"top":""}"><td class="n">${names[k]}</td>${cols.map(v=>x.cnt[k][v]?`<td class="c">${x.cnt[k][v]}</td>`:`<td class="c z">–</td>`).join("")}<td class="p"><b>${x.pts[k]}</b><small>pt</small></td></tr>`).join("") + `</tbody></table>`); }
   if(game==="stable"){ const x=stableCalc(rows,pars,N), mx=Math.max(...x.pts);
     return box([...order].sort((a,b)=>x.pts[b]-x.pts[a]).map(k=>line(names[k], `${x.pts[k]}pt`, x.pts[k]===mx)).join("")); }
   return "";
