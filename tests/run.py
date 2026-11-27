@@ -62,6 +62,8 @@ def open_page(b, ls=None, dark=False, offline=False, repl=None, query=""):
     return pg, errs
 
 def C(pg, sel):  # JS でクリック（重なりや disabled も含めて、アプリの動きをそのまま見る）
+    if ("cd-key" in sel or "cd-finish" in sel) and pg.query_selector(".gp"):   # スコアカード入力: ゲームのパネルが開いていたら、先に「決定」で閉じる（数字キーはパネルの下に戻る）
+        pg.evaluate("document.querySelector('[data-act=cd-gp-ok]').dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true}))"); pg.wait_for_timeout(60)
     ok = pg.evaluate("s=>{const e=document.querySelector(s); if(!e) return false; e.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true})); return true;}", sel)
     pg.wait_for_timeout(80); return ok
 
@@ -477,11 +479,12 @@ with sync_playwright() as pw:
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": ["はなこ", "じろう", "さぶろう"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"nearpin\"", "sc.fields": dict(NONE)}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
     for v in ["3", "3", "3", "3"]: C(pg, f'[data-act=cd-key][data-v="{v}"]')
-    C(pg, '[data-act=cd-cell][data-h="0"][data-i="1"][data-k=s]'); C(pg, '[data-act=cd-pin][data-i="1"]')
-    tg = pg.evaluate("[...document.querySelectorAll('.cdt tr.gr .gtag')].map(e=>e.textContent).join()")
-    check("ニアピン（スコアカード）: 一番近い人を選ぶとコイン1枚（記録中の行）", tg == "0,1,0,0" and pg.query_selector(".pin-sheet") is None)
+    panel_open = pg.query_selector(".gp .gp-who") is not None   # 4人目を入れた直後に、ニアピンのパネルが自動で開く
     C(pg, '[data-act=cd-pin][data-i="1"]')
-    check("ニアピン（スコアカード）: もう一度押すと取り消し・旗は人ごとの列（計の下）にある", pg.evaluate("!state.cdraft.pins[0]") and pg.evaluate("document.querySelectorAll('.cdt tfoot .pinflag').length") == 4)
+    tg = pg.evaluate("[...document.querySelectorAll('.cdt tr.gr .gtag')].map(e=>e.textContent).join()")
+    check("ニアピン（スコアカード）: 全員の打数が入るとパネルが開き、一番近い人を選ぶとコイン1枚（記録中の行）", panel_open and tg == "0,1,0,0" and pg.query_selector(".pin-sheet") is None)
+    C(pg, '[data-act=cd-pin][data-i="1"]')
+    check("ニアピン（スコアカード）: もう一度押すと取り消し。名前のボタンは人数分（表の中には何も増えない）", pg.evaluate("!state.cdraft.pins[0]") and pg.evaluate("document.querySelectorAll('.gp-who button').length") == 4 and pg.evaluate("document.querySelectorAll('.cdt tbody .pinflag, .cdt tfoot .pinflag').length") == 0)
     C(pg, '[data-act=cd-pin][data-i="1"]')
     for _ in range(80):
         if not pg.evaluate("state.cdraft&&state.cdraft.sel"): break
@@ -810,16 +813,20 @@ with sync_playwright() as pw:
     C(pg, "[data-act=finish]"); pg.wait_for_timeout(300)
     check("未入力の打数があると保存せず、そのホールへ案内する", pg.evaluate("state.draft!=null") and pg.evaluate("state.hole") == 0 and "まだです" in pg.inner_text(".toast, #toast, body"))
     pg.context.close()
-    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": ["はなこ", "じろう"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"olympic\""}, offline=True)
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.inputMode": "\"card\"", "sc.mates": ["はなこ", "じろう"], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"olympic\"", "sc.fields": dict(NONE)}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
     C(pg, '[data-act=cd-key][data-v="3"]')
-    check("スコアカード＋オリンピック: 計の下に人ごとのメダルのマス（フリック）", pg.evaluate("document.querySelectorAll('.cdt tfoot .fc.fm').length") == 3)
-    flick(pg, "m", 0, 4)
-    check("スコアカード＋オリンピック: 自分の列でメダルをフリックで入れる（金）", pg.evaluate("state.cdraft.medals[0][0]") == 4)
-    flick(pg, "m", 1, 4)
+    check("スコアカード＋オリンピック: 打数を入れている途中は数字キーのまま（メダルのパネルは出ない）。表の中にもメダルの欄はない", pg.query_selector(".gp") is None and pg.query_selector(".cd-keys") is not None and pg.evaluate("document.querySelectorAll('.cdt .fc.fm, .cdt tfoot tr.gin').length") == 0)
+    C(pg, '[data-act=cd-key][data-v="3"]'); C(pg, '[data-act=cd-key][data-v="3"]')
+    check("スコアカード＋オリンピック: 全員の打数がそろうと、数字キーの場所が「1Hのメダルは？」に変わる（人ごとに なし＋メダル）", pg.query_selector(".gp") is not None and pg.query_selector(".cd-keys") is None and pg.evaluate("document.querySelectorAll('.gp-row').length") == 3 and "メダルは？" in pg.inner_text(".gp-h"))
+    C(pg, '[data-act=cd-medal][data-i="0"][data-v="4"]')
+    check("スコアカード＋オリンピック: 自分の列で金を押すと入る", pg.evaluate("state.cdraft.medals[0][0]") == 4)
+    C(pg, '[data-act=cd-medal][data-i="1"][data-v="4"]')
     check("スコアカード＋オリンピック: 同じメダルは1人だけ（金が後の人へ移る）", pg.evaluate("JSON.stringify(state.cdraft.medals[0])") == "[0,4,0]")
+    C(pg, '[data-act=cd-medal][data-i="1"][data-v="4"]'); C(pg, '[data-act=cd-medal][data-i="2"][data-v="2"]')
+    check("スコアカード＋オリンピック: もう一度押すと外れる（金を外して、別の人に銅）", pg.evaluate("JSON.stringify(state.cdraft.medals[0])") == "[0,0,2]")
     check("スコアカード: 9ホールがスクロールなしで見える（4人・ゲームあり）", pg.evaluate("(()=>{const s=document.querySelector('.cd-scroll'); return s.scrollHeight<=s.clientHeight+4})()"))
-    check("スコアカード: 1〜9Hと計は1つの枠、ゲームの入力・ポイントは別の枠", pg.evaluate("(()=>{const g=document.querySelector('.cd-game'), s=document.querySelector('.cd-scroll'); return !!g && !s.contains(g) && s.querySelector('tfoot').textContent.includes('計') && g.querySelector('.fc.fm')!==null})()"))
+    check("スコアカード: 1〜9Hと計は1つの枠、ゲームのポイントは別の枠", pg.evaluate("(()=>{const g=document.querySelector('.cd-game'), s=document.querySelector('.cd-scroll'); return !!g && !s.contains(g) && s.querySelector('tfoot').textContent.includes('計') && g.querySelector('tr.skr')!==null})()"))
     check("スコアカード: 「◯◯・2H（PAR 3）の打数」の行はない（黄色のマスで分かる）", pg.query_selector(".cd-lbl") is None)
     check("スコアカード: ポイントの数字は大きい（20px以上）", pg.evaluate("parseFloat(getComputedStyle(document.querySelector('.cd-game tr.skr td:nth-child(2)')).fontSize)") >= 20)
     check("スコアカード: 文字は大きめ（打数のマスが20px以上）", pg.evaluate("parseFloat(getComputedStyle(document.querySelector('.cdt td button')).fontSize)") >= 20)
@@ -837,6 +844,12 @@ with sync_playwright() as pw:
         r = pg.locator('.fc[data-k="m"][data-i="0"]').first.bounding_box(); pg.mouse.move(r["x"] + r["width"] / 2, r["y"] + r["height"] / 2); pg.mouse.down(); pg.mouse.move(r["x"] + r["width"] / 2 + 10, r["y"] + r["height"] / 2, steps=2)
         got = pg.evaluate("[...document.querySelectorAll('.fpop .fpc')].map(e=>e.dataset.v).join()"); pg.mouse.up()
         check(f"オリンピック{nm}: 選べるメダルは {want}（人数が少ないと下のメダルから外れる）", got == want)
+        pg.context.close()
+        pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": m, "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.game": "\"olympic\"", "sc.inputMode": "\"card\"", "sc.fields": dict(NONE)}, offline=True)
+        C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
+        for _ in range(1 + len(m)): C(pg, '[data-act=cd-key][data-v="3"]')
+        got = pg.evaluate("[...document.querySelectorAll('.gp-row')[0].querySelectorAll('[data-act=cd-medal]')].map(e=>e.dataset.v).join()")
+        check(f"スコアカード入力のオリンピック{nm}: パネルで選べるメダルも {want}", got == want)
         pg.context.close()
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.mates": [], "sc.courses": c1, "sc.favs": ["c1"], "sc.lastCourse": "\"c1\"", "sc.flickTip": False}, offline=True)
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
@@ -1224,19 +1237,19 @@ with sync_playwright() as pw:
     pg.context.close()
     for g, lab in [("oneon", "ワンオン"), ("snake", "3パット")]:
         pg, errs = open_page(b, {**GM, "sc.game": json.dumps(g), "sc.inputMode": "\"card\""}, offline=True); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
-        row = pg.inner_text("tr.gin"); C(pg, '[data-act=cd-mark][data-i="1"]'); C(pg, '[data-act=cd-mark][data-i="0"]')
+        C(pg, '[data-act=cd-gh][data-h="0"]'); row = pg.inner_text(".gp-h"); C(pg, '[data-act=cd-mark][data-i="1"]'); C(pg, '[data-act=cd-mark][data-i="0"]')
         want = '{"0":[1,0]}' if g == "oneon" else '{"0":[0]}'   # スネークは1ホールに1人だけ（あとに押した人に移る）
         cells = pg.evaluate("[...document.querySelectorAll('tr.skr.gr td.c-s')].slice(0,3).map(e=>e.querySelector('svg,img')?'S':e.textContent.trim())")
-        check(f"スコアカード入力（{lab}）: 計の下に人ごとのボタンが出て、押すと入る", lab in row and pg.evaluate("JSON.stringify(state.cdraft.marks)") == want and cells == (["1", "1", "0"] if g == "oneon" else ["S", "", ""]) and ("スネーク" in pg.inner_text("tr.skr.gr") if g == "snake" else True) and not errs)
+        check(f"スコアカード入力（{lab}）: ホール番号を押すとパネルが開き、人のボタンを押すと入る", (("ワンオン" if g == "oneon" else "3パット") in row) and pg.evaluate("JSON.stringify(state.cdraft.marks)") == want and cells == (["1", "1", "0"] if g == "oneon" else ["S", "", ""]) and ("スネーク" in pg.inner_text("tr.skr.gr") if g == "snake" else True) and not errs)
         pg.context.close()
     # スコアカード入力: ゲームの行がどのホールかを表の中で示し（ホール番号に色）、ホール番号を押すと前のホールのゲームを直せる。印は表の中にも小さく出る
     pg, errs = open_page(b, {**GM, "sc.game": "\"snake\"", "sc.inputMode": "\"card\"", "sc.fields": {"putts": False}}, offline=True); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
     for v in "333444": C(pg, f'[data-act=cd-key][data-v="{v}"]')
-    hl1 = pg.evaluate("[...document.querySelectorAll('.cdt tbody tr')].findIndex(r=>r.classList.contains('ghr'))")
+    hl1 = pg.evaluate("[...document.querySelectorAll('.cdt tbody tr')].findIndex(r=>r.classList.contains('ghr'))")   # 全員の打数がそろった2Hのパネルが自動で開いていて、その行が光る
     C(pg, '[data-act=cd-gh][data-h="0"]'); C(pg, '[data-act=cd-mark][data-i="1"]')
     hl0 = pg.evaluate("[...document.querySelectorAll('.cdt tbody tr')].findIndex(r=>r.classList.contains('ghr'))")
-    check("スコアカード入力: ゲームの行のホールは番号に色が付き、番号を押すと前のホールを直せる。印は表の中にも出る",
-          hl1 == 1 and hl0 == 0 and pg.evaluate("JSON.stringify(state.cdraft.marks)") == '{"0":[1]}' and pg.evaluate("document.querySelectorAll('.cdt tbody tr:first-child .gmk').length") == 1 and pg.inner_text("tr.gin td.ft").startswith("1H") and not errs)
+    check("スコアカード入力: パネルが開いているホールの行だけが光り、ホール番号を押すと前のホールを直せる。表の中の印はホール番号のとなりの点だけ",
+          hl1 == 1 and hl0 == 0 and pg.evaluate("JSON.stringify(state.cdraft.marks)") == '{"0":[1]}' and pg.evaluate("document.querySelectorAll('.cdt .gmk').length") == 0 and pg.evaluate("document.querySelectorAll('.hbtn.has').length") == 1 and pg.inner_text(".gp-h").startswith("1H") and not errs)
     pg.context.close()
     # スコアカード入力（9ホール）: 画面が低くても表は上下に動かず収まる。ホール番号は本物のボタンで、押すとゲームの行がそのホールになる
     c9h = [{"id": "c1", "name": "九ホール", "holes": [{"par": 3}] * 9, "createdAt": 1}]
@@ -1298,10 +1311,13 @@ with sync_playwright() as pw:
     # スコアカード入力: 最後の人の打数を入れて選択が次のホールへ進んでも、ゲームの行（メダルなど）は今入れたホールのまま。次のホールの数字を入れたら、そちらに移る
     pg, errs = open_page(b, {**GM, "sc.game": "\"olympic\"", "sc.inputMode": "\"card\"", "sc.fields": {"putts": False}}, offline=True); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
     for v in ["3", "4", "3"]: C(pg, f'[data-act=cd-key][data-v="{v}"]')
-    a1 = (pg.evaluate("state.cdraft.sel.h"), pg.inner_text("tr.gin td.ft").split()[0])
-    C(pg, "[data-act=cd-key][data-v='4']"); a2 = pg.inner_text("tr.gin td.ft").split()[0]
-    C(pg, "[data-act=cd-cell][data-h='0'][data-i='1'][data-k='s']"); a3 = pg.inner_text("tr.gin td.ft").split()[0]
-    check("スコアカード入力: 全員の打数を入れたあとも、ゲームの行は入れ終わったホール（1H）のまま。次のホールを入れ始めると2Hに移り、前のホールのマスを押すと戻る", a1 == (1, "1H") and a2 == "2H" and a3 == "1H" and not errs)
+    a1 = (pg.evaluate("state.cdraft.sel.h"), pg.inner_text(".gp-h b"))   # 3人（全員）の打数がそろった瞬間: 選択は2Hへ進み、パネルは入れ終わった1Hのメダル
+    C(pg, "[data-act=cd-gp-ok]"); a2 = (pg.query_selector(".gp") is None, pg.query_selector(".cd-keys") is not None)
+    C(pg, "[data-act=cd-key][data-v='4']"); a3 = pg.query_selector(".gp") is None   # 2Hの途中ではパネルは出ない
+    C(pg, "[data-act=cd-gh][data-h='0']"); a4 = pg.inner_text(".gp-h b")   # 前のホールの番号を押すと、そのホールのパネル
+    C(pg, "[data-act=cd-cell][data-h='1'][data-i='1'][data-k='s']"); a5 = pg.query_selector(".gp") is None   # マスを押すと数字キーに戻る
+    check("スコアカード入力: 全員の打数がそろうとそのホールのメダルのパネルが自動で開き、決定で数字キーに戻る。ホール番号を押すと前のホールを開き、マスを押すと閉じる",
+          a1 == (1, "1H") and a2 == (True, True) and a3 and a4 == "1H" and a5 and not errs)
     pg.context.close()
     pg, errs = open_page(b, {"sc.v2": 1}, offline=True, repl={"const LS = {": "const LS = window.LS = {"})
     # 端末に保存できなかったとき（保存領域がいっぱいなど）は、だまって消えずに知らせる
