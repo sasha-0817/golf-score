@@ -2338,11 +2338,13 @@ body[data-tab=stats] #main .alld-lg span{font-size:13px}
 .cdt td.hn button.hbtn.has{position:relative}.cdt td.hn button.hbtn.has:after{content:"";position:absolute;right:2px;top:5px;width:7px;height:7px;border-radius:50%;background:#F2B01E}
 /* 2026-12-31: ゲーム入力は、数字キーの場所に重ねる帯（上の表と同じ列の幅。メダルは押したまま動かして選ぶ） */
 .cd-pad{position:relative}
-.cd-pad.gp-on>*:not(.gp-over){visibility:hidden}
-.gp-over{position:absolute;left:-1px;right:-1px;top:-1px;bottom:-1px;z-index:6;background:var(--rec-surface);border:1px solid var(--rec-fg);border-radius:16px;padding:6px 0 0;box-shadow:0 -8px 22px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:6px}
-.gp-h{display:flex;align-items:center;gap:8px;padding:0 10px;min-height:30px}.gp-h span{font-weight:800;font-size:15px;white-space:nowrap}
+.cd-pad.gp-on>*:not(.gp-over):not(.gp-scrim){visibility:hidden}
+.gp-scrim{position:fixed;left:0;right:0;top:0;bottom:0;z-index:5;background:rgba(10,20,15,.38);border:0;padding:0;margin:0;cursor:default}
+.gp-over{position:absolute;left:-16px;right:-16px;top:-1px;bottom:-14px;z-index:6;background:var(--rec-surface);border:0;border-radius:20px 20px 0 0;padding:16px 16px 14px;box-shadow:0 -6px 24px rgba(0,0,0,.22);display:flex;flex-direction:column;gap:6px}
+.gp-over::before{content:"";position:absolute;left:50%;top:6px;width:38px;height:4px;margin-left:-19px;border-radius:2px;background:#C9D1CB}
+.gp-h{display:flex;align-items:center;gap:8px;padding:0 2px;min-height:30px}.gp-h span{font-weight:800;font-size:15px;white-space:nowrap}
 .gp-ok{margin-left:auto;flex:0 0 auto;height:30px;padding:0 14px;border-radius:999px;border:0;background:linear-gradient(90deg,#22A06B,#1F9AA0);color:#fff;font:800 14px var(--f-body);cursor:pointer;touch-action:manipulation}
-.gp-over .cd-game{border-width:1px 0 0;border-radius:0 0 15px 15px;flex:1 1 auto;display:flex}.gp-over .cd-game table{height:100%}
+.gp-over .cd-game{border-width:1px 0 0;border-radius:0;flex:1 1 auto;display:flex}.gp-over .cd-game table{height:100%}
 .gp-over .cdt tfoot tr.gin td{background:color-mix(in srgb,#F2B01E 9%,#fff);border-bottom:0}
 .gp-over td.gp-hn{font:700 20px var(--f-num);color:#8A5F00;background:color-mix(in srgb,#F2B01E 16%,#fff)!important}
 </style>
@@ -2475,7 +2477,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-32-1000";
+const BUILD = "2026-12-33-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3399,6 +3401,7 @@ function viewCard(cd){
       <tfoot>${two?foot(half?"IN":"OUT",rows,"",FH)+foot("計",all,"all",0):foot("計",all,"",0)}</tfoot></table></div>
     ${(inputRow||skinRow||gameRow||ghostRows)?`<div class="cd-game"><table class="cdt cdg ${pOn?"wp":""}">${colg}<tfoot>${inputRow}${skinRow}${gameRow}${ghostRows}</tfoot></table></div>`:""}
     <div class="cd-pad ${gAsk!==null?"gp-on":""}">
+      ${gAsk!==null?`<button class="gp-scrim" data-act="cd-gp-ok" aria-label="閉じる"></button>`:""}
       ${gpOver}
       ${`${sel?"":`<div class="cd-lbl"><span>${done?"全部入りました。保存しましょう":"マスをタップして入力"}</span></div>`}
       ${sel||!done?`<div class="cd-keys">${[1,2,3,4,5,6,7,8,9].map(n=>key(n,String(n),!sel || (ks==="p" && n>9))).join("")}${key("10","10+",!sel||ks==="p")}${key("0","0",!sel||ks==="s")}${key("del","消す",!sel)}</div>`:""}
