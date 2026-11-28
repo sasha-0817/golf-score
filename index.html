@@ -2367,6 +2367,13 @@ body[data-tab=stats] #main .alld-lg span{font-size:13px}
 .rm-row b .rm-n{display:inline-block;width:34px;text-align:right}
 .rm-row b small{display:inline-block;width:52px;text-align:right;margin-left:0!important}
 .gp-over .cd-game{border-width:1px 0!important}
+/* 数字に対して図形がきつかった（2026-12-41）: △□二重□の中の数字を、場所ごとに図形を少し大きく／数字を少し小さくして、余白を作る */
+.rc-sc table.half .m-bogey,.rc-sc table.half .m-double,.rc-sc table.half .m-triple{width:23px!important;height:23px!important;font-size:12px!important}
+.rc-sc table.v1 .m-bogey,.rc-sc table.v1 .m-double,.rc-sc table.v1 .m-triple{width:25px!important;height:25px!important;font-size:14px!important}
+.lc-t .m-bogey,.lc-t .m-double,.lc-t .m-triple{width:23px!important;height:23px!important;font-size:12px!important}
+.cdt .m-bogey,.cdt .m-double,.cdt .m-triple{font-size:14px!important}
+.pv .m-bogey,.pv .m-double,.pv .m-triple{font-size:17px!important}
+.rec2.multi .pv .m-bogey,.rec2.multi .pv .m-double,.rec2.multi .pv .m-triple{font-size:15px!important}
 </style>
 
 </head>
@@ -2497,7 +2504,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-40-1000";
+const BUILD = "2026-12-41-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
