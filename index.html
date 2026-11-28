@@ -2340,11 +2340,11 @@ body[data-tab=stats] #main .alld-lg span{font-size:13px}
 .cd-pad{position:relative}
 .cd-pad.gp-on>*:not(.gp-over):not(.gp-scrim){visibility:hidden}
 .gp-scrim{position:fixed;left:0;right:0;top:0;bottom:0;z-index:5;background:rgba(10,20,15,.38);border:0;padding:0;margin:0;cursor:default}
-.gp-over{position:absolute;left:-16px;right:-16px;top:auto;height:max(calc(100% + 15px),228px);bottom:-14px;z-index:6;background:var(--rec-surface);border:0;border-radius:20px 20px 0 0;padding:16px 16px 14px;box-shadow:0 -6px 24px rgba(0,0,0,.22);display:flex;flex-direction:column;gap:6px}
+.gp-over{position:absolute;left:-16px;right:-16px;top:auto;height:auto;bottom:-14px;z-index:6;background:var(--rec-surface);border:0;border-radius:20px 20px 0 0;padding:16px 16px 14px;box-shadow:0 -6px 24px rgba(0,0,0,.22);display:flex;flex-direction:column;gap:6px}
 .gp-over::before{content:"";position:absolute;left:50%;top:6px;width:38px;height:4px;margin-left:-19px;border-radius:2px;background:#C9D1CB}
-.gp-h{display:flex;align-items:center;gap:8px;padding:0 2px;min-height:30px}.gp-h span{font-weight:800;font-size:15px;white-space:nowrap}
-.gp-ok{margin-left:auto;flex:0 0 auto;height:30px;padding:0 14px;border-radius:999px;border:0;background:linear-gradient(90deg,#22A06B,#1F9AA0);color:#fff;font:800 14px var(--f-body);cursor:pointer;touch-action:manipulation}
-.gp-over .cd-game{border-width:1px 0 0;border-radius:0;flex:1 1 auto;display:flex}.gp-over .cd-game table{height:100%}
+.gp-h{display:flex;align-items:center;gap:8px;padding:0 2px;min-height:26px}.gp-h span{font-weight:800;font-size:15px;white-space:nowrap}
+.gp-ok{flex:0 0 auto;height:50px;margin:4px 2px 0;border-radius:999px;font-size:16px!important;border:0;background:linear-gradient(90deg,#22A06B,#1F9AA0);color:#fff;font:800 14px var(--f-body);cursor:pointer;touch-action:manipulation}
+.gp-over .cd-game{border-width:1px 0 0;border-radius:0;flex:0 0 auto;display:flex}.gp-over .cd-game table{height:60px}.gp-over .cd-game td{height:60px}
 .gp-over .cdt tfoot tr.gin td{background:color-mix(in srgb,#F2B01E 9%,#fff);border-bottom:0}
 .gp-over td.gp-hn{font:700 20px var(--f-num);color:#8A5F00;background:color-mix(in srgb,#F2B01E 16%,#fff)!important}
 .oly-t{width:100%;border-collapse:collapse;table-layout:fixed}.oly-t th,.oly-t td{padding:5px 0;text-align:center}.oly-t th.n,.oly-t td.n{text-align:left;width:92px;font-weight:700;font-size:14px;line-height:1.25;word-break:break-all}.oly-t th.p,.oly-t td.p{width:56px;text-align:right;white-space:nowrap}.oly-t th svg{display:block;margin:0 auto}.oly-t tbody tr{border-top:1px solid #e6e0cc}.oly-t td.c{font:700 18px var(--f-num)}.oly-t td.c.z{color:#c9c9c9;font-weight:400}.oly-t td.p b{font:800 21px var(--f-num)}.oly-t td.p small{font:600 12px var(--f-num);color:#888;margin-left:1px}.oly-t tr.top td.p b{color:#B8860B}
@@ -2489,7 +2489,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-38-1000";
+const BUILD = "2026-12-39-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3409,7 +3409,7 @@ function viewCard(cd){
       return `<td class="c-s gin-c" colspan="${cwOf(i)}">${c}</td>`; }).join("");
     const n = isOlympic(g) ? (((cd.medals||{})[h])||[]).filter(x=>x>0).length : g==="nearpin" ? ((cd.pins||{})[h]!=null?1:0) : (((cd.marks||{})[h])||[]).length;
     const title = isOlympic(g)?"メダル":g==="oneon"?"ワンオン":g==="snake"?"3パットした人":"ニアピン";
-    return `<div class="gp-over" data-stop="1"><div class="gp-h"><span>${title}</span><button class="gp-ok" data-act="cd-gp-ok">${n?"決定":"なしで次へ"}</button></div><div class="cd-game"><table class="cdt cdg ${pOn?"wp":""}">${colg}<tfoot><tr class="gin"><td colspan="2" class="ft gp-hn">${h+1}H</td>${cells}${padSpB(0)}</tr></tfoot></table></div></div>`; })();
+    return `<div class="gp-over" data-stop="1"><div class="gp-h"><span>${h+1}H ${title}</span></div><div class="cd-game"><table class="cdt cdg ${pOn?"wp":""}">${colg}<tfoot><tr class="gin"><td colspan="2" class="ft gp-hn">${h+1}H</td>${cells}${padSpB(0)}</tr></tfoot></table></div><button class="gp-ok" data-act="cd-gp-ok">${n?"決定":"なしで次へ"}</button></div>`; })();
   const done=cd.players.every(p=>p.s.every(x=>x!=null)); // 打数が全部入ったら保存ボタンを出す（パットの抜けは押したときに案内）
   const key=(v,lab,dis)=>`<button data-act="cd-key" data-v="${v}" ${dis?"disabled":""} aria-label="${lab}">${lab}</button>`;
   const ks = sel ? sel.k : "s";

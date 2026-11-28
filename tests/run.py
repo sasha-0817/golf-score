@@ -1360,7 +1360,7 @@ with sync_playwright() as pw:
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.courses": c9h, "sc.v2": 1, "sc.game": "\"snake\""}, offline=True)
     pg.evaluate("(()=>{state.cdraft={id:'z',card:true,courseId:'c1',courseName:'テストコース',date:'2026-10-10',holes:Array.from({length:9},()=>({par:3})),players:[0,1].map(i=>({name:'n'+i,s:Array(9).fill(4),p:Array(9).fill(null)})),sel:null,game:'snake',marks:{},gAsk:8,gh:8,half:0}; state.tab='record'; render()})()"); pg.wait_for_timeout(300)
     sh = pg.evaluate("(()=>{const o=document.querySelector('.gp-over'); if(!o) return null; const r=o.getBoundingClientRect(); return {h:r.height, vis:r.top>=0 && r.bottom<=innerHeight+16}})()")
-    check("ゲームの入力のシート: 9ホール目（数字キーが出ていないとき）でも、見える高さが足りる（228px以上、画面から切れない）", sh and sh["h"] >= 226 and sh["vis"] and not errs)
+    check("ゲームの入力のシート: 9ホール目（数字キーが出ていないとき）でも、見える高さが足りる（160px以上、決定ボタンまで画面から切れない）", sh and sh["h"] >= 160 and sh["vis"] and not errs)
     pg.context.close()
     toast_ok = None
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.rounds": HR, "sc.courses": c9h, "sc.tab": "\"history\"", "sc.v2": 1}, offline=True)
