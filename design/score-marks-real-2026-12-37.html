@@ -1,0 +1,24 @@
+<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>記号 実寸</title>
+<style>*{box-sizing:border-box}body{margin:0;padding:12px;background:#FBFAF4;font:13px "Zen Kaku Gothic New",sans-serif;color:#1d2a22;width:375px}
+h2{font-size:13px;margin:12px 0 4px}table{width:100%;border-collapse:collapse;table-layout:fixed}td,th{border:1px solid #CFCBBB;height:var(--h);text-align:center;padding:0}
+td.l{background:#EFECE0;font-size:11px;color:#5B665F;width:40px}
+.mk{position:relative;display:inline-flex;align-items:center;justify-content:center;width:var(--s);height:var(--s);font:700 var(--f) "Barlow Condensed",sans-serif;vertical-align:middle}
+.mk svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}.mk b{position:relative;font-weight:700}
+.t b{margin-top:calc(var(--s)*.17);font-size:calc(var(--f)*.86)}</style>
+<div id=o></div>
+<script>
+const P=[3,3,3,4,3,3,4,3,3], S=[4,5,3,5,4,3,10,4,3]; // ボギー・ダボ・トリプルの数字を並べる
+const col={bo:'#F08A24',db:'#E5484D',tr:'#A51D2D'};
+const kind=(s,p)=>s-p===1?'bo':s-p===2?'db':s-p>=3?'tr':'par';
+const sw=(c,i)=>`<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.2" stroke-linejoin="round">${i}</svg>`;
+const sq=(c,s)=>sw(c,`<rect x="${12-s}" y="${12-s}" width="${s*2}" height="${s*2}"/>`), tri=c=>sw(c,'<path d="M12 1.5 L23.2 21.8 L0.8 21.8Z"/>');
+function mk(sty,s,p,size,f){const k=kind(s,p);if(k==='par')return `<b style="font:600 ${f+3}px Barlow Condensed">${s}</b>`;const c=col[k];let inner,cls='';
+ if(sty==='A'){inner=k==='bo'?sq(c,9):k==='db'?sq(c,8)+sq(c,11.5):sw(c,`<rect x=1 y=1 width=22 height=22 fill="${c}"/>`)}
+ else{inner=k==='bo'?tri(c):k==='db'?sq(c,9):sw(c,`<rect x=1 y=1 width=22 height=22 fill="${c}"/>`);cls=k==='bo'?'t':''}
+ return `<span class="mk ${cls}" style="--s:${size}px;--f:${f}px">${inner}<b style="color:${k==='tr'?'#fff':c}">${s}</b></span>`}
+const row=(sty,size,f,h)=>`<table style="--h:${h}px"><tr><td class=l>PAR</td>${P.map(p=>`<td style="color:#7A857E">${p}</td>`).join('')}</tr><tr><td class=l>打数</td>${S.map((s,i)=>`<td>${mk(sty,s,P[i],size,f)}</td>`).join('')}</tr></table>`;
+let h='';
+for(const [nm,size,f,hh] of [['結果カード・履歴の大きさ（記号18px）',18,12,30],['スコアカード入力の大きさ（記号22px）',22,14,34]])
+ h+=`<h2>${nm}　上＝今（□）／下＝三角（△）</h2>`+row('A',size,f,hh)+`<div style=height:6px></div>`+row('B',size,f,hh);
+document.getElementById('o').innerHTML=h;
+</script>
