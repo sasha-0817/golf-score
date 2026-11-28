@@ -1,0 +1,43 @@
+<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>ゲーム入力ウィンドウ 10案（2回目）</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:14px;background:#dfe3df;font:13px/1.4 "Zen Kaku Gothic New","Hiragino Sans",sans-serif;color:#1d2a22}
+h1{font-size:18px;margin:0 0 4px}p.s{margin:0 0 12px;color:#555}
+.g{display:grid;grid-template-columns:repeat(5,262px);gap:14px;justify-content:center}
+.v h3{margin:0 0 5px;font-size:13px}.v h3 small{display:block;font-weight:400;color:#666;font-size:12px}
+.ph{position:relative;width:262px;height:466px;background:#EEF1EF;border-radius:20px;overflow:hidden;border:1px solid #c5ccc7;font-size:11px}
+.in{position:absolute;left:0;top:0;width:375px;height:667px;transform:scale(.698);transform-origin:0 0;padding:0 16px}
+.top{height:58px;display:flex;gap:10px;align-items:center}.top i{width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #ddd}.top b{font-size:15px}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden}td,th{border:1px solid #DDE2DE;height:31px;text-align:center;font:700 17px "Barlow Condensed",sans-serif;padding:0}
+th{background:#EEF1EF;font:700 15px "Zen Kaku Gothic New";height:44px}td.h{width:56px;text-align:left;padding-left:8px}
+tr.on td{background:#FBF1D8}.r{color:#E5484D}.o{color:#F28C28}.bl{color:#2563EB}
+.pt{margin-top:8px;height:40px;border-radius:14px;background:#FBF1D8;color:#8A5F00;display:flex;align-items:center;padding-left:10px;font-weight:800}
+.dim{position:absolute;inset:0;background:rgba(10,20,15,.38)}
+.ab{position:absolute}.sh{background:#fff;box-shadow:0 -6px 24px rgba(0,0,0,.22)}
+.hd{display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-weight:800;font-size:15px}
+.ok{background:linear-gradient(90deg,#22A06B,#1F9AA0);color:#fff;border-radius:99px;padding:6px 14px;font-size:14px;font-weight:800}
+.cells{display:grid;grid-template-columns:repeat(4,1fr);gap:0}.cells.p{grid-template-columns:56px repeat(4,1fr)}
+.cell{margin:6px;height:44px;border-radius:10px;background:#EEF1EF;display:flex;align-items:center;justify-content:center;color:#9aa5a0;font-size:20px}
+.cell.on{background:#FFF3CC;border:1px solid #F2B01E;color:#8A5F00}
+.hn{display:flex;align-items:center;justify-content:center;font:700 18px "Barlow Condensed";color:#8A5F00;background:#FBF1D8}
+.grab{width:38px;height:4px;border-radius:2px;background:#C9D1CB;margin:6px auto 4px}
+</style>
+<h1>ゲーム入力ウィンドウ 10案（2回目）</h1><p class=s>9ホール目・4人・スネークの「3パットした人」。表は同じ。ウィンドウの出方だけ変えました。画面は実寸の約70%です。</p>
+<div class=g id=g></div>
+<script>
+const names=['かまきり','体操きんたろう','たろう','川越大生'];
+const tab=(on=8)=>`<div class=top><i></i><b>ファーツリー</b></div><table><tr><th style="width:56px">H</th>${names.map(n=>`<th>${n.length>4?n.slice(0,4)+'…':n}</th>`).join('')}</tr>${Array.from({length:9},(_,i)=>`<tr class="${i===on?'on':''}"><td class=h>${i+1} <span style="color:#8a948f">3</span></td><td class=o>4</td><td class=r>5</td><td class=r>6</td><td class=r>7</td></tr>`).join('')}<tr><td class=h>計</td><td>36</td><td>45</td><td>54</td><td>63</td></tr></table><div class=pt>スネーク</div>`;
+const row=(h=true)=>`<div class="cells ${h?'p':''}">${h?'<div class=hn>9H</div>':''}${[0,1,2,3].map(i=>`<div class="cell ${i===2?'on':''}">✓</div>`).join('')}</div>`;
+const V=[
+['1 今の形（高さ228px）','下から。見出し＋大きなマス',`<div class="ab sh" style="left:0;right:0;bottom:0;height:228px;border-radius:20px 20px 0 0"><div class=grab></div><div class=hd style="height:34px">3パットした人<span class=ok>決定</span></div>${row()}</div>`],
+['2 下から・内容ぶんだけ（約130px）','見出しと行だけ。マスは小さめ',`<div class="ab sh" style="left:0;right:0;bottom:0;border-radius:20px 20px 0 0;padding-bottom:14px"><div class=grab></div><div class=hd style="height:30px">3パットした人<span class=ok>決定</span></div>${row()}</div>`],
+['3 下から・1行だけ（約70px）','見出しと決定を同じ行の左右に',`<div class="ab sh" style="left:0;right:0;bottom:0;border-radius:20px 20px 0 0;padding-bottom:14px"><div class=grab></div><div class=cells style="grid-template-columns:50px repeat(4,1fr) 64px;align-items:center"><div style="font-weight:800;font-size:12px;padding-left:10px;line-height:1.2">3パット<br>9H</div>${[0,1,2,3].map(i=>`<div class="cell ${i===2?'on':''}" style="margin:6px 3px">✓</div>`).join('')}<div class=ok style="margin:0 6px;text-align:center;padding:8px 0">決定</div></div></div>`],
+['4 画面の真ん中・カード','暗幕＋中央の白いカード',`<div class=dim></div><div class="ab sh" style="left:14px;right:14px;top:50%;transform:translateY(-50%);border-radius:18px;padding:12px 0 8px"><div class=hd style="height:34px">3パットした人 ・ 9H</div>${row(false)}<div class=ok style="margin:4px 14px 2px;text-align:center;padding:10px">決定</div></div>`],
+['5 画面の真ん中・小さな札','名前と✓だけ。決定なしで外を押すと閉じる',`<div class=dim></div><div class="ab sh" style="left:30px;right:30px;top:50%;transform:translateY(-50%);border-radius:18px;padding:10px 6px 8px"><div style="text-align:center;font-weight:800;margin-bottom:4px">9H 3パットした人</div><div style="display:grid;grid-template-columns:1fr 1fr;">${names.map((n,i)=>`<div class="cell ${i===2?'on':''}" style="font-size:13px;font-weight:800;gap:4px">${n.length>4?n.slice(0,4):n}${i===2?' ✓':''}</div>`).join('')}</div></div>`],
+['6 画面の下3分の1・浮いたカード','下に少し余白。角は全部丸く',`<div class=dim></div><div class="ab sh" style="left:10px;right:10px;bottom:84px;border-radius:18px;padding-bottom:10px"><div class=hd style="height:36px">3パットした人<span class=ok>決定</span></div>${row()}</div>`],
+['7 押したホールの行の下に出す','暗幕なし。ホールの行に吹き出し',`<div class="ab sh" style="left:14px;right:14px;top:354px;border-radius:14px;border:1px solid #F2B01E;padding-bottom:6px"><div style="position:absolute;top:-8px;left:30px;width:14px;height:14px;background:#fff;border-left:1px solid #F2B01E;border-top:1px solid #F2B01E;transform:rotate(45deg)"></div><div class=hd style="height:30px;font-size:13px">9H 3パットした人<span class=ok style="padding:4px 12px;font-size:12px">決定</span></div>${row(false)}</div>`],
+['8 表の下の空きに直接（暗幕なし）','「ポイント」の下の空いた所に置く',`<div class="ab" style="left:12px;right:12px;top:430px;background:#fff;border-radius:14px;border:2px solid #F2B01E;padding:4px 0 6px"><div class=hd style="height:30px;font-size:13px">9H 3パットした人<span class=ok style="padding:4px 12px;font-size:12px">決定</span></div>${row(false)}</div>`],
+['9 下から・高さ半分＋大きな決定','マスは親指で押しやすい高さ。決定は下に大きく',`<div class="ab sh" style="left:0;right:0;bottom:0;border-radius:20px 20px 0 0;padding-bottom:12px"><div class=grab></div><div class=hd style="height:28px;font-size:13px">9H 3パットした人</div><div class="cells">${[0,1,2,3].map(i=>`<div class="cell ${i===2?'on':''}" style="height:52px">✓</div>`).join('')}</div><div class=ok style="margin:2px 14px 0;text-align:center;padding:12px">決定</div></div>`],
+['10 同じ面に置く（数字キーの場所）','暗幕なし。キーのかわりに入力を出す',`<div class="ab" style="left:12px;right:12px;bottom:12px;background:#fff;border-radius:16px;border:1px solid #ddd;padding:6px 0 8px"><div class=hd style="height:30px;font-size:13px">9H 3パットした人<span class=ok style="padding:4px 12px;font-size:12px">決定</span></div>${row(false)}</div>`]
+];
+document.getElementById('g').innerHTML=V.map(([t,d,o])=>`<div class=v><h3>${t}<small>${d}</small></h3><div class=ph><div class=in>${tab()}${o}</div></div></div>`).join('');
+</script>

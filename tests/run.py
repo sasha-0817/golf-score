@@ -1348,6 +1348,15 @@ with sync_playwright() as pw:
     dg = pg.evaluate("(()=>{const m=state.rounds.find(r=>r.id==='e4'); return [state.rounds.length, m.holes[0].strokes, m.player]})()")
     check("詳しい入力で記録したラウンドの編集でも、いっしょに回った人の打数が並び、直せる（増えない）", dm and dg == [2, 6, "はなこ"] and not errs)
     pg.context.close()
+    HM3 = [{**HR[1], "id": "e5", "nos": [1, 2, 3], "holes": HR[1]["holes"][:3]}, {"id": "e6", "card": True, "nos": [1, 2, 3], "player": "はなこ", "courseId": "c1", "courseName": "テストコース", "date": "2026-10-11", "createdAt": 1001 + 5,
+           "holes": [{"par": 3, "strokes": 3, "putts": 0} for _ in range(3)]}]
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.rounds": HM3, "sc.courses": c9h, "sc.tab": "\"history\"", "sc.v2": 1}, offline=True)
+    pg.evaluate("state.openRound='e5'; render()"); C(pg, "[data-act=edit-round][data-id=e5]"); pg.wait_for_timeout(300)
+    pm = pg.evaluate("!!state.draft && (state.draft.mates||[]).length===1 && state.draft.mateIds[0]==='e6' && JSON.stringify(state.draft.nos)==='[1,2,3]'")
+    pg.evaluate("state.draft.mates[0].s[0]=6; state.hole=2; render()"); C(pg, "[data-act=finish]"); pg.wait_for_timeout(700)
+    pn = pg.evaluate("(()=>{const m=state.rounds.find(r=>r.id==='e6'), o=state.rounds.find(r=>r.id==='e5'); return [state.rounds.length, m.holes[0].strokes, JSON.stringify(m.nos), JSON.stringify(o.nos)]})()")
+    check("途中で終わったラウンドの編集でも、いっしょに回った人の打数が並び、直せる（ホール番号は残る）", pm and pn == [2, 6, "[1,2,3]", "[1,2,3]"] and not errs)
+    pg.context.close()
     pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.courses": c9h, "sc.v2": 1, "sc.game": "\"snake\""}, offline=True)
     pg.evaluate("(()=>{state.cdraft={id:'z',card:true,courseId:'c1',courseName:'テストコース',date:'2026-10-10',holes:Array.from({length:9},()=>({par:3})),players:[0,1].map(i=>({name:'n'+i,s:Array(9).fill(4),p:Array(9).fill(null)})),sel:null,game:'snake',marks:{},gAsk:8,gh:8,half:0}; state.tab='record'; render()})()"); pg.wait_for_timeout(300)
     sh = pg.evaluate("(()=>{const o=document.querySelector('.gp-over'); if(!o) return null; const r=o.getBoundingClientRect(); return {h:r.height, vis:r.top>=0 && r.bottom<=innerHeight+16}})()")

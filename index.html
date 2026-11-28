@@ -2357,7 +2357,7 @@ body[data-tab=stats] #main .alld-lg span{font-size:13px}
 .m-bogey{box-sizing:border-box!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline:none!important;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F28C28' stroke-width='2.4' stroke-linejoin='round'%3E%3Cpath d='M12 1.8 L22.8 21.6 L1.2 21.6Z'/%3E%3C/svg%3E") center/100% 100% no-repeat!important;padding-top:.16em!important}
 .mk4.m-bogey{padding-top:0!important}
 .m-double{box-shadow:none!important;outline:none!important;border-width:2px!important;border-style:solid!important;border-radius:0!important}
-.m-triple{box-sizing:border-box!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline:none!important;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239F1D2A' stroke-width='1.8'%3E%3Crect x='1.2' y='1.2' width='21.6' height='21.6'/%3E%3Crect x='5.4' y='5.4' width='13.2' height='13.2'/%3E%3C/svg%3E") center/100% 100% no-repeat!important;color:var(--q-triple)!important}
+.m-triple{box-sizing:border-box!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline:none!important;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239F1D2A' stroke-width='1.2'%3E%3Crect x='1' y='1' width='22' height='22'/%3E%3Crect x='4' y='4' width='16' height='16'/%3E%3C/svg%3E") center/100% 100% no-repeat!important;color:var(--q-triple)!important}
 .toast{width:max-content;max-width:calc(100% - 32px);text-align:center;text-wrap:balance;line-height:1.45;border-radius:22px}
 </style>
 
@@ -2489,7 +2489,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-37-1000";
+const BUILD = "2026-12-38-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3316,9 +3316,9 @@ function gameAsks(cd,h){   // このホールで、ゲームの入力を聞く�
   if(g==="nearpin") return (cd.pins||{})[h]==null;
   return !(((cd.marks||{})[h])||[]).length;
 }
-function editGroup(r){ return roundGroup(r).filter(x=>!x.nos && x.holes.length===r.holes.length); }   // 編集のとき、いっしょに回った人（同じ日・同じコース・同じ時刻に保存・同じホール数）も直せるようにする
+function editGroup(r){ const k=JSON.stringify(r.nos||null); return roundGroup(r).filter(x=>x.holes.length===r.holes.length && JSON.stringify(x.nos||null)===k); }   // 編集のとき、いっしょに回った人（同じ日・同じコース・同じ時刻に保存・同じホール数・途中終了なら同じホール番号）も直せるようにする
 function openEdit(r,last){   // 編集: スコアカードで記録したラウンドはスコアカード入力で、それ以外は詳しい入力で開く（途中で終わったラウンドは詳しい入力）。いっしょに回った人の打数も直せる
-  const g=Array.isArray(r.nos)?[]:editGroup(r);
+  const g=editGroup(r);
   if(r.card && !Array.isArray(r.nos)){
     state.result=null; const all=[r,...g];
     state.cdraft={ id:r.id, card:true, editing:true, origs:JSON.parse(JSON.stringify(all)), courseId:r.courseId, courseName:r.courseName, date:r.date, holes:r.holes.map(h=>({par:h.par})), players:all.map((x,k)=>({name:x.player, s:x.holes.map(h=>h.strokes), p:x.holes.map(h=>(k===0&&puttsOn(x))?h.putts:null)})), sel:null, half:(last&&r.holes.length>9)?1:0, ...(r.practice?{practice:true}:{}) };
