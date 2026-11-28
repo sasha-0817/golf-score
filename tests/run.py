@@ -864,7 +864,7 @@ with sync_playwright() as pw:
     C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
     check("スコアカード: ゲームの行は「ポイント」（ニアピンでも）", "ポイント" in pg.inner_text(".cd-game tr.gr .ft") or "ポイント" in pg.inner_text(".cd-game"))
     check("スコアカード: 4文字の名前も「…」にならない", pg.evaluate("[...document.querySelectorAll('.cdt thead th.nm')].filter(e=>e.textContent.trim()).every(e=>e.scrollWidth<=e.clientWidth)"))
-    check("スコアカード: ダボなどの記号の枠が上下の行にはみ出さない（外側の輪まで含めて行の高さに収まる）", pg.evaluate("(()=>{const td=document.querySelector('.cdt tbody td.c-s'); const m=document.createElement('span'); m.className='mk3 m-double'; td.appendChild(m); const r=m.getBoundingClientRect(), cs=getComputedStyle(m), ring=parseFloat(cs.outlineWidth)+parseFloat(cs.outlineOffset); m.remove(); return r.height+ring*2+2 <= td.getBoundingClientRect().height-4})()"))
+    check("スコアカード: ボギー△・ダボ□・トリプル以上の二重□の記号が上下の行にはみ出さない", pg.evaluate("(()=>{const td=document.querySelector('.cdt tbody td.c-s'); const ok=['m-bogey','m-double','m-triple'].map(k=>{const m=document.createElement('span'); m.className='mk3 '+k; m.textContent='4'; td.appendChild(m); const r=m.getBoundingClientRect(); m.remove(); return r.height+2 <= td.getBoundingClientRect().height-4}); return ok.every(Boolean)})()"))
     check("スコアカード: 左上はコース名だけ（日付・「スコアカード」・人数の行は出さない）", pg.query_selector(".rec-who span") is None and pg.query_selector(".rec-who b") is not None)
     check("スコアカード: H・PAR の下に空きの行はない（2行ぶち抜き）", pg.evaluate("document.querySelectorAll('.cdt thead th[rowspan]').length") == 2)
     C(pg, "[data-act=open-rules][data-v=nearpin]")
@@ -1331,6 +1331,8 @@ with sync_playwright() as pw:
     pg.evaluate("state.result=null; state.tab='history'; render()")
     C(pg, "[data-act=toggle-round][data-id=e2]"); pg.wait_for_timeout(100); C(pg, "[data-act=edit-round][data-id=e2]"); pg.wait_for_timeout(300)
     check("詳しい入力で記録したラウンドの編集は、今まで通り詳しい入力で開く", pg.evaluate("!!state.draft && state.draft.editing===true && !state.cdraft") and not errs)
+    ms = pg.evaluate("(()=>{const mk=k=>{const m=document.createElement('span'); m.className='mk3 m-'+k; m.textContent='5'; document.body.appendChild(m); const cs=getComputedStyle(m); const o={bg:cs.backgroundImage.includes('svg'), b:parseFloat(cs.borderTopWidth), fs:cs.fontSize}; m.remove(); return o}; return {bo:mk('bogey'), db:mk('double'), tr:mk('triple')}})()")
+    check("記号: ボギーは△（線の絵）・ダボは□（枠）・トリプル以上は二重□（塗りつぶしなし）。数字の大きさは同じ", ms["bo"]["bg"] and ms["bo"]["b"] == 0 and ms["db"]["b"] == 2 and not ms["db"]["bg"] and ms["tr"]["bg"] and ms["bo"]["fs"] == ms["db"]["fs"] == ms["tr"]["fs"])
     pg.context.close()
     # スコアカード入力: 最後の人の打数を入れて選択が次のホールへ進んでも、ゲームの行（メダルなど）は今入れたホールのまま。次のホールの数字を入れたら、そちらに移る
     pg, errs = open_page(b, {**GM, "sc.game": "\"olympic\"", "sc.inputMode": "\"card\"", "sc.fields": {"putts": False}}, offline=True); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
