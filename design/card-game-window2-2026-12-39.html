@@ -3,6 +3,7 @@
 *{box-sizing:border-box}body{margin:0;padding:14px;background:#dfe3df;font:13px/1.4 "Zen Kaku Gothic New","Hiragino Sans",sans-serif;color:#1d2a22}
 h1{font-size:18px;margin:0 0 4px}p.s{margin:0 0 12px;color:#555}
 .g{display:grid;grid-template-columns:repeat(5,262px);gap:14px;justify-content:center}
+@media (max-width:900px){.g{grid-template-columns:repeat(auto-fit,minmax(262px,1fr));justify-items:center}.v{width:262px}body{padding:10px}}
 .v h3{margin:0 0 5px;font-size:13px}.v h3 small{display:block;font-weight:400;color:#666;font-size:12px}
 .ph{position:relative;width:262px;height:466px;background:#EEF1EF;border-radius:20px;overflow:hidden;border:1px solid #c5ccc7;font-size:11px}
 .in{position:absolute;left:0;top:0;width:375px;height:667px;transform:scale(.698);transform-origin:0 0;padding:0 16px}
