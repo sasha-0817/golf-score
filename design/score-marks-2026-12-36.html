@@ -1,0 +1,39 @@
+<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>スコアの記号 見本</title>
+<style>
+:root{--bi:#2F7DE1;--eg:#1F3A8A;--hio:#F2B01E;--bo:#F08A24;--db:#E5484D;--tr:#A51D2D;--par:#1B2A22}
+*{box-sizing:border-box}body{margin:0;padding:16px;background:#e9ece9;font:14px/1.45 "Zen Kaku Gothic New","Hiragino Sans",sans-serif;color:#1d2a22}
+h1{font-size:18px;margin:0 0 4px}p.s{margin:0 0 14px;color:#555}
+.g{display:grid;grid-template-columns:repeat(2,390px);gap:16px;justify-content:center}
+.c{background:#FBFAF4;border:1px solid #E4E0D2;border-radius:14px;padding:12px}
+.c h3{margin:0 0 8px;font-size:15px}.c h3 small{font-weight:400;color:#777;font-size:13px}
+table{width:100%;border-collapse:collapse;table-layout:fixed}td,th{border:1px solid #CFCBBB;height:34px;text-align:center;padding:0;font:600 16px "Barlow Condensed",sans-serif}
+th{background:#EFECE0;color:#5B665F;font-size:13px;height:22px}td.l{background:#EFECE0;font-size:12px;color:#5B665F;width:42px}
+td.p{color:#7A857E;height:24px;font-size:14px}
+.mk{position:relative;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;font:700 16px "Barlow Condensed",sans-serif}
+.mk svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}.mk b{position:relative;font-weight:700}
+.lg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:13px;color:#555;align-items:center}.lg span{display:inline-flex;align-items:center;gap:4px}
+.note{margin:6px 0 0;font-size:13px;color:#666}
+</style>
+<h1>スコアの記号 見本</h1><p class=s>同じ9ホール（パー 3 3 3 4 3 3 4 3 3）で、記号だけ変えました。色は今のまま（ボギー オレンジ・ダボ 赤・トリプル 濃い赤）。</p>
+<div class=g id=g></div>
+<script>
+const P=[3,3,3,4,3,3,4,3,3], S=[4,2,3,2,5,3,7,1,4];
+const kind=(s,p)=>s===1?'hio':s-p<=-2?'eagle':s-p===-1?'bi':s-p===0?'par':s-p===1?'bo':s-p===2?'db':'tr';
+const C={hio:'#F2B01E',eagle:'#1F3A8A',bi:'#2F7DE1',par:'#1B2A22',bo:'#F08A24',db:'#E5484D',tr:'#A51D2D'};
+const sv=(inner)=>`<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linejoin="round">${inner}</svg>`;
+const circle=(c,r=10,extra='')=>`<circle cx="12" cy="12" r="${r}" stroke="${c}" ${extra}/>`;
+const sq=(c,s=9,extra='')=>`<rect x="${12-s}" y="${12-s}" width="${s*2}" height="${s*2}" stroke="${c}" ${extra}/>`;
+const tri=(c,k=1,extra='')=>`<path d="M12 1.5 L23.2 21.8 L0.8 21.8Z" stroke="${c}" ${extra}/>`;
+const tri2=(c)=>`<path d="M12 0.5 L23.8 22.5 L0.2 22.5Z" stroke="${c}"/><path d="M12 6 L19.4 19.6 L4.6 19.6Z" stroke="${c}" stroke-width="1.5"/>`;
+const sets={
+A:{t:'A 今の形',d:'ボギー□ ・ ダボ二重□ ・ トリプル以上■',m:{hio:c=>sv(`<circle cx=12 cy=12 r=11 fill="${c}"/>`),eagle:c=>sv(circle(c,9)+circle(c,12,'stroke-width=1.5')),bi:c=>sv(circle(c,10)),par:c=>'',bo:c=>sv(sq(c,9)),db:c=>sv(sq(c,8)+sq(c,11.5,'stroke-width=1.5')),tr:c=>sv(sq(c,11,`fill="${c}"`))}},
+B:{t:'B 日本式（おすすめ）',d:'バーディ○ ・ ボギー△ ・ ダボ□ ・ トリプル以上■。パーは印なし',m:{hio:c=>sv(`<circle cx=12 cy=12 r=11 fill="${c}"/>`),eagle:c=>sv(circle(c,9)+circle(c,12,'stroke-width=1.5')),bi:c=>sv(circle(c,10)),par:c=>'',bo:c=>sv(tri(c)),db:c=>sv(sq(c,9)),tr:c=>sv(sq(c,11,`fill="${c}"`))}},
+C:{t:'C ボギー△・ダボは二重△',d:'三角形の仲間でそろえる。トリプル以上は■',m:{hio:c=>sv(`<circle cx=12 cy=12 r=11 fill="${c}"/>`),eagle:c=>sv(circle(c,9)+circle(c,12,'stroke-width=1.5')),bi:c=>sv(circle(c,10)),par:c=>'',bo:c=>sv(tri(c)),db:c=>sv(tri2(c)),tr:c=>sv(sq(c,11,`fill="${c}"`))}},
+D:{t:'D ボギー△・ダボ□・トリプル以上は二重□',d:'ダボまでは線、トリプル以上は二重線。塗りつぶしをやめる',m:{hio:c=>sv(`<circle cx=12 cy=12 r=11 fill="${c}"/>`),eagle:c=>sv(circle(c,9)+circle(c,12,'stroke-width=1.5')),bi:c=>sv(circle(c,10)),par:c=>'',bo:c=>sv(tri(c)),db:c=>sv(sq(c,9)),tr:c=>sv(sq(c,7.5)+sq(c,11,'stroke-width=1.5'))}},
+E:{t:'E パーも○（うすいグレー）',d:'パーに薄い○。バーディは青の太い○、イーグルは二重○。ボギー△・ダボ□・トリプル以上■',m:{hio:c=>sv(`<circle cx=12 cy=12 r=11 fill="${c}"/>`),eagle:c=>sv(circle(c,9,'stroke-width=2.4')+circle(c,12,'stroke-width=1.5')),bi:c=>sv(circle(c,10,'stroke-width=2.6')),par:c=>sv(circle('#A7B0AA',10,'stroke-width=1.3')),bo:c=>sv(tri(c)),db:c=>sv(sq(c,9)),tr:c=>sv(sq(c,11,`fill="${c}"`))}},
+F:{t:'F ボギー△・ダボ△に斜線',d:'△の塗りで悪さを表す：ボギー△、ダボは塗りの△、トリプル以上は濃い塗りの■',m:{hio:c=>sv(`<circle cx=12 cy=12 r=11 fill="${c}"/>`),eagle:c=>sv(circle(c,9)+circle(c,12,'stroke-width=1.5')),bi:c=>sv(circle(c,10)),par:c=>'',bo:c=>sv(tri(c)),db:c=>sv(tri(c,1,`fill="${c}"`)),tr:c=>sv(sq(c,11,`fill="${c}"`))}}
+};
+const mk=(set,s,p)=>{const k=kind(s,p),c=C[k],inner=set.m[k](c);const txt=(k==='tr'&&!(set===sets.D))?'#fff':(k==='par'?'#1B2A22':c);const tcol=(k==='hio')?'#3A2600':(set===sets.F&&k==='db')?'#fff':txt; const dy=(inner.includes('M12')&&k!=='tr')?'margin-top:4px;font-size:14px':''; return `<span class=mk>${inner}<b style="color:${tcol};${dy}">${s}</b></span>`};
+const lgd=set=>[['hio','ホールインワン',1,3],['eagle','イーグル',2,4],['bi','バーディ',2,3],['bo','ボギー',4,3],['db','ダボ',5,3],['tr','トリプル以上',7,4]].map(([k,n,s,p])=>`<span>${mk(set,s,p)}${n}</span>`).join('');
+document.getElementById('g').innerHTML=Object.entries(sets).map(([k,set])=>`<div class=c><h3>${set.t}<br><small>${set.d}</small></h3><table><tr><th>H</th>${P.map((_,i)=>`<th>${i+1}</th>`).join('')}</tr><tr><td class="l p">PAR</td>${P.map(p=>`<td class=p>${p}</td>`).join('')}</tr><tr><td class=l>打数</td>${S.map((s,i)=>`<td>${mk(set,s,P[i])}</td>`).join('')}</tr></table><div class=lg>${lgd(set)}</div></div>`).join('');
+</script>
