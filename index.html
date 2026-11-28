@@ -2354,11 +2354,19 @@ body[data-tab=stats] #main .alld-lg span{font-size:13px}
 .rcard .actions .prac-b{display:inline-flex;align-items:center;gap:8px}.rcard .actions .prac-b.on{border-color:var(--turf);color:var(--fg)}
 .sl-sw.sm{width:34px;height:20px;border-radius:10px}.sl-sw.sm::after{width:14px;height:14px;left:3px;top:3px}.sl-sw.sm.on::after{transform:translateX(14px)}
 /* 記号（2026-12-36 D案）: ボギー△・ダボ□・トリプル以上は二重□（塗りつぶしなし）。数字の大きさは全部の記号で同じ */
-.m-bogey{box-sizing:border-box!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline:none!important;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F28C28' stroke-width='2.4' stroke-linejoin='round'%3E%3Cpath d='M12 1.8 L22.8 21.6 L1.2 21.6Z'/%3E%3C/svg%3E") center/100% 100% no-repeat!important;padding-top:.16em!important}
+.m-bogey{box-sizing:border-box!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline:none!important;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F28C28' stroke-width='1.6' stroke-linejoin='round'%3E%3Cpath vector-effect='non-scaling-stroke' d='M12 1.8 L22.8 21.6 L1.2 21.6Z'/%3E%3C/svg%3E") center/100% 100% no-repeat!important;padding-top:.16em!important}
 .mk4.m-bogey{padding-top:0!important}
 .m-double{box-shadow:none!important;outline:none!important;border-width:2px!important;border-style:solid!important;border-radius:0!important}
-.m-triple{box-sizing:border-box!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline:none!important;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239F1D2A' stroke-width='1.2'%3E%3Crect x='1' y='1' width='22' height='22'/%3E%3Crect x='4' y='4' width='16' height='16'/%3E%3C/svg%3E") center/100% 100% no-repeat!important;color:var(--q-triple)!important}
+.m-triple{box-sizing:border-box!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline:none!important;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239F1D2A' stroke-width='1.6'%3E%3Crect vector-effect='non-scaling-stroke' x='1' y='1' width='22' height='22'/%3E%3Crect vector-effect='non-scaling-stroke' x='4.6' y='4.6' width='14.8' height='14.8'/%3E%3C/svg%3E") center/100% 100% no-repeat!important;color:var(--q-triple)!important}
 .toast{width:max-content;max-width:calc(100% - 32px);text-align:center;text-wrap:balance;line-height:1.45;border-radius:22px}
+/* 記号の線の太さは全部同じ（1.6px）: 丸・二重丸・四角・△・二重□ */
+.m-birdie,.m-double,.m-eagle,.mk4.m-eagle,.mk4.m-bogey{border-width:1.6px!important}
+.m-eagle,.mk4.m-eagle,.m-double,.mk4.m-double{outline-width:1.6px!important}
+.m-double,.mk4.m-double{outline:none!important}
+.rm-row b{display:inline-flex;align-items:baseline;justify-content:flex-end}
+.rm-row b .rm-n{display:inline-block;width:34px;text-align:right}
+.rm-row b small{display:inline-block;width:52px;text-align:right;margin-left:0!important}
+.gp-over .cd-game{border-width:1px 0!important}
 </style>
 
 </head>
@@ -2489,7 +2497,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-39-1000";
+const BUILD = "2026-12-40-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -2750,7 +2758,7 @@ function backupBar(){
 /* いっしょに回った人（同じ日・同じコースで、保存が1分以内のラウンド）と、ラウンドのメモ */
 function roundGroup(r){ return state.rounds.filter(x=>x.id!==r.id && x.player && x.date===r.date && x.courseId===r.courseId && Math.abs((x.createdAt||0)-(r.createdAt||0))<60000).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)); }
 function roundMates(r){ const g=roundGroup(r); if(!g.length) return "";
-  return `<div class="rmates"><div class="rm-h">いっしょに回った人</div>${g.map(x=>{ const t=roundTotals(x); return `<div class="rm-row"><span>${esc(x.player)}</span><b>${t.score}<small>(${toPar(t.diff)})</small></b></div>`; }).join("")}</div>`; }
+  return `<div class="rmates"><div class="rm-h">いっしょに回った人</div>${g.map(x=>{ const t=roundTotals(x); return `<div class="rm-row"><span>${esc(x.player)}</span><b><span class="rm-n">${t.score}</span><small>(${toPar(t.diff)})</small></b></div>`; }).join("")}</div>`; }
 const MEMO_MAX = 200;
 function memoSheet(){ const r=state.rounds.find(x=>x.id===state.memoId); if(!r) return "";
   return `<div class="sheet-back memo-back" data-act="memo-close"><div class="sheet memo-sheet" data-stop="1"><p>メモ</p><textarea id="memo-in" maxlength="${MEMO_MAX}" rows="4" placeholder="天気・調子・気づいたことなど">${esc(r.memo||"")}</textarea><button class="memo-ok" data-act="memo-save">保存する</button><button data-act="memo-close">やめる</button></div></div>`; }

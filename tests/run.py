@@ -1371,8 +1371,8 @@ with sync_playwright() as pw:
     pg.evaluate("state.result=null; state.tab='history'; render()")
     C(pg, "[data-act=toggle-round][data-id=e2]"); pg.wait_for_timeout(100); C(pg, "[data-act=edit-round][data-id=e2]"); pg.wait_for_timeout(300)
     check("詳しい入力で記録したラウンドの編集は、今まで通り詳しい入力で開く", pg.evaluate("!!state.draft && state.draft.editing===true && !state.cdraft") and not errs)
-    ms = pg.evaluate("(()=>{const mk=k=>{const m=document.createElement('span'); m.className='mk3 m-'+k; m.textContent='5'; document.body.appendChild(m); const cs=getComputedStyle(m); const o={bg:cs.backgroundImage.includes('svg'), b:parseFloat(cs.borderTopWidth), fs:cs.fontSize}; m.remove(); return o}; return {bo:mk('bogey'), db:mk('double'), tr:mk('triple')}})()")
-    check("記号: ボギーは△（線の絵）・ダボは□（枠）・トリプル以上は二重□（塗りつぶしなし）。数字の大きさは同じ", ms["bo"]["bg"] and ms["bo"]["b"] == 0 and ms["db"]["b"] == 2 and not ms["db"]["bg"] and ms["tr"]["bg"] and ms["bo"]["fs"] == ms["db"]["fs"] == ms["tr"]["fs"])
+    ms = pg.evaluate("(()=>{const mk=k=>{const m=document.createElement('span'); m.className='mk3 m-'+k; m.textContent='5'; document.body.appendChild(m); const cs=getComputedStyle(m); const o={bg:cs.backgroundImage.includes('svg'), b:parseFloat(cs.borderTopWidth), fs:cs.fontSize}; m.remove(); return o}; return {bo:mk('bogey'), db:mk('double'), tr:mk('triple'), bi:mk('birdie')}})()")
+    check("記号: ボギーは△（線の絵）・ダボは□（枠）・トリプル以上は二重□（塗りつぶしなし）。数字の大きさは同じ・丸と四角の線の太さは同じ", ms["bo"]["bg"] and ms["bo"]["b"] == 0 and ms["db"]["b"] > 0 and ms["db"]["b"] == ms["bi"]["b"] and not ms["db"]["bg"] and ms["tr"]["bg"] and ms["bo"]["fs"] == ms["db"]["fs"] == ms["tr"]["fs"])
     pg.context.close()
     # スコアカード入力: 最後の人の打数を入れて選択が次のホールへ進んでも、ゲームの行（メダルなど）は今入れたホールのまま。次のホールの数字を入れたら、そちらに移る
     pg, errs = open_page(b, {**GM, "sc.game": "\"olympic\"", "sc.inputMode": "\"card\"", "sc.fields": {"putts": False}}, offline=True); C(pg, "[data-act=start]"); pg.wait_for_timeout(300)
