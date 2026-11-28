@@ -1,0 +1,23 @@
+<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>トリプル以上の記号 候補</title>
+<style>*{box-sizing:border-box}body{margin:0;padding:12px;background:#FBFAF4;font:13px "Zen Kaku Gothic New",sans-serif;color:#1d2a22;width:375px}
+h2{font-size:13px;margin:12px 0 3px}p{margin:0 0 4px;color:#666;font-size:12px}table{width:100%;border-collapse:collapse;table-layout:fixed}td{border:1px solid #CFCBBB;height:var(--h);text-align:center;padding:0;background:#fff}
+.mk{position:relative;display:inline-flex;align-items:center;justify-content:center;width:var(--s);height:var(--s);font:700 var(--f) "Barlow Condensed",sans-serif}
+.mk svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}.mk b{position:relative;font-weight:700;color:#9F1D2A}.mk b.sm{font-size:calc(var(--f)*.82)}</style>
+<div id=o></div>
+<script>
+const C='#9F1D2A';const sw=(i,w=1.8)=>`<svg viewBox="0 0 24 24" fill="none" stroke="${C}" stroke-width="${w}">${i}</svg>`;
+const R=(a,b,w='')=>`<rect x="${a}" y="${a}" width="${b}" height="${b}" ${w}/>`;
+const T={
+ T1:['今の形（二重□・太い）',()=>sw(R(1.2,21.6)+R(5.4,13.2),1.8),0],
+ T2:['二重□・細い線・内側を大きく',()=>sw(R(1,22,'stroke-width="1.2"')+R(4,16,'stroke-width="1.2"')),0],
+ T3:['二重□・細い線・2けたは数字を小さく',()=>sw(R(1,22,'stroke-width="1.2"')+R(4,16,'stroke-width="1.2"')),1],
+ T4:['□1本・太め・うすい赤の面',()=>sw(R(1.2,21.6,'fill="#F4D4D6"'),2.2),0],
+ T5:['□1本・細め・濃い赤の面（白い数字）',()=>sw(R(1,22,`fill="${C}"`),1),2],
+ T6:['二重□・外側だけ太く内側は細い',()=>sw(R(1.2,21.6,'stroke-width="2"')+R(4.6,14.8,'stroke-width="1"')),0]
+};
+function mk(k,s,size,f){const [n,fn,mode]=T[k];const two=String(s).length>1;const sm=(mode===1&&two)?'sm':'';const col=mode===2?'#fff':C;return `<span class=mk style="--s:${size}px;--f:${f}px">${fn()}<b class="${sm}" style="color:${col}">${s}</b></span>`}
+let h='';
+for(const k of Object.keys(T)){h+=`<h2>${k} ${T[k][0]}</h2>`;
+ for(const [size,f,hh,lab] of [[18,12,30,'結果・履歴'],[27,17,40,'スコアカード入力']]) h+=`<p>${lab}（記号${size}px）</p><table><tr>${[7,8,9,10,12].map(v=>`<td style="--h:${hh}px">${mk(k,v,size,f)}</td>`).join('')}</tr></table>`}
+document.getElementById('o').innerHTML=h;
+</script>

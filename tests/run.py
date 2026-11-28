@@ -1328,6 +1328,37 @@ with sync_playwright() as pw:
     sv = pg.evaluate("(()=>{const rs=state.rounds.filter(r=>r.id==='e1'); return [state.rounds.length, rs.length, rs[0].holes[0].strokes, rs[0].memo, rs[0].practice===true, rs[0].card===true]})()")
     check("スコアカードで記録したラウンドを編集すると、スコアカード入力で開く。保存すると同じラウンドが直り、メモ・練習の印は残る（増えない）",
           ce and sv == [2, 1, 3, "メモ", True, True] and not errs)
+    old_pg, old_errs = pg, errs
+    HM = [{**HR[0], "id": "e1"}, {"id": "e3", "card": True, "player": "はなこ", "courseId": "c1", "courseName": "テストコース", "date": "2026-10-10", "createdAt": 1000 + 5,
+           "holes": [{"par": 3, "strokes": 3, "putts": 0} for _ in range(9)]}]
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.rounds": HM, "sc.courses": c9h, "sc.tab": "\"history\"", "sc.v2": 1}, offline=True)
+    pg.evaluate("state.openRound='e1'; render()"); C(pg, "[data-act=edit-round][data-id=e1]"); pg.wait_for_timeout(300)
+    two = pg.evaluate("state.cdraft && state.cdraft.players.length")
+    C(pg, "[data-act=cd-cell][data-h='0'][data-i='1'][data-k='s']"); C(pg, "[data-act=cd-key][data-v='5']"); pg.wait_for_timeout(200)
+    C(pg, "[data-act=cd-finish]"); pg.wait_for_timeout(700)
+    gm = pg.evaluate("(()=>{const m=state.rounds.find(r=>r.id==='e3'); return [state.rounds.length, m.holes[0].strokes, m.player, state.rounds.find(r=>r.id==='e1').holes[0].strokes]})()")
+    check("履歴で編集: いっしょに回った人（同じ日・同じコース・同時に保存）もスコアカードに並び、直すとその人のラウンドが直る（増えない）", two == 2 and gm == [2, 5, "はなこ", 4] and not errs)
+    pg.context.close()
+    HM2 = [{**HR[1], "id": "e2"}, {"id": "e4", "card": True, "player": "はなこ", "courseId": "c1", "courseName": "テストコース", "date": "2026-10-11", "createdAt": 1001 + 5,
+           "holes": [{"par": 3, "strokes": 3, "putts": 0} for _ in range(9)]}]
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.rounds": HM2, "sc.courses": c9h, "sc.tab": "\"history\"", "sc.v2": 1}, offline=True)
+    pg.evaluate("state.openRound='e2'; render()"); C(pg, "[data-act=edit-round][data-id=e2]"); pg.wait_for_timeout(300)
+    dm = pg.evaluate("!!state.draft && (state.draft.mates||[]).length===1 && state.draft.mateIds[0]==='e4'")
+    pg.evaluate("state.draft.mates[0].s[0]=6; state.hole=8; render()"); C(pg, "[data-act=finish]"); pg.wait_for_timeout(700)
+    dg = pg.evaluate("(()=>{const m=state.rounds.find(r=>r.id==='e4'); return [state.rounds.length, m.holes[0].strokes, m.player]})()")
+    check("詳しい入力で記録したラウンドの編集でも、いっしょに回った人の打数が並び、直せる（増えない）", dm and dg == [2, 6, "はなこ"] and not errs)
+    pg.context.close()
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.courses": c9h, "sc.v2": 1, "sc.game": "\"snake\""}, offline=True)
+    pg.evaluate("(()=>{state.cdraft={id:'z',card:true,courseId:'c1',courseName:'テストコース',date:'2026-10-10',holes:Array.from({length:9},()=>({par:3})),players:[0,1].map(i=>({name:'n'+i,s:Array(9).fill(4),p:Array(9).fill(null)})),sel:null,game:'snake',marks:{},gAsk:8,gh:8,half:0}; state.tab='record'; render()})()"); pg.wait_for_timeout(300)
+    sh = pg.evaluate("(()=>{const o=document.querySelector('.gp-over'); if(!o) return null; const r=o.getBoundingClientRect(); return {h:r.height, vis:r.top>=0 && r.bottom<=innerHeight+16}})()")
+    check("ゲームの入力のシート: 9ホール目（数字キーが出ていないとき）でも、見える高さが足りる（228px以上、画面から切れない）", sh and sh["h"] >= 226 and sh["vis"] and not errs)
+    pg.context.close()
+    toast_ok = None
+    pg, errs = open_page(b, {"sc.player": "\"たろう\"", "sc.rounds": HR, "sc.courses": c9h, "sc.tab": "\"history\"", "sc.v2": 1}, offline=True)
+    pg.evaluate("state.openRound='e2'; render()"); C(pg, "[data-act=prac-toggle]"); pg.wait_for_timeout(200)
+    tt = pg.evaluate("(()=>{const e=document.querySelector('.toast'); return e? e.textContent:null})()")
+    check("練習ラウンドのメッセージは短く「練習ラウンドにしました」だけ", tt == "練習ラウンドにしました" and not errs)
+    pg, errs = old_pg, old_errs
     pg.evaluate("state.result=null; state.tab='history'; render()")
     C(pg, "[data-act=toggle-round][data-id=e2]"); pg.wait_for_timeout(100); C(pg, "[data-act=edit-round][data-id=e2]"); pg.wait_for_timeout(300)
     check("詳しい入力で記録したラウンドの編集は、今まで通り詳しい入力で開く", pg.evaluate("!!state.draft && state.draft.editing===true && !state.cdraft") and not errs)

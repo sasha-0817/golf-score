@@ -2340,7 +2340,7 @@ body[data-tab=stats] #main .alld-lg span{font-size:13px}
 .cd-pad{position:relative}
 .cd-pad.gp-on>*:not(.gp-over):not(.gp-scrim){visibility:hidden}
 .gp-scrim{position:fixed;left:0;right:0;top:0;bottom:0;z-index:5;background:rgba(10,20,15,.38);border:0;padding:0;margin:0;cursor:default}
-.gp-over{position:absolute;left:-16px;right:-16px;top:-1px;bottom:-14px;z-index:6;background:var(--rec-surface);border:0;border-radius:20px 20px 0 0;padding:16px 16px 14px;box-shadow:0 -6px 24px rgba(0,0,0,.22);display:flex;flex-direction:column;gap:6px}
+.gp-over{position:absolute;left:-16px;right:-16px;top:auto;height:max(calc(100% + 15px),228px);bottom:-14px;z-index:6;background:var(--rec-surface);border:0;border-radius:20px 20px 0 0;padding:16px 16px 14px;box-shadow:0 -6px 24px rgba(0,0,0,.22);display:flex;flex-direction:column;gap:6px}
 .gp-over::before{content:"";position:absolute;left:50%;top:6px;width:38px;height:4px;margin-left:-19px;border-radius:2px;background:#C9D1CB}
 .gp-h{display:flex;align-items:center;gap:8px;padding:0 2px;min-height:30px}.gp-h span{font-weight:800;font-size:15px;white-space:nowrap}
 .gp-ok{margin-left:auto;flex:0 0 auto;height:30px;padding:0 14px;border-radius:999px;border:0;background:linear-gradient(90deg,#22A06B,#1F9AA0);color:#fff;font:800 14px var(--f-body);cursor:pointer;touch-action:manipulation}
@@ -2358,6 +2358,7 @@ body[data-tab=stats] #main .alld-lg span{font-size:13px}
 .mk4.m-bogey{padding-top:0!important}
 .m-double{box-shadow:none!important;outline:none!important;border-width:2px!important;border-style:solid!important;border-radius:0!important}
 .m-triple{box-sizing:border-box!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline:none!important;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239F1D2A' stroke-width='1.8'%3E%3Crect x='1.2' y='1.2' width='21.6' height='21.6'/%3E%3Crect x='5.4' y='5.4' width='13.2' height='13.2'/%3E%3C/svg%3E") center/100% 100% no-repeat!important;color:var(--q-triple)!important}
+.toast{width:max-content;max-width:calc(100% - 32px);text-align:center;text-wrap:balance;line-height:1.45;border-radius:22px}
 </style>
 
 </head>
@@ -2488,7 +2489,7 @@ const state = {
 
 if(state.draft && state.draft.cur>=0 && state.draft.cur<state.draft.holes.length) state.hole=state.draft.cur;
 /* ---------- 自動アップデート: 新しい版が公開されていたら読み直す ---------- */
-const BUILD = "2026-12-36-1000";
+const BUILD = "2026-12-37-1000";
 async function checkUpdate(){
   try{
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache:"no-store" });
@@ -3315,13 +3316,16 @@ function gameAsks(cd,h){   // このホールで、ゲームの入力を聞く�
   if(g==="nearpin") return (cd.pins||{})[h]==null;
   return !(((cd.marks||{})[h])||[]).length;
 }
-function openEdit(r,last){   // 編集: スコアカードで記録したラウンドはスコアカード入力で、それ以外は詳しい入力で開く（途中で終わったラウンドは詳しい入力）
+function editGroup(r){ return roundGroup(r).filter(x=>!x.nos && x.holes.length===r.holes.length); }   // 編集のとき、いっしょに回った人（同じ日・同じコース・同じ時刻に保存・同じホール数）も直せるようにする
+function openEdit(r,last){   // 編集: スコアカードで記録したラウンドはスコアカード入力で、それ以外は詳しい入力で開く（途中で終わったラウンドは詳しい入力）。いっしょに回った人の打数も直せる
+  const g=Array.isArray(r.nos)?[]:editGroup(r);
   if(r.card && !Array.isArray(r.nos)){
-    state.result=null;
-    state.cdraft={ id:r.id, card:true, editing:true, orig:JSON.parse(JSON.stringify(r)), courseId:r.courseId, courseName:r.courseName, date:r.date, holes:r.holes.map(h=>({par:h.par})), players:[{name:r.player, s:r.holes.map(h=>h.strokes), p:r.holes.map(h=>puttsOn(r)?h.putts:null)}], sel:null, half:(last&&r.holes.length>9)?1:0, ...(r.practice?{practice:true}:{}) };
+    state.result=null; const all=[r,...g];
+    state.cdraft={ id:r.id, card:true, editing:true, origs:JSON.parse(JSON.stringify(all)), courseId:r.courseId, courseName:r.courseName, date:r.date, holes:r.holes.map(h=>({par:h.par})), players:all.map((x,k)=>({name:x.player, s:x.holes.map(h=>h.strokes), p:x.holes.map(h=>(k===0&&puttsOn(x))?h.putts:null)})), sel:null, half:(last&&r.holes.length>9)?1:0, ...(r.practice?{practice:true}:{}) };
     saveCDraft(); state.tab="record"; LS.set("sc.tab","record"); render(); return; }
   state.result=null;
   state.draft={...JSON.parse(JSON.stringify(r)), editing:true}; state.draft.holes.forEach(x=>{ x.entered=true; x.sT=true; x.pT=true; });
+  if(g.length){ state.draft.mates=g.map(x=>({name:x.player, s:x.holes.map(h=>h.strokes), p:x.holes.map(()=>2), t:[], pt:[]})); state.draft.mateIds=g.map(x=>x.id); }
   state.hole=last?r.holes.length-1:0; state.tab="record"; LS.set("sc.tab","record"); saveDraft(); render();
 }
 function cardMissing(cd){
@@ -3340,7 +3344,7 @@ async function cardFinish(b, early){
   const miss=early?null:cardMissing(cd); if(miss){ cd.sel=miss.sel; if(cd.holes.length>9) cd.half=miss.sel.h<9?0:1; saveCDraft(); render(); toast(miss.msg); return; }
   const pOn=fields().putts, now=Date.now();
   const rs=cd.players.map((pl,k)=>{ const withP = cdP(k) && idxC.every(h=>pl.p[h]!=null); // パットを書かなかった人は putts 0（＝記録なし）で送る
-    if(cd.editing && cd.orig) return { ...cd.orig, card:true, holes:idxC.map(i=>({...cd.orig.holes[i], par:cd.holes[i].par, strokes:pl.s[i], putts:withP?pl.p[i]:cd.orig.holes[i].putts})) };   // 編集: もとのラウンドの id・メモ・練習の印などを残して、打数・パットだけ入れかえる
+    if(cd.editing && cd.origs && cd.origs[k]){ const o=cd.origs[k]; return { ...o, card:true, holes:idxC.map(i=>({...o.holes[i], par:cd.holes[i].par, strokes:pl.s[i], putts:withP?pl.p[i]:o.holes[i].putts})) }; }   // 編集: もとのラウンドの id・メモ・練習の印などを残して、打数・パットだけ入れかえる
     return { id:k?uid():cd.id, card:true, player:pl.name, courseId:cd.courseId, courseName:cd.courseName, date:cd.date, createdAt:now+k, ...(cd.practice?{practice:true}:{}), ...(partial?{nos:idxC.map(i=>i+1)}:{}),
       holes:idxC.map(i=>({par:cd.holes[i].par, strokes:pl.s[i], putts:withP?pl.p[i]:0, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null})) }; });
   if(state.saving) return; state.saving=true; render();
@@ -4331,7 +4335,7 @@ document.addEventListener("click", async ev => {
         ...(partial?{nos:idxF.map(i=>i+1)}:(d.editing&&Array.isArray(d.nos)&&d.nos.length===d.holes.length?{nos:d.nos}:{})),   // 途中で終わったラウンドを編集しても、ホール番号は残す
         holes:idxF.map(i=>d.holes[i]).map(x=>({par:x.par, strokes:x.strokes, putts:anyP?x.putts:0, dir:x.dir, bunker:!!x.bunker, ob:evs(x,"ob").length>0, pen:evs(x,"pen").length>0, tee:x.tee||null, club:x.club||null, aim:x.aim||null, dirOn:x.dirOn||null, teeOn:x.teeOn||null})) };
       state.saving=true; render(); rememberClubs(r);
-      const mr=(!d.editing && Array.isArray(d.mates)) ? d.mates.map((m,k)=>({ id:uid(), card:true, ...(d.practice?{practice:true}:{}), player:m.name, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:r.createdAt+k+1, ...(partial?{nos:idxF.map(i=>i+1)}:{}),
+      const mr=(d.editing && Array.isArray(d.mateIds)) ? d.mateIds.map((id,k)=>{ const o=state.rounds.find(x=>x.id===id); return o ? {...o, holes:o.holes.map((h,i)=>({...h, strokes:d.mates[k].s[i]}))} : null; }).filter(Boolean) : (!d.editing && Array.isArray(d.mates)) ? d.mates.map((m,k)=>({ id:uid(), card:true, ...(d.practice?{practice:true}:{}), player:m.name, courseId:d.courseId, courseName:d.courseName, date:d.date, createdAt:r.createdAt+k+1, ...(partial?{nos:idxF.map(i=>i+1)}:{}),
         holes:idxF.map(i=>({par:d.holes[i].par, strokes:m.s[i], putts:0, dir:null, bunker:false, ob:false, pen:false, tee:null, club:null})) })) : [];
       try{ await Promise.all([r,...mr].map(x=>store.saveRound(x))); state.saving=false;
         state.draft=null; saveDraft(); state.tab="history"; LS.set("sc.tab","history"); state.fPlayer=r.player; state.openRound=r.id; state.result=r; state.resultGroup=mr.length?[r,...mr]:null; state.resultAll=mr.length>0; state.resultGame=mr.length?d.game:null; state.resultGhost=d.game==="ghost"?(g=>g?{best:roundTotals(g).score}:null)(partial?null:ghostBest(d.player,d.courseId,d.holes.length,r.id)):null; state.resultCarry=!!d.carry; state.resultEx={medals:d.medals||{}, pins:d.pins||{}, marks:d.marks||{}, hidden:isPeoria(d.game)?peoriaHidden(idxF.length):null}; render(); }
@@ -4419,7 +4423,7 @@ document.addEventListener("click", async ev => {
     case "bk-close": state.bkMenu=false; render(); break;
     case "memo-open": state.memoId=b.dataset.id; render(); { const t=document.getElementById("memo-in"); if(t){ t.focus(); t.setSelectionRange(t.value.length,t.value.length); } } break;
     case "memo-close": state.memoId=null; render(); break;
-    case "prac-toggle": { const r=state.rounds.find(x=>x.id===b.dataset.id); if(!r) break; if(r.practice) delete r.practice; else r.practice=true; store.saveRound(r); toast(r.practice?"練習ラウンドにしました（分析に入れません）":"ふつうのラウンドに戻しました"); break; }
+    case "prac-toggle": { const r=state.rounds.find(x=>x.id===b.dataset.id); if(!r) break; if(r.practice) delete r.practice; else r.practice=true; store.saveRound(r); toast(r.practice?"練習ラウンドにしました":"ふつうのラウンドに戻しました"); break; }
     case "memo-save": { const r=state.rounds.find(x=>x.id===state.memoId), t=document.getElementById("memo-in"); state.memoId=null;
       if(r && t){ const v=t.value.trim().slice(0,MEMO_MAX); if(v) r.memo=v; else delete r.memo; if(state.result && state.result.id===r.id) state.result=r; store.saveRound(r); toast(v?"メモを保存しました":"メモを消しました"); } else render(); break; }
     case "file-save": state.bkMenu=false; render(); await fileSave(); break;
